@@ -1,14 +1,9 @@
 
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import { OnboardingContext } from "../OnboardingFlow";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-
-// Colors for macro pie chart
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
 
 const InitialRecommendation: React.FC = () => {
   const navigate = useNavigate();
@@ -19,173 +14,198 @@ const InitialRecommendation: React.FC = () => {
   }
 
   const { data, updateData } = context;
-  
-  // Mock calculation of macros based on user data
-  const [calculatedMacros, setCalculatedMacros] = useState({
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0
-  });
-  
+  const [isCalculating, setIsCalculating] = useState(true);
+
+  // Calculate recommended macros based on user data
   useEffect(() => {
-    // Very simplified calculation for demo purposes
-    // In a real app, this would be a more sophisticated algorithm
-    let baseCals = 0;
+    // Simulate API calculation delay
+    const timer = setTimeout(() => {
+      const calculatedRecommendation = calculateInitialRecommendation(data);
+      
+      updateData({
+        initial_recommended_calories: calculatedRecommendation.calories,
+        initial_recommended_protein_g: calculatedRecommendation.protein,
+        initial_recommended_carbs_g: calculatedRecommendation.carbs,
+        initial_recommended_fats_g: calculatedRecommendation.fats
+      });
+      
+      setIsCalculating(false);
+    }, 1500);
     
-    if (data.gender === "male") {
-      baseCals = 2000;
-    } else {
-      baseCals = 1800;
-    }
-    
-    // Adjust for weight
-    if (data.weight) {
-      baseCals += (data.weight - 70) * 10;
-    }
-    
-    // Adjust for activity level
-    baseCals += data.trainingsPerWeek * 100;
-    
-    // Adjust for goal
-    if (data.mainGoal === "lose_weight") {
-      baseCals -= 300;
-    } else if (data.mainGoal === "gain_muscle") {
-      baseCals += 200;
-    }
-    
-    // Ensure reasonable range
-    baseCals = Math.max(1200, Math.min(3000, baseCals));
-    
-    // Calculate macros
-    const protein = Math.round(data.weight ? data.weight * 1.8 : 120);
-    const fat = Math.round(baseCals * 0.25 / 9);
-    const carbs = Math.round((baseCals - (protein * 4) - (fat * 9)) / 4);
-    
-    setCalculatedMacros({
-      calories: Math.round(baseCals),
-      protein,
-      carbs,
-      fat
-    });
-    
-    // Store these in the onboarding context
-    updateData({
-      initial_recommended_calories: Math.round(baseCals),
-      initial_recommended_protein_g: protein,
-      initial_recommended_carbs_g: carbs,
-      initial_recommended_fats_g: fat
-    });
+    return () => clearTimeout(timer);
   }, []);
-  
+
   const handleNext = () => {
     navigate("/onboarding/features-preview");
-  };
-  
-  // Prepare data for pie chart
-  const chartData = [
-    { name: "Proteínas", value: calculatedMacros.protein * 4 },
-    { name: "Carbohidratos", value: calculatedMacros.carbs * 4 },
-    { name: "Grasas", value: calculatedMacros.fat * 9 }
-  ];
-  
-  // Workout recommendation based on training frequency
-  const getWorkoutRecommendation = () => {
-    if (data.trainingsPerWeek <= 2) {
-      return "Te recomendamos empezar con 2-3 sesiones de entrenamiento de cuerpo completo por semana.";
-    } else if (data.trainingsPerWeek <= 4) {
-      return "Te recomendamos 3-4 sesiones semanales, alternando entre entrenamiento de fuerza y cardio.";
-    } else {
-      return "Con tu nivel de compromiso, puedes seguir un plan de 5-6 días con entrenamientos divididos por grupos musculares.";
-    }
   };
 
   return (
     <OnboardingLayout currentStep={16} totalSteps={20}>
-      <h1 className="text-2xl font-bold mb-4">Tu Punto de Partida Personalizado</h1>
-      
-      <p className="text-muted-foreground mb-6">
-        Basado en tu información, estas son nuestras recomendaciones iniciales
-      </p>
+      <h1 className="text-2xl font-bold mb-8">Tu Punto de Partida Personalizado</h1>
 
-      <div className="space-y-6 w-full max-w-md mx-auto">
-        {/* Macros donut chart */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-secondary/20 p-4 rounded-xl neu-card"
-        >
-          <h3 className="text-center font-medium mb-2">Distribución Diaria de Macros</h3>
-          
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  paddingAngle={5}
-                  dataKey="value"
-                  labelLine={false}
-                  animationDuration={1500}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+      <div className="w-full max-w-md mx-auto">
+        {isCalculating ? (
+          <div className="flex flex-col items-center p-8">
+            <div className="h-16 w-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-lg">Analizando tus datos...</p>
           </div>
-          
-          <div className="grid grid-cols-4 gap-2 text-center">
-            <div>
-              <p className="text-xs text-muted-foreground">Calorías</p>
-              <p className="font-bold">{calculatedMacros.calories}</p>
+        ) : (
+          <>
+            <div className="neu-button p-6 rounded-xl mb-6">
+              <h2 className="font-bold mb-3">Tus macronutrientes diarios recomendados:</h2>
+              
+              {/* Macros donut chart */}
+              <div className="relative h-52 w-52 mx-auto my-6">
+                <MacrosDonutChart
+                  protein={data.initial_recommended_protein_g || 0}
+                  carbs={data.initial_recommended_carbs_g || 0}
+                  fats={data.initial_recommended_fats_g || 0}
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold">{data.initial_recommended_calories}</span>
+                  <span className="text-xs text-muted-foreground">calorías</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="font-semibold text-blue-400">{data.initial_recommended_protein_g}g</p>
+                  <p className="text-xs">Proteínas</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-green-400">{data.initial_recommended_carbs_g}g</p>
+                  <p className="text-xs">Carbos</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-yellow-400">{data.initial_recommended_fats_g}g</p>
+                  <p className="text-xs">Grasas</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground" style={{ color: COLORS[0] }}>Proteínas</p>
-              <p className="font-bold">{calculatedMacros.protein}g</p>
+            
+            <div className="neu-button p-6 rounded-xl">
+              <h2 className="font-bold mb-2">Recomendación de entrenamiento:</h2>
+              <p className="text-sm">
+                Te recomendamos comenzar con {data.trainingsPerWeek} sesiones de entrenamiento 
+                de intensidad moderada-alta por semana.
+              </p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground" style={{ color: COLORS[1] }}>Carbos</p>
-              <p className="font-bold">{calculatedMacros.carbs}g</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground" style={{ color: COLORS[2] }}>Grasas</p>
-              <p className="font-bold">{calculatedMacros.fat}g</p>
-            </div>
-          </div>
-        </motion.div>
-        
-        {/* Workout recommendation */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="bg-secondary/20 p-4 rounded-xl neu-card"
-        >
-          <h3 className="font-medium mb-2">Recomendación de Entrenamiento</h3>
-          <p className="text-sm text-muted-foreground">
-            {getWorkoutRecommendation()}
-          </p>
-        </motion.div>
-        
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="text-xs text-center text-muted-foreground"
-        >
-          Estos son valores iniciales. GatofitAI los refinará a medida que aprendamos más de ti.
-        </motion.p>
+            
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Estos son valores iniciales. GatofitAI los refinará a medida que aprendamos más de ti.
+            </p>
+          </>
+        )}
       </div>
 
-      <OnboardingNavigation onNext={handleNext} />
+      <OnboardingNavigation 
+        onNext={handleNext}
+        nextDisabled={isCalculating}
+      />
     </OnboardingLayout>
+  );
+};
+
+// Simple function to calculate initial recommendation
+const calculateInitialRecommendation = (data: any) => {
+  // Very basic TDEE calculation (this would be more sophisticated in a real app)
+  // This is just for demonstration purposes
+  let bmr = 0;
+  const weight = data.weight || 70; // Default in case weight is not provided
+  const height = data.height || 170; // Default in case height is not provided
+  const age = data.dateOfBirth ? 
+    Math.floor((new Date().getTime() - new Date(data.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30;
+  
+  // Basic BMR calculation using Mifflin-St Jeor Equation
+  if (data.gender === 'male') {
+    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+  } else {
+    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+  }
+  
+  // Activity factor based on training frequency
+  const activityFactor = 1.2 + (data.trainingsPerWeek * 0.05);
+  
+  // TDEE: Total Daily Energy Expenditure
+  let tdee = bmr * activityFactor;
+  
+  // Adjust based on goal
+  if (data.mainGoal === 'lose_weight') {
+    tdee -= 500; // Caloric deficit
+  } else if (data.mainGoal === 'gain_muscle') {
+    tdee += 300; // Caloric surplus
+  }
+  
+  // Calculate macros (simplified)
+  const proteinPerKg = data.mainGoal === 'gain_muscle' ? 2.2 : 2.0;
+  const protein = Math.round(weight * proteinPerKg);
+  const fats = Math.round((tdee * 0.25) / 9); // 25% of calories from fat
+  const proteinCals = protein * 4;
+  const fatsCals = fats * 9;
+  const remainingCals = tdee - proteinCals - fatsCals;
+  const carbs = Math.round(remainingCals / 4);
+  
+  return {
+    calories: Math.round(tdee),
+    protein,
+    carbs,
+    fats
+  };
+};
+
+// Simple donut chart component
+const MacrosDonutChart = ({ protein, carbs, fats }: { protein: number, carbs: number, fats: number }) => {
+  const total = protein + carbs + fats;
+  const proteinPercentage = Math.round(protein * 4 / (total * 4) * 100);
+  const carbsPercentage = Math.round(carbs * 4 / (total * 4) * 100);
+  const fatsPercentage = Math.round(fats * 9 / (total * 4) * 100);
+  
+  const proteinDash = 2 * Math.PI * 40 * (proteinPercentage / 100);
+  const carbsDash = 2 * Math.PI * 40 * (carbsPercentage / 100);
+  const fatsDash = 2 * Math.PI * 40 * (fatsPercentage / 100);
+  
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#334155" strokeWidth="12" />
+      
+      {/* Proteins segment (starting at the top) */}
+      <circle 
+        cx="50" 
+        cy="50" 
+        r="40" 
+        fill="transparent" 
+        stroke="#60a5fa" 
+        strokeWidth="12"
+        strokeDasharray={`${proteinDash} ${2 * Math.PI * 40}`}
+        transform="rotate(-90 50 50)"
+      />
+      
+      {/* Carbs segment */}
+      <circle 
+        cx="50" 
+        cy="50" 
+        r="40" 
+        fill="transparent" 
+        stroke="#4ade80" 
+        strokeWidth="12"
+        strokeDasharray={`${carbsDash} ${2 * Math.PI * 40}`}
+        strokeDashoffset={-proteinDash}
+        transform="rotate(-90 50 50)"
+      />
+      
+      {/* Fats segment */}
+      <circle 
+        cx="50" 
+        cy="50" 
+        r="40" 
+        fill="transparent" 
+        stroke="#fbbf24" 
+        strokeWidth="12"
+        strokeDasharray={`${fatsDash} ${2 * Math.PI * 40}`}
+        strokeDashoffset={-(proteinDash + carbsDash)}
+        transform="rotate(-90 50 50)"
+      />
+    </svg>
   );
 };
 

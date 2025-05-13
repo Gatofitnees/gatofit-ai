@@ -1,29 +1,12 @@
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Utensils, Leaf, Fish, Avocado } from "lucide-react";
+import { Utensils, Leaf, Fish } from "lucide-react";
+import { motion } from "framer-motion";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import SelectableCard from "@/components/onboarding/SelectableCard";
 import { OnboardingContext } from "../OnboardingFlow";
-import { supabase } from "@/integrations/supabase/client";
-
-interface DietType {
-  id: number;
-  name: string;
-  icon_name: string | null;
-  description: string | null;
-}
-
-// Static diets for the demo
-const DIETS = [
-  { id: 1, name: "Omnívora", icon_name: "utensils", description: "Dieta regular incluyendo todos los grupos de alimentos" },
-  { id: 2, name: "Vegetariana", icon_name: "leaf", description: "Sin carne, pero puede incluir lácteos y huevos" },
-  { id: 3, name: "Vegana", icon_name: "leaf", description: "Sin productos animales en absoluto" },
-  { id: 4, name: "Pescetariana", icon_name: "fish", description: "Vegetariana más mariscos" },
-  { id: 5, name: "Keto", icon_name: "utensils", description: "Dieta baja en carbohidratos, alta en grasas" },
-  { id: 6, name: "Paleo", icon_name: "utensils", description: "Basada en alimentos presumiblemente consumidos durante la era paleolítica" }
-];
 
 const Diet: React.FC = () => {
   const navigate = useNavigate();
@@ -43,32 +26,30 @@ const Diet: React.FC = () => {
     navigate("/onboarding/desired-achievements");
   };
 
-  // Helper to get icon component by name
-  const getIconByName = (iconName: string | null) => {
-    switch (iconName) {
-      case "utensils": return <Utensils size={32} />;
-      case "leaf": return <Leaf size={32} />;
-      case "fish": return <Fish size={32} />;
-      default: return <Utensils size={32} />;
-    }
-  };
+  // Diet options (matching the diet_types table in Supabase)
+  const dietOptions = [
+    { id: 1, name: "Omnívora", icon: <Utensils size={32} /> },
+    { id: 2, name: "Vegetariana", icon: <Leaf size={32} /> },
+    { id: 3, name: "Vegana", icon: <Leaf size={32} /> },
+    { id: 4, name: "Pescetariana", icon: <Fish size={32} /> },
+    { id: 5, name: "Keto", icon: <Utensils size={32} /> },
+    { id: 6, name: "Paleo", icon: <Utensils size={32} /> }
+  ];
 
   return (
     <OnboardingLayout currentStep={13} totalSteps={20}>
       <h1 className="text-2xl font-bold mb-8">¿Sigues alguna dieta específica?</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto w-full">
-        {DIETS.map((diet) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+        {dietOptions.map((diet) => (
           <SelectableCard
             key={diet.id}
             selected={data.diet === diet.id}
             onSelect={() => handleSelect(diet.id)}
-            icon={getIconByName(diet.icon_name)}
+            icon={diet.icon}
             label={diet.name}
           >
-            <p className="text-xs text-muted-foreground text-center mt-1">
-              {diet.description}
-            </p>
+            <span className="sr-only">{diet.name}</span>
           </SelectableCard>
         ))}
       </div>

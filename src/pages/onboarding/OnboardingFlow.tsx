@@ -38,9 +38,14 @@ export interface OnboardingData {
   mainGoal: "gain_muscle" | "lose_weight" | "maintain_weight" | null;
   targetWeight: number | null;
   targetPace: "sloth" | "rabbit" | "leopard" | null;
+  targetKgPerWeek: number | null;
   obstacles: string[];
   diet: number | null;
   achievements: string[];
+  initial_recommended_calories: number | null;
+  initial_recommended_protein_g: number | null;
+  initial_recommended_carbs_g: number | null;
+  initial_recommended_fats_g: number | null;
 }
 
 interface OnboardingContextType {
@@ -66,9 +71,14 @@ const OnboardingFlow: React.FC = () => {
     mainGoal: null,
     targetWeight: null,
     targetPace: null,
+    targetKgPerWeek: null,
     obstacles: [],
     diet: null,
     achievements: [],
+    initial_recommended_calories: null,
+    initial_recommended_protein_g: null,
+    initial_recommended_carbs_g: null,
+    initial_recommended_fats_g: null,
   });
 
   const updateData = (newData: Partial<OnboardingData>) => {

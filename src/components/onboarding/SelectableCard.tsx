@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 interface SelectableCardProps {
   selected?: boolean;
   onSelect?: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   icon?: React.ReactNode;
   label?: string;
   className?: string;

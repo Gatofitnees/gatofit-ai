@@ -1,7 +1,7 @@
 
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Male, Female, Users } from "lucide-react";
+import { User, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
@@ -34,23 +34,29 @@ const Gender: React.FC = () => {
         <SelectableCard
           selected={data.gender === "male"}
           onSelect={() => handleSelect("male")}
-          icon={<Male size={32} />}
+          icon={<User size={32} />}
           label="Masculino"
-        />
+        >
+          <span className="sr-only">Masculino</span>
+        </SelectableCard>
         
         <SelectableCard
           selected={data.gender === "female"}
           onSelect={() => handleSelect("female")}
-          icon={<Female size={32} />}
+          icon={<User size={32} />}
           label="Femenino"
-        />
+        >
+          <span className="sr-only">Femenino</span>
+        </SelectableCard>
         
         <SelectableCard
           selected={data.gender === "other"}
           onSelect={() => handleSelect("other")}
           icon={<Users size={32} />}
           label="Otro / Prefiero no decirlo"
-        />
+        >
+          <span className="sr-only">Otro / Prefiero no decirlo</span>
+        </SelectableCard>
       </div>
 
       <OnboardingNavigation 
