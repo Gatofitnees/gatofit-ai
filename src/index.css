@@ -42,7 +42,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sora;
   }
 }
 
@@ -58,6 +58,23 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
   }
 
+  /* New galactic text effect for GatofitAI */
+  .text-galactic {
+    @apply bg-clip-text text-transparent relative;
+    background-image: linear-gradient(
+      90deg, 
+      #4d54e0, 
+      #9b6dff, 
+      #4895ef, 
+      #4cc9f0, 
+      #4d54e0
+    );
+    background-size: 200% auto;
+    animation: shine 4s linear infinite;
+    text-shadow: 0 0 10px rgba(77, 84, 224, 0.5);
+  }
+
+  /* Neu-morphic styles */
   .neu-card {
     @apply bg-card rounded-xl shadow-neu-card;
   }
@@ -97,5 +114,43 @@
 
   .bg-fat {
     @apply bg-yellow-400;
+  }
+
+  /* Typography classes based on the provided guidelines */
+  .h1 {
+    @apply font-bold text-2xl sm:text-3xl tracking-tight;
+  }
+
+  .h2 {
+    @apply font-semibold text-xl sm:text-2xl;
+  }
+
+  .h3 {
+    @apply font-semibold text-lg sm:text-xl;
+  }
+
+  .h4 {
+    @apply font-medium text-base sm:text-lg;
+  }
+
+  .body {
+    @apply font-normal text-sm sm:text-base leading-relaxed;
+  }
+
+  .small {
+    @apply font-normal text-xs sm:text-sm;
+  }
+
+  .light {
+    @apply font-light;
+  }
+}
+
+@keyframes shine {
+  from {
+    background-position: 0% center;
+  }
+  to {
+    background-position: 200% center;
   }
 }

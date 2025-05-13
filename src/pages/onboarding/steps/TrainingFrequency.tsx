@@ -27,7 +27,7 @@ const TrainingFrequency: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={3} totalSteps={20}>
-      <h1 className="text-2xl font-bold mb-8">
+      <h1 className="h1 mb-8">
         ¿Cuántos días a la semana sueles entrenar?
       </h1>
 
@@ -54,7 +54,7 @@ const TrainingFrequency: React.FC = () => {
           <span className="text-5xl font-bold text-primary mb-2 block">
             {data.trainingsPerWeek}
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="small text-muted-foreground">
             {data.trainingsPerWeek === 1 
               ? "día a la semana" 
               : "días a la semana"}

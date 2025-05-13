@@ -30,17 +30,17 @@ const Welcome: React.FC = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
-          className="text-2xl font-bold mb-2"
+          className="h1 mb-2"
         >
           ¡Bienvenido/a a{" "}
-          <span className="text-gradient">GatofitAI</span>!
+          <span className="text-galactic">GatofitAI</span>!
         </motion.h1>
 
         <motion.p
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.4 }}
-          className="text-muted-foreground mb-8"
+          className="body text-muted-foreground mb-8"
         >
           Prepárate para transformar tu fitness con inteligencia.
         </motion.p>

@@ -14,7 +14,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   totalSteps,
 }) => {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col font-sora">
       {/* Progress bar */}
       <div className="px-4 pt-4">
         <div className="h-1 w-full bg-secondary/30 rounded overflow-hidden">
@@ -25,7 +25,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             className="h-1 bg-primary rounded"
           />
         </div>
-        <div className="text-xs text-muted-foreground mt-1 text-right">
+        <div className="small text-muted-foreground mt-1 text-right">
           {currentStep}/{totalSteps}
         </div>
       </div>

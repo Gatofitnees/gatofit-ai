@@ -27,7 +27,7 @@ const PreviousExperience: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={4} totalSteps={20}>
-      <h1 className="text-2xl font-bold mb-8">
+      <h1 className="h1 mb-8">
         ¿Has usado antes apps de entrenamiento o seguimiento de macros?
       </h1>
 
@@ -38,7 +38,7 @@ const PreviousExperience: React.FC = () => {
           icon={<CheckCircle2 size={32} />}
           label="Sí, tengo experiencia"
         >
-          <p className="text-xs text-muted-foreground text-center mt-1">
+          <p className="small text-muted-foreground text-center mt-1">
             He usado otras apps de fitness regularmente
           </p>
         </SelectableCard>
@@ -49,7 +49,7 @@ const PreviousExperience: React.FC = () => {
           icon={<XCircle size={32} />}
           label="No, soy nuevo/a en esto"
         >
-          <p className="text-xs text-muted-foreground text-center mt-1">
+          <p className="small text-muted-foreground text-center mt-1">
             Es mi primera vez usando una app de fitness
           </p>
         </SelectableCard>
