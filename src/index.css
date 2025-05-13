@@ -1,90 +1,101 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
-    --background: 213 19% 12%;
-    --foreground: 0 0% 100%;
-
-    --card: 215 19% 16%;
-    --card-foreground: 0 0% 100%;
-
-    --popover: 215 19% 16%;
-    --popover-foreground: 0 0% 100%;
-
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    
+    --card: 220 40% 13%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+ 
     --primary: 207 90% 54%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 215 14% 30%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 215 14% 25%;
-    --muted-foreground: 215 5% 65%;
-
-    --accent: 207 90% 54%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 215 14% 25%;
-    --input: 215 14% 25%;
-    --ring: 207 90% 54%;
-
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
+ 
+    --accent: 217 32% 17%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 215 27.9% 16.9%;
+    --input: 217 32% 17%;
+    --ring: 212.7 26.8% 83.9%;
+ 
     --radius: 1rem;
   }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
   }
-  
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
-
-  html {
-    @apply scroll-smooth;
   }
 }
 
 @layer components {
-  .neu-card {
-    @apply bg-card rounded-2xl shadow-neu-card relative overflow-hidden;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-  
-  .neu-button {
-    @apply bg-secondary rounded-xl shadow-neu-button active:shadow-neu-button-active relative overflow-hidden transition-all duration-200;
-    border: 1px solid rgba(255, 255, 255, 0.03);
-  }
-  
-  .neu-button-active {
-    @apply bg-primary text-white shadow-neu-button-active;
-  }
-
-  .progress-ring {
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
-    transition: stroke-dashoffset 0.35s;
-  }
-}
-
-@layer utilities {
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/90;
-  }
-  
   .glass-blur {
-    @apply backdrop-blur-md bg-background/30;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(32, 35, 42, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
+  }
+
+  .neu-card {
+    @apply bg-card rounded-xl shadow-neu-card;
+  }
+
+  .neu-button {
+    @apply shadow-neu-button transition-all duration-200;
+  }
+
+  .neu-button-active {
+    @apply shadow-neu-button-active bg-primary/10 transition-all duration-200;
+  }
+
+  .neu-input {
+    @apply bg-secondary/20 border-muted rounded-xl px-4 py-2 focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200 shadow-inner-dark shadow-inner-light;
+  }
+
+  /* Protein, carbs, fat colors */
+  .color-protein {
+    @apply text-blue-400;
+  }
+
+  .bg-protein {
+    @apply bg-blue-400;
+  }
+
+  .color-carbs {
+    @apply text-green-400;
+  }
+
+  .bg-carbs {
+    @apply bg-green-400;
+  }
+
+  .color-fat {
+    @apply text-yellow-400;
+  }
+
+  .bg-fat {
+    @apply bg-yellow-400;
   }
 }
