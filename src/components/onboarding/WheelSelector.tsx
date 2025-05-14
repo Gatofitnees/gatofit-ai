@@ -28,9 +28,15 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
   const startY = useRef(0);
   const currentTranslateY = useRef(0);
 
+  // Safety check to ensure values array is not empty
+  if (!values || values.length === 0) {
+    console.error("WheelSelector: values array is empty or undefined");
+    return <div className="p-4 text-muted-foreground">No values provided</div>;
+  }
+
   // Find initial selected index if initialValue is provided
   useEffect(() => {
-    if (initialValue !== undefined) {
+    if (initialValue !== undefined && values && values.length > 0) {
       const index = values.findIndex(item => item.value === initialValue);
       if (index !== -1) {
         setSelectedIndex(index);
@@ -40,7 +46,9 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
 
   // Notify parent component when selection changes
   useEffect(() => {
-    onChange(values[selectedIndex].value);
+    if (values && values.length > 0 && selectedIndex >= 0 && selectedIndex < values.length) {
+      onChange(values[selectedIndex].value);
+    }
   }, [selectedIndex, onChange, values]);
 
   const handleTouchStart = (e: React.TouchEvent) => {

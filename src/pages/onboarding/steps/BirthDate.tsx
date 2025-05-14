@@ -108,31 +108,37 @@ const BirthDate: React.FC = () => {
       <div className="w-full max-w-sm mx-auto">
         <div className="flex space-x-2 h-[240px] mb-8">
           <div className="w-1/3">
-            <WheelSelector
-              values={daysValues}
-              onChange={(value) => setDay(value)}
-              initialValue={day}
-              className="h-full"
-              labelClassName="text-xl"
-            />
+            {daysValues.length > 0 && (
+              <WheelSelector
+                values={daysValues}
+                onChange={(value) => setDay(value)}
+                initialValue={day}
+                className="h-full"
+                labelClassName="text-xl"
+              />
+            )}
           </div>
           <div className="w-1/3">
-            <WheelSelector
-              values={monthsValues}
-              onChange={(value) => setMonth(value)}
-              initialValue={month}
-              className="h-full"
-              labelClassName="text-xl"
-            />
+            {monthsValues.length > 0 && (
+              <WheelSelector
+                values={monthsValues}
+                onChange={(value) => setMonth(value)}
+                initialValue={month}
+                className="h-full"
+                labelClassName="text-xl"
+              />
+            )}
           </div>
           <div className="w-1/3">
-            <WheelSelector
-              values={yearsValues}
-              onChange={(value) => setYear(value)}
-              initialValue={year}
-              className="h-full"
-              labelClassName="text-xl"
-            />
+            {yearsValues.length > 0 && (
+              <WheelSelector
+                values={yearsValues}
+                onChange={(value) => setYear(value)}
+                initialValue={year}
+                className="h-full"
+                labelClassName="text-xl"
+              />
+            )}
           </div>
         </div>
 

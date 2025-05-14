@@ -174,33 +174,39 @@ const PhysicalData: React.FC = () => {
           <div className="space-y-2">
             <label className="text-sm font-medium block mb-2">Altura</label>
             <div className="h-[200px]">
-              <WheelSelector
-                values={heightValues}
-                onChange={(value) => setHeightCm(value)}
-                initialValue={heightCm}
-                className="w-full"
-                labelClassName="text-lg"
-              />
+              {heightValues.length > 0 && (
+                <WheelSelector
+                  values={heightValues}
+                  onChange={(value) => setHeightCm(value)}
+                  initialValue={heightCm}
+                  className="w-full"
+                  labelClassName="text-lg"
+                />
+              )}
             </div>
           </div>
         ) : (
           <div className="space-y-2">
             <label className="text-sm font-medium block mb-2">Altura</label>
             <div className="flex space-x-2 h-[200px]">
-              <WheelSelector
-                values={heightValues}
-                onChange={(value) => setHeightFt(value)}
-                initialValue={heightFt}
-                className="w-1/2"
-                labelClassName="text-lg"
-              />
-              <WheelSelector
-                values={inchesValues}
-                onChange={(value) => setHeightIn(value)}
-                initialValue={heightIn}
-                className="w-1/2"
-                labelClassName="text-lg"
-              />
+              {heightValues.length > 0 && (
+                <WheelSelector
+                  values={heightValues}
+                  onChange={(value) => setHeightFt(value)}
+                  initialValue={heightFt}
+                  className="w-1/2"
+                  labelClassName="text-lg"
+                />
+              )}
+              {inchesValues.length > 0 && (
+                <WheelSelector
+                  values={inchesValues}
+                  onChange={(value) => setHeightIn(value)}
+                  initialValue={heightIn}
+                  className="w-1/2"
+                  labelClassName="text-lg"
+                />
+              )}
             </div>
           </div>
         )}
@@ -208,26 +214,30 @@ const PhysicalData: React.FC = () => {
         <div className="space-y-2">
           <label className="text-sm font-medium block mb-2">Peso</label>
           <div className="h-[200px]">
-            <WheelSelector
-              values={weightValues}
-              onChange={(value) => setWeight(value)}
-              initialValue={weight}
-              className="w-full"
-              labelClassName="text-lg"
-            />
+            {weightValues.length > 0 && (
+              <WheelSelector
+                values={weightValues}
+                onChange={(value) => setWeight(value)}
+                initialValue={weight}
+                className="w-full"
+                labelClassName="text-lg"
+              />
+            )}
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium block mb-2">% Grasa Corporal (opcional)</label>
           <div className="h-[200px]">
-            <WheelSelector
-              values={fatValues}
-              onChange={(value) => setBodyFat(value)}
-              initialValue={bodyFat}
-              className="w-full"
-              labelClassName="text-lg"
-            />
+            {fatValues.length > 0 && (
+              <WheelSelector
+                values={fatValues}
+                onChange={(value) => setBodyFat(value)}
+                initialValue={bodyFat}
+                className="w-full"
+                labelClassName="text-lg"
+              />
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             No te preocupes si no lo sabes con exactitud
