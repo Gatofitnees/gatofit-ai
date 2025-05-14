@@ -173,7 +173,7 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
           
           return (
             <motion.div
-              key={index}
+              key={`${index}-${item.value}`}
               className={cn(
                 "absolute left-0 w-full flex items-center justify-center cursor-pointer transition-colors",
                 distance === 0 ? "text-primary font-medium" : "text-muted-foreground"
@@ -186,9 +186,10 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
                 scale,
                 zIndex: 100 - Math.abs(distance)
               }}
+              initial={false}
               onClick={() => handleItemClick(index)}
             >
-              <span className={cn("select-none text-center", labelClassName)}>
+              <span className={cn("select-none text-center truncate px-2", labelClassName)}>
                 {item.label}
               </span>
             </motion.div>

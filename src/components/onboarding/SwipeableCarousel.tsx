@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils';
 interface SwipeableCarouselProps {
   children: React.ReactNode[];
   className?: string;
+  reduceSize?: boolean;
 }
 
-const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({ children, className }) => {
+const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({ children, className, reduceSize = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(0);
@@ -72,6 +73,9 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({ children, classNa
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Show hint of previous/next items
+  const peekSize = reduceSize ? 20 : 0; // Show a peek of the next/previous items
   
   return (
     <div 
@@ -89,14 +93,17 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({ children, classNa
         className="flex w-full"
         style={{ 
           x: isDragging 
-            ? dragOffset - (currentIndex * getItemWidth())
-            : -(currentIndex * getItemWidth()),
+            ? dragOffset - (currentIndex * (getItemWidth() - peekSize))
+            : -(currentIndex * (getItemWidth() - peekSize)),
           transition: isDragging ? 'none' : 'transform 0.3s ease'
         }}
       >
         {React.Children.map(children, (child, index) => (
           <div 
-            className="flex-shrink-0 w-full" 
+            className={cn(
+              "flex-shrink-0",
+              reduceSize ? "w-[90%] mx-[5%]" : "w-full"
+            )}
             style={{ touchAction: 'none' }}
             key={index}
           >
