@@ -55,7 +55,7 @@ const CreateAccount: React.FC = () => {
       
       if (error) {
         if (error.message.includes("rate limit exceeded")) {
-          setError("Has alcanzado el límite de envío de correos. Intenta de nuevo más tarde o utiliza Google para registrarte.");
+          setError("Has alcanzado el límite de intentos. Por favor, espera unos minutos o utiliza otra opción de registro.");
         } else {
           setError(error.message);
         }
@@ -64,7 +64,6 @@ const CreateAccount: React.FC = () => {
         toast({
           title: "¡Cuenta creada!",
           description: "Te hemos enviado un email de verificación",
-          variant: "success",
         });
         navigate("/onboarding/app-transition");
       }
@@ -83,8 +82,7 @@ const CreateAccount: React.FC = () => {
       const { error } = await signInWithGoogle();
       
       if (error) {
-        setError("Error al iniciar sesión con Google: " + error.message);
-        setGoogleLoading(false);
+        setError(error.message);
       }
       // The redirect to Google's auth page will happen automatically
     } catch (err: any) {
@@ -99,9 +97,7 @@ const CreateAccount: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={18} totalSteps={20}>
-      <h1 className="text-2xl font-bold mb-2">
-        Crea tu Cuenta <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 animate-gradient">GatofitAI</span>
-      </h1>
+      <h1 className="text-2xl font-bold mb-2">Crea tu Cuenta GatofitAI</h1>
       
       <p className="text-muted-foreground mb-6">
         Un paso más para comenzar tu viaje fitness
@@ -222,15 +218,12 @@ const CreateAccount: React.FC = () => {
       </div>
 
       <div className="mt-6 w-full max-w-md mx-auto">
-        <Button
-          className="w-full py-6 h-auto flex items-center justify-center space-x-2"
-          onClick={handleCreateAccount}
-          disabled={loading || !email || !password || !confirmPassword || !agreedToTerms}
-        >
-          {loading ? (
-            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-          ) : "Crear Mi Cuenta"}
-        </Button>
+        <OnboardingNavigation 
+          onNext={handleCreateAccount}
+          nextDisabled={!email || !password || !confirmPassword || !agreedToTerms}
+          nextLabel="Crear Mi Cuenta"
+          loading={loading}
+        />
         
         <div className="text-center mt-6">
           <p className="text-sm text-muted-foreground">
