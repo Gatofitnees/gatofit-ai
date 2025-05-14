@@ -174,7 +174,7 @@ export function useToast() {
     // Also trigger sonner toast for compatibility with existing code
     const variantStyle = 
       variant === "destructive" ? { style: { backgroundColor: "hsl(var(--destructive))", color: "hsl(var(--destructive-foreground))" } } :
-      variant === "success" ? { style: { backgroundColor: "hsl(var(--success))", color: "hsl(var(--success-foreground))" } } :
+      variant === "success" ? { style: { backgroundColor: "hsl(var(--success, 142 71% 45%))", color: "hsl(var(--success-foreground, 210 40% 98%))" } } :
       {};
 
     sonnerToast(title, {

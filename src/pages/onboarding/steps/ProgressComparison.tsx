@@ -131,7 +131,6 @@ const ProgressComparison: React.FC = () => {
                 tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                 label={{ value: 'Tiempo', position: 'insideBottom', offset: -15, fill: 'hsl(var(--muted-foreground))' }}
                 scale="point"
-                data={DATA_TRADITIONAL}
               />
               <YAxis 
                 tickLine={false}
