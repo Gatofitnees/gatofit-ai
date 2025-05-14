@@ -69,17 +69,14 @@ const ToastStateProvider = ({ children }: { children: React.ReactNode }) => {
 function useToast() {
   const [toasts, setToasts] = React.useState<ToasterToast[]>([]);
 
-  // Sync with Sonner's implementation
   const toast = React.useMemo(() => {
-    const addToast = (
-      props: {
-        title?: React.ReactNode;
-        description?: React.ReactNode;
-        action?: ToastActionElement;
-        variant?: "default" | "destructive" | "success";
-        duration?: number;
-      } = {}
-    ) => {
+    const addToast = (props: {
+      title?: React.ReactNode;
+      description?: React.ReactNode;
+      action?: ToastActionElement;
+      variant?: "default" | "destructive" | "success";
+      duration?: number;
+    } = {}) => {
       const {
         title,
         description,
@@ -140,6 +137,31 @@ function useToast() {
     },
   };
 }
+
+// This is a singleton instance for direct imports
+const toast = {
+  error: (props: any) => {
+    // Add destructive style toast via sonner
+    sonnerToast.error(props.title, {
+      description: props.description,
+      duration: props.duration || 5000,
+    });
+    return "";
+  },
+  success: (props: any) => {
+    // Add success style toast via sonner
+    sonnerToast(props.title, {
+      description: props.description,
+      duration: props.duration || 5000,
+      style: { backgroundColor: "hsl(var(--success, 142 71% 45%))", color: "hsl(var(--success-foreground, 210 40% 98%))" }
+    });
+    return "";
+  },
+  // Default toast
+  // The base implementation directly calls sonnerToast
+  // This allows existing code using "toast(...)" to work without changes
+  ...sonnerToast
+};
 
 export { useToast, ToastStateProvider, toast };
 export type { ToastProps, ToastActionElement };
