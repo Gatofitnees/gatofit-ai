@@ -88,6 +88,10 @@ export default {
         "progress-fill": {
           from: { strokeDashoffset: "100" },
           to: { strokeDashoffset: "0" }
+        },
+        "shine": {
+          from: { backgroundPosition: "0% center" },
+          to: { backgroundPosition: "200% center" }
         }
       },
       animation: {
@@ -96,6 +100,7 @@ export default {
         "fade-in": "fade-in 0.5s ease-out forwards",
         "pulse-ring": "pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "progress-fill": "progress-fill 1s ease-out forwards",
+        "shine": "shine 4s linear infinite"
       },
       boxShadow: {
         'inner-light': 'inset 1px 1px 1px rgba(255, 255, 255, 0.07)',

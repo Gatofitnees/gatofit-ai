@@ -46,6 +46,7 @@ export interface OnboardingData {
   initial_recommended_protein_g: number | null;
   initial_recommended_carbs_g: number | null;
   initial_recommended_fats_g: number | null;
+  unit_system_preference: "metric" | "imperial";
 }
 
 interface OnboardingContextType {
@@ -79,6 +80,7 @@ const OnboardingFlow: React.FC = () => {
     initial_recommended_protein_g: null,
     initial_recommended_carbs_g: null,
     initial_recommended_fats_g: null,
+    unit_system_preference: "metric",
   });
 
   const updateData = (newData: Partial<OnboardingData>) => {

@@ -58,7 +58,7 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
   }
 
-  /* New galactic text effect for GatofitAI */
+  /* Galactic text effect for GatofitAI */
   .text-galactic {
     @apply bg-clip-text text-transparent relative;
     background-image: linear-gradient(
@@ -72,6 +72,19 @@
     background-size: 200% auto;
     animation: shine 4s linear infinite;
     text-shadow: 0 0 10px rgba(77, 84, 224, 0.5);
+  }
+
+  /* Wheel selector classes */
+  .wheel-selector-container {
+    @apply relative overflow-hidden rounded-xl bg-secondary/20 shadow-neu-card;
+  }
+
+  .wheel-selector-highlight {
+    @apply absolute left-0 w-full bg-primary/10 pointer-events-none z-10;
+  }
+
+  .wheel-selector-item {
+    @apply absolute left-0 w-full flex items-center justify-center cursor-pointer transition-colors;
   }
 
   /* Neu-morphic styles */

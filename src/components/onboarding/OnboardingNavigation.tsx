@@ -2,7 +2,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface OnboardingNavigationProps {
   onNext?: () => void;
@@ -38,24 +37,26 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
   };
 
   return (
-    <div className="mt-auto pt-6 flex flex-col space-y-4">
-      <Button
-        onClick={handleNext}
-        disabled={nextDisabled || loading}
-        className="w-full py-2 px-4 h-auto font-medium bg-primary hover:bg-primary/90 text-white rounded-xl neu-button"
-      >
-        {loading ? "Cargando..." : nextLabel}
-      </Button>
-
-      {showBack && (
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background z-10">
+      <div className="max-w-md mx-auto space-y-4">
         <button
-          onClick={handleBack}
-          className="flex items-center justify-center py-2 text-sm text-muted-foreground"
+          onClick={handleNext}
+          disabled={nextDisabled || loading}
+          className="w-full py-3 px-4 h-auto font-medium bg-primary hover:bg-primary/90 text-white rounded-xl neu-button disabled:opacity-50 disabled:pointer-events-none transition-all"
         >
-          <ArrowLeft size={16} className="mr-2" />
-          Atrás
+          {loading ? "Cargando..." : nextLabel}
         </button>
-      )}
+
+        {showBack && (
+          <button
+            onClick={handleBack}
+            className="flex items-center justify-center py-2 w-full text-sm text-muted-foreground"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Atrás
+          </button>
+        )}
+      </div>
     </div>
   );
 };

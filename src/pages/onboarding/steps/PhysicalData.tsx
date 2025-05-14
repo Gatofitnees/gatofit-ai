@@ -6,7 +6,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import { OnboardingContext } from "../OnboardingFlow";
-import { Input } from "@/components/ui/input";
+import WheelSelector from "@/components/onboarding/WheelSelector";
+import { Switch } from "@/components/ui/switch";
 
 const PhysicalData: React.FC = () => {
   const navigate = useNavigate();
@@ -17,89 +18,126 @@ const PhysicalData: React.FC = () => {
   }
 
   const { data, updateData } = context;
-  const [heightValue, setHeightValue] = useState<string>(data.height?.toString() || "");
-  const [weightValue, setWeightValue] = useState<string>(data.weight?.toString() || "");
-  const [fatValue, setFatValue] = useState<string>(data.bodyFatPercentage?.toString() || "");
 
-  // Convert metrics when unit system changes
+  // Generate height values
+  const generateHeightValues = (isMetric: boolean) => {
+    if (isMetric) {
+      // Centimeters (100-250 cm)
+      return Array.from({ length: 151 }, (_, i) => ({
+        label: `${i + 100} cm`,
+        value: i + 100
+      }));
+    } else {
+      // Feet (3-8)
+      return Array.from({ length: 6 }, (_, i) => ({
+        label: `${i + 3} ft`,
+        value: i + 3
+      }));
+    }
+  };
+
+  // Generate inches values (0-11)
+  const generateInchesValues = () => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      label: `${i} in`,
+      value: i
+    }));
+  };
+
+  // Generate weight values
+  const generateWeightValues = (isMetric: boolean) => {
+    if (isMetric) {
+      // Kilograms (30-200 kg, increments of 0.5)
+      return Array.from({ length: 341 }, (_, i) => ({
+        label: `${(i * 0.5) + 30} kg`,
+        value: (i * 0.5) + 30
+      }));
+    } else {
+      // Pounds (60-440 lbs)
+      return Array.from({ length: 381 }, (_, i) => ({
+        label: `${i + 60} lb`,
+        value: i + 60
+      }));
+    }
+  };
+
+  // Generate body fat percentage values (5-50%, increments of 0.5)
+  const generateFatValues = () => {
+    return Array.from({ length: 91 }, (_, i) => ({
+      label: `${(i * 0.5) + 5}%`,
+      value: (i * 0.5) + 5
+    }));
+  };
+
+  const [isMetric, setIsMetric] = useState(data.weightUnit === "kg");
+  const [heightValues, setHeightValues] = useState(generateHeightValues(isMetric));
+  const [inchesValues] = useState(generateInchesValues());
+  const [weightValues, setWeightValues] = useState(generateWeightValues(isMetric));
+  const [fatValues] = useState(generateFatValues());
+  
+  const [heightFt, setHeightFt] = useState<number>(5);
+  const [heightIn, setHeightIn] = useState<number>(7);
+  const [heightCm, setHeightCm] = useState<number>(data.height || 170);
+  const [weight, setWeight] = useState<number>(data.weight || (isMetric ? 70 : 155));
+  const [bodyFat, setBodyFat] = useState<number>(data.bodyFatPercentage || 20);
+
+  // Update context when values change
   useEffect(() => {
-    if (data.height && data.heightUnit === "ft-in" && heightValue === "") {
-      // Convert cm to feet-inches display (not actual calculation)
-      const heightInches = data.height / 2.54;
-      const feet = Math.floor(heightInches / 12);
-      const inches = Math.round(heightInches % 12);
-      setHeightValue(`${feet}'${inches}"`);
-    } else if (data.height && data.heightUnit === "cm" && heightValue === "") {
-      setHeightValue(data.height.toString());
+    if (isMetric) {
+      // Store height in cm
+      updateData({ 
+        height: heightCm,
+        heightUnit: "cm",
+        weight: weight,
+        weightUnit: "kg",
+        bodyFatPercentage: bodyFat,
+        unit_system_preference: "metric"
+      });
+    } else {
+      // Convert ft/in to cm for storage
+      const heightInCm = Math.round((heightFt * 30.48) + (heightIn * 2.54));
+      // Convert lbs to kg for storage
+      const weightInKg = parseFloat((weight / 2.20462).toFixed(1));
+      
+      updateData({ 
+        height: heightInCm,
+        heightUnit: "ft-in",
+        weight: weightInKg,
+        weightUnit: "lbs",
+        bodyFatPercentage: bodyFat,
+        unit_system_preference: "imperial"
+      });
     }
+  }, [heightCm, heightFt, heightIn, weight, bodyFat, isMetric, updateData]);
+
+  // Handle unit system change
+  const handleUnitChange = (checked: boolean) => {
+    const newIsMetric = checked;
+    setIsMetric(newIsMetric);
     
-    if (data.weight && data.weightUnit === "lbs" && weightValue === "") {
-      // Convert kg to lbs
-      const lbs = Math.round(data.weight * 2.20462);
-      setWeightValue(lbs.toString());
-    } else if (data.weight && data.weightUnit === "kg" && weightValue === "") {
-      setWeightValue(data.weight.toString());
-    }
-  }, [data.heightUnit, data.weightUnit]);
-
-  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHeightValue(e.target.value);
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value)) {
-      let heightInCm: number;
+    // Update selectors with new values
+    setHeightValues(generateHeightValues(newIsMetric));
+    setWeightValues(generateWeightValues(newIsMetric));
+    
+    // Convert values when switching systems
+    if (newIsMetric) {
+      // Convert from imperial to metric
+      const cmValue = Math.round((heightFt * 30.48) + (heightIn * 2.54));
+      setHeightCm(cmValue);
       
-      if (data.heightUnit === "ft-in") {
-        // This is simplified - in real app would need proper ft-in parsing
-        heightInCm = value * 30.48; // Rough conversion for demonstration
-      } else {
-        heightInCm = value;
-      }
-      
-      updateData({ height: heightInCm });
+      const kgValue = parseFloat((weight / 2.20462).toFixed(1));
+      setWeight(kgValue);
     } else {
-      updateData({ height: null });
-    }
-  };
-
-  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWeightValue(e.target.value);
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value)) {
-      let weightInKg: number;
+      // Convert from metric to imperial
+      const totalInches = heightCm / 2.54;
+      const ft = Math.floor(totalInches / 12);
+      const inches = Math.round(totalInches % 12);
       
-      if (data.weightUnit === "lbs") {
-        weightInKg = value / 2.20462;
-      } else {
-        weightInKg = value;
-      }
+      setHeightFt(ft);
+      setHeightIn(inches);
       
-      updateData({ weight: weightInKg });
-    } else {
-      updateData({ weight: null });
-    }
-  };
-
-  const handleFatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFatValue(e.target.value);
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value) && value >= 0 && value <= 100) {
-      updateData({ bodyFatPercentage: value });
-    } else {
-      updateData({ bodyFatPercentage: null });
-    }
-  };
-
-  const handleHeightUnitChange = (value: string) => {
-    if (value) {
-      updateData({ heightUnit: value as "cm" | "ft-in" });
-      setHeightValue("");
-    }
-  };
-
-  const handleWeightUnitChange = (value: string) => {
-    if (value) {
-      updateData({ weightUnit: value as "kg" | "lbs" });
-      setWeightValue("");
+      const lbsValue = Math.round(weight * 2.20462);
+      setWeight(lbsValue);
     }
   };
 
@@ -115,75 +153,89 @@ const PhysicalData: React.FC = () => {
         Esta información nos ayuda a personalizar tu experiencia
       </p>
       
-      <div className="space-y-6 w-full max-w-md mx-auto">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Altura</label>
-            <ToggleGroup 
-              type="single" 
-              value={data.heightUnit}
-              onValueChange={handleHeightUnitChange}
-              className="bg-secondary/30 rounded-lg p-1"
-            >
-              <ToggleGroupItem value="cm" className="text-xs h-6 px-2 rounded-md data-[state=on]:bg-primary data-[state=on]:text-white">
-                cm
-              </ToggleGroupItem>
-              <ToggleGroupItem value="ft-in" className="text-xs h-6 px-2 rounded-md data-[state=on]:bg-primary data-[state=on]:text-white">
-                ft-in
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          <Input
-            value={heightValue}
-            onChange={handleHeightChange}
-            placeholder={data.heightUnit === "cm" ? "Altura en cm" : "Altura en pies-pulgadas"}
-            className="neu-input"
+      <div className="flex items-center justify-center mb-8 w-full">
+        <div className="flex items-center justify-between bg-secondary/30 rounded-lg p-3 w-72">
+          <span className={`text-sm ${!isMetric ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+            Imperial
+          </span>
+          <Switch 
+            checked={isMetric}
+            onCheckedChange={handleUnitChange}
+            className="mx-4"
           />
+          <span className={`text-sm ${isMetric ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+            Métrico
+          </span>
         </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Peso</label>
-            <ToggleGroup 
-              type="single" 
-              value={data.weightUnit}
-              onValueChange={handleWeightUnitChange}
-              className="bg-secondary/30 rounded-lg p-1"
-            >
-              <ToggleGroupItem value="kg" className="text-xs h-6 px-2 rounded-md data-[state=on]:bg-primary data-[state=on]:text-white">
-                kg
-              </ToggleGroupItem>
-              <ToggleGroupItem value="lbs" className="text-xs h-6 px-2 rounded-md data-[state=on]:bg-primary data-[state=on]:text-white">
-                lbs
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          <Input
-            value={weightValue}
-            onChange={handleWeightChange}
-            placeholder={data.weightUnit === "kg" ? "Peso en kg" : "Peso en libras"}
-            className="neu-input"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">% Grasa Corporal (opcional)</label>
-          <div className="relative">
-            <Input
-              value={fatValue}
-              onChange={handleFatChange}
-              placeholder="Porcentaje de grasa corporal"
-              className="neu-input"
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-sm text-muted-foreground">
-              %
+      </div>
+      
+      <div className="space-y-10 w-full max-w-xs mx-auto">
+        {isMetric ? (
+          <div className="space-y-2">
+            <label className="text-sm font-medium block mb-2">Altura</label>
+            <div className="h-[200px]">
+              <WheelSelector
+                values={heightValues}
+                onChange={(value) => setHeightCm(value)}
+                initialValue={heightCm}
+                className="w-full"
+                labelClassName="text-lg"
+              />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
+        ) : (
+          <div className="space-y-2">
+            <label className="text-sm font-medium block mb-2">Altura</label>
+            <div className="flex space-x-2 h-[200px]">
+              <WheelSelector
+                values={heightValues}
+                onChange={(value) => setHeightFt(value)}
+                initialValue={heightFt}
+                className="w-1/2"
+                labelClassName="text-lg"
+              />
+              <WheelSelector
+                values={inchesValues}
+                onChange={(value) => setHeightIn(value)}
+                initialValue={heightIn}
+                className="w-1/2"
+                labelClassName="text-lg"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium block mb-2">Peso</label>
+          <div className="h-[200px]">
+            <WheelSelector
+              values={weightValues}
+              onChange={(value) => setWeight(value)}
+              initialValue={weight}
+              className="w-full"
+              labelClassName="text-lg"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium block mb-2">% Grasa Corporal (opcional)</label>
+          <div className="h-[200px]">
+            <WheelSelector
+              values={fatValues}
+              onChange={(value) => setBodyFat(value)}
+              initialValue={bodyFat}
+              className="w-full"
+              labelClassName="text-lg"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
             No te preocupes si no lo sabes con exactitud
           </p>
         </div>
       </div>
+
+      <div className="h-20"></div> {/* Spacer for navigation */}
 
       <OnboardingNavigation 
         onNext={handleNext}

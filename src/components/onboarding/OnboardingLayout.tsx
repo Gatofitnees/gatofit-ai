@@ -31,7 +31,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col p-4">
+      <div className="flex-1 flex flex-col p-4 pb-32">
         <motion.div 
           className="flex-1 flex flex-col"
           initial={{ opacity: 0, y: 20 }}
