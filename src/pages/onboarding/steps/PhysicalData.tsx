@@ -1,13 +1,20 @@
 
 import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import { OnboardingContext } from "../OnboardingFlow";
-import WheelSelector from "@/components/onboarding/WheelSelector";
-import { Switch } from "@/components/ui/switch";
+import PhysicalDataContent from "./physical-data/PhysicalDataContent";
+import { 
+  generateHeightValues, 
+  generateInchesValues, 
+  generateWeightValues, 
+  generateFatValues,
+  convertImperialToMetricHeight,
+  convertMetricToImperialHeight,
+  convertImperialToMetricWeight,
+  convertMetricToImperialWeight
+} from "./physical-data/utils";
 
 const PhysicalData: React.FC = () => {
   const navigate = useNavigate();
@@ -18,56 +25,6 @@ const PhysicalData: React.FC = () => {
   }
 
   const { data, updateData } = context;
-
-  // Generate height values
-  const generateHeightValues = (isMetric: boolean) => {
-    if (isMetric) {
-      // Centimeters (100-250 cm)
-      return Array.from({ length: 151 }, (_, i) => ({
-        label: `${i + 100} cm`,
-        value: i + 100
-      }));
-    } else {
-      // Feet (3-8)
-      return Array.from({ length: 6 }, (_, i) => ({
-        label: `${i + 3} ft`,
-        value: i + 3
-      }));
-    }
-  };
-
-  // Generate inches values (0-11)
-  const generateInchesValues = () => {
-    return Array.from({ length: 12 }, (_, i) => ({
-      label: `${i} in`,
-      value: i
-    }));
-  };
-
-  // Generate weight values
-  const generateWeightValues = (isMetric: boolean) => {
-    if (isMetric) {
-      // Kilograms (30-200 kg, increments of 0.5)
-      return Array.from({ length: 341 }, (_, i) => ({
-        label: `${(i * 0.5) + 30} kg`,
-        value: (i * 0.5) + 30
-      }));
-    } else {
-      // Pounds (60-440 lbs)
-      return Array.from({ length: 381 }, (_, i) => ({
-        label: `${i + 60} lb`,
-        value: i + 60
-      }));
-    }
-  };
-
-  // Generate body fat percentage values (5-50%, increments of 0.5)
-  const generateFatValues = () => {
-    return Array.from({ length: 91 }, (_, i) => ({
-      label: `${(i * 0.5) + 5}%`,
-      value: (i * 0.5) + 5
-    }));
-  };
 
   const [isMetric, setIsMetric] = useState(data.weightUnit === "kg");
   const [heightValues, setHeightValues] = useState(generateHeightValues(isMetric));
@@ -95,9 +52,9 @@ const PhysicalData: React.FC = () => {
       });
     } else {
       // Convert ft/in to cm for storage
-      const heightInCm = Math.round((heightFt * 30.48) + (heightIn * 2.54));
+      const heightInCm = convertImperialToMetricHeight(heightFt, heightIn);
       // Convert lbs to kg for storage
-      const weightInKg = parseFloat((weight / 2.20462).toFixed(1));
+      const weightInKg = convertImperialToMetricWeight(weight);
       
       updateData({ 
         height: heightInCm,
@@ -122,21 +79,18 @@ const PhysicalData: React.FC = () => {
     // Convert values when switching systems
     if (newIsMetric) {
       // Convert from imperial to metric
-      const cmValue = Math.round((heightFt * 30.48) + (heightIn * 2.54));
+      const cmValue = convertImperialToMetricHeight(heightFt, heightIn);
       setHeightCm(cmValue);
       
-      const kgValue = parseFloat((weight / 2.20462).toFixed(1));
+      const kgValue = convertImperialToMetricWeight(weight);
       setWeight(kgValue);
     } else {
       // Convert from metric to imperial
-      const totalInches = heightCm / 2.54;
-      const ft = Math.floor(totalInches / 12);
-      const inches = Math.round(totalInches % 12);
-      
-      setHeightFt(ft);
+      const { feet, inches } = convertMetricToImperialHeight(heightCm);
+      setHeightFt(feet);
       setHeightIn(inches);
       
-      const lbsValue = Math.round(weight * 2.20462);
+      const lbsValue = convertMetricToImperialWeight(weight);
       setWeight(lbsValue);
     }
   };
@@ -147,105 +101,24 @@ const PhysicalData: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={6} totalSteps={20}>
-      <h1 className="text-2xl font-bold mb-4">Hablemos de ti</h1>
-      
-      <p className="text-muted-foreground mb-8">
-        Esta información nos ayuda a personalizar tu experiencia
-      </p>
-      
-      <div className="flex items-center justify-center mb-8 w-full">
-        <div className="flex items-center justify-between bg-secondary/30 rounded-lg p-3 w-72">
-          <span className={`text-sm ${!isMetric ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-            Imperial
-          </span>
-          <Switch 
-            checked={isMetric}
-            onCheckedChange={handleUnitChange}
-            className="mx-4"
-          />
-          <span className={`text-sm ${isMetric ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-            Métrico
-          </span>
-        </div>
-      </div>
-      
-      <div className="space-y-10 w-full max-w-xs mx-auto">
-        {isMetric ? (
-          <div className="space-y-2">
-            <label className="text-sm font-medium block mb-2">Altura</label>
-            <div className="h-[200px]">
-              {heightValues.length > 0 && (
-                <WheelSelector
-                  values={heightValues}
-                  onChange={(value) => setHeightCm(value)}
-                  initialValue={heightCm}
-                  className="w-full"
-                  labelClassName="text-lg"
-                />
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <label className="text-sm font-medium block mb-2">Altura</label>
-            <div className="flex space-x-2 h-[200px]">
-              {heightValues.length > 0 && (
-                <WheelSelector
-                  values={heightValues}
-                  onChange={(value) => setHeightFt(value)}
-                  initialValue={heightFt}
-                  className="w-1/2"
-                  labelClassName="text-lg"
-                />
-              )}
-              {inchesValues.length > 0 && (
-                <WheelSelector
-                  values={inchesValues}
-                  onChange={(value) => setHeightIn(value)}
-                  initialValue={heightIn}
-                  className="w-1/2"
-                  labelClassName="text-lg"
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium block mb-2">Peso</label>
-          <div className="h-[200px]">
-            {weightValues.length > 0 && (
-              <WheelSelector
-                values={weightValues}
-                onChange={(value) => setWeight(value)}
-                initialValue={weight}
-                className="w-full"
-                labelClassName="text-lg"
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium block mb-2">% Grasa Corporal (opcional)</label>
-          <div className="h-[200px]">
-            {fatValues.length > 0 && (
-              <WheelSelector
-                values={fatValues}
-                onChange={(value) => setBodyFat(value)}
-                initialValue={bodyFat}
-                className="w-full"
-                labelClassName="text-lg"
-              />
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            No te preocupes si no lo sabes con exactitud
-          </p>
-        </div>
-      </div>
-
-      <div className="h-20"></div> {/* Spacer for navigation */}
+      <PhysicalDataContent
+        isMetric={isMetric}
+        onUnitChange={handleUnitChange}
+        heightValues={heightValues}
+        inchesValues={inchesValues}
+        weightValues={weightValues}
+        fatValues={fatValues}
+        heightCm={heightCm}
+        heightFt={heightFt}
+        heightIn={heightIn}
+        weight={weight}
+        bodyFat={bodyFat}
+        setHeightCm={setHeightCm}
+        setHeightFt={setHeightFt}
+        setHeightIn={setHeightIn}
+        setWeight={setWeight}
+        setBodyFat={setBodyFat}
+      />
 
       <OnboardingNavigation 
         onNext={handleNext}
