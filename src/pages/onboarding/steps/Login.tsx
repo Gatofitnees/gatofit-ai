@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { LockKeyhole, Mail, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
-import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import { toast } from "@/components/ui/use-toast";
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle } = useAuth();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +22,7 @@ const Login: React.FC = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError("Por favor ingresa email y contraseña");
+      setError("Por favor ingresa tu email y contraseña");
       return;
     }
 
@@ -31,11 +30,13 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      const { error, data } = await signIn(email, password);
       
       if (error) {
-        if (error.message.includes("rate limit exceeded")) {
-          setError("Has alcanzado el límite de intentos. Por favor, espera unos minutos e intenta nuevamente.");
+        if (error.message.includes("Invalid login credentials")) {
+          setError("Email o contraseña incorrectos");
+        } else if (error.message.includes("rate limit exceeded")) {
+          setError("Has alcanzado el límite de intentos. Intenta de nuevo más tarde o utiliza Google para iniciar sesión.");
         } else {
           setError(error.message);
         }
@@ -43,12 +44,13 @@ const Login: React.FC = () => {
         // Successful login
         toast({
           title: "¡Bienvenido de nuevo!",
-          description: "Sesión iniciada correctamente",
+          description: "Has iniciado sesión exitosamente",
+          variant: "success",
         });
         navigate("/onboarding/app-transition");
       }
     } catch (err: any) {
-      setError(err.message || "Error al iniciar sesión");
+      setError(err.message || "Error iniciando sesión");
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ const Login: React.FC = () => {
       const { error } = await signInWithGoogle();
       
       if (error) {
-        setError(error.message);
+        setError("Error al iniciar sesión con Google: " + error.message);
         setGoogleLoading(false);
       }
       // The redirect to Google's auth page will happen automatically
@@ -76,12 +78,22 @@ const Login: React.FC = () => {
     navigate("/onboarding/create-account");
   };
 
+  const handleForgotPassword = () => {
+    // TODO: Implement forgot password functionality
+    toast({
+      title: "Recuperación de contraseña",
+      description: "Próximamente disponible",
+    });
+  };
+
   return (
-    <OnboardingLayout currentStep={19} totalSteps={20}>
-      <h1 className="text-2xl font-bold mb-2">Iniciar Sesión</h1>
+    <OnboardingLayout currentStep={18} totalSteps={20}>
+      <h1 className="text-2xl font-bold mb-2">
+        Inicia sesión en <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 animate-gradient">GatofitAI</span>
+      </h1>
       
       <p className="text-muted-foreground mb-6">
-        Accede a tu cuenta GatofitAI
+        Continúa tu viaje fitness
       </p>
 
       <div className="space-y-4 w-full max-w-md mx-auto">
@@ -115,7 +127,7 @@ const Login: React.FC = () => {
             </>
           )}
         </Button>
-        
+
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-muted"></div>
@@ -124,7 +136,7 @@ const Login: React.FC = () => {
             <span className="bg-background px-4 text-xs text-muted-foreground">o con tu email</span>
           </div>
         </div>
-        
+
         <div className="space-y-1">
           <label className="text-sm font-medium">Email</label>
           <div className="relative">
@@ -141,10 +153,7 @@ const Login: React.FC = () => {
         </div>
         
         <div className="space-y-1">
-          <div className="flex justify-between">
-            <label className="text-sm font-medium">Contraseña</label>
-            <button className="text-xs text-primary">¿Olvidaste tu contraseña?</button>
-          </div>
+          <label className="text-sm font-medium">Contraseña</label>
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
@@ -168,16 +177,27 @@ const Login: React.FC = () => {
               )}
             </button>
           </div>
+          <div className="flex justify-end">
+            <button 
+              onClick={handleForgotPassword}
+              className="text-xs text-primary"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="mt-6 w-full max-w-md mx-auto">
-        <OnboardingNavigation 
-          onNext={handleLogin}
-          nextDisabled={!email || !password}
-          nextLabel="Iniciar Sesión"
-          loading={loading}
-        />
+        <Button
+          className="w-full py-6 h-auto flex items-center justify-center space-x-2"
+          onClick={handleLogin}
+          disabled={loading || !email || !password}
+        >
+          {loading ? (
+            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+          ) : "Iniciar Sesión"}
+        </Button>
         
         <div className="text-center mt-6">
           <p className="text-sm text-muted-foreground">
