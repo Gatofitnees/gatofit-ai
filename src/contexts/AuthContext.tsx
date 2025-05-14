@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
+import { Session, User, Provider } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextProps {
@@ -12,6 +12,10 @@ interface AuthContextProps {
     data: any | null;
   }>;
   signIn: (email: string, password: string) => Promise<{
+    error: any | null;
+    data: any | null;
+  }>;
+  signInWithGoogle: () => Promise<{
     error: any | null;
     data: any | null;
   }>;
@@ -64,7 +68,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
       if (error) {
         toast({
-          title: "Error signing up",
+          title: "Error de registro",
           description: error.message,
           variant: "destructive",
         });
@@ -81,7 +85,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
         if (profileError) {
           toast({
-            title: "Error creating profile",
+            title: "Error al crear perfil",
             description: profileError.message,
             variant: "destructive",
           });
@@ -90,8 +94,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       }
 
       toast({
-        title: "Account created",
-        description: "Please check your email to verify your account",
+        title: "Cuenta creada",
+        description: "Por favor, verifica tu email",
       });
       return { error: null, data };
     } catch (err: any) {
@@ -113,7 +117,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
       if (error) {
         toast({
-          title: "Error signing in",
+          title: "Error de inicio de sesión",
           description: error.message,
           variant: "destructive",
         });
@@ -121,9 +125,38 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       }
 
       toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in",
+        title: "¡Bienvenido de nuevo!",
+        description: "Sesión iniciada exitosamente",
       });
+      return { error: null, data };
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+      return { error: err, data: null };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/onboarding/app-transition',
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Error al iniciar sesión con Google",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error, data: null };
+      }
+
       return { error: null, data };
     } catch (err: any) {
       toast({
@@ -138,8 +171,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const signOut = async () => {
     await supabase.auth.signOut();
     toast({
-      title: "Signed out",
-      description: "You have been signed out",
+      title: "Sesión cerrada",
+      description: "Has cerrado sesión exitosamente",
     });
   };
 
@@ -148,6 +181,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     user,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     loading,
   };
