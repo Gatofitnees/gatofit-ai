@@ -7,6 +7,7 @@ interface WheelItemProps {
   label: string;
   index: number;
   selectedIndex: number;
+  scrollOffset?: number;
   itemHeight: number;
   wheelHeight: number;
   halfVisibleItems: number;
@@ -19,6 +20,7 @@ const WheelItem: React.FC<WheelItemProps> = ({
   label,
   index,
   selectedIndex,
+  scrollOffset = 0,
   itemHeight,
   wheelHeight,
   halfVisibleItems,
@@ -31,16 +33,23 @@ const WheelItem: React.FC<WheelItemProps> = ({
   
   if (!visible) return null;
   
-  const opacity = 1 - Math.min(1, Math.abs(distance) / (halfVisibleItems + 1) * 0.8);
-  const scale = 1 - Math.min(0.3, Math.abs(distance) / (halfVisibleItems + 1) * 0.25);
-  const translateY = (index - selectedIndex) * itemHeight + (wheelHeight / 2 - itemHeight / 2);
+  // Calculate opacity and scale based on distance from center
+  const distanceRatio = Math.min(1, Math.abs(distance) / (halfVisibleItems + 1));
+  const opacity = 1 - distanceRatio * 0.75;
+  const scale = 1 - distanceRatio * 0.2;
+  
+  // Calculate vertical position with scroll offset for smooth animation
+  const translateY = (distance * itemHeight) - scrollOffset + (wheelHeight / 2 - itemHeight / 2);
+  
+  // Determine if this is the selected item
+  const isSelected = distance === 0;
   
   return (
     <motion.div
       key={`${index}-${label}`}
       className={cn(
         "absolute left-0 w-full flex items-center justify-center cursor-pointer transition-colors",
-        distance === 0 ? "text-primary font-medium" : "text-muted-foreground"
+        isSelected ? "text-primary font-medium" : "text-muted-foreground"
       )}
       style={{ 
         height: `${itemHeight}px`,
@@ -53,10 +62,10 @@ const WheelItem: React.FC<WheelItemProps> = ({
         scale,
       }}
       transition={{ 
-        type: "spring", 
-        stiffness: 280, 
-        damping: 25,
-        duration: isAnimating ? 0.3 : 0.1
+        type: isAnimating ? "spring" : "tween",
+        stiffness: isAnimating ? 300 : 400,
+        damping: isAnimating ? 30 : 40,
+        duration: isAnimating ? 0.3 : 0.15
       }}
       onClick={() => onClick(index)}
     >
