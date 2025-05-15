@@ -1,12 +1,13 @@
 
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, Calendar, ArrowUpCircle, List, Calculator, BookOpenCheck } from "lucide-react";
+import { BarChart3, Calendar, ArrowUpCircle, List, Calculator, BookOpenCheck, ArrowLeft } from "lucide-react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { OnboardingContext } from "../OnboardingFlow";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import SwipeableCarousel from "@/components/onboarding/SwipeableCarousel";
+import GatofitAILogo from "@/components/GatofitAILogo";
 
 const FeatureCard: React.FC<{
   title: string;
@@ -14,7 +15,7 @@ const FeatureCard: React.FC<{
   icon: React.ReactNode;
 }> = ({ title, description, icon }) => {
   return (
-    <div className="flex flex-col items-center p-5 rounded-2xl bg-secondary/20 shadow-neu-card text-center h-full">
+    <div className="flex flex-col items-center p-4 rounded-2xl bg-secondary/20 shadow-neu-card text-center h-full">
       <div className="bg-primary/10 p-3 rounded-xl mb-3">
         {icon}
       </div>
@@ -26,6 +27,7 @@ const FeatureCard: React.FC<{
 
 const FeaturesPreview: React.FC = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
   const context = useContext(OnboardingContext);
   
   if (!context) {
@@ -65,14 +67,27 @@ const FeaturesPreview: React.FC = () => {
     },
   ];
 
+  // Auto-scroll carousel every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % features.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [features.length]);
+
   const handleNext = () => {
     navigate("/onboarding/create-account");
+  };
+  
+  const handleBack = () => {
+    navigate(-1);
   };
 
   return (
     <OnboardingLayout currentStep={17} totalSteps={20}>
       <h1 className="text-2xl font-bold mb-2">
-        Descubre cómo <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 animate-gradient">GatofitAI</span> te impulsará
+        Descubre cómo <GatofitAILogo size="lg" className="inline-block" /> te impulsará
       </h1>
       
       <p className="text-muted-foreground mb-6">
@@ -80,11 +95,11 @@ const FeaturesPreview: React.FC = () => {
       </p>
 
       <div className="w-full flex-1 flex flex-col justify-between">
-        <div className="flex-grow pb-6">
-          <SwipeableCarousel reduceSize={true}>
+        <div className="flex-grow">
+          <SwipeableCarousel autoScroll currentSlide={currentSlide} onSlideChange={setCurrentSlide}>
             {features.map((feature, index) => (
               <div key={index} className="px-1 py-1">
-                <AspectRatio ratio={4/5}>
+                <AspectRatio ratio={3/4}>
                   <FeatureCard
                     title={feature.title}
                     description={feature.description}
@@ -97,7 +112,7 @@ const FeaturesPreview: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-full mt-2">
+      <div className="w-full mt-8 space-y-4">
         <motion.button
           className="w-full flex items-center justify-center py-3 px-4 bg-primary hover:bg-primary/90 text-white rounded-xl text-center neu-button"
           onClick={handleNext}
@@ -105,6 +120,14 @@ const FeaturesPreview: React.FC = () => {
         >
           <span>Crear Cuenta</span>
         </motion.button>
+        
+        <button
+          onClick={handleBack}
+          className="flex items-center justify-center py-2 w-full text-sm text-muted-foreground"
+        >
+          <ArrowLeft size={16} className="mr-2" />
+          Atrás
+        </button>
       </div>
     </OnboardingLayout>
   );

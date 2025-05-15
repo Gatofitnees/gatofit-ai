@@ -12,6 +12,7 @@ interface WheelItemProps {
   halfVisibleItems: number;
   onClick: (index: number) => void;
   labelClassName?: string;
+  isAnimating?: boolean;
 }
 
 const WheelItem: React.FC<WheelItemProps> = ({
@@ -22,10 +23,11 @@ const WheelItem: React.FC<WheelItemProps> = ({
   wheelHeight,
   halfVisibleItems,
   onClick,
-  labelClassName
+  labelClassName,
+  isAnimating = false
 }) => {
   const distance = index - selectedIndex;
-  const visible = Math.abs(distance) <= halfVisibleItems;
+  const visible = Math.abs(distance) <= halfVisibleItems + 1; // +1 to render one more item for smooth scrolling
   
   if (!visible) return null;
   
@@ -43,12 +45,19 @@ const WheelItem: React.FC<WheelItemProps> = ({
       style={{ 
         height: `${itemHeight}px`,
         top: 0,
+        zIndex: 100 - Math.abs(distance)
+      }}
+      animate={{ 
         y: translateY,
         opacity,
         scale,
-        zIndex: 100 - Math.abs(distance)
       }}
-      initial={false}
+      transition={{ 
+        type: "spring", 
+        stiffness: 300, 
+        damping: 30,
+        duration: isAnimating ? 0.3 : 0.1
+      }}
       onClick={() => onClick(index)}
     >
       <span className={cn("select-none text-center truncate px-2", labelClassName)}>

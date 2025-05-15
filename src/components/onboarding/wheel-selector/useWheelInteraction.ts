@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { calculateNewIndex } from "./utils";
 
 interface UseWheelInteractionProps {
@@ -16,29 +16,54 @@ export function useWheelInteraction({
   initialSelectedIndex
 }: UseWheelInteractionProps) {
   const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex);
+  const [isAnimating, setIsAnimating] = useState(false);
   const isDragging = useRef(false);
   const startY = useRef(0);
   const currentTranslateY = useRef(0);
   const touchId = useRef<number | null>(null);
+  const momentumId = useRef<number | null>(null);
+  const velocity = useRef(0);
+  const lastY = useRef(0);
+  const lastTime = useRef(0);
+
+  // Clear any ongoing animations when component unmounts
+  useEffect(() => {
+    return () => {
+      if (momentumId.current !== null) {
+        cancelAnimationFrame(momentumId.current);
+      }
+    };
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (touchId.current !== null) return;
     
     const touch = e.touches[0];
     touchId.current = touch.identifier;
-    isDragging.current = true;
-    startY.current = touch.clientY;
-    currentTranslateY.current = 0;
-    document.body.style.overflow = "hidden"; // Prevent scrolling
+    handleStartDrag(touch.clientY);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDragging.current) return;
     
+    handleStartDrag(e.clientY);
+  };
+
+  const handleStartDrag = (clientY: number) => {
+    // Clear any ongoing momentum animation
+    if (momentumId.current !== null) {
+      cancelAnimationFrame(momentumId.current);
+      momentumId.current = null;
+    }
+    
     isDragging.current = true;
-    startY.current = e.clientY;
+    startY.current = clientY;
+    lastY.current = clientY;
+    lastTime.current = Date.now();
     currentTranslateY.current = 0;
+    velocity.current = 0;
     document.body.style.overflow = "hidden"; // Prevent scrolling
+    setIsAnimating(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -56,20 +81,28 @@ export function useWheelInteraction({
     if (touchIndex === -1) return;
     
     const currentY = e.touches[touchIndex].clientY;
-    const diffY = currentY - startY.current;
-    currentTranslateY.current = diffY;
-    
-    const newIndex = calculateNewIndex(diffY, itemHeight, selectedIndex, values.length);
-    if (newIndex !== selectedIndex) {
-      setSelectedIndex(newIndex);
-    }
+    handleMove(currentY);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging.current) return;
     
-    const currentY = e.clientY;
-    const diffY = currentY - startY.current;
+    handleMove(e.clientY);
+  };
+
+  const handleMove = (clientY: number) => {
+    const currentTime = Date.now();
+    const deltaTime = currentTime - lastTime.current;
+    
+    if (deltaTime > 0) {
+      const deltaY = clientY - lastY.current;
+      velocity.current = deltaY / deltaTime * 15; // Adjust multiplier for momentum sensitivity
+    }
+    
+    lastY.current = clientY;
+    lastTime.current = currentTime;
+    
+    const diffY = clientY - startY.current;
     currentTranslateY.current = diffY;
     
     const newIndex = calculateNewIndex(diffY, itemHeight, selectedIndex, values.length);
@@ -89,30 +122,78 @@ export function useWheelInteraction({
     }
     
     if (found) {
-      isDragging.current = false;
-      touchId.current = null;
-      document.body.style.overflow = ""; // Re-enable scrolling
+      handleEndDrag();
     }
   };
 
-  const handleEnd = () => {
+  const handleEndDrag = () => {
     isDragging.current = false;
+    touchId.current = null;
     document.body.style.overflow = ""; // Re-enable scrolling
+    
+    // Apply momentum if velocity is significant
+    if (Math.abs(velocity.current) > 0.5) {
+      applyMomentum();
+    } else {
+      // Ensure we snap to the closest item
+      snapToClosestItem();
+    }
+  };
+
+  const applyMomentum = () => {
+    setIsAnimating(true);
+    
+    const animate = () => {
+      // Determine final index based on current velocity
+      const estimatedDistance = velocity.current * 10; // How far it would travel
+      const estimatedIndexChange = Math.round(estimatedDistance / itemHeight);
+      let targetIndex = Math.max(0, Math.min(values.length - 1, selectedIndex - estimatedIndexChange));
+      
+      // Animate to the target index
+      setSelectedIndex(targetIndex);
+      
+      // Decelerate the momentum
+      velocity.current = 0;
+      momentumId.current = null;
+      
+      // Small delay before allowing new interactions
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 300);
+    };
+    
+    momentumId.current = requestAnimationFrame(animate);
+  };
+
+  const snapToClosestItem = () => {
+    // No need to snap, the index is already integer-based
+    // but we can add a small animation to make it look smoother
+    setIsAnimating(true);
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 300);
   };
 
   const handleItemClick = (index: number) => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
     setSelectedIndex(index);
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 300);
   };
 
   return {
     selectedIndex,
     setSelectedIndex,
+    isAnimating,
     handleTouchStart,
     handleMouseDown,
     handleTouchMove,
     handleMouseMove,
     handleTouchEnd,
-    handleEnd,
+    handleEndDrag,
     handleItemClick
   };
 }

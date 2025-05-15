@@ -41,12 +41,13 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
   const {
     selectedIndex,
     setSelectedIndex,
+    isAnimating,
     handleTouchStart,
     handleMouseDown,
     handleTouchMove,
     handleMouseMove,
     handleTouchEnd,
-    handleEnd,
+    handleEndDrag,
     handleItemClick
   } = useWheelInteraction({
     itemHeight,
@@ -66,9 +67,11 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
   useEffect(() => {
     if (initialValue !== undefined && values && values.length > 0) {
       const index = values.findIndex(item => item.value === initialValue);
-      setSelectedIndex(index !== -1 ? index : 0);
+      if (index !== -1 && index !== selectedIndex) {
+        setSelectedIndex(index);
+      }
     }
-  }, [initialValue, values, setSelectedIndex]);
+  }, [initialValue, values, setSelectedIndex, selectedIndex]);
 
   const wheelHeight = itemHeight * visibleItems;
   const halfVisibleItems = Math.floor(visibleItems / 2);
@@ -84,8 +87,8 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
       onTouchCancel={handleTouchEnd}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
+      onMouseUp={handleEndDrag}
+      onMouseLeave={handleEndDrag}
     >
       {/* Center highlight */}
       <div className="absolute left-0 top-1/2 w-full h-[40px] -translate-y-1/2 bg-primary/10 pointer-events-none z-10"></div>
@@ -103,6 +106,7 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
             halfVisibleItems={halfVisibleItems}
             onClick={handleItemClick}
             labelClassName={labelClassName}
+            isAnimating={isAnimating}
           />
         ))}
       </div>

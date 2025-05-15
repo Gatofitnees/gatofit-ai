@@ -92,6 +92,25 @@ export default {
         "shine": {
           from: { backgroundPosition: "0% center" },
           to: { backgroundPosition: "200% center" }
+        },
+        "galaxy-shift": {
+          "0%": { 
+            backgroundPosition: "0% 50%",
+            filter: "hue-rotate(0deg) brightness(1)"
+          },
+          "50%": { 
+            backgroundPosition: "100% 50%",
+            filter: "hue-rotate(30deg) brightness(1.2)"
+          },
+          "100%": { 
+            backgroundPosition: "0% 50%",
+            filter: "hue-rotate(0deg) brightness(1)"
+          }
+        },
+        "galaxy-star": {
+          "0%": { opacity: "0.3" },
+          "50%": { opacity: "1" },
+          "100%": { opacity: "0.3" }
         }
       },
       animation: {
@@ -100,7 +119,8 @@ export default {
         "fade-in": "fade-in 0.5s ease-out forwards",
         "pulse-ring": "pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "progress-fill": "progress-fill 1s ease-out forwards",
-        "shine": "shine 4s linear infinite"
+        "shine": "shine 4s linear infinite",
+        "galaxy-pulse": "galaxy-shift 8s ease-in-out infinite, galaxy-star 3s ease-in-out infinite"
       },
       boxShadow: {
         'inner-light': 'inset 1px 1px 1px rgba(255, 255, 255, 0.07)',

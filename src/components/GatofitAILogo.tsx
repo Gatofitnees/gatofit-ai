@@ -20,7 +20,7 @@ const GatofitAILogo: React.FC<GatofitAILogoProps> = ({
 
   return (
     <h1 className={cn(
-      "font-bold text-galactic", 
+      "font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-600 to-blue-500 animate-galaxy-pulse", 
       sizeClasses[size],
       className
     )}>
