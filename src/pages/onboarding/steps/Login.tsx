@@ -46,10 +46,9 @@ const Login: React.FC = () => {
         }
       } else {
         // Successful login
-        toast({
+        toast.success({
           title: "¡Bienvenido de nuevo!",
-          description: "Has iniciado sesión exitosamente",
-          variant: "success",
+          description: "Has iniciado sesión exitosamente"
         });
         navigate("/onboarding/app-transition");
       }
@@ -84,9 +83,8 @@ const Login: React.FC = () => {
 
   const handleForgotPassword = () => {
     // TODO: Implement forgot password functionality
-    toast({
-      title: "Recuperación de contraseña",
-      description: "Próximamente disponible",
+    toast.show("Recuperación de contraseña", {
+      description: "Próximamente disponible"
     });
   };
 

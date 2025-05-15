@@ -72,10 +72,9 @@ const CreateAccount: React.FC = () => {
         }
       } else {
         // Successful signup
-        toast({
+        toast.success({
           title: "¡Cuenta creada!",
-          description: "Te hemos enviado un email de verificación",
-          variant: "success",
+          description: "Te hemos enviado un email de verificación"
         });
         navigate("/onboarding/app-transition");
       }
