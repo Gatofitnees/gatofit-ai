@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import WheelItem from "./WheelItem";
@@ -35,25 +36,22 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
 
   const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex !== -1 ? initialSelectedIndex : 0);
   const [isDragging, setIsDragging] = useState(false);
-  const [scrollOffset, setScrollOffset] = useState(0);
-  const [startY, setStartY] = useState(0);
-  const [scrollVelocity, setScrollVelocity] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [momentum, setMomentum] = useState(0);
   
-  // Refs for animation and interaction tracking
   const lastY = useRef(0);
-  const lastTime = useRef(Date.now());
-  const animationRef = useRef<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const velocityTracker = useRef<Array<{time: number, position: number}>>([]);
+  const lastTime = useRef(0);
+  const animationFrameRef = useRef<number | null>(null);
   const selectedIndexRef = useRef(selectedIndex);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track selected index in a ref to avoid closure issues in animations
+  // Update ref when selectedIndex changes
   useEffect(() => {
     selectedIndexRef.current = selectedIndex;
   }, [selectedIndex]);
 
-  // Notify parent component when selection changes
+  // Notify parent component of value changes
   useEffect(() => {
     if (values && values.length > 0 && selectedIndex >= 0 && selectedIndex < values.length) {
       onChange(values[selectedIndex].value);
@@ -66,220 +64,218 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
       const index = values.findIndex(item => item.value === initialValue);
       if (index !== -1 && index !== selectedIndex) {
         setSelectedIndex(index);
-        cancelAnimation();
-        setScrollOffset(0);
+        cancelAnimationFrame();
+        setOffset(0);
       }
     }
   }, [initialValue, values, selectedIndex]);
 
-  // Clean up any animations when component unmounts
+  // Cleanup animation on unmount
   useEffect(() => {
     return () => {
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
 
-  // Helper function to cancel current animation
-  const cancelAnimation = useCallback(() => {
-    if (animationRef.current !== null) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
+  // Helper function to cancel any ongoing animations
+  const cancelAnimationFrame = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
     setIsAnimating(false);
   }, []);
 
-  // Process new position and calculate velocity
-  const processMovement = useCallback((clientY: number, time: number) => {
-    // Calculate new position
-    const delta = clientY - startY;
-    
-    // Update velocity tracker (keep last 5 points for better accuracy)
-    velocityTracker.current.push({ time, position: clientY });
-    if (velocityTracker.current.length > 5) {
-      velocityTracker.current.shift();
-    }
-    
-    // Calculate velocity based on recent movements
-    if (velocityTracker.current.length >= 2) {
-      const newest = velocityTracker.current[velocityTracker.current.length - 1];
-      const oldest = velocityTracker.current[0];
+  // Smoothly snap to the closest item
+  const snapToClosest = useCallback(() => {
+    cancelAnimationFrame();
+    setIsAnimating(true);
+
+    // Round offset to closest item
+    const targetOffset = 0; // Always snap to center (zero offset)
+    const startOffset = offset;
+    const distance = targetOffset - startOffset;
+    const duration = 300; // ms
+    const startTime = performance.now();
+
+    const animateSnap = (timestamp: number) => {
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeOutQuint(progress); // Smoother easing
       
-      const timeDelta = newest.time - oldest.time;
-      if (timeDelta > 0) {
-        const posDelta = newest.position - oldest.position;
-        // Scale factor to make velocity feel natural
-        const newVelocity = (posDelta / timeDelta) * 12; 
-        setScrollVelocity(newVelocity);
+      const currentOffset = startOffset + (distance * easedProgress);
+      setOffset(currentOffset);
+      
+      if (progress < 1) {
+        animationFrameRef.current = window.requestAnimationFrame(animateSnap);
+      } else {
+        setOffset(0); // Ensure we end at exactly 0 offset
+        setIsAnimating(false);
+        animationFrameRef.current = null;
       }
-    }
+    };
     
-    // Calculate how much the wheel should move
-    const sensitivity = 0.6; // Lower = less sensitive
-    const offset = delta * sensitivity;
-    
-    // Calculate theoretical new index based on offset
-    const rawIndexChange = offset / itemHeight;
-    
-    // Calculate potential new index
-    const newIndex = Math.max(
-      0, 
-      Math.min(
-        values.length - 1, 
-        Math.round(initialSelectedIndex - rawIndexChange)
-      )
-    );
-    
-    // Update scroll offset to reflect partial movement between indices
-    const fractionalPart = rawIndexChange % 1;
-    setScrollOffset(fractionalPart * itemHeight);
-    
-    // Update selected index if changed
-    if (newIndex !== selectedIndexRef.current) {
-      setSelectedIndex(newIndex);
-    }
-  }, [startY, initialSelectedIndex, values.length, itemHeight]);
+    animationFrameRef.current = window.requestAnimationFrame(animateSnap);
+  }, [offset, cancelAnimationFrame]);
 
-  // Handle interaction start
+  // Handle start of interaction (touch/mouse down)
   const handleStart = useCallback((clientY: number) => {
-    // Cancel any ongoing animation
-    cancelAnimation();
-    
-    // Reset velocity tracking and start position
-    velocityTracker.current = [];
+    cancelAnimationFrame();
     setIsDragging(true);
-    setStartY(clientY);
     lastY.current = clientY;
-    lastTime.current = Date.now();
-    setScrollVelocity(0);
-    setScrollOffset(0);
-  }, [cancelAnimation]);
+    lastTime.current = performance.now();
+    setMomentum(0);
+  }, [cancelAnimationFrame]);
 
-  // Handle interaction move
+  // Handle movement during interaction
   const handleMove = useCallback((clientY: number) => {
     if (!isDragging) return;
+
+    const now = performance.now();
+    const deltaY = clientY - lastY.current;
+    const deltaTime = now - lastTime.current;
     
-    const now = Date.now();
-    processMovement(clientY, now);
+    // Calculate instantaneous velocity (with direction)
+    if (deltaTime > 0) {
+      const velocity = deltaY / deltaTime * 10; // Scale for better feel
+      setMomentum(velocity);
+    }
+    
+    // Calculate new offset and limit it
+    const sensitivity = 0.5; // Lower number = less sensitive
+    const newOffset = offset + (deltaY * sensitivity);
+    
+    // Calculate index change based on offset
+    const indexChange = Math.floor(Math.abs(newOffset) / itemHeight) * Math.sign(newOffset);
+    
+    if (indexChange !== 0) {
+      // Update selected index
+      const newIndex = Math.max(
+        0, 
+        Math.min(
+          values.length - 1, 
+          selectedIndexRef.current - indexChange
+        )
+      );
+      
+      if (newIndex !== selectedIndexRef.current) {
+        setSelectedIndex(newIndex);
+        setOffset(newOffset - (indexChange * itemHeight)); // Adjust offset
+      }
+    } else {
+      setOffset(newOffset);
+    }
     
     lastY.current = clientY;
     lastTime.current = now;
-  }, [isDragging, processMovement]);
+  }, [isDragging, offset, itemHeight, values.length]);
 
-  // Apply momentum animation after user stops interaction
-  const applyMomentum = useCallback(() => {
-    if (Math.abs(scrollVelocity) < 0.1) {
-      snapToClosest();
-      return;
-    }
-    
-    setIsAnimating(true);
-    
-    let velocity = scrollVelocity;
-    let offset = scrollOffset;
-    let lastTimestamp = performance.now();
-    let accumulatedChange = 0;
-    
-    const animateMomentum = (timestamp: number) => {
-      // Time since last frame
-      const deltaTime = timestamp - lastTimestamp;
-      lastTimestamp = timestamp;
-      
-      // Apply friction to slow down the movement
-      velocity *= 0.95;
-      
-      // Calculate position change
-      const change = velocity * (deltaTime / 16.67); // Normalize to 60fps
-      offset += change;
-      accumulatedChange += change;
-      
-      // Update scroll offset for visual feedback
-      setScrollOffset(offset);
-      
-      // Check if we've moved enough to change the index
-      const indexChange = Math.floor(Math.abs(accumulatedChange) / itemHeight) * Math.sign(accumulatedChange);
-      
-      if (indexChange !== 0) {
-        // Update selected index and reset accumulated change
-        const newIndex = Math.max(0, Math.min(values.length - 1, selectedIndexRef.current - indexChange));
-        
-        if (newIndex !== selectedIndexRef.current) {
-          setSelectedIndex(newIndex);
-          accumulatedChange -= indexChange * itemHeight;
-        }
-      }
-      
-      // Continue animation if velocity is significant, otherwise snap
-      if (Math.abs(velocity) > 0.1) {
-        animationRef.current = requestAnimationFrame(animateMomentum);
-      } else {
-        snapToClosest();
-      }
-    };
-    
-    animationRef.current = requestAnimationFrame(animateMomentum);
-  }, [scrollVelocity, scrollOffset, itemHeight, values.length]);
-
-  // Snap to the closest index with animation
-  const snapToClosest = useCallback(() => {
-    setIsAnimating(true);
-    
-    const targetOffset = 0;
-    const startOffset = scrollOffset;
-    const distance = targetOffset - startOffset;
-    const startTime = performance.now();
-    const duration = 300; // Animation duration in ms
-    
-    const animate = (timestamp: number) => {
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeOutQuint(progress);
-      
-      const newOffset = startOffset + distance * easedProgress;
-      setScrollOffset(newOffset);
-      
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        // Animation complete
-        setScrollOffset(0);
-        setIsAnimating(false);
-        animationRef.current = null;
-      }
-    };
-    
-    animationRef.current = requestAnimationFrame(animate);
-  }, [scrollOffset]);
-
-  // Handle interaction end
+  // Handle end of interaction
   const handleEnd = useCallback(() => {
     if (!isDragging) return;
     
     setIsDragging(false);
     
-    // Apply momentum if there's velocity, otherwise snap to closest
-    if (Math.abs(scrollVelocity) > 0.5) {
+    // Apply momentum if significant, otherwise snap
+    if (Math.abs(momentum) > 0.5) {
       applyMomentum();
     } else {
       snapToClosest();
     }
-  }, [isDragging, scrollVelocity, applyMomentum, snapToClosest]);
+  }, [isDragging, momentum, snapToClosest]);
 
-  // Handle item click
-  const handleItemClick = useCallback((index: number) => {
-    if (isAnimating || index === selectedIndex) return;
-    
-    cancelAnimation();
+  // Apply momentum animation after interaction ends
+  const applyMomentum = useCallback(() => {
+    cancelAnimationFrame();
     setIsAnimating(true);
-    setSelectedIndex(index);
-    setScrollOffset(0);
     
-    // Brief animation for visual feedback
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 300);
-  }, [isAnimating, selectedIndex, cancelAnimation]);
+    let currentMomentum = momentum;
+    let currentOffset = offset;
+    let previousTime = performance.now();
+    let accumulatedOffset = 0;
+    
+    const animate = (timestamp: number) => {
+      const deltaTime = timestamp - previousTime;
+      previousTime = timestamp;
+      
+      // Apply friction to gradually reduce momentum
+      currentMomentum *= 0.95;
+      
+      // Apply momentum to offset
+      const change = currentMomentum * (deltaTime / 16); // Normalize to ~60fps
+      currentOffset += change;
+      accumulatedOffset += change;
+      
+      // Check if we've accumulated enough offset to change the index
+      const indexChange = Math.floor(Math.abs(accumulatedOffset) / itemHeight) * Math.sign(accumulatedOffset);
+      
+      if (indexChange !== 0) {
+        // Update selected index
+        const newIndex = Math.max(0, Math.min(values.length - 1, selectedIndexRef.current - indexChange));
+        
+        if (newIndex !== selectedIndexRef.current) {
+          setSelectedIndex(newIndex);
+          accumulatedOffset -= (indexChange * itemHeight);
+        }
+      }
+      
+      setOffset(currentOffset - (Math.floor(currentOffset / itemHeight) * itemHeight));
+      
+      // Continue animation or end it
+      if (Math.abs(currentMomentum) > 0.1) {
+        animationFrameRef.current = window.requestAnimationFrame(animate);
+      } else {
+        snapToClosest();
+      }
+    };
+    
+    animationFrameRef.current = window.requestAnimationFrame(animate);
+  }, [momentum, offset, itemHeight, values.length, cancelAnimationFrame, snapToClosest]);
+
+  // Handle click on a specific item
+  const handleItemClick = useCallback((index: number) => {
+    if (index === selectedIndex || isAnimating) return;
+    
+    cancelAnimationFrame();
+    setIsAnimating(true);
+    
+    // Animate to the target index
+    const startIndex = selectedIndex;
+    const targetIndex = index;
+    const distance = targetIndex - startIndex;
+    const duration = 300; // ms
+    const startTime = performance.now();
+    
+    const animateToIndex = (timestamp: number) => {
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeOutCubic(progress);
+      
+      const currentIndex = startIndex + (distance * easedProgress);
+      const newIndex = Math.round(currentIndex);
+      
+      if (newIndex !== selectedIndexRef.current) {
+        setSelectedIndex(newIndex);
+      }
+      
+      // Calculate fractional offset for smooth animation
+      const fractionalPart = currentIndex - Math.floor(currentIndex);
+      setOffset(-fractionalPart * itemHeight);
+      
+      if (progress < 1) {
+        animationFrameRef.current = window.requestAnimationFrame(animateToIndex);
+      } else {
+        setOffset(0);
+        setSelectedIndex(targetIndex);
+        setIsAnimating(false);
+        animationFrameRef.current = null;
+      }
+    };
+    
+    animationFrameRef.current = window.requestAnimationFrame(animateToIndex);
+  }, [selectedIndex, isAnimating, itemHeight, cancelAnimationFrame]);
 
   const wheelHeight = itemHeight * visibleItems;
   const halfVisibleItems = Math.floor(visibleItems / 2);
@@ -296,28 +292,36 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
       onMouseDown={(e) => handleStart(e.clientY)}
       onMouseMove={(e) => isDragging && handleMove(e.clientY)}
       onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
+      onMouseLeave={() => isDragging && handleEnd()}
     >
       {/* Center highlight */}
-      <div className="absolute left-0 top-1/2 w-full h-[40px] -translate-y-1/2 bg-primary/10 pointer-events-none z-10"></div>
+      <div className="absolute left-0 top-1/2 w-full h-[40px] -translate-y-1/2 bg-primary/10 pointer-events-none z-10" />
       
       {/* Items */}
       <div className="absolute left-0 w-full transform">
-        {values.map((item, index) => (
-          <WheelItem
-            key={`${index}-${item.value}`}
-            label={item.label}
-            index={index}
-            selectedIndex={selectedIndex}
-            scrollOffset={scrollOffset}
-            itemHeight={itemHeight}
-            wheelHeight={wheelHeight}
-            halfVisibleItems={halfVisibleItems}
-            onClick={handleItemClick}
-            labelClassName={labelClassName}
-            isAnimating={isAnimating}
-          />
-        ))}
+        {values.map((item, index) => {
+          // Calculate distance from selected item
+          const distance = index - selectedIndex;
+          
+          // Only render items that are visible or about to become visible
+          if (Math.abs(distance) > halfVisibleItems + 1) return null;
+          
+          return (
+            <WheelItem
+              key={`${index}-${item.value}`}
+              label={item.label}
+              index={index}
+              selectedIndex={selectedIndex}
+              offset={offset}
+              itemHeight={itemHeight}
+              wheelHeight={wheelHeight}
+              halfVisibleItems={halfVisibleItems}
+              onClick={handleItemClick}
+              labelClassName={labelClassName}
+              isAnimating={isAnimating}
+            />
+          );
+        })}
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ interface WheelItemProps {
   label: string;
   index: number;
   selectedIndex: number;
-  scrollOffset?: number;
+  offset?: number;
   itemHeight: number;
   wheelHeight: number;
   halfVisibleItems: number;
@@ -20,7 +20,7 @@ const WheelItem: React.FC<WheelItemProps> = ({
   label,
   index,
   selectedIndex,
-  scrollOffset = 0,
+  offset = 0,
   itemHeight,
   wheelHeight,
   halfVisibleItems,
@@ -29,32 +29,26 @@ const WheelItem: React.FC<WheelItemProps> = ({
   isAnimating = false
 }) => {
   const distance = index - selectedIndex;
-  const visible = Math.abs(distance) <= halfVisibleItems + 1; // +1 to render one more item for smooth scrolling
-  
-  if (!visible) return null;
   
   // Calculate opacity and scale based on distance from center
-  const distanceRatio = Math.min(1, Math.abs(distance) / (halfVisibleItems + 1));
+  const absDistance = Math.abs(distance);
+  const distanceRatio = Math.min(1, absDistance / (halfVisibleItems + 0.5));
   const opacity = 1 - distanceRatio * 0.75;
   const scale = 1 - distanceRatio * 0.2;
   
-  // Calculate vertical position with scroll offset for smooth animation
-  const translateY = (distance * itemHeight) - scrollOffset + (wheelHeight / 2 - itemHeight / 2);
-  
-  // Determine if this is the selected item
-  const isSelected = distance === 0;
+  // Calculate vertical position with offset for smooth animation
+  const translateY = (distance * itemHeight) + offset + (wheelHeight / 2 - itemHeight / 2);
   
   return (
     <motion.div
-      key={`${index}-${label}`}
       className={cn(
         "absolute left-0 w-full flex items-center justify-center cursor-pointer transition-colors",
-        isSelected ? "text-primary font-medium" : "text-muted-foreground"
+        distance === 0 ? "text-primary font-medium" : "text-muted-foreground"
       )}
       style={{ 
         height: `${itemHeight}px`,
         top: 0,
-        zIndex: 100 - Math.abs(distance)
+        zIndex: 100 - absDistance,
       }}
       animate={{ 
         y: translateY,
