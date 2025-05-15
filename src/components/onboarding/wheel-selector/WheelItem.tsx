@@ -1,7 +1,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useWheelItemAnimation } from "./hooks/useWheelItemAnimation";
+import { getWheelItemContainerStyles, getWheelItemLabelStyles } from "./styles/wheelItemStyles";
 
 interface WheelItemProps {
   label: string;
@@ -28,42 +29,45 @@ const WheelItem: React.FC<WheelItemProps> = ({
   labelClassName,
   isAnimating = false
 }) => {
-  const distance = index - selectedIndex;
+  // Extract animation logic to custom hook
+  const {
+    opacity,
+    scale,
+    translateY,
+    zIndex,
+    isSelected,
+    transition
+  } = useWheelItemAnimation({
+    index,
+    selectedIndex,
+    offset,
+    itemHeight,
+    wheelHeight,
+    halfVisibleItems,
+    isAnimating
+  });
   
-  // Calculate opacity and scale based on distance from center
-  const absDistance = Math.abs(distance);
-  const distanceRatio = Math.min(1, absDistance / (halfVisibleItems + 0.5));
-  const opacity = 1 - distanceRatio * 0.75;
-  const scale = 1 - distanceRatio * 0.2;
-  
-  // Calculate vertical position with offset for smooth animation
-  const translateY = (distance * itemHeight) + offset + (wheelHeight / 2 - itemHeight / 2);
+  // Get computed class names from style helpers
+  const containerClassName = getWheelItemContainerStyles(isSelected);
+  const labelStyles = getWheelItemLabelStyles(labelClassName);
   
   return (
     <motion.div
-      className={cn(
-        "absolute left-0 w-full flex items-center justify-center cursor-pointer transition-colors",
-        distance === 0 ? "text-primary font-medium" : "text-muted-foreground"
-      )}
+      className={containerClassName}
       style={{ 
         height: `${itemHeight}px`,
         top: 0,
-        zIndex: 100 - absDistance,
+        zIndex,
       }}
       animate={{ 
         y: translateY,
         opacity,
         scale,
       }}
-      transition={{ 
-        type: isAnimating ? "spring" : "tween",
-        stiffness: isAnimating ? 300 : 400,
-        damping: isAnimating ? 30 : 40,
-        duration: isAnimating ? 0.3 : 0.15
-      }}
+      transition={transition}
       onClick={() => onClick(index)}
     >
-      <span className={cn("select-none text-center truncate px-2", labelClassName)}>
+      <span className={labelStyles}>
         {label}
       </span>
     </motion.div>
