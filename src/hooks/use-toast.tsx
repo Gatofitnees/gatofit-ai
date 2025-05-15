@@ -142,12 +142,10 @@ function useToast() {
 }
 
 // Create a safe way to use toast outside of components
+// Use proper object literal syntax for the toast object
 const toast = {
-  // Default implementation that will be used outside of React components
-  // This will just forward to sonnerToast
-  (...args: Parameters<typeof sonnerToast>): void {
-    return sonnerToast(...args);
-  },
+  // Use a named method instead of trying to make the object callable
+  show: (message: string, options?: any) => sonnerToast(message, options),
   error: (message: string, options?: any) => sonnerToast.error(message, options),
   success: (message: string, options?: any) => sonnerToast.success(message, options),
   dismiss: (toastId?: string) => sonnerToast.dismiss(toastId)
