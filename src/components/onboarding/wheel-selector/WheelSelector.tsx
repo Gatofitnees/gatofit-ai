@@ -74,7 +74,7 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
   useEffect(() => {
     return () => {
       if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
+        window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
