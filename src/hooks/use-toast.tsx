@@ -141,13 +141,56 @@ function useToast() {
   };
 }
 
+// Define the type for our toast functions to accept either a string message or a props object
+type ToastInput = string | {
+  title?: string;
+  description?: string;
+  duration?: number;
+  [key: string]: any;
+};
+
+// Helper function to normalize input to a consistent format
+function normalizeToastInput(input: ToastInput, options?: any): { title: string; description?: string; [key: string]: any } {
+  if (typeof input === 'string') {
+    return { 
+      title: input,
+      ...options
+    };
+  } else {
+    return input;
+  }
+}
+
 // Create a safe way to use toast outside of components
-// Use proper object literal syntax for the toast object
 const toast = {
-  // Use a named method instead of trying to make the object callable
-  show: (message: string, options?: any) => sonnerToast(message, options),
-  error: (message: string, options?: any) => sonnerToast.error(message, options),
-  success: (message: string, options?: any) => sonnerToast.success(message, options),
+  // Show a default toast with a title and optional description
+  show: (input: ToastInput, options?: any) => {
+    const normalizedInput = normalizeToastInput(input, options);
+    return sonnerToast(normalizedInput.title, { 
+      description: normalizedInput.description,
+      ...options 
+    });
+  },
+  
+  // Show an error toast
+  error: (input: ToastInput, options?: any) => {
+    const normalizedInput = normalizeToastInput(input, options);
+    return sonnerToast.error(normalizedInput.title, { 
+      description: normalizedInput.description,
+      ...options 
+    });
+  },
+  
+  // Show a success toast
+  success: (input: ToastInput, options?: any) => {
+    const normalizedInput = normalizeToastInput(input, options);
+    return sonnerToast.success(normalizedInput.title, { 
+      description: normalizedInput.description,
+      ...options 
+    });
+  },
+  
+  // Dismiss a toast by id
   dismiss: (toastId?: string) => sonnerToast.dismiss(toastId)
 };
 
