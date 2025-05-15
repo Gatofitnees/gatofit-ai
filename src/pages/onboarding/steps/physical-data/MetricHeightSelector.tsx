@@ -1,6 +1,6 @@
 
 import React from "react";
-import WheelSelector from "@/components/onboarding/WheelSelector";
+import WheelSelector from "@/components/onboarding/wheel-selector/WheelSelector";
 
 interface MetricHeightSelectorProps {
   heightValues: Array<{ label: string; value: number }>;
@@ -23,7 +23,9 @@ const MetricHeightSelector: React.FC<MetricHeightSelectorProps> = ({
             onChange={onHeightChange}
             initialValue={heightCm}
             className="w-full"
-            labelClassName="text-lg"
+            labelClassName="text-lg font-medium"
+            itemHeight={45}
+            visibleItems={5}
           />
         )}
       </div>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import WheelSelector from "@/components/onboarding/WheelSelector";
+import WheelSelector from "@/components/onboarding/wheel-selector/WheelSelector";
 
 interface WeightSelectorProps {
   weightValues: Array<{ label: string; value: number }>;
@@ -23,7 +23,9 @@ const WeightSelector: React.FC<WeightSelectorProps> = ({
             onChange={onWeightChange}
             initialValue={weight}
             className="w-full"
-            labelClassName="text-lg"
+            labelClassName="text-lg font-medium"
+            itemHeight={45}
+            visibleItems={5}
           />
         )}
       </div>

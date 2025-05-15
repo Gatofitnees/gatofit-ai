@@ -1,6 +1,6 @@
 
 import React from "react";
-import WheelSelector from "@/components/onboarding/WheelSelector";
+import WheelSelector from "@/components/onboarding/wheel-selector/WheelSelector";
 
 interface DateSelectorsProps {
   day: number;
@@ -34,7 +34,9 @@ const DateSelectors: React.FC<DateSelectorsProps> = ({
             onChange={(value) => setDay(value)}
             initialValue={day}
             className="h-full"
-            labelClassName="text-xl"
+            labelClassName="text-xl font-medium"
+            itemHeight={45}
+            visibleItems={5}
           />
         )}
       </div>
@@ -45,7 +47,9 @@ const DateSelectors: React.FC<DateSelectorsProps> = ({
             onChange={(value) => setMonth(value)}
             initialValue={month}
             className="h-full"
-            labelClassName="text-xl"
+            labelClassName="text-xl font-medium"
+            itemHeight={45}
+            visibleItems={5}
           />
         )}
       </div>
@@ -56,7 +60,9 @@ const DateSelectors: React.FC<DateSelectorsProps> = ({
             onChange={(value) => setYear(value)}
             initialValue={year}
             className="h-full"
-            labelClassName="text-xl"
+            labelClassName="text-xl font-medium"
+            itemHeight={45}
+            visibleItems={5}
           />
         )}
       </div>

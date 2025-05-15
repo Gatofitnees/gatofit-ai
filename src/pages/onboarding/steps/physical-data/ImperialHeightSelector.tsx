@@ -1,6 +1,6 @@
 
 import React from "react";
-import WheelSelector from "@/components/onboarding/WheelSelector";
+import WheelSelector from "@/components/onboarding/wheel-selector/WheelSelector";
 
 interface ImperialHeightSelectorProps {
   heightValues: Array<{ label: string; value: number }>;
@@ -29,7 +29,9 @@ const ImperialHeightSelector: React.FC<ImperialHeightSelectorProps> = ({
             onChange={onHeightFtChange}
             initialValue={heightFt}
             className="w-1/2"
-            labelClassName="text-lg"
+            labelClassName="text-lg font-medium"
+            itemHeight={45}
+            visibleItems={5}
           />
         )}
         {inchesValues.length > 0 && (
@@ -38,7 +40,9 @@ const ImperialHeightSelector: React.FC<ImperialHeightSelectorProps> = ({
             onChange={onHeightInChange}
             initialValue={heightIn}
             className="w-1/2"
-            labelClassName="text-lg"
+            labelClassName="text-lg font-medium"
+            itemHeight={45}
+            visibleItems={5}
           />
         )}
       </div>

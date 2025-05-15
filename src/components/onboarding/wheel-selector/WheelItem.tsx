@@ -31,8 +31,8 @@ const WheelItem: React.FC<WheelItemProps> = ({
   
   if (!visible) return null;
   
-  const opacity = 1 - Math.min(1, Math.abs(distance) / (halfVisibleItems + 1));
-  const scale = 1 - Math.min(0.3, Math.abs(distance) / (halfVisibleItems + 1) * 0.3);
+  const opacity = 1 - Math.min(1, Math.abs(distance) / (halfVisibleItems + 1) * 0.8);
+  const scale = 1 - Math.min(0.3, Math.abs(distance) / (halfVisibleItems + 1) * 0.25);
   const translateY = (index - selectedIndex) * itemHeight + (wheelHeight / 2 - itemHeight / 2);
   
   return (
@@ -54,8 +54,8 @@ const WheelItem: React.FC<WheelItemProps> = ({
       }}
       transition={{ 
         type: "spring", 
-        stiffness: 300, 
-        damping: 30,
+        stiffness: 280, 
+        damping: 25,
         duration: isAnimating ? 0.3 : 0.1
       }}
       onClick={() => onClick(index)}
