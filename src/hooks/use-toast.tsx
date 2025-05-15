@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { toast as sonnerToast } from 'sonner';
 
@@ -143,7 +142,7 @@ function useToast() {
 
 // Define the type for our toast functions to accept either a string message or a props object
 type ToastInput = string | {
-  title?: string;
+  title: string;  // Make title required in the object type
   description?: string;
   duration?: number;
   [key: string]: any;
@@ -157,6 +156,7 @@ function normalizeToastInput(input: ToastInput, options?: any): { title: string;
       ...options
     };
   } else {
+    // Since we've updated ToastInput to require title, this should be safe
     return input;
   }
 }
