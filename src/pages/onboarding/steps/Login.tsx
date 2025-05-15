@@ -1,25 +1,28 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { LockKeyhole, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { motion } from "framer-motion";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import GatofitAILogo from "@/components/GatofitAILogo";
+import useAuthForm from "@/hooks/useAuthForm";
+import AccountForm from "@/components/onboarding/auth/AccountForm";
+import BackButton from "@/components/onboarding/auth/BackButton";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { 
+    email, setEmail,
+    password, setPassword,
+    confirmPassword: _, setConfirmPassword: __,
+    showPassword, setShowPassword,
+    agreedToTerms: ___, setAgreedToTerms: ____,
+    loading, setLoading,
+    googleLoading, setGoogleLoading,
+    error, setError
+  } = useAuthForm();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -102,77 +105,40 @@ const Login: React.FC = () => {
       </p>
 
       <div className="space-y-4 w-full max-w-md mx-auto">
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-500/10 text-red-500 p-3 rounded-lg text-sm"
+        <AccountForm 
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          confirmPassword={""}
+          setConfirmPassword={() => {}}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          agreedToTerms={false}
+          setAgreedToTerms={() => {}}
+          loading={loading}
+          error={error}
+        />
+        <div className="flex justify-end">
+          <button 
+            onClick={handleForgotPassword}
+            className="text-xs text-primary"
           >
-            {error}
-          </motion.div>
-        )}
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Email</label>
-          <div className="relative">
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="nombre@ejemplo.com"
-              className="neu-input pl-10"
-              disabled={loading}
-            />
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          </div>
-        </div>
-        
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Contraseña</label>
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Tu contraseña"
-              className="neu-input pl-10"
-              disabled={loading}
-            />
-            <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2"
-              disabled={loading}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Eye className="h-4 w-4 text-muted-foreground" />
-              )}
-            </button>
-          </div>
-          <div className="flex justify-end">
-            <button 
-              onClick={handleForgotPassword}
-              className="text-xs text-primary"
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
-          </div>
+            ¿Olvidaste tu contraseña?
+          </button>
         </div>
       </div>
 
       <div className="mt-6 w-full max-w-md mx-auto space-y-4">
-        <Button
-          className="w-full py-6 h-auto flex items-center justify-center space-x-2"
+        <button
+          className="w-full py-6 h-auto flex items-center justify-center space-x-2 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-neu-button active:shadow-neu-button-active disabled:opacity-50 disabled:pointer-events-none transition-all"
           onClick={handleLogin}
           disabled={loading || !email || !password}
         >
           {loading ? (
             <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
           ) : "Iniciar Sesión"}
-        </Button>
+        </button>
         
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
@@ -183,9 +149,8 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        <Button 
-          variant="outline" 
-          className="w-full py-6 h-auto flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10"
+        <button 
+          className="w-full py-6 h-auto flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10 border border-muted rounded-xl"
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
         >
@@ -202,7 +167,7 @@ const Login: React.FC = () => {
               <span>Continuar con Google</span>
             </>
           )}
-        </Button>
+        </button>
         
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
@@ -210,15 +175,7 @@ const Login: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex justify-center mt-4">
-          <button
-            onClick={handleBack}
-            className="flex items-center justify-center py-2 text-sm text-muted-foreground"
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Atrás
-          </button>
-        </div>
+        <BackButton onBack={handleBack} />
       </div>
     </OnboardingLayout>
   );
