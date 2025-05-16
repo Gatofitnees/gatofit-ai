@@ -6,68 +6,63 @@ import { toast } from "@/components/ui/use-toast";
  */
 export const authNotifications = {
   signUpSuccess: () => {
-    toast({
+    toast.show({
       title: "Cuenta creada",
       description: "Por favor, verifica tu email",
     });
   },
   
   signUpError: (message: string) => {
-    toast({
+    toast.error({
       title: "Error de registro",
       description: message,
-      variant: "destructive",
     });
   },
   
   profileCreationError: (message: string) => {
-    toast({
+    toast.error({
       title: "Error al crear perfil",
       description: message,
-      variant: "destructive",
     });
   },
   
   signInSuccess: () => {
-    toast({
+    toast.success({
       title: "¡Bienvenido de nuevo!",
       description: "Sesión iniciada exitosamente",
     });
   },
   
   signInError: (message: string) => {
-    toast({
+    toast.error({
       title: "Error de inicio de sesión",
       description: message,
-      variant: "destructive",
     });
   },
   
   googleSignInError: (message: string) => {
-    toast({
+    toast.error({
       title: "Error al iniciar sesión con Google",
       description: message,
-      variant: "destructive",
     });
   },
   
   genericError: (message: string) => {
-    toast({
+    toast.error({
       title: "Error",
       description: message,
-      variant: "destructive",
     });
   },
   
   signOutSuccess: () => {
-    toast({
+    toast.success({
       title: "Sesión cerrada",
       description: "Has cerrado sesión exitosamente",
     });
   },
   
   signedInWelcome: () => {
-    toast({
+    toast.success({
       title: "¡Bienvenido!",
       description: "Has iniciado sesión exitosamente",
     });
