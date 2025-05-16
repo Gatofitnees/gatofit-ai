@@ -36,7 +36,8 @@ const WheelItem: React.FC<WheelItemProps> = ({
     translateY,
     zIndex,
     isSelected,
-    transition
+    transition,
+    perspective
   } = useWheelItemAnimation({
     index,
     selectedIndex,
@@ -58,6 +59,8 @@ const WheelItem: React.FC<WheelItemProps> = ({
         height: `${itemHeight}px`,
         top: 0,
         zIndex,
+        transform: perspective,
+        willChange: 'transform, opacity' // Optimize for performance
       }}
       animate={{ 
         y: translateY,
@@ -74,4 +77,4 @@ const WheelItem: React.FC<WheelItemProps> = ({
   );
 };
 
-export default WheelItem;
+export default React.memo(WheelItem); // Optimize with memo to prevent unnecessary rerenders

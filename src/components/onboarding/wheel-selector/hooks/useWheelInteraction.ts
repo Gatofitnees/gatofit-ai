@@ -1,4 +1,3 @@
-
 import { useRef, useState, useCallback } from "react";
 
 interface UseWheelInteractionProps {
@@ -29,6 +28,7 @@ export const useWheelInteraction = ({
   
   const lastY = useRef(0);
   const lastTime = useRef(0);
+  const velocityReadings = useRef<Array<number>>([]);
   
   // Handle start of interaction (touch/mouse down)
   const handleStart = useCallback((clientY: number) => {
@@ -36,10 +36,11 @@ export const useWheelInteraction = ({
     setIsDragging(true);
     lastY.current = clientY;
     lastTime.current = performance.now();
+    velocityReadings.current = [];
     setMomentum(0);
   }, [cancelAnimationFrame]);
 
-  // Handle movement during interaction
+  // Handle movement during interaction with improved momentum tracking
   const handleMove = useCallback((clientY: number) => {
     if (!isDragging) return;
 
@@ -49,19 +50,30 @@ export const useWheelInteraction = ({
     
     // Calculate instantaneous velocity (with direction)
     if (deltaTime > 0) {
-      const velocity = deltaY / deltaTime * 10; // Scale for better feel
-      setMomentum(velocity);
+      // Track last few velocity measurements for smoother momentum
+      const velocity = deltaY / deltaTime * 12; // Increased sensitivity for better feel
+      velocityReadings.current.push(velocity);
+      
+      // Keep only last 5 readings for momentum calculation
+      if (velocityReadings.current.length > 5) {
+        velocityReadings.current.shift();
+      }
+      
+      // Calculate average velocity for smoother momentum
+      const avgVelocity = velocityReadings.current.reduce((sum, v) => sum + v, 0) / 
+                          velocityReadings.current.length;
+      setMomentum(avgVelocity);
     }
     
-    // Calculate new offset and limit it
-    const sensitivity = 0.5; // Lower number = less sensitive
+    // Calculate new offset with improved sensitivity
+    const sensitivity = 0.8; // Higher number = more sensitive
     const newOffset = offset + (deltaY * sensitivity);
     
     // Calculate index change based on offset
     const indexChange = Math.floor(Math.abs(newOffset) / itemHeight) * Math.sign(newOffset);
     
     if (indexChange !== 0) {
-      // Update selected index
+      // Update selected index with bounds checking
       const newIndex = Math.max(
         0, 
         Math.min(
@@ -82,7 +94,7 @@ export const useWheelInteraction = ({
     lastTime.current = now;
   }, [isDragging, offset, itemHeight, valuesLength, selectedIndexRef, updateSelectedIndexRef, setOffset]);
 
-  // Handle end of interaction
+  // Handle end of interaction with enhanced momentum effect
   const handleEnd = useCallback(() => {
     if (!isDragging) return;
     
@@ -90,10 +102,14 @@ export const useWheelInteraction = ({
     
     // Apply momentum if significant, otherwise snap
     if (Math.abs(momentum) > 0.5) {
+      // Apply momentum with the average of recent readings for smoother effect
       applyMomentum(momentum, offset);
     } else {
       snapToClosest();
     }
+    
+    // Clear velocity readings
+    velocityReadings.current = [];
   }, [isDragging, momentum, offset, applyMomentum, snapToClosest]);
 
   return {

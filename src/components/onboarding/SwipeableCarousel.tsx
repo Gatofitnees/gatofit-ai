@@ -8,8 +8,10 @@ interface SwipeableCarouselProps {
   className?: string;
   reduceSize?: boolean;
   autoScroll?: boolean;
+  autoScrollInterval?: number;
   currentSlide?: number;
   onSlideChange?: (index: number) => void;
+  cardsPerView?: number;
 }
 
 const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({ 
@@ -17,14 +19,17 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
   className, 
   reduceSize = false,
   autoScroll = false,
+  autoScrollInterval = 5000,
   currentSlide,
-  onSlideChange
+  onSlideChange,
+  cardsPerView = 1
 }) => {
   const [internalCurrentIndex, setInternalCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Use either controlled (from props) or uncontrolled (internal) state
   const currentIndex = currentSlide !== undefined ? currentSlide : internalCurrentIndex;
@@ -36,13 +41,34 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
     }
   }, [currentSlide]);
   
-  // Calculate item width based on container
+  // Auto-scroll logic
+  useEffect(() => {
+    if (autoScroll && !isDragging) {
+      autoScrollTimerRef.current = setTimeout(() => {
+        const nextIndex = (currentIndex + 1) % children.length;
+        goToSlide(nextIndex);
+      }, autoScrollInterval);
+    }
+    
+    return () => {
+      if (autoScrollTimerRef.current) {
+        clearTimeout(autoScrollTimerRef.current);
+      }
+    };
+  }, [autoScroll, currentIndex, children.length, isDragging]);
+  
+  // Calculate item width based on container and cards per view
   const getItemWidth = (): number => {
     if (!containerRef.current) return 0;
-    return containerRef.current.offsetWidth;
+    return containerRef.current.offsetWidth / cardsPerView;
   };
   
   const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
+    // Clear auto-scroll timer
+    if (autoScrollTimerRef.current) {
+      clearTimeout(autoScrollTimerRef.current);
+    }
+    
     setIsDragging(true);
     setDragOffset(0);
     
@@ -52,6 +78,9 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
       : e.clientX;
       
     setDragStart(clientX);
+    
+    // Prevent default browser behavior
+    e.preventDefault();
   };
   
   const handleDragMove = (e: React.TouchEvent | React.MouseEvent) => {
@@ -64,13 +93,16 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
       
     const offset = clientX - dragStart;
     setDragOffset(offset);
+    
+    // Prevent default browser behavior
+    e.preventDefault();
   };
   
-  const handleDragEnd = () => {
+  const handleDragEnd = (e: React.TouchEvent | React.MouseEvent) => {
     if (!isDragging) return;
     
     const itemWidth = getItemWidth();
-    const threshold = itemWidth * 0.2; // 20% threshold to change slide
+    const threshold = itemWidth * 0.15; // 15% threshold to change slide (more sensitive)
     
     if (dragOffset > threshold && currentIndex > 0) {
       // Swipe right - go to previous
@@ -78,10 +110,15 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
     } else if (dragOffset < -threshold && currentIndex < children.length - 1) {
       // Swipe left - go to next
       goToSlide(currentIndex + 1);
+    } else {
+      // Stay on current slide - snap back
+      setDragOffset(0);
     }
     
     setIsDragging(false);
-    setDragOffset(0);
+    
+    // Prevent default browser behavior
+    e.preventDefault();
   };
 
   const goToSlide = (index: number) => {
@@ -92,6 +129,8 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
     } else {
       setInternalCurrentIndex(newIndex);
     }
+    
+    setDragOffset(0);
   };
   
   // Handle window resize
@@ -106,12 +145,12 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
 
   // Calculate container and item dimensions
   const containerWidth = containerRef.current?.offsetWidth || 0;
-  const slideWidth = reduceSize ? containerWidth * 0.8 : containerWidth;
-  const slideMargin = reduceSize ? containerWidth * 0.1 : 0;
+  const slideWidth = reduceSize ? containerWidth * (0.8 / cardsPerView) : containerWidth / cardsPerView;
+  const slideMargin = reduceSize ? containerWidth * 0.1 / cardsPerView : 0;
   
   return (
     <div 
-      className={cn('relative overflow-hidden w-full', className)} 
+      className={cn('relative overflow-hidden w-full touch-none', className)} 
       ref={containerRef}
       onTouchStart={handleDragStart}
       onTouchMove={handleDragMove}
@@ -125,13 +164,13 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
         className="flex w-full"
         animate={{ 
           x: isDragging 
-            ? dragOffset - (currentIndex * slideWidth)
-            : -(currentIndex * slideWidth)
+            ? dragOffset - (currentIndex * slideWidth * cardsPerView)
+            : -(currentIndex * slideWidth * cardsPerView)
         }}
         transition={{ 
           type: "spring",
-          stiffness: 300,
-          damping: 30,
+          stiffness: 400,
+          damping: 40,
           duration: 0.3 
         }}
       >
@@ -142,13 +181,14 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
               width: slideWidth, 
               marginLeft: index === 0 ? 0 : slideMargin,
               marginRight: index === children.length - 1 ? 0 : slideMargin,
-              touchAction: 'none'
+              touchAction: 'none',
+              maxHeight: '100%'
             }}
             key={index}
             initial={{ opacity: 0.5, scale: 0.9 }}
             animate={{ 
-              opacity: currentIndex === index ? 1 : 0.7,
-              scale: currentIndex === index ? 1 : 0.9
+              opacity: Math.abs(currentIndex - index) <= 1 ? 1 : 0.8, // Show adjacent slides better
+              scale: currentIndex === index ? 1 : 0.95
             }}
             transition={{ duration: 0.3 }}
           >
@@ -157,16 +197,21 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
         ))}
       </motion.div>
       
-      {/* Indicators */}
-      <div className="flex justify-center space-x-2 mt-4">
+      {/* Enhanced indicators with better visibility and tap targets */}
+      <div className="flex justify-center space-x-3 mt-4">
         {children.map((_, index) => (
           <button
             key={index}
             className={cn(
-              "w-2 h-2 rounded-full transition-colors",
-              index === currentIndex ? "bg-primary" : "bg-muted"
+              "w-3 h-3 rounded-full transition-colors border",
+              index === currentIndex 
+                ? "bg-primary border-primary scale-110" 
+                : "bg-muted border-muted-foreground/30 hover:bg-muted-foreground/50"
             )}
-            onClick={() => goToSlide(index)}
+            onClick={(e) => {
+              e.preventDefault();
+              goToSlide(index);
+            }}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}

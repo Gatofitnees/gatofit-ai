@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import { easeOutCubic } from "../easingFunctions";
 
@@ -25,27 +26,34 @@ export const useWheelItemAnimation = ({
     const distance = index - selectedIndex;
     const absDistance = Math.abs(distance);
     
-    // Calculate visual properties based on distance
+    // Enhanced visual properties based on distance for 3D effect
     const distanceRatio = Math.min(1, absDistance / (halfVisibleItems + 0.5));
-    const opacity = 1 - distanceRatio * 0.8; // Slightly increased opacity fade for better readability
-    const scale = 1 - distanceRatio * 0.25; // Slightly increased scale effect for better distinction
     
-    // Position calculation with smooth offset
+    // Improved opacity curve for better readability
+    const opacity = 1 - Math.pow(distanceRatio, 1.5) * 0.8;
+    
+    // Enhanced 3D-like scaling effect
+    const scale = 1 - distanceRatio * 0.3;
+    
+    // Smoother position calculation with enhanced offset
     const translateY = (distance * itemHeight) + offset + (wheelHeight / 2 - itemHeight / 2);
     
-    // Determine z-index to keep selected item on top
-    const zIndex = 100 - absDistance;
+    // Improved z-index calculation for proper layering
+    const zIndex = 100 - Math.round(absDistance * 10);
     
-    // Determine text styles based on selection state
+    // Determine selection state
     const isSelected = distance === 0;
     
-    // Animation properties
+    // Enhanced animation properties
     const transition = {
       type: isAnimating ? "spring" : "tween",
-      stiffness: isAnimating ? 350 : 400, // Increased stiffness for snappier animations
-      damping: isAnimating ? 35 : 40, // Adjusted damping for smoother motion
-      duration: isAnimating ? 0.3 : 0.15
+      stiffness: isAnimating ? 400 : 450, // Increased stiffness for snappier animations
+      damping: isAnimating ? 40 : 42,     // Better damping for smoother stops
+      duration: isAnimating ? 0.25 : 0.2  // Slightly faster animations
     };
+    
+    // Add subtle perspective transform
+    const perspective = absDistance > 0 ? `perspective(350px) translateZ(${-Math.min(absDistance * 5, 30)}px)` : '';
     
     return {
       distance,
@@ -55,7 +63,8 @@ export const useWheelItemAnimation = ({
       translateY,
       zIndex,
       isSelected,
-      transition
+      transition,
+      perspective
     };
   }, [index, selectedIndex, offset, itemHeight, wheelHeight, halfVisibleItems, isAnimating]);
 };

@@ -1,9 +1,19 @@
 
 import React from "react";
+import { getWheelHighlightStyles } from "./styles/wheelItemStyles";
 
-const WheelHighlight: React.FC = () => {
+interface WheelHighlightProps {
+  itemHeight?: number;
+}
+
+const WheelHighlight: React.FC<WheelHighlightProps> = ({ itemHeight = 40 }) => {
+  const highlightStyles = getWheelHighlightStyles();
+  
   return (
-    <div className="absolute left-0 top-1/2 w-full h-[40px] -translate-y-1/2 bg-primary/10 pointer-events-none z-10" />
+    <div 
+      className={highlightStyles} 
+      style={{ height: `${itemHeight}px` }}
+    />
   );
 };
 

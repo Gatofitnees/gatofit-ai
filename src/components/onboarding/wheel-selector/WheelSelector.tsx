@@ -1,6 +1,6 @@
 
-import React, { useEffect } from "react";
-import { cn } from "@/lib/utils";
+import React, { useEffect, useCallback } from "react";
+import { getWheelContainerStyles } from "./styles/wheelItemStyles";
 import WheelItem from "./WheelItem";
 import WheelHighlight from "./WheelHighlight";
 import { useWheelAnimation } from "./hooks/useWheelAnimation";
@@ -89,24 +89,40 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
   // Cleanup animation on unmount
   useEffect(cleanupAnimation, [cleanupAnimation]);
 
+  // Prevent touch events from propagating to parent elements
+  const preventDefaultAndStop = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
   const wheelHeight = itemHeight * visibleItems;
   const halfVisibleItems = Math.floor(visibleItems / 2);
+  const containerStyles = getWheelContainerStyles(className);
 
   return (
     <div 
-      className={cn("relative overflow-hidden rounded-xl bg-secondary/20 shadow-neu-card", className)}
+      className={containerStyles}
       style={{ height: `${wheelHeight}px`, width: "100%" }}
-      onTouchStart={(e) => handleStart(e.touches[0].clientY)}
-      onTouchMove={(e) => handleMove(e.touches[0].clientY)}
+      onTouchStart={(e) => {
+        preventDefaultAndStop(e);
+        handleStart(e.touches[0].clientY);
+      }}
+      onTouchMove={(e) => {
+        preventDefaultAndStop(e);
+        handleMove(e.touches[0].clientY);
+      }}
       onTouchEnd={handleEnd}
       onTouchCancel={handleEnd}
-      onMouseDown={(e) => handleStart(e.clientY)}
+      onMouseDown={(e) => {
+        preventDefaultAndStop(e);
+        handleStart(e.clientY);
+      }}
       onMouseMove={(e) => isDragging && handleMove(e.clientY)}
       onMouseUp={handleEnd}
       onMouseLeave={() => isDragging && handleEnd()}
     >
-      {/* Center highlight */}
-      <WheelHighlight />
+      {/* Center highlight with dynamic height */}
+      <WheelHighlight itemHeight={itemHeight} />
       
       {/* Items */}
       <div className="absolute left-0 w-full transform">
