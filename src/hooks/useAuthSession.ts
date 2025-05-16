@@ -2,14 +2,13 @@
 import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { authNotifications } from "@/services/notifications/auth-notifications";
 
 export const useAuthSession = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,10 +56,7 @@ export const useAuthSession = () => {
           // Navigate to app transition page on successful login
           navigate('/onboarding/app-transition');
           
-          toast({
-            title: "¡Bienvenido!",
-            description: "Has iniciado sesión exitosamente",
-          });
+          authNotifications.signedInWelcome();
         } catch (err) {
           console.error("Error handling auth state change:", err);
         }
@@ -70,7 +66,7 @@ export const useAuthSession = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast, navigate]);
+  }, [navigate]);
 
   return { user, session, loading };
 };

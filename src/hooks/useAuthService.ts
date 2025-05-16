@@ -1,10 +1,9 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { authNotifications } from "@/services/notifications/auth-notifications";
 
 export const useAuthService = () => {
-  const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);
   
   const signUp = async (email: string, password: string) => {
@@ -15,11 +14,7 @@ export const useAuthService = () => {
       });
 
       if (error) {
-        toast({
-          title: "Error de registro",
-          description: error.message,
-          variant: "destructive",
-        });
+        authNotifications.signUpError(error.message);
         return { error, data: null };
       }
 
@@ -32,26 +27,15 @@ export const useAuthService = () => {
         ]);
 
         if (profileError) {
-          toast({
-            title: "Error al crear perfil",
-            description: profileError.message,
-            variant: "destructive",
-          });
+          authNotifications.profileCreationError(profileError.message);
           return { error: profileError, data: null };
         }
       }
 
-      toast({
-        title: "Cuenta creada",
-        description: "Por favor, verifica tu email",
-      });
+      authNotifications.signUpSuccess();
       return { error: null, data };
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message,
-        variant: "destructive",
-      });
+      authNotifications.genericError(err.message);
       return { error: err, data: null };
     }
   };
@@ -64,25 +48,14 @@ export const useAuthService = () => {
       });
 
       if (error) {
-        toast({
-          title: "Error de inicio de sesión",
-          description: error.message,
-          variant: "destructive",
-        });
+        authNotifications.signInError(error.message);
         return { error, data: null };
       }
 
-      toast({
-        title: "¡Bienvenido de nuevo!",
-        description: "Sesión iniciada exitosamente",
-      });
+      authNotifications.signInSuccess();
       return { error: null, data };
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message,
-        variant: "destructive",
-      });
+      authNotifications.genericError(err.message);
       return { error: err, data: null };
     }
   };
@@ -105,31 +78,20 @@ export const useAuthService = () => {
       });
 
       if (error) {
-        toast({
-          title: "Error al iniciar sesión con Google",
-          description: error.message,
-          variant: "destructive",
-        });
+        authNotifications.googleSignInError(error.message);
         return { error, data: null };
       }
 
       return { error: null, data };
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message,
-        variant: "destructive",
-      });
+      authNotifications.genericError(err.message);
       return { error: err, data: null };
     }
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    toast({
-      title: "Sesión cerrada",
-      description: "Has cerrado sesión exitosamente",
-    });
+    authNotifications.signOutSuccess();
   };
 
   return {
