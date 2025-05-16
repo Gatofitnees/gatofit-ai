@@ -5,3 +5,8 @@ project_id = "mwgnpexeymgpzibnkiof"
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
+
+# Configuración de redirectos (importante para autenticación OAuth)
+[auth]
+site_url = "https://glow-up-mobile-fit.lovable.app"
+additional_redirect_urls = ["https://glow-up-mobile-fit.lovable.app/onboarding/app-transition"]

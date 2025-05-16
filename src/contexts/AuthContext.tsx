@@ -141,10 +141,12 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signInWithGoogle = async () => {
     try {
+      // Especificamos explícitamente la URL de redirección
+      const currentUrl = window.location.origin;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/onboarding/app-transition',
+          redirectTo: `${currentUrl}/onboarding/app-transition`,
         },
       });
 
