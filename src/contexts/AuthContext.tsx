@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, Provider } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextProps {
@@ -141,12 +140,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signInWithGoogle = async () => {
     try {
-      // Especificamos explícitamente la URL de redirección
-      const currentUrl = window.location.origin;
+      // Usar la URL del site configurada en Supabase
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${currentUrl}/onboarding/app-transition`,
+          redirectTo: `https://appsecret.gatofit.com/onboarding/app-transition`,
         },
       });
 
