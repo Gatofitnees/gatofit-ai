@@ -1,10 +1,8 @@
 
-import React, { useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { getWheelContainerStyles } from "./styles/wheelItemStyles";
 import WheelItem from "./WheelItem";
 import WheelHighlight from "./WheelHighlight";
-import { useWheelAnimation } from "./hooks/useWheelAnimation";
-import { useWheelInteraction } from "./hooks/useWheelInteraction";
 
 interface WheelSelectorProps {
   values: Array<{ label: string; value: any }>;
@@ -25,79 +23,144 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
   className,
   labelClassName,
 }) => {
-  // Safety check to ensure values array is not empty
+  // Safety check
   if (!values || values.length === 0) {
     console.error("WheelSelector: values array is empty or undefined");
     return <div className="p-4 text-muted-foreground">No values provided</div>;
   }
 
-  // Find initial selected index if initialValue is provided
-  const initialSelectedIndex = initialValue !== undefined && values && values.length > 0
-    ? values.findIndex(item => item.value === initialValue)
-    : 0;
+  // Find initial selected index
+  const getInitialIndex = () => {
+    if (initialValue !== undefined) {
+      const index = values.findIndex(item => item.value === initialValue);
+      return index !== -1 ? index : 0;
+    }
+    return 0;
+  };
 
-  // Use the animation hook for handling wheel animations
-  const {
-    selectedIndex,
-    offset,
-    isAnimating,
-    selectedIndexRef,
-    setOffset,
-    updateSelectedIndexRef,
-    cancelAnimationFrame,
-    cleanupAnimation,
-    snapToClosest,
-    handleItemClick,
-    applyMomentum
-  } = useWheelAnimation({
-    itemHeight,
-    valuesLength: values.length,
-    initialSelectedIndex: initialSelectedIndex !== -1 ? initialSelectedIndex : 0,
-    onChange: (index) => onChange(values[index].value)
-  });
+  const [selectedIndex, setSelectedIndex] = useState(getInitialIndex);
+  const [offset, setOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const startYRef = useRef(0);
+  const lastYRef = useRef(0);
+  const animationRef = useRef<number | null>(null);
 
-  // Use the interaction hook for handling user interactions
-  const {
-    isDragging,
-    handleStart,
-    handleMove,
-    handleEnd
-  } = useWheelInteraction({
-    selectedIndexRef,
-    itemHeight,
-    offset,
-    valuesLength: values.length,
-    setOffset,
-    updateSelectedIndexRef,
-    cancelAnimationFrame,
-    snapToClosest,
-    applyMomentum
-  });
-
-  // Update selectedIndex if initialValue changes
+  // Update selected index if initialValue changes
   useEffect(() => {
-    if (initialValue !== undefined && values && values.length > 0) {
+    if (initialValue !== undefined) {
       const index = values.findIndex(item => item.value === initialValue);
       if (index !== -1 && index !== selectedIndex) {
-        updateSelectedIndexRef(index);
-        cancelAnimationFrame();
+        setSelectedIndex(index);
         setOffset(0);
       }
     }
-  }, [initialValue, values, selectedIndex, updateSelectedIndexRef, cancelAnimationFrame, setOffset]);
+  }, [initialValue, values, selectedIndex]);
 
-  // Cleanup animation on unmount
-  useEffect(cleanupAnimation, [cleanupAnimation]);
+  // Handle item click
+  const handleItemClick = useCallback((index: number) => {
+    if (index === selectedIndex) return;
+    
+    setSelectedIndex(index);
+    setOffset(0);
+    onChange(values[index].value);
+  }, [selectedIndex, onChange, values]);
 
-  // Prevent touch events from propagating to parent elements
+  // Reset offset to 0 when it's large enough to change the selection
+  useEffect(() => {
+    if (Math.abs(offset) >= itemHeight / 2) {
+      const indexChange = Math.sign(offset) * -1; // Reverse direction for natural feel
+      const newIndex = Math.max(0, Math.min(values.length - 1, selectedIndex + indexChange));
+      
+      if (newIndex !== selectedIndex) {
+        setSelectedIndex(newIndex);
+        onChange(values[newIndex].value);
+      }
+      
+      setOffset(0);
+    }
+  }, [offset, itemHeight, selectedIndex, values, onChange]);
+
+  // Handle touch/mouse start
+  const handleStart = useCallback((clientY: number) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    
+    setIsDragging(true);
+    startYRef.current = clientY;
+    lastYRef.current = clientY;
+  }, []);
+
+  // Handle touch/mouse move
+  const handleMove = useCallback((clientY: number) => {
+    if (!isDragging) return;
+    
+    const delta = clientY - lastYRef.current;
+    lastYRef.current = clientY;
+    
+    // Update offset with some resistance for better feel
+    setOffset(prevOffset => {
+      const newOffset = prevOffset + delta * 0.8;
+      
+      // Add resistance at ends
+      if ((selectedIndex === 0 && newOffset > 0) || 
+          (selectedIndex === values.length - 1 && newOffset < 0)) {
+        return prevOffset + delta * 0.3;
+      }
+      
+      return newOffset;
+    });
+  }, [isDragging, selectedIndex, values.length]);
+
+  // Handle touch/mouse end
+  const handleEnd = useCallback(() => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    // Snap back to center with animation
+    const snapBack = () => {
+      setOffset(prevOffset => {
+        if (Math.abs(prevOffset) < 1) {
+          if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+            animationRef.current = null;
+          }
+          return 0;
+        }
+        
+        const newOffset = prevOffset * 0.8;
+        animationRef.current = requestAnimationFrame(snapBack);
+        return newOffset;
+      });
+    };
+    
+    animationRef.current = requestAnimationFrame(snapBack);
+  }, [isDragging]);
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  // Calculate wheel dimensions
+  const wheelHeight = itemHeight * visibleItems;
+  const halfVisibleItems = Math.floor(visibleItems / 2);
+  
+  // Get container styles
+  const containerStyles = getWheelContainerStyles(className);
+
+  // Prevent default on wheel to avoid page scroll
   const preventDefaultAndStop = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
-
-  const wheelHeight = itemHeight * visibleItems;
-  const halfVisibleItems = Math.floor(visibleItems / 2);
-  const containerStyles = getWheelContainerStyles(className);
 
   return (
     <div 
@@ -111,21 +174,21 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
         preventDefaultAndStop(e);
         handleMove(e.touches[0].clientY);
       }}
-      onTouchEnd={handleEnd}
-      onTouchCancel={handleEnd}
+      onTouchEnd={() => handleEnd()}
+      onTouchCancel={() => handleEnd()}
       onMouseDown={(e) => {
         preventDefaultAndStop(e);
         handleStart(e.clientY);
       }}
       onMouseMove={(e) => isDragging && handleMove(e.clientY)}
-      onMouseUp={handleEnd}
+      onMouseUp={() => handleEnd()}
       onMouseLeave={() => isDragging && handleEnd()}
     >
-      {/* Center highlight with dynamic height */}
+      {/* Center highlight */}
       <WheelHighlight itemHeight={itemHeight} />
       
       {/* Items */}
-      <div className="absolute left-0 w-full transform">
+      <div className="relative h-full w-full">
         {values.map((item, index) => {
           // Calculate distance from selected item
           const distance = index - selectedIndex;
@@ -142,10 +205,8 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
               offset={offset}
               itemHeight={itemHeight}
               wheelHeight={wheelHeight}
-              halfVisibleItems={halfVisibleItems}
               onClick={handleItemClick}
               labelClassName={labelClassName}
-              isAnimating={isAnimating}
             />
           );
         })}
