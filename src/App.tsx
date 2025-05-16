@@ -11,8 +11,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="bg-background text-foreground min-h-screen">
           <Routes>
             <Route path="/onboarding/*" element={<OnboardingFlow />} />
@@ -46,8 +46,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
