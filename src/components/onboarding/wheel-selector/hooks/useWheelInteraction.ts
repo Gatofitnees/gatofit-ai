@@ -52,28 +52,16 @@ export const useWheelInteraction = ({
     if (deltaTime > 0) {
       // Track last few velocity measurements for smoother momentum
       const velocity = deltaY / deltaTime * 12; // Increased sensitivity for better feel
+      velocityReadings.current.push(velocity);
       
-      // Only record significant movements to avoid jitter
-      if (Math.abs(deltaY) > 1) {
-        velocityReadings.current.push(velocity);
-      }
-      
-      // Keep only last 7 readings for momentum calculation (increased for smoother effect)
-      if (velocityReadings.current.length > 7) {
+      // Keep only last 5 readings for momentum calculation
+      if (velocityReadings.current.length > 5) {
         velocityReadings.current.shift();
       }
       
-      // Calculate average velocity with weighted emphasis on recent movements
-      let sum = 0;
-      let weights = 0;
-      
-      for (let i = 0; i < velocityReadings.current.length; i++) {
-        const weight = i + 1; // More recent readings get higher weights
-        sum += velocityReadings.current[i] * weight;
-        weights += weight;
-      }
-      
-      const avgVelocity = sum / (weights || 1);
+      // Calculate average velocity for smoother momentum
+      const avgVelocity = velocityReadings.current.reduce((sum, v) => sum + v, 0) / 
+                          velocityReadings.current.length;
       setMomentum(avgVelocity);
     }
     
@@ -113,7 +101,7 @@ export const useWheelInteraction = ({
     setIsDragging(false);
     
     // Apply momentum if significant, otherwise snap
-    if (Math.abs(momentum) > 0.3) {
+    if (Math.abs(momentum) > 0.5) {
       // Apply momentum with the average of recent readings for smoother effect
       applyMomentum(momentum, offset);
     } else {

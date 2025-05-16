@@ -1,8 +1,27 @@
 
-import React, { createContext, useContext } from "react";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useAuthService } from "@/hooks/useAuthService";
-import { AuthContextProps } from "@/types/auth.types";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Session, User, Provider } from "@supabase/supabase-js";
+import { useToast } from "@/components/ui/use-toast";
+
+interface AuthContextProps {
+  session: Session | null;
+  user: User | null;
+  signUp: (email: string, password: string) => Promise<{
+    error: any | null;
+    data: any | null;
+  }>;
+  signIn: (email: string, password: string) => Promise<{
+    error: any | null;
+    data: any | null;
+  }>;
+  signInWithGoogle: () => Promise<{
+    error: any | null;
+    data: any | null;
+  }>;
+  signOut: () => Promise<void>;
+  loading: boolean;
+}
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
@@ -15,10 +34,149 @@ export const useAuth = () => {
 };
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, session, loading } = useAuthSession();
-  const { signUp, signIn, signInWithGoogle, signOut } = useAuthService();
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { toast } = useToast();
 
-  const value: AuthContextProps = {
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Error de registro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error, data: null };
+      }
+
+      // Create profile record
+      if (data.user) {
+        const { error: profileError } = await supabase.from("profiles").insert([
+          {
+            id: data.user.id,
+          },
+        ]);
+
+        if (profileError) {
+          toast({
+            title: "Error al crear perfil",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          return { error: profileError, data: null };
+        }
+      }
+
+      toast({
+        title: "Cuenta creada",
+        description: "Por favor, verifica tu email",
+      });
+      return { error: null, data };
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+      return { error: err, data: null };
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Error de inicio de sesión",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error, data: null };
+      }
+
+      toast({
+        title: "¡Bienvenido de nuevo!",
+        description: "Sesión iniciada exitosamente",
+      });
+      return { error: null, data };
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+      return { error: err, data: null };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/onboarding/app-transition',
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Error al iniciar sesión con Google",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error, data: null };
+      }
+
+      return { error: null, data };
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+      return { error: err, data: null };
+    }
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Sesión cerrada",
+      description: "Has cerrado sesión exitosamente",
+    });
+  };
+
+  const value = {
     session,
     user,
     signUp,

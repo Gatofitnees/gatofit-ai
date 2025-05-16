@@ -5,5 +5,3 @@ project_id = "mwgnpexeymgpzibnkiof"
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
-# Added display name for Google OAuth
-display_name = "GatoFit"
