@@ -1,10 +1,11 @@
 
-import React, { useState, useCallback, useEffect } from "react";
+import React from "react";
 import { getWheelContainerStyles } from "./styles/wheelItemStyles";
 import WheelItem from "./WheelItem";
 import WheelHighlight from "./WheelHighlight";
 import { useWheelAnimation } from "./hooks/useWheelAnimation";
 import { useWheelInteraction } from "./hooks/useWheelInteraction";
+import { useWheelTouchHandlers } from "./hooks/useWheelTouchHandlers";
 
 interface WheelSelectorProps {
   values: Array<{ label: string; value: any }>;
@@ -76,9 +77,27 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
     snapToClosest,
     applyMomentum
   });
+  
+  // Setup touch and mouse event handlers
+  const {
+    touchHandlers,
+    mouseHandlers
+  } = useWheelTouchHandlers({
+    handleStart,
+    handleMove,
+    handleEnd,
+    isDragging
+  });
 
-  // Update selected index if initialValue changes
-  useEffect(() => {
+  // Calculate wheel dimensions
+  const wheelHeight = itemHeight * visibleItems;
+  const halfVisibleItems = Math.floor(visibleItems / 2);
+  
+  // Get container styles
+  const containerStyles = getWheelContainerStyles(className);
+
+  // Effect to handle initial value changes
+  React.useEffect(() => {
     if (initialValue !== undefined) {
       const index = values.findIndex(item => item.value === initialValue);
       if (index !== -1 && index !== selectedIndex) {
@@ -89,42 +108,14 @@ const WheelSelector: React.FC<WheelSelectorProps> = ({
   }, [initialValue, values, selectedIndex, updateSelectedIndexRef, setOffset]);
   
   // Cleanup animation on unmount
-  useEffect(cleanupAnimation, [cleanupAnimation]);
-
-  // Calculate wheel dimensions
-  const wheelHeight = itemHeight * visibleItems;
-  const halfVisibleItems = Math.floor(visibleItems / 2);
-  
-  // Get container styles
-  const containerStyles = getWheelContainerStyles(className);
-
-  // Prevent default on wheel to avoid page scroll
-  const preventDefaultAndStop = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  React.useEffect(cleanupAnimation, [cleanupAnimation]);
 
   return (
     <div 
       className={containerStyles}
       style={{ height: `${wheelHeight}px`, width: "100%" }}
-      onTouchStart={(e) => {
-        preventDefaultAndStop(e);
-        handleStart(e.touches[0].clientY);
-      }}
-      onTouchMove={(e) => {
-        preventDefaultAndStop(e);
-        handleMove(e.touches[0].clientY);
-      }}
-      onTouchEnd={() => handleEnd()}
-      onTouchCancel={() => handleEnd()}
-      onMouseDown={(e) => {
-        preventDefaultAndStop(e);
-        handleStart(e.clientY);
-      }}
-      onMouseMove={(e) => isDragging && handleMove(e.clientY)}
-      onMouseUp={() => handleEnd()}
-      onMouseLeave={() => isDragging && handleEnd()}
+      {...touchHandlers}
+      {...mouseHandlers}
     >
       {/* Center highlight */}
       <WheelHighlight itemHeight={itemHeight} />

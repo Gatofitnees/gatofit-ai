@@ -29,7 +29,7 @@ const BodyFatSelector: React.FC<BodyFatSelectorProps> = ({
           />
         )}
       </div>
-      <div className="mt-4">
+      <div className="mt-6">
         <p className="text-xs text-muted-foreground">
           No te preocupes si no lo sabes con exactitud
         </p>
