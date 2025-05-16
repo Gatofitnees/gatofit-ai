@@ -47,7 +47,7 @@ export const useWheelAnimation = ({
     };
   }, []);
   
-  // Smoothly snap to the closest item
+  // Smoothly snap to the closest item with improved animation
   const snapToClosest = useCallback(() => {
     cancelAnimationFrame();
     setIsAnimating(true);
@@ -56,13 +56,16 @@ export const useWheelAnimation = ({
     const targetOffset = 0; // Always snap to center (zero offset)
     const startOffset = offset;
     const distance = targetOffset - startOffset;
-    const duration = 300; // ms
+    
+    // Longer duration for smoother animation
+    const duration = 400; 
     const startTime = performance.now();
 
     const animateSnap = (timestamp: number) => {
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeOutQuint(progress); // Smoother easing
+      // Use a smoother easing function for better movement
+      const easedProgress = easeOutQuint(progress);
       
       const currentOffset = startOffset + (distance * easedProgress);
       setOffset(currentOffset);
@@ -79,7 +82,7 @@ export const useWheelAnimation = ({
     animationFrameRef.current = window.requestAnimationFrame(animateSnap);
   }, [offset, cancelAnimationFrame]);
   
-  // Handle click on a specific item
+  // Handle click on a specific item with improved animation
   const handleItemClick = useCallback((index: number) => {
     if (index === selectedIndexRef.current || isAnimating) return;
     
@@ -90,7 +93,9 @@ export const useWheelAnimation = ({
     const startIndex = selectedIndexRef.current;
     const targetIndex = index;
     const distance = targetIndex - startIndex;
-    const duration = 300; // ms
+    
+    // Longer duration for smoother animation
+    const duration = 400; 
     const startTime = performance.now();
     
     const animateToIndex = (timestamp: number) => {
@@ -130,19 +135,22 @@ export const useWheelAnimation = ({
     cancelAnimationFrame();
     setIsAnimating(true);
     
-    // Increase initial momentum for more pronounced effect
-    let currentMomentum = momentum * 1.5; // Amplify initial momentum
+    // Adjust initial momentum for better feel
+    let currentMomentum = momentum * 1.8; 
     let offset = currentOffset;
     let previousTime = performance.now();
     let accumulatedOffset = 0;
+    
+    // Track if we need to snap at end to prevent abrupt stops
+    let needsSnapToClosest = true;
     
     const animate = (timestamp: number) => {
       const deltaTime = timestamp - previousTime;
       previousTime = timestamp;
       
       // Apply friction to gradually reduce momentum
-      // Lower value = more inercia (slower decay)
-      currentMomentum *= 0.92; 
+      // Lower value = more inertia (slower decay)
+      currentMomentum *= 0.95; 
       
       // Apply momentum to offset
       const change = currentMomentum * (deltaTime / 16); // Normalize to ~60fps
@@ -164,11 +172,15 @@ export const useWheelAnimation = ({
       
       setOffset(offset - (Math.floor(offset / itemHeight) * itemHeight));
       
-      // Continue animation or end it
+      // Continue animation or transition to snap animation
       if (Math.abs(currentMomentum) > 0.05) { // Lower threshold for longer animation
         animationFrameRef.current = window.requestAnimationFrame(animate);
       } else {
-        snapToClosest();
+        // When momentum gets low, transition to the snap animation for a clean finish
+        if (needsSnapToClosest) {
+          snapToClosest();
+          needsSnapToClosest = false;
+        }
       }
     };
     

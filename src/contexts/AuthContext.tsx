@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, Provider } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextProps {
   session: Session | null;
@@ -38,26 +39,67 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Initial session check
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setLoading(false);
+      }
+    };
+    
+    checkSession();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      
+      // Handle successful sign-in events
+      if (event === 'SIGNED_IN' && session) {
+        // Check if user profile exists, if not create it
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (profileError || !profileData) {
+            // Create a new profile if one doesn't exist
+            await supabase.from('profiles').insert([
+              { id: session.user.id }
+            ]);
+            
+            console.log("Created new profile for user:", session.user.id);
+          }
+          
+          // Navigate to app transition page on successful login
+          navigate('/onboarding/app-transition');
+          
+          toast({
+            title: "¡Bienvenido!",
+            description: "Has iniciado sesión exitosamente",
+          });
+        } catch (err) {
+          console.error("Error handling auth state change:", err);
+        }
+      }
     });
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [toast, navigate]);
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -141,10 +183,18 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signInWithGoogle = async () => {
     try {
+      // Use the site's domain for redirection
+      const redirectTo = window.location.origin + '/onboarding/app-transition';
+      console.log("Redirect URL:", redirectTo);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/onboarding/app-transition',
+          redirectTo: redirectTo,
+          queryParams: {
+            // We can add additional parameters to customize the OAuth flow
+            prompt: 'select_account', // Always show account selection
+          }
         },
       });
 
