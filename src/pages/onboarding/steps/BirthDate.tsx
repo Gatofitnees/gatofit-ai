@@ -23,15 +23,14 @@ const BirthDate: React.FC = () => {
 
   const { data, updateData } = context;
   
-  // Calculate min/max dates (16-100 years old range)
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() - 16);
+  // Calculate min/max dates (con límite hasta 2015)
+  const maxDate = new Date(2015, 11, 31); // 31 de diciembre de 2015
   
   const minDate = new Date();
   minDate.setFullYear(minDate.getFullYear() - 100);
 
   // Initialize with current date or existing data
-  const initialDate = data.dateOfBirth || new Date(maxDate.getFullYear() - 9, 5, 15);
+  const initialDate = data.dateOfBirth || new Date(2000, 5, 15);
   
   const [day, setDay] = useState(initialDate.getDate());
   const [month, setMonth] = useState(initialDate.getMonth());

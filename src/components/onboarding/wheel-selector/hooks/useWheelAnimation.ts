@@ -122,7 +122,7 @@ export const useWheelAnimation = ({
     animationFrameRef.current = window.requestAnimationFrame(animateToIndex);
   }, [isAnimating, itemHeight, cancelAnimationFrame, updateSelectedIndexRef]);
   
-  // Apply momentum animation after interaction ends
+  // Apply momentum animation after interaction ends - enhanced for more natural feeling
   const applyMomentum = useCallback((
     momentum: number, 
     currentOffset: number
@@ -130,7 +130,8 @@ export const useWheelAnimation = ({
     cancelAnimationFrame();
     setIsAnimating(true);
     
-    let currentMomentum = momentum;
+    // Increase initial momentum for more pronounced effect
+    let currentMomentum = momentum * 1.5; // Amplify initial momentum
     let offset = currentOffset;
     let previousTime = performance.now();
     let accumulatedOffset = 0;
@@ -140,7 +141,8 @@ export const useWheelAnimation = ({
       previousTime = timestamp;
       
       // Apply friction to gradually reduce momentum
-      currentMomentum *= 0.95;
+      // Lower value = more inercia (slower decay)
+      currentMomentum *= 0.92; 
       
       // Apply momentum to offset
       const change = currentMomentum * (deltaTime / 16); // Normalize to ~60fps
@@ -163,7 +165,7 @@ export const useWheelAnimation = ({
       setOffset(offset - (Math.floor(offset / itemHeight) * itemHeight));
       
       // Continue animation or end it
-      if (Math.abs(currentMomentum) > 0.1) {
+      if (Math.abs(currentMomentum) > 0.05) { // Lower threshold for longer animation
         animationFrameRef.current = window.requestAnimationFrame(animate);
       } else {
         snapToClosest();
