@@ -76,7 +76,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 
   return (
     <div className="mb-5 animate-fade-in">
-      <ScrollArea className="w-full" orientation="horizontal">
+      <ScrollArea className="w-full">
         <div className="flex p-2 w-max">
           {dateRange.map((date, index) => (
             <DateCard 

@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardBody } from "./Card";
 import MacroRing from "./MacroRing";
 import MacroProgress from "./MacroProgress";
-import { Flame, Lightning, Wheat, Droplet } from "lucide-react";
+import { Flame, Zap, Wheat, Droplet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MacroData {
@@ -50,7 +50,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
               target={macros.protein.target}
               color="protein"
               size="sm"
-              icon={<Lightning className="h-4 w-4" />}
+              icon={<Zap className="h-4 w-4" />}
             />
             <p className="mt-1 text-center text-xs text-muted-foreground">
               Proteína
