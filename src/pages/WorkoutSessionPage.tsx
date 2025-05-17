@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Play, Pause, Timer, CheckCircle, AlertCircle } from "lucide-react";
@@ -56,7 +55,7 @@ const WorkoutSessionPage = () => {
         const { data: routineData, error: routineError } = await supabase
           .from('routines')
           .select('*')
-          .eq('id', id)
+          .eq('id', parseInt(id)) // Convert string to number here
           .single();
         
         if (routineError) throw routineError;
@@ -82,7 +81,7 @@ const WorkoutSessionPage = () => {
             rest_between_sets_seconds,
             exercises:exercise_id (id, name)
           `)
-          .eq('routine_id', id)
+          .eq('routine_id', parseInt(id)) // Convert string to number here
           .order('exercise_order', { ascending: true });
         
         if (exercisesError) throw exercisesError;
@@ -164,7 +163,7 @@ const WorkoutSessionPage = () => {
         .from('workout_logs')
         .insert({
           user_id: session.session.user.id,
-          routine_id: parseInt(id as string),
+          routine_id: id ? parseInt(id) : null, // Convert string to number safely
           routine_name_snapshot: routine?.name,
           workout_date: now.toISOString()
         })
