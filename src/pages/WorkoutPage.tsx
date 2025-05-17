@@ -55,7 +55,7 @@ const WorkoutPage: React.FC = () => {
   const handleStartRoutine = (routineId: string | number) => {
     // Will be implemented in the future
     console.log("Starting routine:", routineId);
-    toast.info("Esta funcionalidad estará disponible próximamente");
+    toast.show("Esta funcionalidad estará disponible próximamente");
   };
 
   return (
@@ -77,7 +77,7 @@ const WorkoutPage: React.FC = () => {
           <SearchBar 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            onFilterClick={() => toast.info("Filtros estará disponible próximamente")}
+            onFilterClick={() => toast.show("Filtros estará disponible próximamente")}
           />
 
           <RoutinesList 
