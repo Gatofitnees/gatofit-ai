@@ -57,7 +57,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
             <div className="bg-background/20 p-3 rounded-xl">
               <div className="flex flex-col items-center">
                 <div className="text-sm font-semibold">{macros.protein.target}g</div>
-                <div className="text-xs text-muted-foreground mb-2">Proteínas requer.</div>
+                <div className="text-xs text-muted-foreground mb-2">Proteínas</div>
                 <MacroRing
                   value={macros.protein.current}
                   target={macros.protein.target}
@@ -72,7 +72,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
             <div className="bg-background/20 p-3 rounded-xl">
               <div className="flex flex-col items-center">
                 <div className="text-sm font-semibold">{macros.carbs.target}g</div>
-                <div className="text-xs text-muted-foreground mb-2">Carbohid. requer.</div>
+                <div className="text-xs text-muted-foreground mb-2">Carbohid.</div>
                 <MacroRing
                   value={macros.carbs.current}
                   target={macros.carbs.target}
@@ -87,7 +87,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
             <div className="bg-background/20 p-3 rounded-xl">
               <div className="flex flex-col items-center">
                 <div className="text-sm font-semibold">{macros.fats.target}g</div>
-                <div className="text-xs text-muted-foreground mb-2">Grasas requer.</div>
+                <div className="text-xs text-muted-foreground mb-2">Grasas</div>
                 <MacroRing
                   value={macros.fats.current}
                   target={macros.fats.target}

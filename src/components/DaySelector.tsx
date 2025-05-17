@@ -63,7 +63,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
+  
   // Generate range of dates (current day and 20 days after)
   useEffect(() => {
     const today = new Date();
@@ -79,8 +79,8 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     // Auto-scroll to position the current day on the left
     setTimeout(() => {
       if (scrollContainerRef.current) {
-        const cardWidth = 64; // Width of each card
-        scrollContainerRef.current.scrollLeft = 0; // Start with current day visible
+        // Position the first card (today) on the left
+        scrollContainerRef.current.scrollLeft = 0;
       }
     }, 100);
   }, []);
@@ -97,20 +97,21 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   return (
     <div className="mb-5 animate-fade-in bg-background/10 p-2 rounded-lg">
       <div 
-        className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory" 
+        className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-2"
         ref={scrollContainerRef}
         style={{ scrollBehavior: 'smooth' }}
       >
         {dateRange.map((date, index) => (
           <div 
             key={index} 
-            className="flex-shrink-0 mx-1 snap-start"
+            className="flex-shrink-0 snap-start"
           >
             <DateCard 
               date={date}
               isSelected={isSameDay(date, selectedDate)}
               hasRecords={checkHasRecords(date)}
               onClick={() => handleSelectDate(date)}
+              label={isToday(date) ? "Hoy" : undefined}
             />
           </div>
         ))}
