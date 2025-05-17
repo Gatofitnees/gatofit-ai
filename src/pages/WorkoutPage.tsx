@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronDown, Clock, Dumbbell, Filter, Plus, Search } from "lucide-react";
@@ -7,7 +6,7 @@ import Button from "../components/Button";
 import TabMenu from "../components/TabMenu";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToastHelper } from "@/hooks/useToastHelper";
 
 interface WorkoutRoutine {
   id: string;
@@ -25,7 +24,7 @@ const WorkoutPage: React.FC = () => {
   const [routineDescription, setRoutineDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const toast = useToastHelper();
   
   // Fetch user routines
   useEffect(() => {
@@ -54,11 +53,10 @@ const WorkoutPage: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching routines:", error);
-        toast.show({
-          title: "Error",
-          description: "No se pudieron cargar las rutinas",
-          variant: "destructive"
-        });
+        toast.showError(
+          "Error", 
+          "No se pudieron cargar las rutinas"
+        );
       }
     };
     
@@ -75,11 +73,10 @@ const WorkoutPage: React.FC = () => {
   const handleSelectExercises = async () => {
     // Return early if routine name is empty
     if (!routineName.trim()) {
-      toast.show({
-        title: "Nombre requerido",
-        description: "Por favor añade un nombre para tu rutina",
-        variant: "destructive"
-      });
+      toast.showError(
+        "Nombre requerido",
+        "Por favor añade un nombre para tu rutina"
+      );
       return;
     }
 
@@ -88,11 +85,10 @@ const WorkoutPage: React.FC = () => {
       const { data: session } = await supabase.auth.getSession();
       
       if (!session.session) {
-        toast.show({
-          title: "Error de autenticación",
-          description: "Debes iniciar sesión para crear rutinas",
-          variant: "destructive"
-        });
+        toast.showError(
+          "Error de autenticación",
+          "Debes iniciar sesión para crear rutinas"
+        );
         return;
       }
       
@@ -116,11 +112,10 @@ const WorkoutPage: React.FC = () => {
       });
     } catch (error) {
       console.error("Error creating routine:", error);
-      toast.show({
-        title: "Error",
-        description: "No se pudo crear la rutina",
-        variant: "destructive"
-      });
+      toast.showError(
+        "Error",
+        "No se pudo crear la rutina"
+      );
     } finally {
       setIsLoading(false);
     }

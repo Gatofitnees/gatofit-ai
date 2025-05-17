@@ -71,6 +71,18 @@ function App() {
               }
             />
             <Route
+              path="/workout/start/:id"
+              element={
+                <ProtectedRoute>
+                  {/* Placeholder for future WorkoutSessionPage */}
+                  <div className="p-4">
+                    <h1>Iniciar Rutina</h1>
+                    <p>Esta página está en desarrollo</p>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/nutrition"
               element={
                 <ProtectedRoute>

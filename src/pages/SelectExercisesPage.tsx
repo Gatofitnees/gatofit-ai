@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Check, ChevronDown, Filter, Info, Search, X, Plus, Dumbbell } from "lucide-react";
@@ -15,12 +14,12 @@ import {
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToastHelper } from "@/hooks/useToastHelper";
 
 interface Exercise {
-  id: string;
+  id: number;
   name: string;
-  muscle_group_main: string;
+  muscle_group_main?: string;
   equipment_required?: string;
   difficulty_level?: string;
   video_url?: string;
@@ -34,11 +33,11 @@ interface LocationState {
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  const toast = useToastHelper();
   const state = location.state as LocationState;
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -47,11 +46,10 @@ const SelectExercisesPage: React.FC = () => {
   // Ensure we have the routineId passed from previous screen
   useEffect(() => {
     if (!state?.routineId) {
-      toast.show({
-        title: "Error",
-        description: "No se pudo identificar la rutina",
-        variant: "destructive"
-      });
+      toast.showError(
+        "Error",
+        "No se pudo identificar la rutina"
+      );
       navigate("/workout");
     }
   }, [state, navigate, toast]);
@@ -70,11 +68,10 @@ const SelectExercisesPage: React.FC = () => {
         setExercises(data || []);
       } catch (error) {
         console.error("Error fetching exercises:", error);
-        toast.show({
-          title: "Error", 
-          description: "No se pudieron cargar los ejercicios",
-          variant: "destructive"
-        });
+        toast.showError(
+          "Error", 
+          "No se pudieron cargar los ejercicios"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -100,7 +97,7 @@ const SelectExercisesPage: React.FC = () => {
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
 
-  const handleExerciseSelect = (id: string) => {
+  const handleExerciseSelect = (id: number) => {
     if (selectedExercises.includes(id)) {
       setSelectedExercises(selectedExercises.filter(exId => exId !== id));
     } else {
@@ -124,18 +121,17 @@ const SelectExercisesPage: React.FC = () => {
     }
   };
 
-  const handleExerciseDetails = (id: string) => {
+  const handleExerciseDetails = (id: number) => {
     navigate(`/workout/exercise-details/${id}`);
   };
 
   const handleAddExercises = async () => {
     try {
       if (selectedExercises.length === 0) {
-        toast.show({
-          title: "Sin ejercicios",
-          description: "Selecciona al menos un ejercicio",
-          variant: "destructive"
-        });
+        toast.showError(
+          "Sin ejercicios",
+          "Selecciona al menos un ejercicio"
+        );
         return;
       }
       
@@ -158,11 +154,10 @@ const SelectExercisesPage: React.FC = () => {
         
       if (error) throw error;
       
-      toast.show({
-        title: "Ejercicios añadidos",
-        description: `${selectedExercises.length} ejercicios añadidos a la rutina`,
-        variant: "default"
-      });
+      toast.showSuccess(
+        "Ejercicios añadidos",
+        `${selectedExercises.length} ejercicios añadidos a la rutina`
+      );
       
       // Navigate to configure exercises page
       navigate(`/workout/configure/${state.routineId}`, { 
@@ -173,11 +168,10 @@ const SelectExercisesPage: React.FC = () => {
       });
     } catch (error) {
       console.error("Error adding exercises:", error);
-      toast.show({
-        title: "Error", 
-        description: "No se pudieron añadir los ejercicios",
-        variant: "destructive"
-      });
+      toast.showError(
+        "Error", 
+        "No se pudieron añadir los ejercicios"
+      );
     } finally {
       setIsLoading(false);
     }
