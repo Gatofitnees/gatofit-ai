@@ -6,6 +6,7 @@ import { Card, CardHeader, CardBody } from "../components/Card";
 import Button from "../components/Button";
 import TabMenu from "../components/TabMenu";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WorkoutRoutine {
@@ -19,6 +20,11 @@ interface WorkoutRoutine {
 const WorkoutPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("routines");
   const navigate = useNavigate();
+  
+  // Form state
+  const [routineName, setRoutineName] = useState("");
+  const [routineType, setRoutineType] = useState("");
+  const [routineDescription, setRoutineDescription] = useState("");
   
   // Mock data
   const routines: WorkoutRoutine[] = [
@@ -53,7 +59,22 @@ const WorkoutPage: React.FC = () => {
   ];
 
   const handleSelectExercises = () => {
-    navigate("/workout/select-exercises");
+    // Validate form fields
+    if (!routineName.trim()) {
+      toast.error("Por favor, ingresa un nombre para la rutina");
+      return;
+    }
+    
+    // Navigate to select exercises with the form data
+    navigate("/workout/select-exercises", {
+      state: {
+        routineFormData: {
+          name: routineName,
+          type: routineType,
+          description: routineDescription
+        }
+      }
+    });
   };
 
   return (
@@ -145,13 +166,15 @@ const WorkoutPage: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Ej: Día de Pierna" 
+                    value={routineName}
+                    onChange={(e) => setRoutineName(e.target.value)}
                     className="w-full h-10 rounded-xl px-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button"
                   />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">Tipo de Rutina</label>
-                  <Select>
+                  <Select value={routineType} onValueChange={setRoutineType}>
                     <SelectTrigger className="w-full h-10 rounded-xl px-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button">
                       <SelectValue placeholder="Seleccionar tipo" />
                       <ChevronDown className="h-4 w-4 text-primary" />
@@ -173,6 +196,8 @@ const WorkoutPage: React.FC = () => {
                   <textarea 
                     rows={3}
                     placeholder="Describe brevemente esta rutina..." 
+                    value={routineDescription}
+                    onChange={(e) => setRoutineDescription(e.target.value)}
                     className="w-full rounded-xl p-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button resize-none"
                   />
                 </div>

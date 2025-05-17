@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Check, ChevronDown, Filter, Info, Search, X, Plus, Dumbbell } from "lucide-react";
 import { Card, CardBody } from "@/components/Card";
 import Button from "@/components/Button";
@@ -14,6 +14,7 @@ import {
   SheetClose
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Exercise {
@@ -25,64 +26,108 @@ interface Exercise {
   video_url?: string;
 }
 
+interface RoutineFormData {
+  name: string;
+  type: string;
+  description?: string;
+}
+
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const routineFormData = location.state?.routineFormData as RoutineFormData;
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Mock data for now
-  const exercises: Exercise[] = [
-    {
-      id: "1",
-      name: "Press de Banca",
-      muscle_group_main: "Pecho",
-      equipment_required: "Barra",
-      difficulty_level: "Intermedio",
-      video_url: "/exercises/bench-press.mp4"
-    },
-    {
-      id: "2",
-      name: "Sentadilla",
-      muscle_group_main: "Piernas",
-      equipment_required: "Peso Corporal",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/squat.mp4"
-    },
-    {
-      id: "3",
-      name: "Pull-up",
-      muscle_group_main: "Espalda",
-      equipment_required: "Barra de dominadas",
-      difficulty_level: "Avanzado",
-      video_url: "/exercises/pull-up.mp4"
-    },
-    {
-      id: "4",
-      name: "Plancha",
-      muscle_group_main: "Core",
-      equipment_required: "Peso Corporal",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/plank.mp4"
-    },
-    {
-      id: "5",
-      name: "Extensión de Tríceps",
-      muscle_group_main: "Tríceps",
-      equipment_required: "Mancuernas",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/triceps.mp4"
-    },
-    {
-      id: "6",
-      name: "Curl de Bíceps",
-      muscle_group_main: "Bíceps",
-      equipment_required: "Mancuernas",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/biceps-curl.mp4"
+  // Fetch exercises from Supabase
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('exercises')
+          .select('*');
+        
+        if (error) {
+          console.error('Error fetching exercises:', error);
+          toast.error('Error al cargar ejercicios');
+          return;
+        }
+        
+        if (data) {
+          setExercises(data);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Error al cargar ejercicios');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExercises();
+  }, []);
+
+  // If we don't have routine data, use mock data temporarily
+  useEffect(() => {
+    if (!exercises.length && !loading) {
+      // Mock data as fallback
+      setExercises([
+        {
+          id: "1",
+          name: "Press de Banca",
+          muscle_group_main: "Pecho",
+          equipment_required: "Barra",
+          difficulty_level: "Intermedio",
+          video_url: "/exercises/bench-press.mp4"
+        },
+        {
+          id: "2",
+          name: "Sentadilla",
+          muscle_group_main: "Piernas",
+          equipment_required: "Peso Corporal",
+          difficulty_level: "Principiante",
+          video_url: "/exercises/squat.mp4"
+        },
+        {
+          id: "3",
+          name: "Pull-up",
+          muscle_group_main: "Espalda",
+          equipment_required: "Barra de dominadas",
+          difficulty_level: "Avanzado",
+          video_url: "/exercises/pull-up.mp4"
+        },
+        {
+          id: "4",
+          name: "Plancha",
+          muscle_group_main: "Core",
+          equipment_required: "Peso Corporal",
+          difficulty_level: "Principiante",
+          video_url: "/exercises/plank.mp4"
+        },
+        {
+          id: "5",
+          name: "Extensión de Tríceps",
+          muscle_group_main: "Tríceps",
+          equipment_required: "Mancuernas",
+          difficulty_level: "Principiante",
+          video_url: "/exercises/triceps.mp4"
+        },
+        {
+          id: "6",
+          name: "Curl de Bíceps",
+          muscle_group_main: "Bíceps",
+          equipment_required: "Mancuernas",
+          difficulty_level: "Principiante",
+          video_url: "/exercises/biceps-curl.mp4"
+        }
+      ]);
     }
-  ];
+  }, [exercises, loading]);
 
   const muscleGroups = ["Pecho", "Espalda", "Piernas", "Hombros", "Bíceps", "Tríceps", "Core", "Glúteos"];
   const equipmentTypes = ["Peso Corporal", "Mancuernas", "Barra", "Máquinas", "Banda Elástica", "TRX"];
@@ -129,8 +174,16 @@ const SelectExercisesPage: React.FC = () => {
   };
 
   const handleAddExercises = () => {
-    // Here we would typically pass the selected exercises back to the previous screen
-    navigate("/workout");
+    // Get the selected exercises data
+    const selectedExercisesData = exercises.filter(ex => selectedExercises.includes(ex.id));
+    
+    // Navigate to configure routine exercises with the selected exercises and form data
+    navigate('/workout/configure-routine-exercises', { 
+      state: { 
+        selectedExercises: selectedExercisesData,
+        routineFormData
+      } 
+    });
   };
 
   const handleCreateExercise = () => {
@@ -247,37 +300,43 @@ const SelectExercisesPage: React.FC = () => {
           </Button>
         </div>
 
-        <div className="space-y-3">
-          {filteredExercises.map(exercise => (
-            <Card key={exercise.id} className="hover:scale-[1.01] transition-transform duration-300">
-              <CardBody>
-                <div className="flex items-center">
-                  <Checkbox
-                    id={`select-${exercise.id}`}
-                    checked={selectedExercises.includes(exercise.id)}
-                    onCheckedChange={() => handleExerciseSelect(exercise.id)}
-                    className="mr-3 h-5 w-5 rounded-full bg-background"
-                  />
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                    <Dumbbell className="h-5 w-5 text-primary" />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-pulse text-primary">Cargando ejercicios...</div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredExercises.map(exercise => (
+              <Card key={exercise.id} className="hover:scale-[1.01] transition-transform duration-300">
+                <CardBody>
+                  <div className="flex items-center">
+                    <Checkbox
+                      id={`select-${exercise.id}`}
+                      checked={selectedExercises.includes(exercise.id)}
+                      onCheckedChange={() => handleExerciseSelect(exercise.id)}
+                      className="mr-3 h-5 w-5 rounded-full bg-background"
+                    />
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                      <Dumbbell className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{exercise.name}</h3>
+                      <span className="text-xs text-muted-foreground">{exercise.muscle_group_main}</span>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="min-w-0 p-1"
+                      onClick={() => handleExerciseDetails(exercise.id)}
+                    >
+                      <Info className="h-4 w-4 text-primary" />
+                    </Button>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">{exercise.name}</h3>
-                    <span className="text-xs text-muted-foreground">{exercise.muscle_group_main}</span>
-                  </div>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="min-w-0 p-1"
-                    onClick={() => handleExerciseDetails(exercise.id)}
-                  >
-                    <Info className="h-4 w-4 text-primary" />
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Selected Exercises Floating Button */}

@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import SelectExercisesPage from "./pages/SelectExercisesPage";
 import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
 import CreateExercisePage from "./pages/CreateExercisePage";
+import ConfigureRoutineExercisesPage from "./pages/ConfigureRoutineExercisesPage";
 
 function App() {
   return (
@@ -58,6 +59,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreateExercisePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/configure-routine-exercises"
+              element={
+                <ProtectedRoute>
+                  <ConfigureRoutineExercisesPage />
                 </ProtectedRoute>
               }
             />
