@@ -55,10 +55,13 @@ const WorkoutPage: React.FC = () => {
                 console.error("Error counting exercises:", countError);
               }
               
+              // Use the routine.type if it exists, otherwise use a default value
+              const routineType = (routine as any).type || "Mixto";
+              
               return {
                 id: routine.id.toString(),
                 name: routine.name,
-                type: routine.type || "Mixto", // Usar el tipo de la rutina o valor por defecto
+                type: routineType, // Using the safely accessed type value
                 duration: `${routine.estimated_duration_minutes || 45} min`,
                 exercises: exerciseCount || 0
               };
