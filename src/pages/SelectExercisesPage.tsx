@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Filter, Plus } from "lucide-react";
-import { Card, CardBody } from "@/components/Card";
-import Button from "@/components/Button";
-import ExerciseListItem from "@/components/workout/ExerciseListItem";
-import ExerciseFilterSheet from "@/components/workout/ExerciseFilterSheet";
-import ExerciseSearchBar from "@/components/workout/ExerciseSearchBar";
-import { useExercises, Exercise } from "@/hooks/workout/useExercises";
+import { useExercises } from "@/hooks/workout/useExercises";
 import { useToastHelper } from "@/hooks/useToastHelper";
+import ExerciseFilterSheet from "@/components/workout/ExerciseFilterSheet";
+import ExerciseSelectionHeader from "@/components/workout/ExerciseSelectionHeader";
+import ExerciseListStats from "@/components/workout/ExerciseListStats";
+import ExercisesList from "@/components/workout/ExercisesList";
+import ExercisesFloatingButton from "@/components/workout/ExercisesFloatingButton";
 
 interface LocationState {
   routineId: number;
@@ -44,6 +43,7 @@ const SelectExercisesPage: React.FC = () => {
   const muscleGroups = [...new Set(exercises.map(ex => ex.muscle_group_main).filter(Boolean))];
   const equipmentTypes = [...new Set(exercises.map(ex => ex.equipment_required).filter(Boolean))];
 
+  // Filter exercises based on search term and filters
   const filteredExercises = exercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (exercise.muscle_group_main && exercise.muscle_group_main.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -128,98 +128,50 @@ const SelectExercisesPage: React.FC = () => {
     });
   };
 
+  const handleBackNavigation = () => {
+    navigate("/workout/create", { 
+      state: { 
+        routineId: state?.routineId,
+        routineName: state?.routineName
+      } 
+    });
+  };
+
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background p-4 border-b border-muted/20">
-        <div className="flex items-center mb-4">
-          <button 
-            onClick={() => navigate("/workout/create", { 
-              state: { 
-                routineId: state?.routineId,
-                routineName: state?.routineName
-              } 
-            })}
-            className="mr-3 p-1 rounded-full hover:bg-secondary/50"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-xl font-bold">Seleccionar Ejercicios</h1>
-        </div>
-
-        {/* Search and Filter */}
-        <div className="flex items-center gap-2">
-          <ExerciseSearchBar 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-          />
-
-          <Button 
-            variant="secondary"
-            size="sm"
-            leftIcon={<Filter className="h-4 w-4" />}
-            onClick={() => setIsFilterSheetOpen(true)}
-          >
-            Filtrar
-          </Button>
-        </div>
-      </div>
+      {/* Header Component */}
+      <ExerciseSelectionHeader
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onBackClick={handleBackNavigation}
+        onFilterClick={() => setIsFilterSheetOpen(true)}
+        routineId={state?.routineId}
+        routineName={state?.routineName}
+      />
 
       {/* Exercise List */}
       <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-sm text-muted-foreground">
-            {filteredExercises.length} ejercicios encontrados
-          </span>
-          <Button 
-            variant="secondary"
-            size="sm"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={handleCreateExercise}
-          >
-            Crear Ejercicio
-          </Button>
-        </div>
+        {/* Stats and Create Button */}
+        <ExerciseListStats
+          exerciseCount={filteredExercises.length}
+          onCreateExercise={handleCreateExercise}
+        />
 
-        {isLoading ? (
-          <div className="flex justify-center items-center min-h-[200px]">
-            <p>Cargando ejercicios...</p>
-          </div>
-        ) : filteredExercises.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No se encontraron ejercicios</p>
-            <p className="text-sm mt-2">Intenta con otra búsqueda o añade uno nuevo</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredExercises.map(exercise => (
-              <Card key={exercise.id} className="hover:scale-[1.01] transition-transform duration-300">
-                <CardBody>
-                  <ExerciseListItem
-                    exercise={exercise}
-                    isSelected={selectedExercises.includes(exercise.id)}
-                    onToggleSelect={handleExerciseSelect}
-                    onViewDetails={handleExerciseDetails}
-                  />
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        )}
+        {/* Exercises List */}
+        <ExercisesList
+          exercises={filteredExercises}
+          selectedExercises={selectedExercises}
+          onToggleSelect={handleExerciseSelect}
+          onViewDetails={handleExerciseDetails}
+          isLoading={isLoading}
+        />
       </div>
 
-      {/* Selected Exercises Floating Button */}
-      {selectedExercises.length > 0 && (
-        <div className="fixed bottom-20 left-0 right-0 p-4 flex justify-center">
-          <Button
-            variant="primary"
-            className="shadow-neu-float px-6"
-            onClick={handleAddExercises}
-          >
-            Añadir {selectedExercises.length} ejercicios
-          </Button>
-        </div>
-      )}
+      {/* Floating Action Button */}
+      <ExercisesFloatingButton
+        selectedCount={selectedExercises.length}
+        onAddExercises={handleAddExercises}
+      />
 
       {/* Filter Sheet */}
       <ExerciseFilterSheet
