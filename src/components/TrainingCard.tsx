@@ -49,13 +49,13 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
             )}
             
             {workout.exercises && workout.exercises.length > 0 && (
-              <div className="bg-secondary/10 rounded-lg p-2">
+              <div className="bg-secondary/20 rounded-lg p-2">
                 <span className="text-xs text-muted-foreground block mb-1">Ejercicios clave:</span>
                 <div className="flex flex-wrap gap-1">
                   {workout.exercises.map((exercise, index) => (
                     <span 
                       key={index}
-                      className="text-xs px-2 py-0.5 bg-secondary rounded-full"
+                      className="text-xs px-2 py-0.5 bg-background/60 rounded-full"
                     >
                       {exercise}
                     </span>
@@ -69,7 +69,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
             <p className="text-sm text-muted-foreground mb-2">
               Es un buen día para mejorar 💪
             </p>
-            <div className="bg-secondary/10 rounded-lg p-3 mb-3">
+            <div className="bg-secondary/20 rounded-lg p-3 mb-3">
               <h5 className="text-sm font-medium mb-1">Entrenamiento Sugerido</h5>
               <p className="text-xs text-muted-foreground">
                 Basado en tu objetivo y nivel actual

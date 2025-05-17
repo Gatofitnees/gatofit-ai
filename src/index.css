@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,29 +7,29 @@
     --background: 215 30% 11%; /* #1A1D21 - Dark Gray/Black background */
     --foreground: 210 20% 98%; /* White/Light Gray for text */
 
-    --card: 220 10% 20%; /* #2C2F33 - Slightly lighter than background for cards */
+    --card: 220 10% 15%; /* Reduced contrast - slightly lighter than background */
     --card-foreground: 213 31% 91%; /* White for card text */
 
-    --popover: 220 10% 20%; /* #2C2F33 */
+    --popover: 220 10% 15%; /* Matching card background */
     --popover-foreground: 215 20.2% 95.1%; 
 
     --primary: 207 90% 54%; /* Electric Blue for accent */
     --primary-foreground: 210 40% 98%; /* White for text on primary */
 
-    --secondary: 220 13% 23%; /* #36393F - Medium Dark Gray for secondary elements */
+    --secondary: 220 13% 18%; /* Lighter gray for secondary elements with less contrast */
     --secondary-foreground: 210 40% 98%; /* White for text on secondary */
 
-    --muted: 220 13% 23%; /* #36393F */
+    --muted: 220 13% 18%; /* Matching secondary */
     --muted-foreground: 215 20.2% 75.1%; /* Gray for muted text */
 
-    --accent: 220 13% 23%; /* #36393F */
+    --accent: 220 13% 18%; /* Matching secondary */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 13% 23%; /* #36393F */
-    --input: 220 13% 23%; /* #36393F */
+    --border: 220 13% 18%; /* Matching secondary */
+    --input: 220 13% 18%; /* Matching secondary */
     --ring: 207 90% 54%; /* Electric Blue for ring */
 
     --radius: 1rem; /* Increased border radius */
@@ -66,7 +65,7 @@
   }
   
   .neu-card {
-    @apply bg-card/90 border border-white/10 shadow-neu-card rounded-xl backdrop-blur-sm;
+    @apply bg-card/90 border border-white/5 shadow-neu-card rounded-xl backdrop-blur-sm;
   }
   
   .hide-scrollbar {
