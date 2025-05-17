@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Save } from "lucide-react";
-import { Card, CardBody, CardHeader } from "@/components/Card";
+import { Card, CardBody } from "@/components/Card";
 import Button from "@/components/Button";
 import { useToastHelper } from "@/hooks/useToastHelper";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import ExerciseListItem from "@/components/workout/ExerciseListItem";
+import ExerciseConfigItem from "@/components/workout/ExerciseConfigItem";
 import { Exercise } from "@/hooks/workout/useExercises";
 
 interface LocationState {
@@ -302,81 +302,18 @@ const CreateRoutinePage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {selectedExercises.map((exercise) => (
-              <Card key={exercise.id} className="hover:scale-[1.01] transition-transform duration-300">
-                <CardBody>
-                  <div className="mb-2">
-                    <ExerciseListItem
-                      exercise={exercise}
-                      isSelected={false}
-                      onToggleSelect={() => {}}
-                      onViewDetails={handleViewExerciseDetails}
-                    />
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">Series</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={exerciseConfigs[exercise.id]?.sets || 3}
-                        onChange={(e) => handleUpdateExerciseConfig(
-                          exercise.id, 
-                          'sets', 
-                          parseInt(e.target.value) || 1
-                        )}
-                        className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">Descanso (seg)</label>
-                      <input
-                        type="number"
-                        min="5"
-                        step="5"
-                        value={exerciseConfigs[exercise.id]?.restSeconds || 60}
-                        onChange={(e) => handleUpdateExerciseConfig(
-                          exercise.id, 
-                          'restSeconds', 
-                          parseInt(e.target.value) || 60
-                        )}
-                        className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">Reps. Min</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={exerciseConfigs[exercise.id]?.repsMin || 8}
-                        onChange={(e) => handleUpdateExerciseConfig(
-                          exercise.id, 
-                          'repsMin', 
-                          parseInt(e.target.value) || 1
-                        )}
-                        className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">Reps. Max</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={exerciseConfigs[exercise.id]?.repsMax || 12}
-                        onChange={(e) => handleUpdateExerciseConfig(
-                          exercise.id, 
-                          'repsMax', 
-                          parseInt(e.target.value) || 1
-                        )}
-                        className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-                      />
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
+              <ExerciseConfigItem
+                key={exercise.id}
+                exercise={exercise}
+                config={exerciseConfigs[exercise.id] || {
+                  sets: 3,
+                  repsMin: 8,
+                  repsMax: 12,
+                  restSeconds: 60
+                }}
+                onConfigChange={handleUpdateExerciseConfig}
+                onViewDetails={handleViewExerciseDetails}
+              />
             ))}
           </div>
         )}
