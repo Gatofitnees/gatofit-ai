@@ -12,6 +12,7 @@ import SelectExercisesPage from "./pages/SelectExercisesPage";
 import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
 import CreateExercisePage from "./pages/CreateExercisePage";
 import ConfigureRoutineExercisesPage from "./pages/ConfigureRoutineExercisesPage";
+import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 
 function App() {
   return (
@@ -74,11 +75,7 @@ function App() {
               path="/workout/start/:id"
               element={
                 <ProtectedRoute>
-                  {/* Placeholder for future WorkoutSessionPage */}
-                  <div className="p-4">
-                    <h1>Iniciar Rutina</h1>
-                    <p>Esta página está en desarrollo</p>
-                  </div>
+                  <WorkoutSessionPage />
                 </ProtectedRoute>
               }
             />
