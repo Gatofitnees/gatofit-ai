@@ -2,21 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Save } from "lucide-react";
-import { Card, CardBody } from "@/components/Card";
 import Button from "@/components/Button";
 import { useToastHelper } from "@/hooks/useToastHelper";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import ExerciseConfigItem from "@/components/workout/ExerciseConfigItem";
 import { Exercise } from "@/hooks/workout/useExercises";
+import RoutineForm, { RoutineFormData } from "@/components/workout/RoutineForm";
 
 interface LocationState {
   selectedExercises?: Exercise[];
@@ -30,9 +21,12 @@ const CreateRoutinePage: React.FC = () => {
   const toast = useToastHelper();
   const state = location.state as LocationState || {};
   
-  const [routineName, setRoutineName] = useState(state.routineName || "");
-  const [routineType, setRoutineType] = useState("");
-  const [routineDescription, setRoutineDescription] = useState("");
+  const [routineFormData, setRoutineFormData] = useState<RoutineFormData>({
+    name: state.routineName || "",
+    type: "",
+    description: "",
+  });
+  
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>(state.selectedExercises || []);
   const [routineId, setRoutineId] = useState<number | undefined>(state.routineId);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +62,7 @@ const CreateRoutinePage: React.FC = () => {
 
   const handleSelectExercises = async () => {
     // Return early if routine name is empty
-    if (!routineName.trim()) {
+    if (!routineFormData.name.trim()) {
       toast.showError(
         "Nombre requerido",
         "Por favor añade un nombre para tu rutina"
@@ -93,9 +87,9 @@ const CreateRoutinePage: React.FC = () => {
         
         // Create a routine in the database
         const { data, error } = await supabase.from('routines').insert({
-          name: routineName,
-          type: routineType || "Mixto",
-          description: routineDescription,
+          name: routineFormData.name,
+          type: routineFormData.type || "Mixto",
+          description: routineFormData.description,
           user_id: session.session.user.id,
           is_predefined: false
         }).select().single();
@@ -111,7 +105,7 @@ const CreateRoutinePage: React.FC = () => {
       navigate("/workout/select-exercises", { 
         state: { 
           routineId: routineIdToUse,
-          routineName: routineName
+          routineName: routineFormData.name
         }
       });
       
@@ -208,6 +202,10 @@ const CreateRoutinePage: React.FC = () => {
     navigate(`/workout/exercise-details/${id}`);
   };
 
+  const handleFormChange = (data: RoutineFormData) => {
+    setRoutineFormData(data);
+  };
+
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">
       {/* Header */}
@@ -237,50 +235,11 @@ const CreateRoutinePage: React.FC = () => {
       </div>
 
       <div className="p-4">
-        <Card className="mb-6">
-          <CardBody>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nombre de la Rutina</label>
-                <Input
-                  type="text" 
-                  placeholder="Ej: Día de Pierna" 
-                  value={routineName}
-                  onChange={(e) => setRoutineName(e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Tipo de Rutina</label>
-                <Select value={routineType} onValueChange={setRoutineType}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Seleccionar tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="strength">Fuerza</SelectItem>
-                      <SelectItem value="cardio">Cardio</SelectItem>
-                      <SelectItem value="flexibility">Flexibilidad</SelectItem>
-                      <SelectItem value="mixed">Mixto</SelectItem>
-                      <SelectItem value="custom">Personalizado</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Descripción (opcional)</label>
-                <textarea 
-                  rows={3}
-                  placeholder="Describe brevemente esta rutina..." 
-                  className="w-full rounded-xl p-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button resize-none"
-                  value={routineDescription}
-                  onChange={(e) => setRoutineDescription(e.target.value)}
-                />
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+        <RoutineForm 
+          initialData={routineFormData} 
+          onFormChange={handleFormChange}
+          isDisabled={isLoading}
+        />
 
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">Ejercicios</h2>
