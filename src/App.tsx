@@ -8,6 +8,9 @@ import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SelectExercisesPage from "./pages/SelectExercisesPage";
+import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
+import CreateExercisePage from "./pages/CreateExercisePage";
 
 function App() {
   return (
@@ -31,6 +34,30 @@ function App() {
                 <ProtectedRoute>
                   <WorkoutPage />
                   <NavBar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/select-exercises"
+              element={
+                <ProtectedRoute>
+                  <SelectExercisesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/exercise-details/:id"
+              element={
+                <ProtectedRoute>
+                  <ExerciseDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/create-exercise"
+              element={
+                <ProtectedRoute>
+                  <CreateExercisePage />
                 </ProtectedRoute>
               }
             />

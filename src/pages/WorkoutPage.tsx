@@ -1,9 +1,12 @@
 
 import React, { useState } from "react";
-import { Clock, Dumbbell, Filter, Plus, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, ChevronDown, Clock, Dumbbell, Filter, Plus, Search } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
 import Button from "../components/Button";
 import TabMenu from "../components/TabMenu";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WorkoutRoutine {
   id: string;
@@ -15,6 +18,7 @@ interface WorkoutRoutine {
 
 const WorkoutPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("routines");
+  const navigate = useNavigate();
   
   // Mock data
   const routines: WorkoutRoutine[] = [
@@ -47,6 +51,10 @@ const WorkoutPage: React.FC = () => {
       exercises: 6
     }
   ];
+
+  const handleSelectExercises = () => {
+    navigate("/workout/select-exercises");
+  };
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -143,14 +151,21 @@ const WorkoutPage: React.FC = () => {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">Tipo de Rutina</label>
-                  <select 
-                    className="w-full h-10 rounded-xl px-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button appearance-none"
-                  >
-                    <option value="strength">Fuerza</option>
-                    <option value="cardio">Cardio</option>
-                    <option value="flexibility">Flexibilidad</option>
-                    <option value="mixed">Mixto</option>
-                  </select>
+                  <Select>
+                    <SelectTrigger className="w-full h-10 rounded-xl px-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button">
+                      <SelectValue placeholder="Seleccionar tipo" />
+                      <ChevronDown className="h-4 w-4 text-primary" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background/95 backdrop-blur-sm border border-secondary">
+                      <SelectGroup>
+                        <SelectItem value="strength">Fuerza</SelectItem>
+                        <SelectItem value="cardio">Cardio</SelectItem>
+                        <SelectItem value="flexibility">Flexibilidad</SelectItem>
+                        <SelectItem value="mixed">Mixto</SelectItem>
+                        <SelectItem value="custom">Personalizado</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>
@@ -167,6 +182,7 @@ const WorkoutPage: React.FC = () => {
                     variant="primary" 
                     fullWidth 
                     leftIcon={<Plus className="h-4 w-4" />}
+                    onClick={handleSelectExercises}
                   >
                     Añadir Ejercicios
                   </Button>

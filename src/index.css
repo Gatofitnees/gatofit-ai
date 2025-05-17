@@ -65,6 +65,10 @@
     @apply bg-background/80 border border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:shadow-[0_6px_14px_rgba(0,0,0,0.4)];
   }
   
+  .neu-button-active {
+    @apply shadow-[inset_2px_2px_5px_rgba(0,0,0,0.3),inset_-2px_-2px_5px_rgba(255,255,255,0.05)];
+  }
+  
   .neu-card {
     @apply bg-card/90 border border-white/5 shadow-neu-card rounded-xl backdrop-blur-sm;
   }
@@ -94,6 +98,52 @@
     }
     50% {
       filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.7));
+    }
+  }
+  
+  /* New animations for exercise selection */
+  .slide-in-right {
+    animation: slideInRight 0.3s forwards;
+  }
+  
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .slide-out-right {
+    animation: slideOutRight 0.3s forwards;
+  }
+  
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+  
+  .fade-in-scale {
+    animation: fadeInScale 0.3s forwards;
+  }
+  
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 }
