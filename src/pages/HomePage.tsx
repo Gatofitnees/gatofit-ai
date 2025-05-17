@@ -1,15 +1,23 @@
 
-import React from "react";
-import { Calendar, ChevronRight, Plus } from "lucide-react";
-import Avatar from "../components/Avatar";
-import { Card, CardHeader, CardBody, CardFooter } from "../components/Card";
+import React, { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { Plus } from "lucide-react";
 import Button from "../components/Button";
-import MacroProgress from "../components/MacroProgress";
+import UserHeader from "../components/UserHeader";
+import DaySelector from "../components/DaySelector";
+import TrainingCard from "../components/TrainingCard";
+import MacrosCard from "../components/MacrosCard";
 
 const HomePage: React.FC = () => {
-  // Mock data
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
+  
+  // Datos de ejemplo - En una implementación real vendrían de Supabase
+  const username = user?.user_metadata?.name || user?.email?.split('@')[0] || "Usuario";
   const userProgress = 75;
-  const username = "Carlos";
   
   const macros = {
     calories: { current: 1450, target: 2000, unit: "kcal" },
@@ -18,120 +26,82 @@ const HomePage: React.FC = () => {
     fats: { current: 35, target: 65 }
   };
   
-  const nextWorkout = {
+  const completedWorkout = hasCompletedWorkout ? {
     name: "Full Body Force",
-    time: "18:30",
-    duration: "45 min"
+    duration: "45 min",
+    calories: 320,
+    exercises: ["Press Banca", "Sentadillas", "Pull-ups"]
+  } : undefined;
+
+  // En una implementación real, esto cargaría los datos de Supabase
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    // Aquí se cargarían los datos de entreno y alimentación para la fecha seleccionada
+    
+    // Simulamos datos de ejemplo aleatorios
+    if (Math.random() > 0.5) {
+      setHasCompletedWorkout(true);
+    } else {
+      setHasCompletedWorkout(false);
+    }
+  };
+
+  const handleStartWorkout = () => {
+    toast({
+      title: "Iniciar entrenamiento",
+      description: "Redirigiendo a la página de entrenamiento...",
+    });
+  };
+
+  const handleAddFood = () => {
+    toast({
+      title: "Añadir comida",
+      description: "Redirigiendo a la página de nutrición...",
+    });
   };
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      {/* User Greeting & Progress */}
-      <div className="flex items-center mb-6 animate-fade-in">
-        <Avatar 
-          name={username} 
-          progress={userProgress} 
-          size="md" 
-        />
-        <div className="ml-4">
-          <h1 className="text-xl font-bold">
-            ¡Hola, <span className="text-gradient">{username}</span>!
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {userProgress}% completado hoy
-          </p>
-        </div>
-      </div>
-
-      {/* Today's Workout Card */}
-      <Card className="mb-5">
-        <CardHeader 
-          title="Mi Entrenamiento Hoy" 
-          icon={<Calendar className="h-5 w-5" />} 
-        />
-        <CardBody>
-          {nextWorkout ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium">{nextWorkout.name}</h4>
-                <div className="flex items-center mt-1">
-                  <span className="text-sm text-muted-foreground mr-2">
-                    {nextWorkout.time}
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                    {nextWorkout.duration}
-                  </span>
-                </div>
-              </div>
-              <Button 
-                variant="primary"
-                size="sm"
-                rightIcon={<ChevronRight className="h-4 w-4" />}
-              >
-                Iniciar
-              </Button>
-            </div>
-          ) : (
-            <div className="text-center py-3">
-              <p className="text-sm text-muted-foreground">
-                No hay entrenamientos programados para hoy
-              </p>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                leftIcon={<Plus className="h-4 w-4" />}
-              >
-                Programar Entrenamiento
-              </Button>
-            </div>
-          )}
-        </CardBody>
-      </Card>
+      {/* Encabezado y perfil de usuario */}
+      <UserHeader 
+        username={username} 
+        progress={userProgress}
+      />
       
-      {/* Nutrition Progress Card */}
-      <Card>
-        <CardHeader 
-          title="Mis Macros Hoy"
-          subtitle="Resumen de objetivos nutricionales" 
-        />
-        <CardBody>
-          <div className="space-y-4">
-            <MacroProgress 
-              label="Calorías" 
-              current={macros.calories.current} 
-              target={macros.calories.target} 
-              unit={macros.calories.unit} 
-            />
-            <MacroProgress 
-              label="Proteínas" 
-              current={macros.protein.current} 
-              target={macros.protein.target}
-              color="protein" 
-            />
-            <MacroProgress 
-              label="Carbohidratos" 
-              current={macros.carbs.current} 
-              target={macros.carbs.target}
-              color="carbs" 
-            />
-            <MacroProgress 
-              label="Grasas" 
-              current={macros.fats.current} 
-              target={macros.fats.target}
-              color="fat" 
-            />
-          </div>
-        </CardBody>
-        <CardFooter className="flex justify-center">
-          <Button 
-            variant="secondary"
-            leftIcon={<Plus className="h-4 w-4" />}
-          >
-            Añadir Comida
-          </Button>
-        </CardFooter>
-      </Card>
+      {/* Selector de días */}
+      <DaySelector 
+        onSelectDate={handleDateSelect}
+        datesWithRecords={[
+          new Date(),
+          new Date(new Date().setDate(new Date().getDate() - 2)),
+          new Date(new Date().setDate(new Date().getDate() - 5))
+        ]}
+      />
+
+      {/* Tarjeta de Entrenamiento */}
+      <TrainingCard
+        completed={hasCompletedWorkout}
+        workout={completedWorkout}
+        onStartWorkout={handleStartWorkout}
+        onViewDetails={() => toast({
+          title: "Detalles del entrenamiento",
+          description: "Mostrando detalles del entrenamiento...",
+        })}
+      />
+      
+      {/* Tarjeta de Macros */}
+      <MacrosCard macros={macros} />
+      
+      {/* Botón flotante para añadir comida */}
+      <div className="fixed right-4 bottom-20 z-30">
+        <Button
+          variant="primary"
+          className="rounded-full h-14 w-14 shadow-lg"
+          onClick={handleAddFood}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 };
