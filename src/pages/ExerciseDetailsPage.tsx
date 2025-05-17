@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, ChevronRight, LineChart } from "lucide-react";
+import { ArrowLeft, Plus, ChevronRight, LineChart, Dumbbell } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Button from "@/components/Button";
 import { supabase } from "@/integrations/supabase/client";
