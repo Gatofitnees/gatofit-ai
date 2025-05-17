@@ -33,23 +33,38 @@ const WorkoutPage: React.FC = () => {
         const { data: session } = await supabase.auth.getSession();
         if (!session.session) return;
         
-        const { data, error } = await supabase
+        // First get the basic routine info
+        const { data: routinesData, error } = await supabase
           .from('routines')
           .select('*')
           .eq('user_id', session.session.user.id);
           
         if (error) throw error;
         
-        if (data) {
-          const formattedRoutines = data.map(routine => ({
-            id: routine.id.toString(),
-            name: routine.name,
-            type: routine.type || "Mixto",
-            duration: `${routine.estimated_duration_minutes || 45} min`,
-            exercises: routine.exercise_count || 0
-          }));
+        if (routinesData) {
+          // Now fetch exercise counts for each routine
+          const routinesWithExercises = await Promise.all(
+            routinesData.map(async (routine) => {
+              const { count: exerciseCount, error: countError } = await supabase
+                .from('routine_exercises')
+                .select('*', { count: 'exact', head: true })
+                .eq('routine_id', routine.id);
+              
+              if (countError) {
+                console.error("Error counting exercises:", countError);
+              }
+              
+              return {
+                id: routine.id.toString(),
+                name: routine.name,
+                type: routineType || "Mixto", // Default or use a field from the database if available
+                duration: `${routine.estimated_duration_minutes || 45} min`,
+                exercises: exerciseCount || 0
+              };
+            })
+          );
           
-          setRoutines(formattedRoutines);
+          setRoutines(routinesWithExercises);
         }
       } catch (error) {
         console.error("Error fetching routines:", error);
@@ -63,7 +78,7 @@ const WorkoutPage: React.FC = () => {
     if (activeTab === "routines") {
       fetchRoutines();
     }
-  }, [activeTab, toast]);
+  }, [activeTab, toast, routineType]);
 
   const handleNewRoutine = () => {
     // Just navigate to the create tab
