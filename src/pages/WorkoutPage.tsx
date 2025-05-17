@@ -26,7 +26,7 @@ const WorkoutPage: React.FC = () => {
     if (activeTab === "routines") {
       fetchRoutines();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchRoutines]);
   
   // Filter routines based on search term
   const filteredRoutines = routines.filter(routine => 

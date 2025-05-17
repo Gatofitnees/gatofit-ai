@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Exercise } from "../types";
 
 export const useExerciseSelection = (exercises: Exercise[]) => {
@@ -13,12 +13,16 @@ export const useExerciseSelection = (exercises: Exercise[]) => {
   const equipmentTypes = ["Peso Corporal", "Mancuernas", "Barra", "Máquinas", "Banda Elástica", "TRX"];
 
   const filteredExercises = useMemo(() => {
+    if (!exercises || exercises.length === 0) {
+      return [];
+    }
+    
     return exercises.filter(exercise => {
       const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            exercise.muscle_group_main.toLowerCase().includes(searchTerm.toLowerCase());
+                            (exercise.muscle_group_main && exercise.muscle_group_main.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesMuscle = muscleFilters.length === 0 || 
-                            muscleFilters.includes(exercise.muscle_group_main);
+                            (exercise.muscle_group_main && muscleFilters.includes(exercise.muscle_group_main));
       
       const matchesEquipment = equipmentFilters.length === 0 || 
                               (exercise.equipment_required && equipmentFilters.includes(exercise.equipment_required));
@@ -27,29 +31,35 @@ export const useExerciseSelection = (exercises: Exercise[]) => {
     });
   }, [exercises, searchTerm, muscleFilters, equipmentFilters]);
 
-  const handleExerciseSelect = (id: number) => {
-    if (selectedExercises.includes(id)) {
-      setSelectedExercises(selectedExercises.filter(exId => exId !== id));
-    } else {
-      setSelectedExercises([...selectedExercises, id]);
-    }
-  };
+  const handleExerciseSelect = useCallback((id: number) => {
+    setSelectedExercises(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(exId => exId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  }, []);
 
-  const handleMuscleFilterToggle = (muscle: string) => {
-    if (muscleFilters.includes(muscle)) {
-      setMuscleFilters(muscleFilters.filter(m => m !== muscle));
-    } else {
-      setMuscleFilters([...muscleFilters, muscle]);
-    }
-  };
+  const handleMuscleFilterToggle = useCallback((muscle: string) => {
+    setMuscleFilters(prev => {
+      if (prev.includes(muscle)) {
+        return prev.filter(m => m !== muscle);
+      } else {
+        return [...prev, muscle];
+      }
+    });
+  }, []);
 
-  const handleEquipmentFilterToggle = (equipment: string) => {
-    if (equipmentFilters.includes(equipment)) {
-      setEquipmentFilters(equipmentFilters.filter(e => e !== equipment));
-    } else {
-      setEquipmentFilters([...equipmentFilters, equipment]);
-    }
-  };
+  const handleEquipmentFilterToggle = useCallback((equipment: string) => {
+    setEquipmentFilters(prev => {
+      if (prev.includes(equipment)) {
+        return prev.filter(e => e !== equipment);
+      } else {
+        return [...prev, equipment];
+      }
+    });
+  }, []);
 
   return {
     searchTerm,

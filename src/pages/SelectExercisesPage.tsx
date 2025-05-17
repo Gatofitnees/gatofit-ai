@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "@/features/workout/exercise-selection/components/Header";
 import ExerciseList from "@/features/workout/exercise-selection/components/ExerciseList";
@@ -9,12 +9,22 @@ import FloatingActionButton from "@/features/workout/exercise-selection/componen
 import { useExercises } from "@/features/workout/exercise-selection/hooks/useExercises";
 import { useExerciseSelection } from "@/features/workout/exercise-selection/hooks/useExerciseSelection";
 import { RoutineFormData } from "@/features/workout/exercise-selection/types";
+import { toast } from "@/hooks/use-toast";
 
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routineFormData = location.state?.routineFormData as RoutineFormData;
   
+  // Check if we have the required data
+  useEffect(() => {
+    if (!routineFormData || !routineFormData.name) {
+      toast.error("Información de rutina incompleta");
+      navigate('/workout');
+      return;
+    }
+  }, [routineFormData, navigate]);
+
   const { exercises, loading } = useExercises();
   
   const {
@@ -38,6 +48,11 @@ const SelectExercisesPage: React.FC = () => {
   };
 
   const handleAddExercises = () => {
+    if (selectedExercises.length === 0) {
+      toast.error("Por favor, selecciona al menos un ejercicio");
+      return;
+    }
+
     // Get the selected exercises data
     const selectedExercisesData = exercises.filter(ex => selectedExercises.includes(ex.id));
     
@@ -53,6 +68,11 @@ const SelectExercisesPage: React.FC = () => {
   const handleCreateExercise = () => {
     navigate("/workout/create-exercise");
   };
+
+  // If there's no valid state data, show nothing while redirecting
+  if (!routineFormData) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">
