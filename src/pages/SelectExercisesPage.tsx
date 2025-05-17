@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Check, ChevronDown, Filter, Info, Search, X, Plus, Dumbbell } from "lucide-react";
@@ -59,12 +60,17 @@ const SelectExercisesPage: React.FC = () => {
     const fetchExercises = async () => {
       try {
         setIsLoading(true);
+        console.log("Fetching exercises...");
         const { data, error } = await supabase
           .from('exercises')
           .select('*');
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching exercises:", error);
+          throw error;
+        }
         
+        console.log("Exercises data:", data);
         setExercises(data || []);
       } catch (error) {
         console.error("Error fetching exercises:", error);

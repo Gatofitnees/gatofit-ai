@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronDown, Clock, Dumbbell, Filter, Plus, Search } from "lucide-react";
@@ -57,7 +58,7 @@ const WorkoutPage: React.FC = () => {
               return {
                 id: routine.id.toString(),
                 name: routine.name,
-                type: routineType || "Mixto", // Default or use a field from the database if available
+                type: routine.type || "Mixto", // Usar el tipo de la rutina o valor por defecto
                 duration: `${routine.estimated_duration_minutes || 45} min`,
                 exercises: exerciseCount || 0
               };
@@ -78,7 +79,7 @@ const WorkoutPage: React.FC = () => {
     if (activeTab === "routines") {
       fetchRoutines();
     }
-  }, [activeTab, toast, routineType]);
+  }, [activeTab, toast]);
 
   const handleNewRoutine = () => {
     // Just navigate to the create tab
@@ -218,16 +219,6 @@ const WorkoutPage: React.FC = () => {
                 <p className="text-sm mt-2">Crea tu primera rutina usando el botón de abajo</p>
               </div>
             )}
-
-            {/* Create Routine Button - Fixed at bottom right */}
-            <div className="fixed bottom-24 right-6">
-              <Button
-                variant="primary"
-                className="h-14 w-14 rounded-full shadow-neu-float"
-                leftIcon={<Plus className="h-6 w-6" />}
-                onClick={handleNewRoutine}
-              />
-            </div>
           </div>
         </>
       ) : (
