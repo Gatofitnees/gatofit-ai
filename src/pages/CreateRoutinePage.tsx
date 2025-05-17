@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Plus, Save } from "lucide-react";
-import Button from "@/components/Button";
 import { useToastHelper } from "@/hooks/useToastHelper";
 import { supabase } from "@/integrations/supabase/client";
-import ExerciseConfigItem from "@/components/workout/ExerciseConfigItem";
 import { Exercise } from "@/hooks/workout/useExercises";
 import RoutineForm, { RoutineFormData } from "@/components/workout/RoutineForm";
+import CreateRoutineHeader from "@/components/workout/CreateRoutineHeader";
+import RoutineExercisesList from "@/components/workout/RoutineExercisesList";
 
 interface LocationState {
   selectedExercises?: Exercise[];
@@ -206,33 +205,16 @@ const CreateRoutinePage: React.FC = () => {
     setRoutineFormData(data);
   };
 
+  const pageTitle = routineId ? 'Editar Rutina' : 'Crear Rutina';
+
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background p-4 border-b border-muted/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <button 
-              onClick={() => navigate("/workout")}
-              className="mr-3 p-1 rounded-full hover:bg-secondary/50"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-xl font-bold">{routineId ? 'Editar Rutina' : 'Crear Rutina'}</h1>
-          </div>
-          {selectedExercises.length > 0 && (
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={<Save className="h-4 w-4" />}
-              onClick={handleSaveRoutine}
-              disabled={isLoading}
-            >
-              Guardar
-            </Button>
-          )}
-        </div>
-      </div>
+      <CreateRoutineHeader
+        title={pageTitle}
+        onSave={handleSaveRoutine}
+        hasExercises={selectedExercises.length > 0}
+        isLoading={isLoading}
+      />
 
       <div className="p-4">
         <RoutineForm 
@@ -241,41 +223,13 @@ const CreateRoutinePage: React.FC = () => {
           isDisabled={isLoading}
         />
 
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Ejercicios</h2>
-          <Button 
-            variant="primary" 
-            size="sm"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={handleSelectExercises}
-          >
-            Añadir Ejercicios
-          </Button>
-        </div>
-
-        {selectedExercises.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No hay ejercicios añadidos</p>
-            <p className="text-sm mt-2">Añade ejercicios a tu rutina</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {selectedExercises.map((exercise) => (
-              <ExerciseConfigItem
-                key={exercise.id}
-                exercise={exercise}
-                config={exerciseConfigs[exercise.id] || {
-                  sets: 3,
-                  repsMin: 8,
-                  repsMax: 12,
-                  restSeconds: 60
-                }}
-                onConfigChange={handleUpdateExerciseConfig}
-                onViewDetails={handleViewExerciseDetails}
-              />
-            ))}
-          </div>
-        )}
+        <RoutineExercisesList
+          exercises={selectedExercises}
+          exerciseConfigs={exerciseConfigs}
+          onAddExercises={handleSelectExercises}
+          onConfigChange={handleUpdateExerciseConfig}
+          onViewDetails={handleViewExerciseDetails}
+        />
       </div>
     </div>
   );
