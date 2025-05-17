@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Check, ChevronDown, Filter, Info, Search, X, Plus, Dumbbell } from "lucide-react";
@@ -18,7 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Exercise {
-  id: string;
+  id: number; // Changed from string to number to match database
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
@@ -38,7 +37,7 @@ const SelectExercisesPage: React.FC = () => {
   const routineFormData = location.state?.routineFormData as RoutineFormData;
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<number[]>([]); // Changed from string[] to number[]
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -59,7 +58,7 @@ const SelectExercisesPage: React.FC = () => {
         }
         
         if (data) {
-          setExercises(data);
+          setExercises(data as Exercise[]);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -78,7 +77,7 @@ const SelectExercisesPage: React.FC = () => {
       // Mock data as fallback
       setExercises([
         {
-          id: "1",
+          id: 1,  // Changed from string to number
           name: "Press de Banca",
           muscle_group_main: "Pecho",
           equipment_required: "Barra",
@@ -86,7 +85,7 @@ const SelectExercisesPage: React.FC = () => {
           video_url: "/exercises/bench-press.mp4"
         },
         {
-          id: "2",
+          id: 2,  // Changed from string to number
           name: "Sentadilla",
           muscle_group_main: "Piernas",
           equipment_required: "Peso Corporal",
@@ -94,7 +93,7 @@ const SelectExercisesPage: React.FC = () => {
           video_url: "/exercises/squat.mp4"
         },
         {
-          id: "3",
+          id: 3,  // Changed from string to number
           name: "Pull-up",
           muscle_group_main: "Espalda",
           equipment_required: "Barra de dominadas",
@@ -102,7 +101,7 @@ const SelectExercisesPage: React.FC = () => {
           video_url: "/exercises/pull-up.mp4"
         },
         {
-          id: "4",
+          id: 4,  // Changed from string to number
           name: "Plancha",
           muscle_group_main: "Core",
           equipment_required: "Peso Corporal",
@@ -110,7 +109,7 @@ const SelectExercisesPage: React.FC = () => {
           video_url: "/exercises/plank.mp4"
         },
         {
-          id: "5",
+          id: 5,  // Changed from string to number
           name: "Extensión de Tríceps",
           muscle_group_main: "Tríceps",
           equipment_required: "Mancuernas",
@@ -118,7 +117,7 @@ const SelectExercisesPage: React.FC = () => {
           video_url: "/exercises/triceps.mp4"
         },
         {
-          id: "6",
+          id: 6,  // Changed from string to number
           name: "Curl de Bíceps",
           muscle_group_main: "Bíceps",
           equipment_required: "Mancuernas",
@@ -145,7 +144,7 @@ const SelectExercisesPage: React.FC = () => {
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
 
-  const handleExerciseSelect = (id: string) => {
+  const handleExerciseSelect = (id: number) => {  // Changed from string to number
     if (selectedExercises.includes(id)) {
       setSelectedExercises(selectedExercises.filter(exId => exId !== id));
     } else {
@@ -169,7 +168,7 @@ const SelectExercisesPage: React.FC = () => {
     }
   };
 
-  const handleExerciseDetails = (id: string) => {
+  const handleExerciseDetails = (id: number) => {  // Changed from string to number
     navigate(`/workout/exercise-details/${id}`);
   };
 

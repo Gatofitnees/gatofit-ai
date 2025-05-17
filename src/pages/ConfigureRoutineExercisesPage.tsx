@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Trash2, Save, GripVertical, PlusCircle, MinusCircle } from "lucide-react";
@@ -17,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 
 interface Exercise {
-  id: string;
+  id: number; // Changed from string to number
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
@@ -103,7 +102,7 @@ const ConfigureRoutineExercisesPage: React.FC = () => {
       // Insert exercise details
       const routineExercises = exercises.map((ex, index) => ({
         routine_id: routineData.id,
-        exercise_id: ex.id,
+        exercise_id: ex.id, // This is now a number, matching the database expectation
         exercise_order: index + 1,
         sets: ex.sets,
         reps_min: ex.is_time_based ? null : ex.reps_min,

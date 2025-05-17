@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronDown, Clock, Dumbbell, Filter, Plus, Search } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WorkoutRoutine {
-  id: string;
+  id: string | number; // Allow for either string or number to be flexible
   name: string;
   type: string;
   duration: string;
@@ -26,8 +26,68 @@ const WorkoutPage: React.FC = () => {
   const [routineType, setRoutineType] = useState("");
   const [routineDescription, setRoutineDescription] = useState("");
   
-  // Mock data
-  const routines: WorkoutRoutine[] = [
+  // State for database routines
+  const [dbRoutines, setDbRoutines] = useState<WorkoutRoutine[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Fetch user routines
+  useEffect(() => {
+    const fetchRoutines = async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.log('No authenticated user found');
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch routines from the database
+        const { data, error } = await supabase
+          .from('routines')
+          .select('id, name, description, estimated_duration_minutes, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching routines:', error);
+          return;
+        }
+        
+        if (data) {
+          // For each routine, count the exercises
+          const routinesWithExerciseCount = await Promise.all(data.map(async (routine) => {
+            const { count, error } = await supabase
+              .from('routine_exercises')
+              .select('*', { count: 'exact', head: true })
+              .eq('routine_id', routine.id);
+              
+            return {
+              id: routine.id,
+              name: routine.name,
+              type: "Custom", // We'll update this when we add routine types
+              duration: `${routine.estimated_duration_minutes || 0} min`,
+              exercises: count || 0
+            };
+          }));
+          
+          setDbRoutines(routinesWithExerciseCount);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (activeTab === "routines") {
+      fetchRoutines();
+    }
+  }, [activeTab]);
+  
+  // Mock data as fallback
+  const mockRoutines: WorkoutRoutine[] = [
     {
       id: "1",
       name: "Full Body Force",
@@ -57,6 +117,9 @@ const WorkoutPage: React.FC = () => {
       exercises: 6
     }
   ];
+
+  // Combine real and mock routines
+  const routines = dbRoutines.length > 0 ? dbRoutines : mockRoutines;
 
   const handleSelectExercises = () => {
     // Validate form fields
@@ -114,35 +177,51 @@ const WorkoutPage: React.FC = () => {
 
           {/* Routines List */}
           <div className="space-y-4">
-            {routines.map((routine) => (
-              <Card key={routine.id} className="hover:scale-[1.01] transition-transform duration-300">
-                <CardBody>
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-                      <Dumbbell className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium">{routine.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                          {routine.type}
-                        </span>
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {routine.duration}
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {routine.exercises} ejercicios
-                        </span>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-pulse text-primary">Cargando rutinas...</div>
+              </div>
+            ) : routines.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">No tienes rutinas guardadas</p>
+                <Button 
+                  variant="primary"
+                  onClick={() => setActiveTab("create")}
+                >
+                  Crear tu primera rutina
+                </Button>
+              </div>
+            ) : (
+              routines.map((routine) => (
+                <Card key={routine.id} className="hover:scale-[1.01] transition-transform duration-300">
+                  <CardBody>
+                    <div className="flex items-center">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                        <Dumbbell className="h-6 w-6 text-primary" />
                       </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium">{routine.name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                            {routine.type}
+                          </span>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {routine.duration}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {routine.exercises} ejercicios
+                          </span>
+                        </div>
+                      </div>
+                      <Button variant="primary" size="sm">
+                        Iniciar
+                      </Button>
                     </div>
-                    <Button variant="primary" size="sm">
-                      Iniciar
-                    </Button>
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
+                  </CardBody>
+                </Card>
+              ))
+            )}
 
             <Button
               variant="secondary"
