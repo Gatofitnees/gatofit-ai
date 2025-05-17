@@ -11,6 +11,7 @@ interface MacroRingProps {
   className?: string;
   animated?: boolean;
   unit?: string;
+  showValues?: boolean;
 }
 
 const MacroRing: React.FC<MacroRingProps> = ({
@@ -22,6 +23,7 @@ const MacroRing: React.FC<MacroRingProps> = ({
   className,
   animated = true,
   unit = "g",
+  showValues = false,
 }) => {
   const progress = Math.min(100, Math.max(0, (value / target) * 100));
   
@@ -72,16 +74,18 @@ const MacroRing: React.FC<MacroRingProps> = ({
         />
       </svg>
       
-      {/* Contenido del centro */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+      {/* Contenido del centro - solo icono */}
+      <div className="absolute inset-0 flex items-center justify-center">
         {icon && (
-          <div className="mb-0.5">
+          <div className="flex items-center justify-center">
             {icon}
           </div>
         )}
-        <div className="text-xs font-medium leading-tight">
-          {value}<span className="text-xs text-muted-foreground">/{target}{unit}</span>
-        </div>
+        {showValues && (
+          <div className="text-xs font-medium leading-tight">
+            {value}<span className="text-xs text-muted-foreground">/{target}{unit}</span>
+          </div>
+        )}
       </div>
     </div>
   );

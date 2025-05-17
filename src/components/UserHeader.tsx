@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import Avatar from "./Avatar";
-import { MessageCircle, Settings, LogOut, Globe, CreditCard, RefreshCw } from "lucide-react";
+import { Settings, LogOut, Globe, CreditCard, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -67,11 +67,12 @@ const UserHeader: React.FC<UserHeaderProps> = ({
 
         <Button
           onClick={handleChatClick}
-          className="p-2 h-11 w-11 rounded-full bg-primary/10 hover:bg-primary/20 border-none text-primary"
+          className="p-2 h-11 px-3 rounded-full bg-primary/10 hover:bg-primary/20 border-none"
           variant="outline"
-          size="icon"
         >
-          <MessageCircle className="h-6 w-6 animate-galaxy-pulse" />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-600 to-blue-500 animate-galaxy-pulse font-bold">
+            AI
+          </span>
         </Button>
       </div>
 

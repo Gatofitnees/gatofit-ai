@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { format, addDays, subDays, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dateRange, setDateRange] = useState<Date[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Generar rango de fechas (10 días antes y después de la fecha actual)
   useEffect(() => {
@@ -63,6 +64,23 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     }
     
     setDateRange(range.sort((a, b) => a.getTime() - b.getTime()));
+    
+    // Auto-scroll to today's date
+    setTimeout(() => {
+      const todayIndex = range.findIndex(date => 
+        isSameDay(date, today)
+      );
+      
+      if (scrollRef.current && todayIndex >= 0) {
+        const cardWidth = 64; // 16px × 4 (min-w-16)
+        const cardMargin = 8; // 2px × 4 (mx-1)
+        const totalCardWidth = cardWidth + cardMargin;
+        
+        // Calculate position to show current date as the second item
+        const scrollPosition = Math.max(0, (todayIndex - 1) * totalCardWidth);
+        scrollRef.current.scrollLeft = scrollPosition;
+      }
+    }, 100);
   }, []);
 
   const handleSelectDate = (date: Date) => {
@@ -76,8 +94,8 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 
   return (
     <div className="mb-5 animate-fade-in">
-      <ScrollArea className="w-full">
-        <div className="flex p-2 w-max">
+      <ScrollArea className="w-full overflow-x-auto">
+        <div className="flex p-2 w-max" ref={scrollRef}>
           {dateRange.map((date, index) => (
             <DateCard 
               key={index}

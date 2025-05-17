@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Card, CardHeader, CardBody } from "./Card";
+import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import MacroRing from "./MacroRing";
 import MacroProgress from "./MacroProgress";
-import { Flame, Zap, Wheat, Droplet } from "lucide-react";
+import { Flame, Zap, Wheat, Droplet, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Button from "./Button";
 
 interface MacroData {
   calories: { current: number; target: number; unit: string };
@@ -16,11 +17,13 @@ interface MacroData {
 interface MacrosCardProps {
   macros: MacroData;
   className?: string;
+  onAddFood?: () => void;
 }
 
 const MacrosCard: React.FC<MacrosCardProps> = ({
   macros,
-  className
+  className,
+  onAddFood
 }) => {
   return (
     <Card className={cn("animate-fade-in", className)}>
@@ -37,6 +40,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
             size="lg"
             unit={macros.calories.unit}
             icon={<Flame className="h-6 w-6 text-orange-400" />}
+            showValues={false}
           />
           <p className="mt-2 text-center text-sm text-muted-foreground">
             Calorías Consumidas
@@ -51,6 +55,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
               color="protein"
               size="sm"
               icon={<Zap className="h-4 w-4" />}
+              showValues={false}
             />
             <p className="mt-1 text-center text-xs text-muted-foreground">
               Proteína
@@ -64,6 +69,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
               color="carbs"
               size="sm"
               icon={<Wheat className="h-4 w-4" />}
+              showValues={false}
             />
             <p className="mt-1 text-center text-xs text-muted-foreground">
               Carbos
@@ -77,6 +83,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
               color="fat"
               size="sm"
               icon={<Droplet className="h-4 w-4" />}
+              showValues={false}
             />
             <p className="mt-1 text-center text-xs text-muted-foreground">
               Grasas
@@ -115,6 +122,16 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
           />
         </div>
       </CardBody>
+      <CardFooter>
+        <Button
+          variant="secondary"
+          className="w-full"
+          leftIcon={<Plus className="h-4 w-4" />}
+          onClick={onAddFood}
+        >
+          Añadir comidas
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
