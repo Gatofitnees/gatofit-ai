@@ -16,7 +16,7 @@ const HomePage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
   
-  // Datos de ejemplo - En una implementación real vendrían de Supabase
+  // Example data - In a real implementation, this would come from Supabase
   const username = user?.user_metadata?.name || user?.email?.split('@')[0] || "Usuario";
   const userProgress = 75;
   
@@ -34,12 +34,12 @@ const HomePage: React.FC = () => {
     exercises: ["Press Banca", "Sentadillas", "Pull-ups"]
   } : undefined;
 
-  // En una implementación real, esto cargaría los datos de Supabase
+  // In a real implementation, this would load data from Supabase
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    // Aquí se cargarían los datos de entreno y alimentación para la fecha seleccionada
+    // Here we would load workout and nutrition data for the selected date
     
-    // Simulamos datos de ejemplo aleatorios
+    // Simulate random example data
     if (Math.random() > 0.5) {
       setHasCompletedWorkout(true);
     } else {
@@ -65,13 +65,13 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      {/* Encabezado y perfil de usuario */}
+      {/* User header and profile */}
       <UserHeader 
         username={username} 
         progress={userProgress}
       />
       
-      {/* Selector de días */}
+      {/* Day selector */}
       <DaySelector 
         onSelectDate={handleDateSelect}
         datesWithRecords={[
@@ -81,7 +81,7 @@ const HomePage: React.FC = () => {
         ]}
       />
 
-      {/* Tarjeta de Entrenamiento */}
+      {/* Training card */}
       <TrainingCard
         completed={hasCompletedWorkout}
         workout={completedWorkout}
@@ -92,10 +92,10 @@ const HomePage: React.FC = () => {
         })}
       />
       
-      {/* Tarjeta de Macros */}
+      {/* Macros card */}
       <MacrosCard 
-        macros={macros} 
-        onAddFood={handleAddFood}
+        macros={macros}
+        onAddFood={handleAddFood} 
       />
     </div>
   );

@@ -40,14 +40,14 @@ const MacroRing: React.FC<MacroRingProps> = ({
     fat: "text-yellow-400"
   };
   
-  const strokeWidth = size === 'sm' ? 4 : 5;
+  const strokeWidth = size === 'sm' ? 3 : 4;
   const radius = size === 'sm' ? 26 : (size === 'md' ? 34 : 42);
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
   
   return (
     <div className={cn("relative flex items-center justify-center", sizeClasses[size], className)}>
-      {/* Fondo del anillo */}
+      {/* Background ring */}
       <svg className="w-full h-full -rotate-90">
         <circle
           cx="50%"
@@ -74,16 +74,11 @@ const MacroRing: React.FC<MacroRingProps> = ({
         />
       </svg>
       
-      {/* Contenido del centro - solo icono */}
+      {/* Center content - only icon */}
       <div className="absolute inset-0 flex items-center justify-center">
         {icon && (
           <div className="flex items-center justify-center">
             {icon}
-          </div>
-        )}
-        {showValues && (
-          <div className="text-xs font-medium leading-tight">
-            {value}<span className="text-xs text-muted-foreground">/{target}{unit}</span>
           </div>
         )}
       </div>

@@ -1,41 +1,51 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { format, addDays, subDays, isSameDay } from "date-fns";
+import { format, addDays, subDays, isSameDay, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "./ui/scroll-area";
 
 interface DateCardProps {
   date: Date;
   isSelected: boolean;
   hasRecords?: boolean;
   onClick: () => void;
+  label?: string;
 }
 
-const DateCard: React.FC<DateCardProps> = ({ date, isSelected, hasRecords = false, onClick }) => {
-  const formattedDate = format(date, "dd MMM", { locale: es }).toUpperCase();
+const DateCard: React.FC<DateCardProps> = ({ 
+  date, 
+  isSelected, 
+  hasRecords = false, 
+  onClick,
+  label
+}) => {
+  const dayNumber = format(date, "dd");
+  const dayName = format(date, "EEE", { locale: es }).toLowerCase();
   
   return (
     <div 
       className={cn(
-        "flex flex-col items-center justify-center h-20 min-w-16 mx-1 p-2 rounded-xl transition-all cursor-pointer relative",
+        "flex flex-col items-center justify-center h-20 min-w-16 p-2 rounded-xl transition-all cursor-pointer",
         isSelected 
-          ? "neu-card border border-primary/20" 
-          : "neu-button hover:bg-secondary/20"
+          ? "bg-primary/20 text-primary border border-primary/30" 
+          : "bg-background/30 text-muted-foreground hover:bg-secondary/10"
       )}
       onClick={onClick}
     >
       <span className={cn(
-        "text-sm font-medium",
+        "text-lg font-bold",
+        isSelected ? "text-primary" : "text-foreground"
+      )}>
+        {dayNumber}
+      </span>
+      <span className={cn(
+        "text-xs mt-1",
         isSelected ? "text-primary" : "text-muted-foreground"
       )}>
-        {formattedDate.split(' ')[0]}
+        {label || dayName}
       </span>
-      <span className="text-xs mt-1">
-        {formattedDate.split(' ')[1]}
-      </span>
-      {hasRecords && (
-        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
+      {hasRecords && !isSelected && (
+        <div className="w-1.5 h-1.5 mt-1 rounded-full bg-primary" />
       )}
     </div>
   );
@@ -52,33 +62,25 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dateRange, setDateRange] = useState<Date[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Generar rango de fechas (10 días antes y después de la fecha actual)
+  // Generate range of dates (current day and 20 days after)
   useEffect(() => {
     const today = new Date();
     const range: Date[] = [];
     
-    for (let i = -10; i <= 10; i++) {
-      range.push(i < 0 ? subDays(today, Math.abs(i)) : addDays(today, i));
+    // Include 10 days before today and 20 days after
+    for (let i = -10; i <= 20; i++) {
+      range.push(addDays(today, i));
     }
     
-    setDateRange(range.sort((a, b) => a.getTime() - b.getTime()));
+    setDateRange(range);
     
-    // Auto-scroll to today's date
+    // Auto-scroll to position the current day on the left
     setTimeout(() => {
-      const todayIndex = range.findIndex(date => 
-        isSameDay(date, today)
-      );
-      
-      if (scrollRef.current && todayIndex >= 0) {
-        const cardWidth = 64; // 16px × 4 (min-w-16)
-        const cardMargin = 8; // 2px × 4 (mx-1)
-        const totalCardWidth = cardWidth + cardMargin;
-        
-        // Calculate position to show current date as the second item
-        const scrollPosition = Math.max(0, (todayIndex - 1) * totalCardWidth);
-        scrollRef.current.scrollLeft = scrollPosition;
+      if (scrollContainerRef.current) {
+        const cardWidth = 64; // Width of each card
+        scrollContainerRef.current.scrollLeft = 0; // Start with current day visible
       }
     }, 100);
   }, []);
@@ -93,20 +95,26 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   };
 
   return (
-    <div className="mb-5 animate-fade-in">
-      <ScrollArea className="w-full overflow-x-auto">
-        <div className="flex p-2 w-max" ref={scrollRef}>
-          {dateRange.map((date, index) => (
+    <div className="mb-5 animate-fade-in bg-background/10 p-2 rounded-lg">
+      <div 
+        className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory" 
+        ref={scrollContainerRef}
+        style={{ scrollBehavior: 'smooth' }}
+      >
+        {dateRange.map((date, index) => (
+          <div 
+            key={index} 
+            className="flex-shrink-0 mx-1 snap-start"
+          >
             <DateCard 
-              key={index}
               date={date}
               isSelected={isSameDay(date, selectedDate)}
               hasRecords={checkHasRecords(date)}
               onClick={() => handleSelectDate(date)}
             />
-          ))}
-        </div>
-      </ScrollArea>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
