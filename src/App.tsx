@@ -13,6 +13,7 @@ import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
 import CreateExercisePage from "./pages/CreateExercisePage";
 import ConfigureRoutineExercisesPage from "./pages/ConfigureRoutineExercisesPage";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
+import CreateRoutinePage from "./pages/CreateRoutinePage";
 
 function App() {
   return (
@@ -36,6 +37,14 @@ function App() {
                 <ProtectedRoute>
                   <WorkoutPage />
                   <NavBar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/create"
+              element={
+                <ProtectedRoute>
+                  <CreateRoutinePage />
                 </ProtectedRoute>
               }
             />

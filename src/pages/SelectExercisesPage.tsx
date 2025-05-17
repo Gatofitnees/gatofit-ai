@@ -8,7 +8,6 @@ import ExerciseListItem from "@/components/workout/ExerciseListItem";
 import ExerciseFilterSheet from "@/components/workout/ExerciseFilterSheet";
 import ExerciseSearchBar from "@/components/workout/ExerciseSearchBar";
 import { useExercises, Exercise } from "@/hooks/workout/useExercises";
-import { supabase } from "@/integrations/supabase/client";
 import { useToastHelper } from "@/hooks/useToastHelper";
 
 interface LocationState {
@@ -47,13 +46,13 @@ const SelectExercisesPage: React.FC = () => {
 
   const filteredExercises = exercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (exercise.muscle_group_main && exercise.muscle_group_main.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (exercise.muscle_group_main && exercise.muscle_group_main.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesMuscle = muscleFilters.length === 0 || 
-                          (exercise.muscle_group_main && muscleFilters.includes(exercise.muscle_group_main));
+                         (exercise.muscle_group_main && muscleFilters.includes(exercise.muscle_group_main));
     
     const matchesEquipment = equipmentFilters.length === 0 || 
-                            (exercise.equipment_required && equipmentFilters.includes(exercise.equipment_required));
+                           (exercise.equipment_required && equipmentFilters.includes(exercise.equipment_required));
     
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
@@ -86,7 +85,7 @@ const SelectExercisesPage: React.FC = () => {
     navigate(`/workout/exercise-details/${id}`);
   };
 
-  const handleAddExercises = async () => {
+  const handleAddExercises = () => {
     try {
       if (selectedExercises.length === 0) {
         toast.showError(
@@ -96,35 +95,20 @@ const SelectExercisesPage: React.FC = () => {
         return;
       }
       
-      // Add selected exercises to the routine
-      const exercisesToAdd = selectedExercises.map((exerciseId, index) => ({
-        routine_id: state.routineId,
-        exercise_id: exerciseId,
-        exercise_order: index + 1,
-        sets: 3,  // Default values
-        reps_min: 8,
-        reps_max: 12,
-        rest_between_sets_seconds: 60
-      }));
-      
-      const { error } = await supabase
-        .from('routine_exercises')
-        .insert(exercisesToAdd);
-        
-      if (error) throw error;
-      
-      toast.showSuccess(
-        "Ejercicios añadidos",
-        `${selectedExercises.length} ejercicios añadidos a la rutina`
+      // Get the full exercise objects for the selected IDs
+      const selectedExercisesObjects = exercises.filter(ex => 
+        selectedExercises.includes(ex.id)
       );
       
-      // Navigate to configure exercises page
-      navigate(`/workout/configure/${state.routineId}`, { 
+      // Navigate back to create routine page with selected exercises
+      navigate(`/workout/create`, { 
         state: { 
           routineId: state.routineId,
-          routineName: state.routineName
+          routineName: state.routineName,
+          selectedExercises: selectedExercisesObjects
         } 
       });
+      
     } catch (error) {
       console.error("Error adding exercises:", error);
       toast.showError(
@@ -150,7 +134,12 @@ const SelectExercisesPage: React.FC = () => {
       <div className="sticky top-0 z-10 bg-background p-4 border-b border-muted/20">
         <div className="flex items-center mb-4">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/workout/create", { 
+              state: { 
+                routineId: state?.routineId,
+                routineName: state?.routineName
+              } 
+            })}
             className="mr-3 p-1 rounded-full hover:bg-secondary/50"
           >
             <ArrowLeft className="h-5 w-5" />
