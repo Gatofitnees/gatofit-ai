@@ -3,6 +3,7 @@ import React from "react";
 import { Exercise } from "@/hooks/workout/useExercises";
 import ExerciseListItem from "@/components/workout/ExerciseListItem";
 import { Card, CardBody } from "@/components/Card";
+import ConfigInput from "@/components/workout/ConfigInput";
 
 interface ExerciseConfigItemProps {
   exercise: Exercise;
@@ -22,6 +23,11 @@ const ExerciseConfigItem: React.FC<ExerciseConfigItemProps> = ({
   onConfigChange,
   onViewDetails
 }) => {
+  // Helper function to create onChange handlers for each config field
+  const createChangeHandler = (field: string) => (value: number) => {
+    onConfigChange(exercise.id, field, value);
+  };
+
   return (
     <Card className="hover:scale-[1.01] transition-transform duration-300">
       <CardBody>
@@ -35,66 +41,34 @@ const ExerciseConfigItem: React.FC<ExerciseConfigItemProps> = ({
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">Series</label>
-            <input
-              type="number"
-              min="1"
-              value={config.sets}
-              onChange={(e) => onConfigChange(
-                exercise.id, 
-                'sets', 
-                parseInt(e.target.value) || 1
-              )}
-              className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">Descanso (seg)</label>
-            <input
-              type="number"
-              min="5"
-              step="5"
-              value={config.restSeconds}
-              onChange={(e) => onConfigChange(
-                exercise.id, 
-                'restSeconds', 
-                parseInt(e.target.value) || 60
-              )}
-              className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">Reps. Min</label>
-            <input
-              type="number"
-              min="1"
-              value={config.repsMin}
-              onChange={(e) => onConfigChange(
-                exercise.id, 
-                'repsMin', 
-                parseInt(e.target.value) || 1
-              )}
-              className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">Reps. Max</label>
-            <input
-              type="number"
-              min="1"
-              value={config.repsMax}
-              onChange={(e) => onConfigChange(
-                exercise.id, 
-                'repsMax', 
-                parseInt(e.target.value) || 1
-              )}
-              className="w-full h-8 rounded-lg px-3 bg-secondary border-none text-sm"
-            />
-          </div>
+          <ConfigInput
+            label="Series"
+            value={config.sets}
+            min={1}
+            onChange={createChangeHandler('sets')}
+          />
+          
+          <ConfigInput
+            label="Descanso (seg)"
+            value={config.restSeconds}
+            min={5}
+            step={5}
+            onChange={createChangeHandler('restSeconds')}
+          />
+          
+          <ConfigInput
+            label="Reps. Min"
+            value={config.repsMin}
+            min={1}
+            onChange={createChangeHandler('repsMin')}
+          />
+          
+          <ConfigInput
+            label="Reps. Max"
+            value={config.repsMax}
+            min={1}
+            onChange={createChangeHandler('repsMax')}
+          />
         </div>
       </CardBody>
     </Card>
