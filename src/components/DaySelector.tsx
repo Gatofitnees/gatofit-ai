@@ -27,7 +27,7 @@ const DateCard: React.FC<DateCardProps> = ({
       className={cn(
         "flex flex-col items-center justify-center h-20 min-w-16 p-2 rounded-xl transition-all cursor-pointer",
         isSelected 
-          ? "bg-primary/20 text-primary border border-primary/30" 
+          ? "bg-primary/20 text-primary border border-primary/30 shadow-glow" 
           : "bg-background/30 text-muted-foreground hover:bg-secondary/10"
       )}
       onClick={onClick}
@@ -64,22 +64,22 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Generate range of dates (current day and 20 days after)
+  // Generate range of dates (past and future dates)
   useEffect(() => {
     const today = new Date();
     const range: Date[] = [];
     
-    // Include 10 days before today and 20 days after
+    // Include days before today and days after
     for (let i = -10; i <= 20; i++) {
       range.push(addDays(today, i));
     }
     
     setDateRange(range);
     
-    // Auto-scroll to position the current day on the left
+    // Auto-scroll on component mount to show current day on the left
     setTimeout(() => {
       if (scrollContainerRef.current) {
-        // Position the first card (today) on the left
+        // Reset scroll to show today on the left
         scrollContainerRef.current.scrollLeft = 0;
       }
     }, 100);
@@ -95,16 +95,16 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   };
 
   return (
-    <div className="mb-5 animate-fade-in bg-background/10 p-2 rounded-lg">
+    <div className="mb-5 animate-fade-in bg-card/30 p-2 rounded-lg shadow-neu-card">
       <div 
-        className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-2"
+        className="flex overflow-x-auto hide-scrollbar gap-2"
         ref={scrollContainerRef}
         style={{ scrollBehavior: 'smooth' }}
       >
         {dateRange.map((date, index) => (
           <div 
             key={index} 
-            className="flex-shrink-0 snap-start"
+            className="flex-shrink-0"
           >
             <DateCard 
               date={date}

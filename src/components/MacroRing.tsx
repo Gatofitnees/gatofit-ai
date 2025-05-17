@@ -22,8 +22,6 @@ const MacroRing: React.FC<MacroRingProps> = ({
   size = "md",
   className,
   animated = true,
-  unit = "g",
-  showValues = false,
 }) => {
   const progress = Math.min(100, Math.max(0, (value / target) * 100));
   
@@ -46,7 +44,11 @@ const MacroRing: React.FC<MacroRingProps> = ({
   const strokeDashoffset = circumference - (progress / 100) * circumference;
   
   return (
-    <div className={cn("relative flex items-center justify-center", sizeClasses[size], className)}>
+    <div className={cn(
+      "relative flex items-center justify-center", 
+      sizeClasses[size], 
+      className
+    )}>
       {/* Background ring */}
       <svg className="w-full h-full -rotate-90">
         <circle

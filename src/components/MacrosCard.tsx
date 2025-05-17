@@ -33,7 +33,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
       <CardBody>
         <div className="flex flex-col space-y-6">
           {/* Main calorie counter */}
-          <div className="bg-background/20 p-4 rounded-xl">
+          <div className="bg-background/20 p-4 rounded-xl shadow-inner-dark">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold">{macros.calories.target}</div>
@@ -54,7 +54,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
           {/* Macros grid */}
           <div className="grid grid-cols-3 gap-4">
             {/* Protein */}
-            <div className="bg-background/20 p-3 rounded-xl">
+            <div className="bg-background/20 p-3 rounded-xl shadow-inner-dark">
               <div className="flex flex-col items-center">
                 <div className="text-sm font-semibold">{macros.protein.target}g</div>
                 <div className="text-xs text-muted-foreground mb-2">Proteínas</div>
@@ -69,7 +69,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
             </div>
             
             {/* Carbs */}
-            <div className="bg-background/20 p-3 rounded-xl">
+            <div className="bg-background/20 p-3 rounded-xl shadow-inner-dark">
               <div className="flex flex-col items-center">
                 <div className="text-sm font-semibold">{macros.carbs.target}g</div>
                 <div className="text-xs text-muted-foreground mb-2">Carbohid.</div>
@@ -84,7 +84,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
             </div>
             
             {/* Fats */}
-            <div className="bg-background/20 p-3 rounded-xl">
+            <div className="bg-background/20 p-3 rounded-xl shadow-inner-dark">
               <div className="flex flex-col items-center">
                 <div className="text-sm font-semibold">{macros.fats.target}g</div>
                 <div className="text-xs text-muted-foreground mb-2">Grasas</div>

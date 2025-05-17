@@ -5,35 +5,35 @@
 
 @layer base {
   :root {
-    --background: 220 20% 10%;
-    --foreground: 210 20% 98%;
+    --background: 215 30% 11%; /* #1A1D21 - Dark Gray/Black background */
+    --foreground: 210 20% 98%; /* White/Light Gray for text */
 
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
+    --card: 220 10% 20%; /* #2C2F33 - Slightly lighter than background for cards */
+    --card-foreground: 213 31% 91%; /* White for card text */
 
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
+    --popover: 220 10% 20%; /* #2C2F33 */
+    --popover-foreground: 215 20.2% 95.1%; 
 
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 207 90% 54%; /* Electric Blue for accent */
+    --primary-foreground: 210 40% 98%; /* White for text on primary */
 
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 13% 23%; /* #36393F - Medium Dark Gray for secondary elements */
+    --secondary-foreground: 210 40% 98%; /* White for text on secondary */
 
-    --muted: 216 34% 20%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 13% 23%; /* #36393F */
+    --muted-foreground: 215 20.2% 75.1%; /* Gray for muted text */
 
-    --accent: 216 34% 17%;
+    --accent: 220 13% 23%; /* #36393F */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 224 71.4% 4.1%;
+    --border: 220 13% 23%; /* #36393F */
+    --input: 220 13% 23%; /* #36393F */
+    --ring: 207 90% 54%; /* Electric Blue for ring */
 
-    --radius: 0.5rem;
+    --radius: 1rem; /* Increased border radius */
   }
 }
 
@@ -66,7 +66,7 @@
   }
   
   .neu-card {
-    @apply bg-background/80 border border-white/10 shadow-[0_10px_20px_rgba(0,0,0,0.3)];
+    @apply bg-card/90 border border-white/10 shadow-neu-card rounded-xl backdrop-blur-sm;
   }
   
   .hide-scrollbar {
@@ -82,6 +82,10 @@
   .ai-galactic-text {
     @apply font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300 drop-shadow-[0_0_5px_rgba(59,130,246,0.5)];
     animation: pulse 2s infinite;
+  }
+
+  .glow-effect {
+    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.6));
   }
   
   @keyframes pulse {
