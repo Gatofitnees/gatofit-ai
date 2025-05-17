@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { ChevronDown, Plus } from "lucide-react";
 import Button from "@/components/Button";
@@ -14,13 +15,8 @@ import {
 import { useToastHelper } from "@/hooks/useToastHelper";
 import { supabase } from "@/integrations/supabase/client";
 
-interface CreateRoutineFormProps {
-  onSelectExercises: () => void;
-}
-
-const CreateRoutineForm: React.FC<CreateRoutineFormProps> = ({ 
-  onSelectExercises 
-}) => {
+const CreateRoutineForm: React.FC = () => {
+  const navigate = useNavigate();
   const [routineName, setRoutineName] = useState("");
   const [routineType, setRoutineType] = useState("");
   const [routineDescription, setRoutineDescription] = useState("");
@@ -49,7 +45,7 @@ const CreateRoutineForm: React.FC<CreateRoutineFormProps> = ({
         return;
       }
       
-      // Create a temporary routine in the database
+      // Create a routine in the database
       const { data, error } = await supabase.from('routines').insert({
         name: routineName,
         type: routineType || "Mixto",
@@ -60,8 +56,16 @@ const CreateRoutineForm: React.FC<CreateRoutineFormProps> = ({
       
       if (error) throw error;
       
-      // After successful creation, call the parent function with routine data
-      onSelectExercises();
+      console.log("Routine created:", data);
+      
+      // Navigate to exercise selection with the routine id
+      navigate("/workout/select-exercises", { 
+        state: { 
+          routineId: data.id,
+          routineName: routineName
+        }
+      });
+      
     } catch (error) {
       console.error("Error creating routine:", error);
       toast.showError(
@@ -78,7 +82,10 @@ const CreateRoutineForm: React.FC<CreateRoutineFormProps> = ({
       <Card>
         <CardHeader title="Crear Nueva Rutina" />
         <CardBody>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={(e) => {
+            e.preventDefault();
+            handleSelectExercises();
+          }}>
             <div>
               <label className="block text-sm font-medium mb-1">Nombre de la Rutina</label>
               <input 

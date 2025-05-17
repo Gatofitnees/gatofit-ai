@@ -46,6 +46,7 @@ const SelectExercisesPage: React.FC = () => {
   
   // Ensure we have the routineId passed from previous screen
   useEffect(() => {
+    console.log("Location state:", location.state);
     if (!state?.routineId) {
       toast.showError(
         "Error",
@@ -53,7 +54,7 @@ const SelectExercisesPage: React.FC = () => {
       );
       navigate("/workout");
     }
-  }, [state, navigate, toast]);
+  }, [state, navigate, toast, location.state]);
   
   // Fetch exercises from Supabase
   useEffect(() => {
