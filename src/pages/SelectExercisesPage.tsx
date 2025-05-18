@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/workout/useExercises";
@@ -10,15 +9,15 @@ import ExercisesList from "@/components/workout/ExercisesList";
 import ExercisesFloatingButton from "@/components/workout/ExercisesFloatingButton";
 
 interface LocationState {
-  routineId: number;
-  routineName: string;
+  routineId?: number;
+  routineName?: string;
 }
 
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToastHelper();
-  const state = location.state as LocationState;
+  const state = location.state as LocationState || {};
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
@@ -29,7 +28,7 @@ const SelectExercisesPage: React.FC = () => {
   
   // Ensure we have the routineId passed from previous screen
   useEffect(() => {
-    console.log("Location state:", location.state);
+    console.log("Location state in SelectExercisesPage:", location.state);
     if (!state?.routineId) {
       toast.showError(
         "Error",
@@ -37,7 +36,7 @@ const SelectExercisesPage: React.FC = () => {
       );
       navigate("/workout");
     }
-  }, [state, navigate, toast, location.state]);
+  }, []);
 
   // Extract unique muscle groups and equipment types for filters
   const muscleGroups = [...new Set(exercises.map(ex => ex.muscle_group_main).filter(Boolean))];
@@ -100,13 +99,20 @@ const SelectExercisesPage: React.FC = () => {
         selectedExercises.includes(ex.id)
       );
       
+      console.log("Navigating back to create routine with:", {
+        routineId: state.routineId,
+        routineName: state.routineName,
+        selectedExercises: selectedExercisesObjects
+      });
+      
       // Navigate back to create routine page with selected exercises
       navigate(`/workout/create`, { 
         state: { 
           routineId: state.routineId,
           routineName: state.routineName,
           selectedExercises: selectedExercisesObjects
-        } 
+        },
+        replace: false
       });
       
     } catch (error) {

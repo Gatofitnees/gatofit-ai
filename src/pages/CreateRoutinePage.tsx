@@ -101,11 +101,18 @@ const CreateRoutinePage: React.FC = () => {
       }
       
       // Navigate to exercise selection with the routine id
+      console.log("Navigating to select-exercises with:", {
+        routineId: routineIdToUse,
+        routineName: routineFormData.name
+      });
+      
+      // Make sure we're navigating with the correct state
       navigate("/workout/select-exercises", { 
         state: { 
           routineId: routineIdToUse,
           routineName: routineFormData.name
-        }
+        },
+        replace: false
       });
       
     } catch (error) {
@@ -210,7 +217,7 @@ const CreateRoutinePage: React.FC = () => {
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">
       <CreateRoutineHeader
-        title={pageTitle}
+        title={routineId ? 'Editar Rutina' : 'Crear Rutina'}
         onSave={handleSaveRoutine}
         hasExercises={selectedExercises.length > 0}
         isLoading={isLoading}

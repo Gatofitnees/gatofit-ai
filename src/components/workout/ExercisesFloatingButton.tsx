@@ -14,7 +14,7 @@ const ExercisesFloatingButton: React.FC<ExercisesFloatingButtonProps> = ({
   if (selectedCount === 0) return null;
   
   return (
-    <div className="fixed bottom-20 left-0 right-0 p-4 flex justify-center">
+    <div className="fixed bottom-20 left-0 right-0 p-4 flex justify-center z-20">
       <Button
         variant="primary"
         className="shadow-neu-float px-6"
