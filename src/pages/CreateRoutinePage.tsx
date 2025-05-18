@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronDown, Plus, Save, Trash2, Grip } from "lucide-react";
+import { ChevronDown, Plus, Save, Trash2, Grip, ArrowLeft } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
 import Button from "../components/Button";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -154,19 +153,33 @@ const CreateRoutinePage: React.FC = () => {
     }
   };
 
+  const handleBack = () => {
+    navigate("/workout");
+  };
+
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold">Crear Rutina</h1>
-        <Button 
-          variant="primary" 
-          size="sm"
-          leftIcon={<Save className="h-4 w-4" />}
-          onClick={handleSaveRoutine}
-          disabled={isSubmitting}
-        >
-          Guardar
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="primary" 
+            size="sm"
+            leftIcon={<Save className="h-4 w-4" />}
+            onClick={handleSaveRoutine}
+            disabled={isSubmitting}
+          >
+            Guardar
+          </Button>
+          <Button 
+            variant="secondary" 
+            size="sm"
+            leftIcon={<ArrowLeft className="h-4 w-4" />}
+            onClick={handleBack}
+          >
+            Volver
+          </Button>
+        </div>
       </div>
       
       <div className="animate-fade-in">
