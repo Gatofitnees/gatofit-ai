@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, ChevronDown, Filter, Info, Search, X, Plus, Dumbbell } from "lucide-react";
@@ -14,9 +15,10 @@ import {
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Exercise {
-  id: number; // Changed from string to number to match Supabase data
+  id: number;
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
@@ -24,8 +26,26 @@ interface Exercise {
   video_url?: string;
 }
 
+const preloadedExercises: Exercise[] = [
+  {
+    id: 1001,
+    name: "Aperturas con mancuernas en banco inclinado",
+    muscle_group_main: "Pecho",
+    equipment_required: "Mancuernas",
+    video_url: "https://storage.cloud.google.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas-en-banco-inclinado.mp4",
+  },
+  {
+    id: 1002,
+    name: "Aperturas con mancuernas",
+    muscle_group_main: "Pecho",
+    equipment_required: "Mancuernas",
+    video_url: "https://storage.cloud.google.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas.mp4",
+  },
+];
+
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
@@ -44,69 +64,28 @@ const SelectExercisesPage: React.FC = () => {
           throw error;
         }
         
-        if (data) {
+        if (data && data.length > 0) {
           setExercises(data);
+        } else {
+          // If no data returned from DB, use preloaded exercises
+          setExercises(preloadedExercises);
         }
       } catch (error) {
         console.error('Error fetching exercises:', error);
-        // Fallback to mock data if fetch fails
-        setExercises([
-          {
-            id: 1, // Changed from "1" to 1 to match the new type
-            name: "Press de Banca",
-            muscle_group_main: "Pecho",
-            equipment_required: "Barra",
-            difficulty_level: "Intermedio",
-            video_url: "/exercises/bench-press.mp4"
-          },
-          {
-            id: 2, // Changed from "2" to 2
-            name: "Sentadilla",
-            muscle_group_main: "Piernas",
-            equipment_required: "Peso Corporal",
-            difficulty_level: "Principiante",
-            video_url: "/exercises/squat.mp4"
-          },
-          {
-            id: 3, // Changed from "3" to 3
-            name: "Pull-up",
-            muscle_group_main: "Espalda",
-            equipment_required: "Barra de dominadas",
-            difficulty_level: "Avanzado",
-            video_url: "/exercises/pull-up.mp4"
-          },
-          {
-            id: 4, // Changed from "4" to 4
-            name: "Plancha",
-            muscle_group_main: "Core",
-            equipment_required: "Peso Corporal",
-            difficulty_level: "Principiante",
-            video_url: "/exercises/plank.mp4"
-          },
-          {
-            id: 5, // Changed from "5" to 5
-            name: "Extensión de Tríceps",
-            muscle_group_main: "Tríceps",
-            equipment_required: "Mancuernas",
-            difficulty_level: "Principiante",
-            video_url: "/exercises/triceps.mp4"
-          },
-          {
-            id: 6, // Changed from "6" to 6
-            name: "Curl de Bíceps",
-            muscle_group_main: "Bíceps",
-            equipment_required: "Mancuernas",
-            difficulty_level: "Principiante",
-            video_url: "/exercises/biceps-curl.mp4"
-          }
-        ]);
+        // Fallback to preloaded exercises if fetch fails
+        setExercises(preloadedExercises);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los ejercicios",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchExercises();
-  }, []);
+  }, [toast]);
 
   // Extract unique values for filter options
   const muscleGroups = Array.from(new Set(exercises.map(e => e.muscle_group_main).filter(Boolean))) as string[];
@@ -125,7 +104,7 @@ const SelectExercisesPage: React.FC = () => {
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
 
-  const handleExerciseSelect = (id: number) => { // Updated parameter type from string to number
+  const handleExerciseSelect = (id: number) => {
     if (selectedExercises.includes(id)) {
       setSelectedExercises(selectedExercises.filter(exId => exId !== id));
     } else {
@@ -149,8 +128,14 @@ const SelectExercisesPage: React.FC = () => {
     }
   };
 
-  const handleExerciseDetails = (id: number) => { // Updated parameter type from string to number
-    navigate(`/workout/exercise-details/${id}`);
+  const handleExerciseDetails = (id: number) => {
+    const exercise = exercises.find(ex => ex.id === id);
+    if (exercise?.video_url) {
+      // Open the video URL in a new tab or show details
+      window.open(exercise.video_url, '_blank');
+    } else {
+      navigate(`/workout/exercise-details/${id}`);
+    }
   };
 
   const handleAddExercises = () => {
@@ -301,6 +286,9 @@ const SelectExercisesPage: React.FC = () => {
                     <div className="flex-1">
                       <h3 className="font-medium">{exercise.name}</h3>
                       <span className="text-xs text-muted-foreground">{exercise.muscle_group_main}</span>
+                      {exercise.equipment_required && (
+                        <span className="text-xs text-muted-foreground ml-2">· {exercise.equipment_required}</span>
+                      )}
                     </div>
                     <Button 
                       variant="outline"

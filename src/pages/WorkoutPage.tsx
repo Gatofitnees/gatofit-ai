@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 interface WorkoutRoutine {
-  id: number; // Changed from string to number to match Supabase data
+  id: number;
   name: string;
   type?: string;
   description?: string;
@@ -33,7 +33,7 @@ const WorkoutPage: React.FC = () => {
           // User not logged in, show demo routines
           setRoutines([
             {
-              id: 1, // Changed from "1" to 1
+              id: 1,
               name: "Full Body Force",
               type: "Fuerza",
               estimated_duration_minutes: 45,
@@ -41,7 +41,7 @@ const WorkoutPage: React.FC = () => {
               created_at: new Date().toISOString()
             },
             {
-              id: 2, // Changed from "2" to 2
+              id: 2,
               name: "HIIT Quemagrasa",
               type: "Cardio",
               estimated_duration_minutes: 30,
@@ -49,7 +49,7 @@ const WorkoutPage: React.FC = () => {
               created_at: new Date().toISOString()
             },
             {
-              id: 3, // Changed from "3" to 3
+              id: 3,
               name: "Día de Pierna",
               type: "Fuerza",
               estimated_duration_minutes: 50,
@@ -106,7 +106,7 @@ const WorkoutPage: React.FC = () => {
     navigate("/workout/create");
   };
 
-  const handleStartWorkout = (routineId: number) => { // Updated parameter type from string to number
+  const handleStartWorkout = (routineId: number) => {
     // In a future implementation, this would navigate to a workout session page
     toast({
       title: "¡Rutina iniciada!",
@@ -116,7 +116,18 @@ const WorkoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-6">Mis Rutinas</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-bold">Mis Rutinas</h1>
+        <Button 
+          variant="primary"
+          size="sm"
+          leftIcon={<Plus className="h-4 w-4" />}
+          onClick={handleCreateRoutine}
+          className="bg-blue-500 hover:bg-blue-600"
+        >
+          Nueva Rutina
+        </Button>
+      </div>
       
       {/* Search and Filter */}
       <div className="flex items-center gap-2 mb-5">
@@ -189,16 +200,6 @@ const WorkoutPage: React.FC = () => {
               No se encontraron rutinas
             </div>
           )}
-
-          <Button
-            variant="secondary"
-            fullWidth
-            className="mt-4"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={handleCreateRoutine}
-          >
-            Crear Nueva Rutina
-          </Button>
         </div>
       )}
     </div>
