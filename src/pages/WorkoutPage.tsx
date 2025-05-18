@@ -116,17 +116,7 @@ const WorkoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">Mis Rutinas</h1>
-        <Button 
-          variant="primary" 
-          size="sm"
-          leftIcon={<Plus className="h-4 w-4" />}
-          onClick={handleCreateRoutine}
-        >
-          Nueva Rutina
-        </Button>
-      </div>
+      <h1 className="text-xl font-bold mb-6">Mis Rutinas</h1>
       
       {/* Search and Filter */}
       <div className="flex items-center gap-2 mb-5">
@@ -199,6 +189,16 @@ const WorkoutPage: React.FC = () => {
               No se encontraron rutinas
             </div>
           )}
+
+          <Button
+            variant="secondary"
+            fullWidth
+            className="mt-4"
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={handleCreateRoutine}
+          >
+            Crear Nueva Rutina
+          </Button>
         </div>
       )}
     </div>
