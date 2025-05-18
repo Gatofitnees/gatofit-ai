@@ -34,8 +34,56 @@ export const useExercises = () => {
         throw error;
       }
       
-      console.log("Exercises data:", data);
-      setExercises(data || []);
+      // If no data, add sample exercises for now
+      if (!data || data.length === 0) {
+        const sampleExercises = [
+          {
+            id: 1,
+            name: "Aperturas con mancuernas en banco inclinado",
+            muscle_group_main: "Pecho",
+            equipment_required: "Mancuernas",
+            difficulty_level: "Intermedio",
+            video_url: "https://storage.cloud.google.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas-en-banco-inclinado.mp4"
+          },
+          {
+            id: 2,
+            name: "Aperturas con mancuernas",
+            muscle_group_main: "Pecho",
+            equipment_required: "Mancuernas",
+            difficulty_level: "Intermedio",
+            video_url: "https://storage.cloud.google.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas.mp4"
+          },
+          {
+            id: 3,
+            name: "Press de banca",
+            muscle_group_main: "Pecho",
+            equipment_required: "Barra",
+            difficulty_level: "Intermedio",
+            video_url: "https://storage.cloud.google.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-de-banca.mp4"
+          },
+          {
+            id: 4,
+            name: "Sentadilla",
+            muscle_group_main: "Pierna",
+            equipment_required: "Ninguno",
+            difficulty_level: "Básico",
+            video_url: null
+          },
+          {
+            id: 5,
+            name: "Curl de bíceps",
+            muscle_group_main: "Bíceps",
+            equipment_required: "Mancuernas",
+            difficulty_level: "Básico",
+            video_url: null
+          }
+        ];
+        
+        setExercises(sampleExercises);
+      } else {
+        console.log("Exercises data:", data);
+        setExercises(data || []);
+      }
     } catch (err) {
       console.error("Error fetching exercises:", err);
       toast.showError(
