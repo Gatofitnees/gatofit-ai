@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 interface WorkoutRoutine {
-  id: string;
+  id: number; // Changed from string to number to match Supabase data
   name: string;
   type?: string;
   description?: string;
@@ -33,7 +33,7 @@ const WorkoutPage: React.FC = () => {
           // User not logged in, show demo routines
           setRoutines([
             {
-              id: "1",
+              id: 1, // Changed from "1" to 1
               name: "Full Body Force",
               type: "Fuerza",
               estimated_duration_minutes: 45,
@@ -41,7 +41,7 @@ const WorkoutPage: React.FC = () => {
               created_at: new Date().toISOString()
             },
             {
-              id: "2",
+              id: 2, // Changed from "2" to 2
               name: "HIIT Quemagrasa",
               type: "Cardio",
               estimated_duration_minutes: 30,
@@ -49,7 +49,7 @@ const WorkoutPage: React.FC = () => {
               created_at: new Date().toISOString()
             },
             {
-              id: "3",
+              id: 3, // Changed from "3" to 3
               name: "Día de Pierna",
               type: "Fuerza",
               estimated_duration_minutes: 50,
@@ -106,7 +106,7 @@ const WorkoutPage: React.FC = () => {
     navigate("/workout/create");
   };
 
-  const handleStartWorkout = (routineId: string) => {
+  const handleStartWorkout = (routineId: number) => { // Updated parameter type from string to number
     // In a future implementation, this would navigate to a workout session page
     toast({
       title: "¡Rutina iniciada!",

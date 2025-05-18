@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, ChevronDown, Filter, Info, Search, X, Plus, Dumbbell } from "lucide-react";
@@ -17,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Exercise {
-  id: string;
+  id: number; // Changed from string to number to match Supabase data
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
@@ -28,7 +27,7 @@ interface Exercise {
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -53,7 +52,7 @@ const SelectExercisesPage: React.FC = () => {
         // Fallback to mock data if fetch fails
         setExercises([
           {
-            id: "1",
+            id: 1, // Changed from "1" to 1 to match the new type
             name: "Press de Banca",
             muscle_group_main: "Pecho",
             equipment_required: "Barra",
@@ -61,7 +60,7 @@ const SelectExercisesPage: React.FC = () => {
             video_url: "/exercises/bench-press.mp4"
           },
           {
-            id: "2",
+            id: 2, // Changed from "2" to 2
             name: "Sentadilla",
             muscle_group_main: "Piernas",
             equipment_required: "Peso Corporal",
@@ -69,7 +68,7 @@ const SelectExercisesPage: React.FC = () => {
             video_url: "/exercises/squat.mp4"
           },
           {
-            id: "3",
+            id: 3, // Changed from "3" to 3
             name: "Pull-up",
             muscle_group_main: "Espalda",
             equipment_required: "Barra de dominadas",
@@ -77,7 +76,7 @@ const SelectExercisesPage: React.FC = () => {
             video_url: "/exercises/pull-up.mp4"
           },
           {
-            id: "4",
+            id: 4, // Changed from "4" to 4
             name: "Plancha",
             muscle_group_main: "Core",
             equipment_required: "Peso Corporal",
@@ -85,7 +84,7 @@ const SelectExercisesPage: React.FC = () => {
             video_url: "/exercises/plank.mp4"
           },
           {
-            id: "5",
+            id: 5, // Changed from "5" to 5
             name: "Extensión de Tríceps",
             muscle_group_main: "Tríceps",
             equipment_required: "Mancuernas",
@@ -93,7 +92,7 @@ const SelectExercisesPage: React.FC = () => {
             video_url: "/exercises/triceps.mp4"
           },
           {
-            id: "6",
+            id: 6, // Changed from "6" to 6
             name: "Curl de Bíceps",
             muscle_group_main: "Bíceps",
             equipment_required: "Mancuernas",
@@ -126,7 +125,7 @@ const SelectExercisesPage: React.FC = () => {
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
 
-  const handleExerciseSelect = (id: string) => {
+  const handleExerciseSelect = (id: number) => { // Updated parameter type from string to number
     if (selectedExercises.includes(id)) {
       setSelectedExercises(selectedExercises.filter(exId => exId !== id));
     } else {
@@ -150,7 +149,7 @@ const SelectExercisesPage: React.FC = () => {
     }
   };
 
-  const handleExerciseDetails = (id: string) => {
+  const handleExerciseDetails = (id: number) => { // Updated parameter type from string to number
     navigate(`/workout/exercise-details/${id}`);
   };
 
