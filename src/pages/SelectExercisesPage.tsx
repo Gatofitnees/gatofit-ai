@@ -31,68 +31,94 @@ const SelectExercisesPage: React.FC = () => {
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Mock data for now
-  const exercises: Exercise[] = [
-    {
-      id: "1",
-      name: "Press de Banca",
-      muscle_group_main: "Pecho",
-      equipment_required: "Barra",
-      difficulty_level: "Intermedio",
-      video_url: "/exercises/bench-press.mp4"
-    },
-    {
-      id: "2",
-      name: "Sentadilla",
-      muscle_group_main: "Piernas",
-      equipment_required: "Peso Corporal",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/squat.mp4"
-    },
-    {
-      id: "3",
-      name: "Pull-up",
-      muscle_group_main: "Espalda",
-      equipment_required: "Barra de dominadas",
-      difficulty_level: "Avanzado",
-      video_url: "/exercises/pull-up.mp4"
-    },
-    {
-      id: "4",
-      name: "Plancha",
-      muscle_group_main: "Core",
-      equipment_required: "Peso Corporal",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/plank.mp4"
-    },
-    {
-      id: "5",
-      name: "Extensión de Tríceps",
-      muscle_group_main: "Tríceps",
-      equipment_required: "Mancuernas",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/triceps.mp4"
-    },
-    {
-      id: "6",
-      name: "Curl de Bíceps",
-      muscle_group_main: "Bíceps",
-      equipment_required: "Mancuernas",
-      difficulty_level: "Principiante",
-      video_url: "/exercises/biceps-curl.mp4"
-    }
-  ];
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('exercises')
+          .select('*');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setExercises(data);
+        }
+      } catch (error) {
+        console.error('Error fetching exercises:', error);
+        // Fallback to mock data if fetch fails
+        setExercises([
+          {
+            id: "1",
+            name: "Press de Banca",
+            muscle_group_main: "Pecho",
+            equipment_required: "Barra",
+            difficulty_level: "Intermedio",
+            video_url: "/exercises/bench-press.mp4"
+          },
+          {
+            id: "2",
+            name: "Sentadilla",
+            muscle_group_main: "Piernas",
+            equipment_required: "Peso Corporal",
+            difficulty_level: "Principiante",
+            video_url: "/exercises/squat.mp4"
+          },
+          {
+            id: "3",
+            name: "Pull-up",
+            muscle_group_main: "Espalda",
+            equipment_required: "Barra de dominadas",
+            difficulty_level: "Avanzado",
+            video_url: "/exercises/pull-up.mp4"
+          },
+          {
+            id: "4",
+            name: "Plancha",
+            muscle_group_main: "Core",
+            equipment_required: "Peso Corporal",
+            difficulty_level: "Principiante",
+            video_url: "/exercises/plank.mp4"
+          },
+          {
+            id: "5",
+            name: "Extensión de Tríceps",
+            muscle_group_main: "Tríceps",
+            equipment_required: "Mancuernas",
+            difficulty_level: "Principiante",
+            video_url: "/exercises/triceps.mp4"
+          },
+          {
+            id: "6",
+            name: "Curl de Bíceps",
+            muscle_group_main: "Bíceps",
+            equipment_required: "Mancuernas",
+            difficulty_level: "Principiante",
+            video_url: "/exercises/biceps-curl.mp4"
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const muscleGroups = ["Pecho", "Espalda", "Piernas", "Hombros", "Bíceps", "Tríceps", "Core", "Glúteos"];
-  const equipmentTypes = ["Peso Corporal", "Mancuernas", "Barra", "Máquinas", "Banda Elástica", "TRX"];
+    fetchExercises();
+  }, []);
+
+  // Extract unique values for filter options
+  const muscleGroups = Array.from(new Set(exercises.map(e => e.muscle_group_main).filter(Boolean))) as string[];
+  const equipmentTypes = Array.from(new Set(exercises.map(e => e.equipment_required).filter(Boolean))) as string[];
 
   const filteredExercises = exercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          exercise.muscle_group_main.toLowerCase().includes(searchTerm.toLowerCase());
+                          (exercise.muscle_group_main?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     const matchesMuscle = muscleFilters.length === 0 || 
-                          muscleFilters.includes(exercise.muscle_group_main);
+                          (exercise.muscle_group_main && muscleFilters.includes(exercise.muscle_group_main));
     
     const matchesEquipment = equipmentFilters.length === 0 || 
                             (exercise.equipment_required && equipmentFilters.includes(exercise.equipment_required));
@@ -129,8 +155,15 @@ const SelectExercisesPage: React.FC = () => {
   };
 
   const handleAddExercises = () => {
-    // Here we would typically pass the selected exercises back to the previous screen
-    navigate("/workout");
+    // Get the selected exercise objects
+    const selectedExerciseObjects = exercises.filter(exercise => 
+      selectedExercises.includes(exercise.id)
+    );
+    
+    // Navigate back to create routine with the selected exercises
+    navigate("/workout/create", { 
+      state: { selectedExercises: selectedExerciseObjects } 
+    });
   };
 
   const handleCreateExercise = () => {
@@ -143,7 +176,7 @@ const SelectExercisesPage: React.FC = () => {
       <div className="sticky top-0 z-10 bg-background p-4 border-b border-muted/20">
         <div className="flex items-center mb-4">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/workout/create")}
             className="mr-3 p-1 rounded-full hover:bg-secondary/50"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -247,37 +280,43 @@ const SelectExercisesPage: React.FC = () => {
           </Button>
         </div>
 
-        <div className="space-y-3">
-          {filteredExercises.map(exercise => (
-            <Card key={exercise.id} className="hover:scale-[1.01] transition-transform duration-300">
-              <CardBody>
-                <div className="flex items-center">
-                  <Checkbox
-                    id={`select-${exercise.id}`}
-                    checked={selectedExercises.includes(exercise.id)}
-                    onCheckedChange={() => handleExerciseSelect(exercise.id)}
-                    className="mr-3 h-5 w-5 rounded-full bg-background"
-                  />
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                    <Dumbbell className="h-5 w-5 text-primary" />
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredExercises.map(exercise => (
+              <Card key={exercise.id} className="hover:scale-[1.01] transition-transform duration-300">
+                <CardBody>
+                  <div className="flex items-center">
+                    <Checkbox
+                      id={`select-${exercise.id}`}
+                      checked={selectedExercises.includes(exercise.id)}
+                      onCheckedChange={() => handleExerciseSelect(exercise.id)}
+                      className="mr-3 h-5 w-5 rounded-full bg-background"
+                    />
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                      <Dumbbell className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{exercise.name}</h3>
+                      <span className="text-xs text-muted-foreground">{exercise.muscle_group_main}</span>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="min-w-0 p-1"
+                      onClick={() => handleExerciseDetails(exercise.id)}
+                    >
+                      <Info className="h-4 w-4 text-primary" />
+                    </Button>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">{exercise.name}</h3>
-                    <span className="text-xs text-muted-foreground">{exercise.muscle_group_main}</span>
-                  </div>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="min-w-0 p-1"
-                    onClick={() => handleExerciseDetails(exercise.id)}
-                  >
-                    <Info className="h-4 w-4 text-primary" />
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Selected Exercises Floating Button */}
