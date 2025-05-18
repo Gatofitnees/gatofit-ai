@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import SelectExercisesPage from "./pages/SelectExercisesPage";
 import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
 import CreateExercisePage from "./pages/CreateExercisePage";
+import CreateRoutinePage from "./pages/CreateRoutinePage";
 
 function App() {
   return (
@@ -33,6 +34,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <WorkoutPage />
+                  <NavBar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/create"
+              element={
+                <ProtectedRoute>
+                  <CreateRoutinePage />
                   <NavBar />
                 </ProtectedRoute>
               }
