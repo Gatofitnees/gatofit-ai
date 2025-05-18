@@ -19,6 +19,13 @@ const equipmentOptions = [
   "Kettlebell", "Bandas de Resistencia", "TRX", "Balón Medicinal"
 ];
 
+// Define proper difficulty mapping that matches the database enum values
+const difficultyMap: { [key: string]: "beginner" | "intermediate" | "advanced" } = {
+  "Principiante": "beginner",
+  "Intermedio": "intermediate",
+  "Avanzado": "advanced"
+};
+
 const CreateExercisePage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -51,24 +58,22 @@ const CreateExercisePage: React.FC = () => {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      const difficultyMap: { [key: string]: string } = {
-        "Principiante": "beginner",
-        "Intermedio": "intermediate",
-        "Avanzado": "advanced"
+      // Create exercise object with correct mapping of difficulty level
+      const exerciseData = {
+        name: exerciseName,
+        muscle_group_main: muscleGroup,
+        equipment_required: equipment || null,
+        description: description || null,
+        // Only set difficulty_level if a value has been selected
+        ...(difficulty && { difficulty_level: difficultyMap[difficulty] }),
+        video_url: videoUrl || null,
+        created_by_user_id: user?.id || null
       };
       
       // Insert exercise
-      const { data: exerciseData, error } = await supabase
+      const { data, error } = await supabase
         .from('exercises')
-        .insert({
-          name: exerciseName,
-          muscle_group_main: muscleGroup,
-          equipment_required: equipment || null,
-          description: description || null,
-          difficulty_level: difficulty ? difficultyMap[difficulty] : null,
-          video_url: videoUrl || null,
-          created_by_user_id: user?.id || null
-        })
+        .insert(exerciseData)
         .select();
 
       if (error) {
