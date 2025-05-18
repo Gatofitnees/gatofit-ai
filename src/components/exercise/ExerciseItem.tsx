@@ -4,6 +4,12 @@ import { Info, Dumbbell } from "lucide-react";
 import { Card, CardBody } from "@/components/Card";
 import { Checkbox } from "@/components/ui/checkbox";
 import Button from "@/components/Button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Exercise {
   id: number;
@@ -42,14 +48,23 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({ exercise, isSelected, onSel
               <span className="text-xs text-muted-foreground ml-2">· {exercise.equipment_required}</span>
             )}
           </div>
-          <Button 
-            variant="outline"
-            size="sm"
-            className="min-w-0 p-1"
-            onClick={() => onViewDetails(exercise.id)}
-          >
-            <Info className="h-4 w-4 text-primary" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="min-w-0 p-1"
+                  onClick={() => onViewDetails(exercise.id)}
+                >
+                  <Info className="h-4 w-4 text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Ver detalles</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </CardBody>
     </Card>

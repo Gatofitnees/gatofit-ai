@@ -10,6 +10,7 @@ interface Exercise {
   equipment_required?: string;
   difficulty_level?: string;
   video_url?: string;
+  description?: string;
 }
 
 const preloadedExercises: Exercise[] = [
@@ -18,15 +19,37 @@ const preloadedExercises: Exercise[] = [
     name: "Aperturas con mancuernas en banco inclinado",
     muscle_group_main: "Pecho",
     equipment_required: "Mancuernas",
-    video_url: "https://storage.cloud.google.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas-en-banco-inclinado.mp4",
+    difficulty_level: "Intermedio",
+    description: "Este ejercicio trabaja principalmente los músculos pectorales superiores. Se realiza acostado en un banco inclinado sosteniendo mancuernas en cada mano.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas-en-banco-inclinado.mp4",
   },
   {
     id: 1002,
     name: "Aperturas con mancuernas",
     muscle_group_main: "Pecho",
     equipment_required: "Mancuernas",
-    video_url: "https://storage.cloud.google.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas.mp4",
+    difficulty_level: "Intermedio",
+    description: "Este ejercicio trabaja los músculos pectorales de forma aislada. Se realiza acostado en un banco plano sosteniendo mancuernas en cada mano.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas.mp4",
   },
+  {
+    id: 1003,
+    name: "Aperturas en maquina",
+    muscle_group_main: "Pecho",
+    equipment_required: "Maquina",
+    difficulty_level: "Principiante",
+    description: "Este ejercicio aísla los músculos pectorales utilizando una máquina especializada que proporciona resistencia constante a lo largo del movimiento.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-maquina.mp4",
+  },
+  {
+    id: 1004,
+    name: "Aperturas en polea",
+    muscle_group_main: "Pecho",
+    equipment_required: "Polea",
+    difficulty_level: "Intermedio",
+    description: "Este ejercicio trabaja los músculos pectorales utilizando poleas, lo que proporciona tensión constante durante todo el movimiento.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-polea-alta.mp4",
+  }
 ];
 
 export const useExercises = () => {

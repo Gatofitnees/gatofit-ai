@@ -56,13 +56,8 @@ const SelectExercisesPage: React.FC = () => {
   };
 
   const handleExerciseDetails = (id: number) => {
-    const exercise = exercises.find(ex => ex.id === id);
-    if (exercise?.video_url) {
-      // Open the video URL in a new tab or show details
-      window.open(exercise.video_url, '_blank');
-    } else {
-      navigate(`/workout/exercise-details/${id}`);
-    }
+    // Navigate to the exercise details page
+    navigate(`/workout/exercise-details/${id}`);
   };
 
   const handleAddExercises = () => {
@@ -142,7 +137,7 @@ const SelectExercisesPage: React.FC = () => {
         <div className="fixed bottom-20 left-0 right-0 p-4 flex justify-center">
           <Button
             variant="primary"
-            className="shadow-neu-float px-6"
+            className="shadow-neu-float px-6 bg-blue-500 hover:bg-blue-600"
             onClick={handleAddExercises}
           >
             Añadir {selectedExercises.length} ejercicios
