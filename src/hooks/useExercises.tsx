@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -154,7 +155,7 @@ const preloadedExercises: Exercise[] = [
     id: 2012,
     name: "Jalon al pecho agarre abierto",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Jalón vertical con agarre ancho que trabaja principalmente el dorsal ancho.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/jalon-al-pecho-agarre-abierto.mp4",
@@ -163,7 +164,7 @@ const preloadedExercises: Exercise[] = [
     id: 2013,
     name: "Jalon al pecho agarre cerrado",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Jalón vertical con agarre cerrado que enfoca más el trabajo en la parte inferior del dorsal.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/jalon-al-pecho-agarre-cerrado.mp4",
@@ -172,7 +173,7 @@ const preloadedExercises: Exercise[] = [
     id: 2014,
     name: "Jalon al pecho agarre en V",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Jalón al pecho utilizando una barra en forma de V para un agarre neutral.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/jalon-al-pecho-agarre-en-v.mp4",
@@ -181,7 +182,7 @@ const preloadedExercises: Exercise[] = [
     id: 2015,
     name: "Jalon al pecho agarre invertido",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Jalón con agarre supino que trabaja la espalda y enfatiza los bíceps.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/jalon-al-pecho-agarre-invertido.mp4",
@@ -190,7 +191,7 @@ const preloadedExercises: Exercise[] = [
     id: 2016,
     name: "Jalon al pecho agarre medio",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Jalón con agarre a distancia media para un balance entre amplitud y concentración del movimiento.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/jalon-al-pecho-agarre-medio.mp4",
@@ -199,7 +200,7 @@ const preloadedExercises: Exercise[] = [
     id: 2017,
     name: "Jalon al pecho agarre neutro",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Jalón con agarre neutro que reduce la tensión en las muñecas y codos.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/jalon-al-pecho-agarre-neutro.mp4",
@@ -217,7 +218,7 @@ const preloadedExercises: Exercise[] = [
     id: 2019,
     name: "Jalon unilateral",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Intermedio",
     description: "Jalón realizado con un brazo a la vez para corregir desbalances musculares.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/jalon-unilateral.mp4",
@@ -388,7 +389,7 @@ const preloadedExercises: Exercise[] = [
     id: 2038,
     name: "Remo en polea agarre corto con barra",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Remo en polea con barra corta que enfatiza la parte media de la espalda.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/remo-en-polea-agarre-corto-con-barra.mp4",
@@ -397,7 +398,7 @@ const preloadedExercises: Exercise[] = [
     id: 2039,
     name: "Remo en polea agarre estrecho",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Principiante",
     description: "Remo en polea con agarre estrecho que enfatiza la parte central de la espalda.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/remo-en-polea-agarre-estrecho.mp4",
@@ -451,7 +452,7 @@ const preloadedExercises: Exercise[] = [
     id: 2045,
     name: "Remo unilateral en polea",
     muscle_group_main: "Espalda",
-    equipment_required: "Maquina-polea",
+    equipment_required: "Maquina Polea",
     difficulty_level: "Intermedio",
     description: "Remo de un brazo realizado en polea baja para trabajar cada lado independientemente.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/remo-unilateral-en-polea.mp4",
@@ -497,9 +498,24 @@ export const useExercises = () => {
     fetchExercises();
   }, [toast]);
 
-  // Extract unique values for filter options
+  // Extract unique values for filter options, handling combined equipment types
   const muscleGroups = Array.from(new Set(exercises.map(e => e.muscle_group_main).filter(Boolean))) as string[];
-  const equipmentTypes = Array.from(new Set(exercises.map(e => e.equipment_required).filter(Boolean))) as string[];
+  
+  // Procesar equipos para separar aquellos que contienen múltiples valores
+  const processedEquipmentTypes = exercises
+    .flatMap(e => {
+      if (!e.equipment_required) return [];
+      
+      // Si contiene espacios, dividir en múltiples valores
+      if (e.equipment_required.includes(" ")) {
+        return e.equipment_required.split(" ");
+      }
+      
+      return [e.equipment_required];
+    })
+    .filter(Boolean);
+  
+  const equipmentTypes = Array.from(new Set(processedEquipmentTypes)) as string[];
 
   return {
     exercises,

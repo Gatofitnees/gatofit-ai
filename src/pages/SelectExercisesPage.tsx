@@ -25,8 +25,12 @@ const SelectExercisesPage: React.FC = () => {
     const matchesMuscle = muscleFilters.length === 0 || 
                           (exercise.muscle_group_main && muscleFilters.includes(exercise.muscle_group_main));
     
+    // Modificación para manejar equipamiento múltiple (como "Maquina-polea")
     const matchesEquipment = equipmentFilters.length === 0 || 
-                            (exercise.equipment_required && equipmentFilters.includes(exercise.equipment_required));
+                            (exercise.equipment_required && 
+                              equipmentFilters.some(filter => 
+                                exercise.equipment_required?.includes(filter)
+                              ));
     
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
