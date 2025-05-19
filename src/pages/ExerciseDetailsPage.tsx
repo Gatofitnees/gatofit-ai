@@ -5,9 +5,11 @@ import { ArrowLeft, Plus, LineChart, Dumbbell } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Button from "@/components/Button";
 import { supabase } from "@/integrations/supabase/client";
+import { useExercises } from "@/hooks/useExercises";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Exercise {
-  id: string;
+  id: number | string;
   name: string;
   description?: string;
   muscle_group_main: string;
@@ -20,6 +22,8 @@ interface Exercise {
 const ExerciseDetailsPage: React.FC = () => {
   const { id } = useParams<{id: string}>();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { exercises, loading: exercisesLoading } = useExercises();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,65 +34,37 @@ const ExerciseDetailsPage: React.FC = () => {
         
         if (!id) return;
         
-        // In a real app, we'd use the actual ID from params
-        // For now using mockdata - in production this would query Supabase
-        const mockExercises = [
-          {
-            id: "1001",
-            name: "Aperturas con mancuernas en banco inclinado",
-            description: "Este ejercicio trabaja principalmente los músculos pectorales superiores. Se realiza acostado en un banco inclinado sosteniendo mancuernas en cada mano.",
-            muscle_group_main: "Pecho",
-            equipment_required: "Mancuernas",
-            difficulty_level: "Intermedio",
-            video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas-en-banco-inclinado.mp4",
-            created_by_user_id: null
-          },
-          {
-            id: "1002",
-            name: "Aperturas con mancuernas",
-            description: "Este ejercicio trabaja los músculos pectorales de forma aislada. Se realiza acostado en un banco plano sosteniendo mancuernas en cada mano.",
-            muscle_group_main: "Pecho",
-            equipment_required: "Mancuernas",
-            difficulty_level: "Intermedio",
-            video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas.mp4",
-            created_by_user_id: null
-          },
-          {
-            id: "1003",
-            name: "Aperturas en maquina",
-            description: "Este ejercicio aísla los músculos pectorales utilizando una máquina especializada que proporciona resistencia constante a lo largo del movimiento.",
-            muscle_group_main: "Pecho",
-            equipment_required: "Maquina",
-            difficulty_level: "Principiante",
-            video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-maquina.mp4",
-            created_by_user_id: null
-          },
-          {
-            id: "1004",
-            name: "Aperturas en polea",
-            description: "Este ejercicio trabaja los músculos pectorales utilizando poleas, lo que proporciona tensión constante durante todo el movimiento.",
-            muscle_group_main: "Pecho",
-            equipment_required: "Polea",
-            difficulty_level: "Intermedio",
-            video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-polea-alta.mp4",
-            created_by_user_id: null
-          }
-        ];
-        
-        const foundExercise = mockExercises.find(ex => ex.id === id);
+        // Try to find exercise in our list by matching either string or number ID
+        const numericId = parseInt(id);
+        const foundExercise = exercises.find(ex => 
+          ex.id === numericId || ex.id.toString() === id
+        );
         
         if (foundExercise) {
           setExercise(foundExercise);
+        } else {
+          toast({
+            title: "Error",
+            description: "No se pudo encontrar el ejercicio",
+            variant: "destructive"
+          });
         }
       } catch (error) {
         console.error("Error fetching exercise details:", error);
+        toast({
+          title: "Error",
+          description: "Ocurrió un error al cargar el ejercicio",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
     
-    fetchExerciseDetails();
-  }, [id]);
+    if (exercises.length > 0) {
+      fetchExerciseDetails();
+    }
+  }, [id, exercises, toast]);
 
   const handleAddToRoutine = () => {
     // Add to routine and navigate back
@@ -102,9 +78,13 @@ const ExerciseDetailsPage: React.FC = () => {
   const showHistoryGraph = () => {
     // In a real app, this would open a modal with exercise history
     console.log("Show exercise history");
+    toast({
+      title: "Historial",
+      description: "Mostrando historial del ejercicio (funcionalidad en desarrollo)",
+    });
   };
 
-  if (loading) {
+  if (exercisesLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-primary">Cargando...</div>
