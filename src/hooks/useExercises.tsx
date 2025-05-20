@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { preloadedExercises } from "@/data/preloadedExercises";
+import { additionalExercises } from "@/data/additionalExercises";
 
 interface Exercise {
   id: number;
@@ -34,12 +35,15 @@ export const useExercises = () => {
           setExercises(data);
         } else {
           // If no data returned from DB, use preloaded exercises
-          setExercises(preloadedExercises);
+          // Combine both preloaded and additional exercises
+          const allExercises = [...preloadedExercises, ...additionalExercises];
+          setExercises(allExercises);
         }
       } catch (error) {
         console.error('Error fetching exercises:', error);
         // Fallback to preloaded exercises if fetch fails
-        setExercises(preloadedExercises);
+        const allExercises = [...preloadedExercises, ...additionalExercises];
+        setExercises(allExercises);
         toast({
           title: "Error",
           description: "No se pudieron cargar los ejercicios",
@@ -53,15 +57,26 @@ export const useExercises = () => {
     fetchExercises();
   }, [toast]);
 
-  // Extract unique values for filter options, handling combined equipment types
-  const muscleGroups = Array.from(new Set(exercises.map(e => e.muscle_group_main).filter(Boolean))) as string[];
+  // Extract unique values for filter options, properly handling multiple muscle groups and equipment types
+  const muscleGroups = Array.from(
+    new Set(
+      exercises.flatMap(e => {
+        if (!e.muscle_group_main) return [];
+        // Split multiple muscle groups if they exist
+        if (e.muscle_group_main.includes(" ")) {
+          return e.muscle_group_main.split(" ");
+        }
+        return [e.muscle_group_main];
+      })
+    )
+  ) as string[];
   
-  // Procesar equipos para separar aquellos que contienen múltiples valores
+  // Process equipment types to separate those that contain multiple values
   const processedEquipmentTypes = exercises
     .flatMap(e => {
       if (!e.equipment_required) return [];
       
-      // Si contiene espacios, dividir en múltiples valores
+      // Split by space to handle multiple equipment types
       if (e.equipment_required.includes(" ")) {
         return e.equipment_required.split(" ");
       }
