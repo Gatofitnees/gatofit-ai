@@ -11,13 +11,13 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 
-interface DiscardChangesDialogProps {
+interface NoExercisesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
 
-const DiscardChangesDialog: React.FC<DiscardChangesDialogProps> = ({ 
+const NoExercisesDialog: React.FC<NoExercisesDialogProps> = ({ 
   open, 
   onOpenChange, 
   onConfirm 
@@ -26,18 +26,18 @@ const DiscardChangesDialog: React.FC<DiscardChangesDialogProps> = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Te vas a ir sin guardar los cambios?</AlertDialogTitle>
+          <AlertDialogTitle>¿Continuar sin ejercicios?</AlertDialogTitle>
           <AlertDialogDescription>
-            Los cambios no guardados se perderán.
+            Todavía no has añadido ejercicios. ¿Quieres guardar de todos modos?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Confirmar</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm}>Guardar</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 };
 
-export default DiscardChangesDialog;
+export default NoExercisesDialog;

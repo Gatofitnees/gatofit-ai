@@ -1,8 +1,8 @@
 
 import React from "react";
 import { RoutineExercise } from "../../types";
-import ExerciseOptionsSheet from "../ExerciseOptionsSheet";
-import ReorderSheet from "../ReorderSheet";
+import ExerciseOptionsSheet from "./ExerciseOptionsSheet";
+import ReorderSheet from "./ReorderSheet";
 
 interface RoutineSheetsProps {
   showExerciseOptionsSheet: boolean;
@@ -13,7 +13,7 @@ interface RoutineSheetsProps {
   handleRemoveExercise: (index: number) => void;
   handleMoveExercise: (fromIndex: number, toIndex: number) => void;
   routineExercises: RoutineExercise[];
-  navigateToSelectExercises: (e?: React.MouseEvent) => void; // Make MouseEvent optional
+  navigateToSelectExercises: (e?: React.MouseEvent) => void;
   handleReorderSave: () => void;
 }
 
@@ -40,7 +40,7 @@ const RoutineSheets: React.FC<RoutineSheetsProps> = ({
         }}
         onReplaceExercise={() => {
           setShowExerciseOptionsSheet(false);
-          navigateToSelectExercises(); // Now accepts no arguments
+          navigateToSelectExercises();
         }}
         onRemoveExercise={() => {
           if (currentExerciseIndex !== null) {

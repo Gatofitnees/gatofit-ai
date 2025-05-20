@@ -11,33 +11,35 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 
-interface DiscardChangesDialogProps {
+interface SaveConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  isSubmitting: boolean;
 }
 
-const DiscardChangesDialog: React.FC<DiscardChangesDialogProps> = ({ 
+const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({ 
   open, 
   onOpenChange, 
-  onConfirm 
+  onConfirm,
+  isSubmitting
 }) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Te vas a ir sin guardar los cambios?</AlertDialogTitle>
+          <AlertDialogTitle>Confirmar guardado</AlertDialogTitle>
           <AlertDialogDescription>
-            Los cambios no guardados se perderán.
+            ¿Está seguro que desea guardar esta rutina?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Confirmar</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm} disabled={isSubmitting}>Confirmar</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 };
 
-export default DiscardChangesDialog;
+export default SaveConfirmDialog;

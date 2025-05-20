@@ -1,10 +1,8 @@
 
 import React from "react";
-import { 
-  NoExercisesDialog, 
-  SaveConfirmDialog, 
-  DiscardChangesDialog 
-} from "@/features/workout/components/ConfirmationDialogs";
+import NoExercisesDialog from "./NoExercisesDialog";
+import SaveConfirmDialog from "./SaveConfirmDialog";
+import DiscardChangesDialog from "./DiscardChangesDialog";
 
 interface RoutineDialogsProps {
   showNoExercisesDialog: boolean;
