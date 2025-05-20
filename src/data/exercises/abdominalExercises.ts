@@ -23,7 +23,7 @@ export const abdominalExercises: Exercise[] = [
   {
     id: 7002,
     name: "Crunch abdominal cruzado",
-    muscle_group_main: "Abdominales Oblicuos",
+    muscle_group_main: "Abdominales, Oblicuos",
     equipment_required: "Libre",
     difficulty_level: "Principiante",
     description: "Contracción abdominal con rotación que trabaja especialmente los oblicuos.",
