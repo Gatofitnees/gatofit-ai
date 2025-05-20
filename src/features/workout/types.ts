@@ -15,3 +15,13 @@ export interface ExerciseSet {
 export interface RoutineExercise extends ExerciseItem {
   sets: ExerciseSet[];
 }
+
+export interface RoutineData {
+  id: number;
+  name: string;
+  type: string;
+  user_id: string;
+  created_at: string;
+  estimated_duration_minutes: number;
+  description?: string;
+}
