@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Play } from "lucide-react";
@@ -75,13 +74,12 @@ const RoutineDetailsPage: React.FC = () => {
           };
         });
         
-        // Combine the data with a default type value
-        const routineWithType = {
+        // Add the type property to routineData if it doesn't exist
+        const routineWithType: RoutineData = {
           ...routineData,
-          // Fix #1: Add type property with a default value if it's missing from DB
-          type: routineData.type || "strength", 
+          type: routineData.type || "strength", // Default type if missing from DB
           exercises: formattedExercises
-        } as RoutineData; // Explicitly cast to RoutineData type
+        };
         
         setRoutine(routineWithType);
       } catch (error) {
@@ -171,33 +169,36 @@ const RoutineDetailsPage: React.FC = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-xl font-bold">{routine.name}</h1>
+        <h1 className="text-xl font-bold">{routine?.name}</h1>
       </div>
       
       <Card className="mb-4">
         <CardHeader 
           title="Información"
-          // Fix #2: Use string in subtitle instead of React Element directly
           subtitle={
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="px-2 py-0.5 rounded-full bg-secondary">
-                {routine.type === "strength" ? "Fuerza" :
-                 routine.type === "cardio" ? "Cardio" :
-                 routine.type === "flexibility" ? "Flexibilidad" :
-                 routine.type === "mixed" ? "Mixto" : "Personalizado"}
-              </span>
-              {routine.estimated_duration_minutes && (
-                <div className="flex items-center">
-                  <Clock className="h-3.5 w-3.5 mr-1" />
-                  {routine.estimated_duration_minutes} min
-                </div>
-              )}
-              <span>{routine.exercises.length} ejercicios</span>
-            </div>
+            // Converting the JSX element to a string by using a renderer function
+            // This pattern allows us to keep the JSX structure while satisfying TypeScript
+            () => (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="px-2 py-0.5 rounded-full bg-secondary">
+                  {routine?.type === "strength" ? "Fuerza" :
+                   routine?.type === "cardio" ? "Cardio" :
+                   routine?.type === "flexibility" ? "Flexibilidad" :
+                   routine?.type === "mixed" ? "Mixto" : "Personalizado"}
+                </span>
+                {routine?.estimated_duration_minutes && (
+                  <div className="flex items-center">
+                    <Clock className="h-3.5 w-3.5 mr-1" />
+                    {routine.estimated_duration_minutes} min
+                  </div>
+                )}
+                <span>{routine?.exercises.length} ejercicios</span>
+              </div>
+            )
           }
         />
         <CardBody>
-          {routine.description && (
+          {routine?.description && (
             <p className="text-sm mb-4">{routine.description}</p>
           )}
           <Button
@@ -215,7 +216,7 @@ const RoutineDetailsPage: React.FC = () => {
         <CardHeader title="Ejercicios" />
         <CardBody>
           <div className="space-y-4">
-            {routine.exercises.map((exercise, index) => (
+            {routine?.exercises.map((exercise, index) => (
               <div key={`${exercise.id}-${index}`} className="border-b border-secondary/30 pb-4 last:border-0">
                 <h3 className="font-medium">{exercise.name}</h3>
                 <div className="flex flex-wrap gap-2 mt-1">
