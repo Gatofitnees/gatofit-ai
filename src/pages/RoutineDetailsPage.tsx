@@ -11,7 +11,7 @@ import { RoutineExercise } from "@/features/workout/types";
 interface RoutineData {
   id: number;
   name: string;
-  type: string;
+  type: string; // Ensuring this is defined in the interface
   description: string | null;
   estimated_duration_minutes: number | null;
   user_id: string;
@@ -78,9 +78,10 @@ const RoutineDetailsPage: React.FC = () => {
         // Combine the data with a default type value
         const routineWithType = {
           ...routineData,
-          type: routineData.type || "strength", // Default type if missing from DB
+          // Fix #1: Add type property with a default value if it's missing from DB
+          type: routineData.type || "strength", 
           exercises: formattedExercises
-        };
+        } as RoutineData; // Explicitly cast to RoutineData type
         
         setRoutine(routineWithType);
       } catch (error) {
@@ -176,6 +177,7 @@ const RoutineDetailsPage: React.FC = () => {
       <Card className="mb-4">
         <CardHeader 
           title="Información"
+          // Fix #2: Use string in subtitle instead of React Element directly
           subtitle={
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="px-2 py-0.5 rounded-full bg-secondary">
