@@ -52,9 +52,9 @@ const CreateRoutinePage: React.FC = () => {
   // State to handle navigation blocking
   const [blockedNavigation, setBlockedNavigation] = useState<string | null>(null);
 
-  // Custom navigation blocker
+  // Custom navigation blocker - corrected to match the expected type signature
   const shouldBlock = useCallback(
-    (nextLocation: { pathname: string }) => {
+    ({ nextLocation }) => {
       // Don't block navigation to select-exercises
       if (nextLocation.pathname === "/workout/select-exercises") {
         return false;
@@ -76,7 +76,7 @@ const CreateRoutinePage: React.FC = () => {
   useBlocker(shouldBlock);
 
   // Handle confirm discard changes
-  const onConfirmDiscardChanges = useCallback(() => {
+  const handleConfirmDiscardChanges = useCallback(() => {
     if (blockedNavigation) {
       navigate(blockedNavigation);
     }
