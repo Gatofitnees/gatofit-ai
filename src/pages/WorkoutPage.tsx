@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import WorkoutHeader from "@/components/workout/WorkoutHeader";
 import WorkoutSearchFilter from "@/components/workout/WorkoutSearchFilter";
@@ -9,7 +8,6 @@ import { useRoutines } from "@/hooks/useRoutines";
 
 const WorkoutPage: React.FC = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { routines, loading } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -19,8 +17,11 @@ const WorkoutPage: React.FC = () => {
   );
 
   const handleStartWorkout = (routineId: number) => {
-    // Navigate to routine details page
-    navigate(`/workout/routine/${routineId}`);
+    // In a future implementation, this would navigate to a workout session page
+    toast({
+      title: "¡Rutina iniciada!",
+      description: "Funcionalidad en desarrollo"
+    });
   };
 
   return (

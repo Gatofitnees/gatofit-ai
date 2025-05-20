@@ -1,44 +1,26 @@
 
 import React from "react";
-import { Check, ArrowLeft } from "lucide-react";
 import Button from "@/components/Button";
+import { Save } from "lucide-react";
 
 interface RoutinePageHeaderProps {
-  isSubmitting: boolean;
   onSaveClick: (e: React.MouseEvent) => void;
-  onBackClick?: () => void;
+  isSubmitting: boolean;
 }
 
-const RoutinePageHeader: React.FC<RoutinePageHeaderProps> = ({ 
-  onSaveClick, 
-  onBackClick,
-  isSubmitting 
-}) => {
+const RoutinePageHeader: React.FC<RoutinePageHeaderProps> = ({ onSaveClick, isSubmitting }) => {
   return (
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center">
-        {onBackClick && (
-          <button
-            onClick={onBackClick}
-            className="mr-3 p-2 rounded-full hover:bg-secondary/50 transition-colors"
-            type="button"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        )}
-        <h1 className="text-xl font-bold">Crear Rutina</h1>
-      </div>
-      
-      <Button
-        variant="primary"
+    <div className="flex justify-between items-center mb-6">
+      <h1 className="text-xl font-bold">Crear Rutina</h1>
+      <Button 
+        variant="primary" 
         size="sm"
-        leftIcon={<Check className="h-4 w-4" />}
+        leftIcon={<Save className="h-4 w-4" />}
         onClick={onSaveClick}
         disabled={isSubmitting}
         type="button"
-        className="rounded-full px-4"
       >
-        {isSubmitting ? "Guardando..." : "Guardar"}
+        Guardar
       </Button>
     </div>
   );
