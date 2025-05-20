@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus } from "lucide-react";
@@ -29,12 +28,13 @@ const SelectExercisesPage: React.FC = () => {
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   
-  // Load state from sessionStorage on component mount
+  // Load state from sessionStorage on component mount and reset selected exercises
   useEffect(() => {
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
       const parsedState = JSON.parse(savedState) as SelectExercisesState;
-      setSelectedExercises(parsedState.selectedExercises || []);
+      // Reset selected exercises but keep other filters if needed
+      setSelectedExercises([]);
       setSearchTerm(parsedState.searchTerm || "");
       setMuscleFilters(parsedState.muscleFilters || []);
       setEquipmentFilters(parsedState.equipmentFilters || []);
@@ -114,8 +114,8 @@ const SelectExercisesPage: React.FC = () => {
       selectedExercises.includes(exercise.id)
     );
     
-    // Clear filters from session storage before navigating
-    resetFiltersInStorage();
+    // Clear all state from session storage before navigating
+    resetSessionStorage();
     
     // Navigate back to create routine with the selected exercises
     navigate("/workout/create", { 
@@ -127,11 +127,10 @@ const SelectExercisesPage: React.FC = () => {
     navigate("/workout/create-exercise");
   };
   
-  // Function to reset filters in sessionStorage
-  const resetFiltersInStorage = () => {
-    const currentState = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "{}");
+  // Function to completely reset session storage
+  const resetSessionStorage = () => {
     const resetState = {
-      ...currentState,
+      selectedExercises: [],
       searchTerm: "",
       muscleFilters: [],
       equipmentFilters: []
@@ -139,9 +138,9 @@ const SelectExercisesPage: React.FC = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
   };
 
-  // Reset filters when navigating back
+  // Reset filters and selections when navigating back
   const handleNavigateBack = () => {
-    resetFiltersInStorage();
+    resetSessionStorage();
     navigate("/workout/create");
   };
 

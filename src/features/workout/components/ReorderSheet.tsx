@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Trash2 } from "lucide-react";
 import Button from "@/components/Button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
@@ -22,6 +22,25 @@ const ReorderSheet: React.FC<ReorderSheetProps> = ({
   onRemoveExercise,
   onSave
 }) => {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  
+  const handleDragStart = (index: number) => {
+    setDragIndex(index);
+  };
+  
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) return;
+    
+    // Move exercise
+    onMoveExercise(dragIndex, index);
+    setDragIndex(index);
+  };
+  
+  const handleDragEnd = () => {
+    setDragIndex(null);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="px-0 sm:max-w-md w-full">
@@ -31,7 +50,15 @@ const ReorderSheet: React.FC<ReorderSheetProps> = ({
         <div className="py-4">
           <div className="space-y-2">
             {exercises.map((exercise, index) => (
-              <div key={`reorder-${exercise.id}-${index}`} className="flex items-center px-4 py-3 bg-secondary/40 rounded-md">
+              <div 
+                key={`reorder-${exercise.id}-${index}`} 
+                className={`flex items-center px-4 py-3 bg-secondary/40 rounded-md cursor-move ${dragIndex === index ? 'scale-105 shadow-lg' : ''}`}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                style={{ transition: 'transform 0.15s ease-in-out' }}
+              >
                 <Button
                   variant="outline"
                   size="sm"
@@ -46,36 +73,6 @@ const ReorderSheet: React.FC<ReorderSheetProps> = ({
                 </Button>
                 <div className="flex-1">
                   <h4 className="font-medium text-sm">{exercise.name}</h4>
-                </div>
-                <div className="flex items-center space-x-1">
-                  {index > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="p-1 min-w-0"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onMoveExercise(index, index - 1);
-                      }}
-                      type="button"
-                    >
-                      ↑
-                    </Button>
-                  )}
-                  {index < exercises.length - 1 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="p-1 min-w-0"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onMoveExercise(index, index + 1);
-                      }}
-                      type="button"
-                    >
-                      ↓
-                    </Button>
-                  )}
                 </div>
               </div>
             ))}

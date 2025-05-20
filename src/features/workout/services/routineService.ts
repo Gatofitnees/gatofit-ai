@@ -20,12 +20,14 @@ export async function saveRoutine(
     .insert({
       name: routineName,
       user_id: user.id,
+      type: routineType, // Add routine type field
       estimated_duration_minutes: routineExercises.length * 5, // Rough estimate
     })
     .select()
     .single();
 
   if (routineError) {
+    console.error("Error creating routine:", routineError);
     throw new Error(routineError.message);
   }
 
@@ -47,6 +49,7 @@ export async function saveRoutine(
     .insert(routineExercisesData);
 
   if (exercisesError) {
+    console.error("Error inserting exercise data:", exercisesError);
     throw new Error(exercisesError.message);
   }
 

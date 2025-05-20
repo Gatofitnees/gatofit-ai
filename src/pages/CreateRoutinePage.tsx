@@ -90,14 +90,14 @@ const CreateRoutinePage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await saveRoutine(routineName, routineType, routineExercises);
+      const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
 
       toast({
         title: "¡Rutina creada!",
         description: `La rutina ${routineName} ha sido guardada correctamente`,
       });
 
-      navigate("/workout");
+      navigate("/workout", { replace: true });
     } catch (error) {
       console.error("Error saving routine:", error);
       toast({

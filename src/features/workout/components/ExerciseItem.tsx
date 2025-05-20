@@ -40,6 +40,7 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
               e.preventDefault(); // Prevent form submission
               onExerciseOptions(index);
             }}
+            type="button"
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
@@ -62,6 +63,7 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
             e.preventDefault(); // Prevent form submission
             onAddSet(index);
           }}
+          type="button"
         >
           <Plus className="h-3 w-3 mr-1" /> Agregar serie
         </Button>
