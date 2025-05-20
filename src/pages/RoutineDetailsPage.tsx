@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Play } from "lucide-react";
@@ -74,9 +75,10 @@ const RoutineDetailsPage: React.FC = () => {
           };
         });
         
-        // Add the type property to routineData if it doesn't exist
+        // Fix #1: Properly create a routine object with the type property
         const routineWithType: RoutineData = {
           ...routineData,
+          // Since type might not exist in the database, we add it here
           type: routineData.type || "strength", // Default type if missing from DB
           exercises: formattedExercises
         };
@@ -175,26 +177,15 @@ const RoutineDetailsPage: React.FC = () => {
       <Card className="mb-4">
         <CardHeader 
           title="Información"
+          // Fix #2: Convert the JSX to a string representation
           subtitle={
-            // Converting the JSX element to a string by using a renderer function
-            // This pattern allows us to keep the JSX structure while satisfying TypeScript
-            () => (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="px-2 py-0.5 rounded-full bg-secondary">
-                  {routine?.type === "strength" ? "Fuerza" :
-                   routine?.type === "cardio" ? "Cardio" :
-                   routine?.type === "flexibility" ? "Flexibilidad" :
-                   routine?.type === "mixed" ? "Mixto" : "Personalizado"}
-                </span>
-                {routine?.estimated_duration_minutes && (
-                  <div className="flex items-center">
-                    <Clock className="h-3.5 w-3.5 mr-1" />
-                    {routine.estimated_duration_minutes} min
-                  </div>
-                )}
-                <span>{routine?.exercises.length} ejercicios</span>
-              </div>
-            )
+            // Using a string instead of a function to return JSX
+            `${routine.type === "strength" ? "Fuerza" : 
+               routine.type === "cardio" ? "Cardio" : 
+               routine.type === "flexibility" ? "Flexibilidad" : 
+               routine.type === "mixed" ? "Mixto" : "Personalizado"} · 
+             ${routine.estimated_duration_minutes ? `${routine.estimated_duration_minutes} min` : ""} · 
+             ${routine.exercises.length} ejercicios`
           }
         />
         <CardBody>
