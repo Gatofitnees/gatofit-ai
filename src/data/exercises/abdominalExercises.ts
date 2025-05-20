@@ -1,0 +1,149 @@
+
+interface Exercise {
+  id: number;
+  name: string;
+  muscle_group_main: string;
+  equipment_required?: string;
+  difficulty_level?: string;
+  video_url?: string;
+  description?: string;
+}
+
+// Abdominal exercises (IDs 7001-7015)
+export const abdominalExercises: Exercise[] = [
+  {
+    id: 7001,
+    name: "Bicicleta abdominal",
+    muscle_group_main: "Abdominales Oblicuos",
+    equipment_required: "Libre",
+    difficulty_level: "Principiante",
+    description: "Ejercicio dinámico que simula pedalear trabajando abdominales y oblicuos.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/bicicleta-abdominal.mp4",
+  },
+  {
+    id: 7002,
+    name: "Crunch abdominal cruzado",
+    muscle_group_main: "Abdominales Oblicuos",
+    equipment_required: "Libre",
+    difficulty_level: "Principiante",
+    description: "Contracción abdominal con rotación que trabaja especialmente los oblicuos.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/crunch-abdominal-cruzado.mp4",
+  },
+  {
+    id: 7003,
+    name: "Crunch abdominal declinado",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Intermedio",
+    description: "Crunch realizado en banco declinado para mayor intensidad.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/crunch-abdominal-declinado.mp4",
+  },
+  {
+    id: 7004,
+    name: "Crunch abdominal en maquina",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Maquina",
+    difficulty_level: "Principiante",
+    description: "Contracción abdominal en máquina específica con resistencia ajustable.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/crunch-abdominal-en-maquina.mp4",
+  },
+  {
+    id: 7005,
+    name: "Crunch abdominal en polea",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Polea",
+    difficulty_level: "Intermedio",
+    description: "Contracción abdominal utilizando polea alta para mayor resistencia.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/crunch-abdominal-en-polea.mp4",
+  },
+  {
+    id: 7006,
+    name: "Crunch abdominal",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Principiante",
+    description: "Ejercicio básico de contracción abdominal elevando hombros del suelo.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/crunch-abdominal.mp4",
+  },
+  {
+    id: 7007,
+    name: "Elevación de piernas colgado",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Intermedio",
+    description: "Elevación de piernas en posición colgado que trabaja abdominales inferiores.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/elevacion-de-piernas-colgado.mp4",
+  },
+  {
+    id: 7008,
+    name: "Elevación de piernas en maquina",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Maquina",
+    difficulty_level: "Principiante",
+    description: "Elevación de piernas en máquina específica para abdominales inferiores.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/elevacion-de-piernas-en-maquina.mp4",
+  },
+  {
+    id: 7009,
+    name: "Elevación de piernas",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Principiante",
+    description: "Elevación de piernas acostado para trabajar abdominales inferiores.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/elevacion-de-piernas.mp4",
+  },
+  {
+    id: 7010,
+    name: "Encogimiento de pierna en banco",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Principiante",
+    description: "Contracción abdominal acercando rodillas al pecho en posición sentado.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/encogimiento-de-pierna-en-banco.mp4",
+  },
+  {
+    id: 7011,
+    name: "Giros con barra",
+    muscle_group_main: "Oblicuos Abdominales",
+    equipment_required: "Barra",
+    difficulty_level: "Intermedio",
+    description: "Ejercicio de rotación de tronco con barra sobre los hombros.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/giros-con-barra.mp4",
+  },
+  {
+    id: 7012,
+    name: "Giros en polea",
+    muscle_group_main: "Oblicuos Abdominales",
+    equipment_required: "Polea",
+    difficulty_level: "Principiante",
+    description: "Rotación de tronco utilizando polea para trabajar oblicuos.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/giros-en-polea.mp4",
+  },
+  {
+    id: 7013,
+    name: "Giros rusos",
+    muscle_group_main: "Oblicuos Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Intermedio",
+    description: "Rotación de tronco en posición sentada con piernas elevadas.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/giros-rusos.mp4",
+  },
+  {
+    id: 7014,
+    name: "Plancha abdominal",
+    muscle_group_main: "Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Principiante",
+    description: "Ejercicio isométrico que trabaja el core completo manteniendo una posición estática.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/plancha-abdominal.mp4",
+  },
+  {
+    id: 7015,
+    name: "Plancha lateral",
+    muscle_group_main: "Oblicuos Abdominales",
+    equipment_required: "Libre",
+    difficulty_level: "Intermedio",
+    description: "Variante de la plancha que se realiza de lado para enfatizar los oblicuos.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/abdomen/plancha-lateral.mp4",
+  },
+];

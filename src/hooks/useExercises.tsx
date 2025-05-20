@@ -4,16 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { preloadedExercises } from "@/data/preloadedExercises";
 import { additionalExercises } from "@/data/additionalExercises";
-
-interface Exercise {
-  id: number;
-  name: string;
-  muscle_group_main: string;
-  equipment_required?: string;
-  difficulty_level?: string;
-  video_url?: string;
-  description?: string;
-}
+import { Exercise } from "@/data/exercises/exerciseTypes";
 
 export const useExercises = () => {
   const { toast } = useToast();
