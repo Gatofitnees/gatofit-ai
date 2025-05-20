@@ -9,3 +9,15 @@ export interface Exercise {
   video_url?: string;
   description?: string;
 }
+
+// Define the exercise history type
+export interface ExerciseHistory {
+  id: number;
+  exercise_id: number;
+  date: Date | string;
+  weight_kg: number;
+  reps: number;
+  sets: number;
+  notes?: string;
+  user_id: string;
+}

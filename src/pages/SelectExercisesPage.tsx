@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus } from "lucide-react";
 import Button from "@/components/Button";
 import { useExercises } from "@/hooks/useExercises";
@@ -8,29 +8,65 @@ import ExerciseSearch from "@/components/exercise/ExerciseSearch";
 import ExerciseFilters from "@/components/exercise/ExerciseFilters";
 import ExerciseList from "@/components/exercise/ExerciseList";
 
+// Define state types for sessionStorage
+interface SelectExercisesState {
+  selectedExercises: number[];
+  searchTerm: string;
+  muscleFilters: string[];
+  equipmentFilters: string[];
+}
+
+const SESSION_STORAGE_KEY = "selectExercisesState";
+
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
   
+  // Initialize state from session storage or with defaults
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   
-  // Filter exercises based on search term and selected filters
+  // Load state from sessionStorage on component mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (savedState) {
+      const parsedState = JSON.parse(savedState) as SelectExercisesState;
+      setSelectedExercises(parsedState.selectedExercises || []);
+      setSearchTerm(parsedState.searchTerm || "");
+      setMuscleFilters(parsedState.muscleFilters || []);
+      setEquipmentFilters(parsedState.equipmentFilters || []);
+    }
+  }, []);
+  
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    const stateToSave: SelectExercisesState = {
+      selectedExercises,
+      searchTerm,
+      muscleFilters,
+      equipmentFilters
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
+
+  // Filter exercises based on search term and selected filters with improved multi-value handling
   const filteredExercises = exercises.filter(exercise => {
+    // Search term filter (name or muscle group)
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (exercise.muscle_group_main?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
+    // Muscle filter - check if any of the selected muscle filters match any of the muscles in the exercise
+    const exerciseMuscles = exercise.muscle_group_main ? exercise.muscle_group_main.split(" ") : [];
     const matchesMuscle = muscleFilters.length === 0 || 
-                          (exercise.muscle_group_main && muscleFilters.includes(exercise.muscle_group_main));
+                          muscleFilters.some(filter => exerciseMuscles.includes(filter));
     
-    // Modificación para manejar equipamiento múltiple (como "Maquina-polea")
+    // Equipment filter - check if any of the selected equipment types match any of the equipment in the exercise
+    const exerciseEquipment = exercise.equipment_required ? exercise.equipment_required.split(" ") : [];
     const matchesEquipment = equipmentFilters.length === 0 || 
-                            (exercise.equipment_required && 
-                              equipmentFilters.some(filter => 
-                                exercise.equipment_required?.includes(filter)
-                              ));
+                           equipmentFilters.some(filter => exerciseEquipment.includes(filter));
     
     return matchesSearch && matchesMuscle && matchesEquipment;
   });

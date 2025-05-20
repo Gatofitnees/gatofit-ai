@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, LineChart, Dumbbell } from "lucide-react";
+import { ArrowLeft, Plus, Dumbbell } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Button from "@/components/Button";
 import { supabase } from "@/integrations/supabase/client";
 import { useExercises } from "@/hooks/useExercises";
 import { useToast } from "@/components/ui/use-toast";
+import ExerciseHistoryDialog from "@/components/exercise/ExerciseHistoryDialog";
 
 interface Exercise {
   id: number | string;
@@ -67,21 +68,12 @@ const ExerciseDetailsPage: React.FC = () => {
   }, [id, exercises, toast]);
 
   const handleAddToRoutine = () => {
-    // Add to routine and navigate back
+    // Add to routine and navigate back - preserving state
     navigate(-1);
   };
 
   const handleEditExercise = () => {
     navigate(`/workout/edit-exercise/${id}`);
-  };
-
-  const showHistoryGraph = () => {
-    // In a real app, this would open a modal with exercise history
-    console.log("Show exercise history");
-    toast({
-      title: "Historial",
-      description: "Mostrando historial del ejercicio (funcionalidad en desarrollo)",
-    });
   };
 
   if (exercisesLoading || loading) {
@@ -167,15 +159,10 @@ const ExerciseDetailsPage: React.FC = () => {
             </div>
           </CardBody>
           <CardFooter>
-            <Button 
-              variant="outline"
-              leftIcon={<LineChart className="h-4 w-4" />}
-              className="mr-2"
-              onClick={showHistoryGraph}
-              fullWidth
-            >
-              Ver Historial
-            </Button>
+            <ExerciseHistoryDialog 
+              exerciseId={Number(exercise.id)} 
+              exerciseName={exercise.name} 
+            />
           </CardFooter>
         </Card>
 
