@@ -13,7 +13,7 @@ interface RoutineSheetsProps {
   handleRemoveExercise: (index: number) => void;
   handleMoveExercise: (fromIndex: number, toIndex: number) => void;
   routineExercises: RoutineExercise[];
-  navigateToSelectExercises: () => void;
+  navigateToSelectExercises: (e?: React.MouseEvent) => void; // Update signature to make MouseEvent optional
   handleReorderSave: () => void;
 }
 
@@ -40,7 +40,7 @@ const RoutineSheets: React.FC<RoutineSheetsProps> = ({
         }}
         onReplaceExercise={() => {
           setShowExerciseOptionsSheet(false);
-          navigateToSelectExercises();
+          navigateToSelectExercises(); // Now accepts no arguments
         }}
         onRemoveExercise={() => {
           if (currentExerciseIndex !== null) {

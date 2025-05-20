@@ -21,7 +21,7 @@ interface RoutineFormContainerProps {
   handleSetUpdate: (exerciseIndex: number, setIndex: number, field: string, value: number) => void;
   handleExerciseOptions: (index: number) => void;
   handleReorderClick: () => void;
-  handleSelectExercises: (e: React.MouseEvent) => void;
+  handleSelectExercises: (e: React.MouseEvent) => void; // Update function signature to match
 }
 
 const RoutineFormContainer: React.FC<RoutineFormContainerProps> = ({

@@ -106,6 +106,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     // State setters
     setRoutineName,
     setRoutineType,
+    setRoutineExercises, // Make sure we export this function
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowExerciseOptionsSheet,
