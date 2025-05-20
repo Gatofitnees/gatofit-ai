@@ -83,6 +83,8 @@ export const useRoutineSave = () => {
       // Clear form state from session storage after successful save
       clearStoredRoutine();
       
+      // Explicitly set replace: true to replace the current route in history
+      // This ensures back button works correctly
       navigate("/workout", { replace: true });
     } catch (error) {
       console.error("Error saving routine:", error);

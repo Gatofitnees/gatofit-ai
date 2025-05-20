@@ -34,7 +34,7 @@ const WorkoutPage: React.FC = () => {
   
   // Refrescar rutinas cuando volvemos a esta página
   useEffect(() => {
-    // Esta función se ejecutará cada vez que el usuario navegue a esta página
+    // Esta función se ejecutará cada vez que navegamos a esta página
     refetch();
     console.log("Refrescando rutinas en WorkoutPage");
   }, [location.pathname, refetch]);

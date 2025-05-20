@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
@@ -62,7 +63,7 @@ export const useRoutinePersistence = (
         ex => !existingExerciseIds.has(ex.id)
       );
       
-      // Actualizar los ejercicios con el array completo, no con una función
+      // Actualizar los ejercicios con el array completo
       setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
