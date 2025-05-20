@@ -60,7 +60,7 @@ const ExerciseHistoryDialog: React.FC<ExerciseHistoryDialogProps> = ({
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-lg">Historial de {exerciseName}</DialogTitle>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             className="h-8 w-8 p-0 rounded-full"
             onClick={() => setOpen(false)}

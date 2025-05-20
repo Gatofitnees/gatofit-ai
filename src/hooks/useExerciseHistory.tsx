@@ -29,7 +29,11 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             weight_kg_used,
             reps_completed,
             set_number,
-            workout_log(id, workout_date, user_id)
+            workout_log_id,
+            workout_log:workout_log_id (
+              workout_date,
+              user_id
+            )
           `)
           .eq('exercise_id', exerciseId);
           
