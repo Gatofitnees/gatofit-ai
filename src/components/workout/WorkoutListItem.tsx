@@ -1,58 +1,69 @@
 
 import React from "react";
-import { Dumbbell, Clock } from "lucide-react";
+import { Clock, ChevronRight, Play } from "lucide-react";
 import { Card, CardBody } from "@/components/Card";
 import Button from "@/components/Button";
+import { useNavigate } from "react-router-dom";
 
-interface WorkoutRoutine {
+interface WorkoutListItemProps {
   id: number;
   name: string;
   type?: string;
-  description?: string;
-  estimated_duration_minutes?: number;
-  exercise_count?: number;
-  created_at: string;
-}
-
-interface WorkoutListItemProps {
-  routine: WorkoutRoutine;
+  exerciseCount?: number;
+  duration?: number;
   onStartWorkout: (id: number) => void;
 }
 
-const WorkoutListItem: React.FC<WorkoutListItemProps> = ({ routine, onStartWorkout }) => {
+const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
+  id,
+  name,
+  type,
+  exerciseCount,
+  duration,
+  onStartWorkout,
+}) => {
+  const navigate = useNavigate();
+  
+  const handleItemClick = () => {
+    navigate(`/workout/routine/${id}`);
+  };
+
   return (
-    <Card key={routine.id} className="hover:scale-[1.01] transition-transform duration-300">
+    <Card className="bg-secondary/40 hover:bg-secondary/60 transition-colors cursor-pointer">
       <CardBody>
         <div className="flex items-center">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-            <Dumbbell className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-medium">{routine.name}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              {routine.type && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                  {routine.type}
+          <div className="flex-1" onClick={handleItemClick}>
+            <h3 className="font-medium">{name}</h3>
+            <div className="flex items-center mt-1">
+              {type && (
+                <span className="text-xs text-muted-foreground mr-2">
+                  {type}
                 </span>
               )}
-              {routine.estimated_duration_minutes && (
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {routine.estimated_duration_minutes} min
-                </div>
+              {duration && (
+                <span className="text-xs flex items-center mr-2">
+                  <Clock className="h-3 w-3 mr-1 text-primary" />
+                  {duration} min
+                </span>
               )}
-              <span className="text-xs text-muted-foreground">
-                {routine.exercise_count} ejercicios
-              </span>
+              {exerciseCount && (
+                <span className="text-xs text-muted-foreground">
+                  {exerciseCount} ejercicios
+                </span>
+              )}
             </div>
           </div>
-          <Button 
-            variant="primary" 
-            size="sm"
-            onClick={() => onStartWorkout(routine.id)}
-          >
-            Iniciar
-          </Button>
+
+          <div className="flex items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              className="p-1 min-w-0 mr-2"
+              onClick={() => onStartWorkout(id)}
+              leftIcon={<Play className="h-3 w-3 text-primary" />}
+            />
+            <ChevronRight className="h-5 w-5 text-muted-foreground" onClick={handleItemClick} />
+          </div>
         </div>
       </CardBody>
     </Card>
