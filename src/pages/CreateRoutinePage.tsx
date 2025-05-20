@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Save } from "lucide-react";
+import { Save, Plus } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
 import Button from "@/components/Button";
 import { useToast } from "@/hooks/use-toast";
