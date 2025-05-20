@@ -59,14 +59,22 @@ const SelectExercisesPage: React.FC = () => {
                           (exercise.muscle_group_main?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     // Muscle filter - check if any of the selected muscle filters match any of the muscles in the exercise
-    const exerciseMuscles = exercise.muscle_group_main ? exercise.muscle_group_main.split(" ") : [];
-    const matchesMuscle = muscleFilters.length === 0 || 
-                          muscleFilters.some(filter => exerciseMuscles.includes(filter));
+    let matchesMuscle = true;
+    if (muscleFilters.length > 0) {
+      const exerciseMuscles = exercise.muscle_group_main ? exercise.muscle_group_main.split(" ").map(m => m.trim()) : [];
+      matchesMuscle = muscleFilters.some(filter => 
+        exerciseMuscles.some(muscle => muscle === filter)
+      );
+    }
     
     // Equipment filter - check if any of the selected equipment types match any of the equipment in the exercise
-    const exerciseEquipment = exercise.equipment_required ? exercise.equipment_required.split(" ") : [];
-    const matchesEquipment = equipmentFilters.length === 0 || 
-                           equipmentFilters.some(filter => exerciseEquipment.includes(filter));
+    let matchesEquipment = true;
+    if (equipmentFilters.length > 0) {
+      const exerciseEquipment = exercise.equipment_required ? exercise.equipment_required.split(" ").map(e => e.trim()) : [];
+      matchesEquipment = equipmentFilters.some(filter => 
+        exerciseEquipment.some(equipment => equipment === filter)
+      );
+    }
     
     return matchesSearch && matchesMuscle && matchesEquipment;
   });

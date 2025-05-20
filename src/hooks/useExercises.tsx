@@ -48,40 +48,48 @@ export const useExercises = () => {
     fetchExercises();
   }, [toast]);
 
-  // Extract unique values for filter options, properly handling multiple muscle groups and equipment types
-  const muscleGroups = Array.from(
-    new Set(
-      exercises.flatMap(e => {
-        if (!e.muscle_group_main) return [];
-        // Split multiple muscle groups if they exist
-        if (e.muscle_group_main.includes(" ")) {
-          return e.muscle_group_main.split(" ");
+  // Extract and normalize unique muscle groups from all exercises
+  const getMuscleGroups = () => {
+    const muscleSet = new Set<string>();
+    
+    exercises.forEach(exercise => {
+      if (!exercise.muscle_group_main) return;
+      
+      // Split by spaces and add each muscle group
+      const muscles = exercise.muscle_group_main.split(' ');
+      muscles.forEach(muscle => {
+        if (muscle.trim()) {
+          muscleSet.add(muscle.trim());
         }
-        return [e.muscle_group_main];
-      })
-    )
-  ) as string[];
-  
-  // Process equipment types to separate those that contain multiple values
-  const processedEquipmentTypes = exercises
-    .flatMap(e => {
-      if (!e.equipment_required) return [];
-      
-      // Split by space to handle multiple equipment types
-      if (e.equipment_required.includes(" ")) {
-        return e.equipment_required.split(" ");
-      }
-      
-      return [e.equipment_required];
-    })
-    .filter(Boolean);
-  
-  const equipmentTypes = Array.from(new Set(processedEquipmentTypes)) as string[];
+      });
+    });
+    
+    return Array.from(muscleSet).sort();
+  };
 
+  // Extract and normalize unique equipment types from all exercises
+  const getEquipmentTypes = () => {
+    const equipmentSet = new Set<string>();
+    
+    exercises.forEach(exercise => {
+      if (!exercise.equipment_required) return;
+      
+      // Split by spaces and add each equipment type
+      const equipment = exercise.equipment_required.split(' ');
+      equipment.forEach(item => {
+        if (item.trim()) {
+          equipmentSet.add(item.trim());
+        }
+      });
+    });
+    
+    return Array.from(equipmentSet).sort();
+  };
+  
   return {
     exercises,
     loading,
-    muscleGroups,
-    equipmentTypes
+    muscleGroups: getMuscleGroups(),
+    equipmentTypes: getEquipmentTypes()
   };
 };

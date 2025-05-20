@@ -30,7 +30,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             reps_completed,
             set_number,
             workout_log_id,
-            workout_log:workout_log_id (
+            workout_log:workout_logs(
               workout_date,
               user_id
             )
@@ -41,15 +41,26 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         
         if (data && data.length > 0) {
           // Transform data to match our ExerciseHistory interface
-          const formattedHistory: ExerciseHistory[] = data.map((entry) => ({
-            id: entry.id,
-            exercise_id: entry.exercise_id,
-            date: entry.workout_log?.workout_date || new Date().toISOString(),
-            weight_kg: entry.weight_kg_used || 0,
-            reps: entry.reps_completed || 0,
-            sets: entry.set_number || 1,
-            user_id: entry.workout_log?.user_id || '',
-          }));
+          const formattedHistory: ExerciseHistory[] = data.map((entry) => {
+            const workoutLog = entry.workout_log && Array.isArray(entry.workout_log) && entry.workout_log.length > 0 
+              ? entry.workout_log[0] 
+              : null;
+              
+            return {
+              id: entry.id,
+              exercise_id: entry.exercise_id,
+              date: workoutLog?.workout_date || new Date().toISOString(),
+              weight_kg: entry.weight_kg_used || 0,
+              reps: entry.reps_completed || 0,
+              sets: entry.set_number || 1,
+              user_id: workoutLog?.user_id || '',
+            };
+          });
+          
+          // Sort by date (newest first)
+          formattedHistory.sort((a, b) => {
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
+          });
           
           setHistory(formattedHistory);
         } else {
