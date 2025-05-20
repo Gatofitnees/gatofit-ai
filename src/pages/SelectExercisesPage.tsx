@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus } from "lucide-react";
@@ -9,7 +10,7 @@ import ExerciseList from "@/components/exercise/ExerciseList";
 
 // Define state types for sessionStorage
 interface SelectExercisesState {
-  selectedExercises: number[];
+  selectedExerciseIds: number[];
   searchTerm: string;
   muscleFilters: string[];
   equipmentFilters: string[];
@@ -28,23 +29,26 @@ const SelectExercisesPage: React.FC = () => {
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   
-  // Load state from sessionStorage on component mount and reset selected exercises
+  // Load state from sessionStorage on component mount
   useEffect(() => {
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
-      const parsedState = JSON.parse(savedState) as SelectExercisesState;
-      // Reset selected exercises but keep other filters if needed
-      setSelectedExercises([]);
-      setSearchTerm(parsedState.searchTerm || "");
-      setMuscleFilters(parsedState.muscleFilters || []);
-      setEquipmentFilters(parsedState.equipmentFilters || []);
+      try {
+        const parsedState = JSON.parse(savedState) as SelectExercisesState;
+        setSelectedExercises(parsedState.selectedExerciseIds || []);
+        setSearchTerm(parsedState.searchTerm || "");
+        setMuscleFilters(parsedState.muscleFilters || []);
+        setEquipmentFilters(parsedState.equipmentFilters || []);
+      } catch (error) {
+        console.error("Error parsing session storage:", error);
+      }
     }
   }, []);
   
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
     const stateToSave: SelectExercisesState = {
-      selectedExercises,
+      selectedExerciseIds: selectedExercises,
       searchTerm,
       muscleFilters,
       equipmentFilters
@@ -114,9 +118,6 @@ const SelectExercisesPage: React.FC = () => {
       selectedExercises.includes(exercise.id)
     );
     
-    // Clear all state from session storage before navigating
-    resetSessionStorage();
-    
     // Navigate back to create routine with the selected exercises
     navigate("/workout/create", { 
       state: { selectedExercises: selectedExerciseObjects } 
@@ -127,10 +128,10 @@ const SelectExercisesPage: React.FC = () => {
     navigate("/workout/create-exercise");
   };
   
-  // Function to completely reset session storage
+  // Function to reset select exercises session storage
   const resetSessionStorage = () => {
     const resetState = {
-      selectedExercises: [],
+      selectedExerciseIds: [],
       searchTerm: "",
       muscleFilters: [],
       equipmentFilters: []
@@ -138,9 +139,8 @@ const SelectExercisesPage: React.FC = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
   };
 
-  // Reset filters and selections when navigating back
+  // Only reset filters and selections when clicking back, not when navigating to details
   const handleNavigateBack = () => {
-    resetSessionStorage();
     navigate("/workout/create");
   };
 
@@ -207,7 +207,7 @@ const SelectExercisesPage: React.FC = () => {
         <div className="fixed bottom-20 left-0 right-0 p-4 flex justify-center">
           <Button
             variant="primary"
-            className="shadow-neu-float px-6 bg-blue-500 hover:bg-blue-600"
+            className="shadow-neu-float px-6"
             onClick={handleAddExercises}
             type="button"
           >
