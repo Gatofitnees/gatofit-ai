@@ -1,3 +1,4 @@
+import { Exercise } from './exerciseTypes';
 
 interface Exercise {
   id: number;
@@ -280,5 +281,41 @@ export const chestExercises: Exercise[] = [
     difficulty_level: "Intermedio",
     description: "Ejercicio que trabaja pecho y dorsal ancho mediante una extensión de brazos por encima de la cabeza.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/pullo-over-con-mancuernas.mp4",
+  },
+  {
+    id: 3031,
+    name: "Aperturas con mancuernas",
+    muscle_group_main: "Pecho",
+    equipment_required: "Mancuerna",
+    difficulty_level: "Intermedio",
+    description: "Ejercicio de aperturas con mancuernas para desarrollar el pecho, enfocándose en el estiramiento y contracción de los músculos pectorales.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas.mp4",
+  },
+  {
+    id: 3032,
+    name: "Aperturas con mancuernas en banco inclinado",
+    muscle_group_main: "Pecho",
+    equipment_required: "Mancuerna",
+    difficulty_level: "Intermedio",
+    description: "Variación de las aperturas con mancuernas realizadas en un banco inclinado para enfatizar la parte superior del pecho.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas-en-banco-inclinado.mp4",
+  },
+  {
+    id: 3033,
+    name: "Aperturas en maquina",
+    muscle_group_main: "Pecho",
+    equipment_required: "Maquina",
+    difficulty_level: "Principiante",
+    description: "Ejercicio de aperturas realizado en una máquina especializada que proporciona resistencia constante durante todo el movimiento.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-maquina.mp4",
+  },
+  {
+    id: 3034,
+    name: "Aperturas en polea alta",
+    muscle_group_main: "Pecho",
+    equipment_required: "Polea",
+    difficulty_level: "Intermedio",
+    description: "Ejercicio de aperturas realizado con poleas altas que permite mantener tensión constante en los músculos pectorales.",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-polea-alta.mp4",
   },
 ];

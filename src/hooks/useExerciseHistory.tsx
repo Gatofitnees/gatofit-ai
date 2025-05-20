@@ -30,10 +30,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             reps_completed,
             set_number,
             workout_log_id,
-            workout_log:workout_logs(
-              workout_date,
-              user_id
-            )
+            workout_log:workout_logs(workout_date, user_id)
           `)
           .eq('exercise_id', exerciseId);
           
@@ -42,18 +39,32 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         if (data && data.length > 0) {
           // Transform data to match our ExerciseHistory interface
           const formattedHistory: ExerciseHistory[] = data.map((entry) => {
-            const workoutLog = entry.workout_log && Array.isArray(entry.workout_log) && entry.workout_log.length > 0 
-              ? entry.workout_log[0] 
-              : null;
+            // Handle the nested workout_log data
+            const workoutLog = entry.workout_log;
+            let workoutDate = new Date().toISOString();
+            let userId = '';
+            
+            // Check if workout_log exists and extract date and user_id
+            if (workoutLog && typeof workoutLog === 'object') {
+              // If it's an array, take the first item
+              if (Array.isArray(workoutLog) && workoutLog.length > 0) {
+                workoutDate = workoutLog[0].workout_date || workoutDate;
+                userId = workoutLog[0].user_id || userId;
+              } else {
+                // If it's a single object
+                workoutDate = (workoutLog as any).workout_date || workoutDate;
+                userId = (workoutLog as any).user_id || userId;
+              }
+            }
               
             return {
               id: entry.id,
               exercise_id: entry.exercise_id,
-              date: workoutLog?.workout_date || new Date().toISOString(),
+              date: workoutDate,
               weight_kg: entry.weight_kg_used || 0,
               reps: entry.reps_completed || 0,
               sets: entry.set_number || 1,
-              user_id: workoutLog?.user_id || '',
+              user_id: userId,
             };
           });
           
