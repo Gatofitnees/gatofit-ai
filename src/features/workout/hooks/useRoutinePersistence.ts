@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
@@ -52,17 +53,19 @@ export const useRoutinePersistence = (
       }));
       
       // Merge new exercises with existing ones
-      setRoutineExercises(prevExercises => {
-        // Create a map of existing exercise IDs to avoid duplicates
-        const existingExerciseIds = new Set(prevExercises.map(ex => ex.id));
-        
-        // Filter out any new exercises that already exist
-        const uniqueNewExercises = newExercises.filter(
-          ex => !existingExerciseIds.has(ex.id)
-        );
-        
-        return [...prevExercises, ...uniqueNewExercises];
-      });
+      // Fix: Use intermediate variable to handle the update function pattern
+      const updatedExercises = [...routineExercises];
+      
+      // Create a map of existing exercise IDs to avoid duplicates
+      const existingExerciseIds = new Set(updatedExercises.map(ex => ex.id));
+      
+      // Filter out any new exercises that already exist
+      const uniqueNewExercises = newExercises.filter(
+        ex => !existingExerciseIds.has(ex.id)
+      );
+      
+      // Set the exercises using the array directly, not a function
+      setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
       
       // Clear the location state to prevent re-adding on navigation
       if (window.history.state) {
@@ -73,7 +76,7 @@ export const useRoutinePersistence = (
         }
       }
     }
-  }, [location.state, setRoutineExercises]);
+  }, [location.state, routineExercises, setRoutineExercises]);
 
   // Clear session storage
   const clearStoredRoutine = () => {
