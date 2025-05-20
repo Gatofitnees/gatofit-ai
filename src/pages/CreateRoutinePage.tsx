@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useCallback } from "react";
-import { useLocation, useNavigate, useBlocker } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
 import RoutineFormContainer from "@/features/workout/components/RoutineFormContainer";
 import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs";
@@ -49,43 +49,24 @@ const CreateRoutinePage: React.FC = () => {
     handleNavigateAway
   } = useCreateRoutine([]);
 
-  // State to handle navigation blocking
-  const [blockedNavigation, setBlockedNavigation] = useState<string | null>(null);
-
-  // Custom navigation blocker - corrected to match the expected type signature
-  const shouldBlock = useCallback(
-    ({ nextLocation }) => {
-      // Don't block navigation to select-exercises
-      if (nextLocation.pathname === "/workout/select-exercises") {
-        return false;
-      }
-
-      // Check if we should show the dialog
-      const hasChanges = routineName !== "" || routineType !== "" || routineExercises.length > 0;
-      if (hasChanges) {
-        setBlockedNavigation(nextLocation.pathname);
-        setShowDiscardChangesDialog(true);
-        return true;
-      }
-      return false;
-    },
-    [routineName, routineType, routineExercises, setShowDiscardChangesDialog]
-  );
-
-  // Set up the navigation blocker
-  useBlocker(shouldBlock);
-
-  // Handle confirm discard changes
-  const handleConfirmDiscardChanges = useCallback(() => {
-    if (blockedNavigation) {
-      navigate(blockedNavigation);
+  // Custom navigation protection logic
+  const handleBackClick = useCallback(() => {
+    const hasChanges = routineName !== "" || routineType !== "" || routineExercises.length > 0;
+    
+    if (hasChanges) {
+      setShowDiscardChangesDialog(true);
+      return;
     }
-  }, [blockedNavigation, navigate]);
+    
+    // No changes, navigate directly
+    navigate("/workout");
+  }, [routineName, routineType, routineExercises, navigate, setShowDiscardChangesDialog]);
   
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <RoutinePageHeader 
-        onSaveClick={handleSaveRoutineStart} 
+        onSaveClick={handleSaveRoutineStart}
+        onBackClick={handleBackClick}
         isSubmitting={isSubmitting} 
       />
       

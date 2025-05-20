@@ -6,15 +6,23 @@ import { Save, ArrowLeft } from "lucide-react";
 
 interface RoutinePageHeaderProps {
   onSaveClick: (e: React.MouseEvent) => void;
+  onBackClick?: () => void;
   isSubmitting: boolean;
 }
 
-const RoutinePageHeader: React.FC<RoutinePageHeaderProps> = ({ onSaveClick, isSubmitting }) => {
+const RoutinePageHeader: React.FC<RoutinePageHeaderProps> = ({ 
+  onSaveClick, 
+  onBackClick, 
+  isSubmitting 
+}) => {
   const navigate = useNavigate();
 
   const handleBackClick = () => {
-    // We don't need to handle confirmation here, as the navigation protection in CreateRoutinePage will catch it
-    navigate("/workout");
+    if (onBackClick) {
+      onBackClick();
+    } else {
+      navigate("/workout");
+    }
   };
 
   return (
