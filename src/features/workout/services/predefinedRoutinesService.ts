@@ -65,7 +65,7 @@ export const createPredefinedChestRoutine = async () => {
         for (let setNum = 1; setNum <= exerciseInfo.sets; setNum++) {
           exercisesData.push({
             routine_id: routineData.id,
-            exercise_id: exercise.id,  // Fix: Convert to string or fix the type in database schema
+            exercise_id: exercise.id.toString(), // Convertimos a string para asegurarnos de que coincida el tipo
             exercise_order: i + 1,
             set_number: setNum,
             reps_min: 8,

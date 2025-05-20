@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
@@ -32,7 +31,7 @@ export const useRoutinePersistence = (
         console.error("Error parsing saved routine state:", error);
       }
     }
-  }, []);
+  }, [setRoutineName, setRoutineType, setRoutineExercises]);
 
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
@@ -52,22 +51,21 @@ export const useRoutinePersistence = (
         sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
       }));
       
-      // Merge new exercises with existing ones
-      // Fix: Use intermediate variable to handle the update function pattern
+      // Crear una copia de los ejercicios actuales
       const updatedExercises = [...routineExercises];
       
-      // Create a map of existing exercise IDs to avoid duplicates
+      // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
       const existingExerciseIds = new Set(updatedExercises.map(ex => ex.id));
       
-      // Filter out any new exercises that already exist
+      // Filtrar ejercicios nuevos para evitar duplicados
       const uniqueNewExercises = newExercises.filter(
         ex => !existingExerciseIds.has(ex.id)
       );
       
-      // Set the exercises using the array directly, not a function
+      // Actualizar los ejercicios con el array completo, no con una función
       setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
       
-      // Clear the location state to prevent re-adding on navigation
+      // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
       if (window.history.state) {
         const newState = { ...window.history.state };
         if (newState.usr && newState.usr.selectedExercises) {

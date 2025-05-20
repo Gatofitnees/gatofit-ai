@@ -33,13 +33,13 @@ export const useRoutines = () => {
         .order('created_at', { ascending: false });
       
       if (user) {
-        // If user is logged in, get their routines and predefined ones
+        // Si el usuario está logueado, obtenemos sus rutinas y las predefinidas
         query = query.or(`user_id.eq.${user.id},is_predefined.eq.true`);
       } else {
-        // If user is not logged in, only get predefined routines
+        // Si el usuario no está logueado, solo obtenemos rutinas predefinidas
         query = query.eq('is_predefined', true);
         
-        // If no predefined routines, show demo routines
+        // Si no hay rutinas predefinidas, mostramos rutinas de demo
         const { count } = await supabase
           .from('routines')
           .select('*', { count: 'exact', head: true })
@@ -84,11 +84,13 @@ export const useRoutines = () => {
       }
 
       if (data) {
-        // Transform data to include exercise count
+        // Transformamos los datos para incluir el contador de ejercicios
         const formattedData = data.map(routine => ({
           ...routine,
           exercise_count: routine.routine_exercises?.[0]?.count || 0
         }));
+        
+        console.log("Routines fetched:", formattedData);
         setRoutines(formattedData);
       }
     } catch (error) {

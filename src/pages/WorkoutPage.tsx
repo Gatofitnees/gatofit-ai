@@ -8,20 +8,21 @@ import WorkoutSearchFilter from "@/components/workout/WorkoutSearchFilter";
 import WorkoutList from "@/components/workout/WorkoutList";
 import { useRoutines } from "@/hooks/useRoutines";
 import { initPredefinedRoutines } from "@/features/workout/services/predefinedRoutinesService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const WorkoutPage: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { routines, loading, refetch } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Initialize predefined routines when the page loads
+  // Inicializar rutinas predefinidas cuando la página se carga
   useEffect(() => {
     const loadPredefinedRoutines = async () => {
       try {
         await initPredefinedRoutines();
-        // Refetch routines to include the predefined ones
+        // Recargar rutinas para incluir las predefinidas
         refetch();
       } catch (error) {
         console.error("Error loading predefined routines:", error);
@@ -31,13 +32,20 @@ const WorkoutPage: React.FC = () => {
     loadPredefinedRoutines();
   }, [refetch]);
   
-  // Filter routines based on search term
+  // Refrescar rutinas cuando volvemos a esta página
+  useEffect(() => {
+    // Esta función se ejecutará cada vez que el usuario navegue a esta página
+    refetch();
+    console.log("Refrescando rutinas en WorkoutPage");
+  }, [location.pathname, refetch]);
+  
+  // Filtrar rutinas basadas en el término de búsqueda
   const filteredRoutines = routines.filter(routine => 
     routine.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleStartWorkout = (routineId: number) => {
-    // In a future implementation, this would navigate to a workout session page
+    // En una futura implementación, esto navegaría a una página de sesión de entrenamiento
     toast({
       title: "¡Rutina iniciada!",
       description: "Funcionalidad en desarrollo"
@@ -70,7 +78,7 @@ const WorkoutPage: React.FC = () => {
         <Button
           onClick={handleCreateRoutine}
           size="icon"
-          className="h-14 w-14 rounded-full shadow-lg"
+          className="h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 text-white"
         >
           <Plus className="h-6 w-6" />
         </Button>
