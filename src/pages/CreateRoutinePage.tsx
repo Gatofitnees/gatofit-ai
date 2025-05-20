@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronDown, Plus, Save, Trash2, Grip, MoreVertical } from "lucide-react";
@@ -445,9 +444,9 @@ const CreateRoutinePage: React.FC = () => {
               <Plus className="mr-2 h-5 w-5" /> Reemplazar ejercicio
             </Button>
             <Button
-              variant="destructive"
+              variant="outline"
               fullWidth
-              className="justify-start rounded-none px-4"
+              className="justify-start rounded-none px-4 text-red-500"
               onClick={() => currentExerciseIndex !== null && handleRemoveExercise(currentExerciseIndex)}
             >
               <Trash2 className="mr-2 h-5 w-5" /> Eliminar ejercicio
