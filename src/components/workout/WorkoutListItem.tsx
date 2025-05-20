@@ -4,28 +4,21 @@ import { Clock, ChevronRight, Play } from "lucide-react";
 import { Card, CardBody } from "@/components/Card";
 import Button from "@/components/Button";
 import { useNavigate } from "react-router-dom";
+import { RoutineData } from "@/features/workout/types";
 
 interface WorkoutListItemProps {
-  id: number;
-  name: string;
-  type?: string;
-  exerciseCount?: number;
-  duration?: number;
+  routine: RoutineData;
   onStartWorkout: (id: number) => void;
 }
 
 const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
-  id,
-  name,
-  type,
-  exerciseCount,
-  duration,
+  routine,
   onStartWorkout,
 }) => {
   const navigate = useNavigate();
   
   const handleItemClick = () => {
-    navigate(`/workout/routine/${id}`);
+    navigate(`/workout/routine/${routine.id}`);
   };
 
   return (
@@ -33,22 +26,22 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
       <CardBody>
         <div className="flex items-center">
           <div className="flex-1" onClick={handleItemClick}>
-            <h3 className="font-medium">{name}</h3>
+            <h3 className="font-medium">{routine.name}</h3>
             <div className="flex items-center mt-1">
-              {type && (
+              {routine.type && (
                 <span className="text-xs text-muted-foreground mr-2">
-                  {type}
+                  {routine.type}
                 </span>
               )}
-              {duration && (
+              {routine.estimated_duration_minutes && (
                 <span className="text-xs flex items-center mr-2">
                   <Clock className="h-3 w-3 mr-1 text-primary" />
-                  {duration} min
+                  {routine.estimated_duration_minutes} min
                 </span>
               )}
-              {exerciseCount && (
+              {routine.exercise_count && (
                 <span className="text-xs text-muted-foreground">
-                  {exerciseCount} ejercicios
+                  {routine.exercise_count} ejercicios
                 </span>
               )}
             </div>
@@ -59,7 +52,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
               variant="outline"
               size="sm"
               className="p-1 min-w-0 mr-2"
-              onClick={() => onStartWorkout(id)}
+              onClick={() => onStartWorkout(routine.id)}
               leftIcon={<Play className="h-3 w-3 text-primary" />}
             />
             <ChevronRight className="h-5 w-5 text-muted-foreground" onClick={handleItemClick} />

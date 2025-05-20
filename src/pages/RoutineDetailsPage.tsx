@@ -29,7 +29,7 @@ const RoutineDetailsPage: React.FC = () => {
         const { data: routineData, error: routineError } = await supabase
           .from('routines')
           .select('*')
-          .eq('id', id)
+          .eq('id', Number(id))
           .single();
         
         if (routineError) throw routineError;
@@ -43,7 +43,7 @@ const RoutineDetailsPage: React.FC = () => {
               id, name, muscle_group_main, equipment_required
             )
           `)
-          .eq('routine_id', id)
+          .eq('routine_id', Number(id))
           .order('exercise_order', { ascending: true });
         
         if (exercisesError) throw exercisesError;
@@ -65,7 +65,14 @@ const RoutineDetailsPage: React.FC = () => {
           };
         });
         
-        setRoutine(routineData);
+        // Add the required 'type' field to the routine data to match the RoutineData interface
+        const routineWithType: RoutineData = {
+          ...routineData,
+          type: routineData.description?.includes('Cardio') ? 'Cardio' : 'Fuerza', // Default type based on description or set a default
+          exercise_count: exercisesData.length
+        };
+        
+        setRoutine(routineWithType);
         setExercises(formattedExercises);
       } catch (error) {
         console.error('Error fetching routine details:', error);
