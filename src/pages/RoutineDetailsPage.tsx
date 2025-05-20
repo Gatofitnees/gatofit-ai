@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Play } from "lucide-react";
@@ -75,11 +74,11 @@ const RoutineDetailsPage: React.FC = () => {
           };
         });
         
-        // Fix #1: Properly create a routine object with the type property
+        // Create a routine object with a default type if missing
         const routineWithType: RoutineData = {
           ...routineData,
-          // Since type might not exist in the database, we add it here
-          type: routineData.type || "strength", // Default type if missing from DB
+          // Since type might not exist in the database result, we add it here
+          type: "strength", // Default type since it's not in the database schema
           exercises: formattedExercises
         };
         
@@ -177,15 +176,14 @@ const RoutineDetailsPage: React.FC = () => {
       <Card className="mb-4">
         <CardHeader 
           title="Información"
-          // Fix #2: Convert the JSX to a string representation
           subtitle={
             // Using a string instead of a function to return JSX
-            `${routine.type === "strength" ? "Fuerza" : 
-               routine.type === "cardio" ? "Cardio" : 
-               routine.type === "flexibility" ? "Flexibilidad" : 
-               routine.type === "mixed" ? "Mixto" : "Personalizado"} · 
-             ${routine.estimated_duration_minutes ? `${routine.estimated_duration_minutes} min` : ""} · 
-             ${routine.exercises.length} ejercicios`
+            `${routine?.type === "strength" ? "Fuerza" : 
+               routine?.type === "cardio" ? "Cardio" : 
+               routine?.type === "flexibility" ? "Flexibilidad" : 
+               routine?.type === "mixed" ? "Mixto" : "Personalizado"} · 
+             ${routine?.estimated_duration_minutes ? `${routine?.estimated_duration_minutes} min` : ""} · 
+             ${routine?.exercises.length} ejercicios`
           }
         />
         <CardBody>
