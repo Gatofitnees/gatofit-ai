@@ -35,7 +35,7 @@ export async function saveRoutine(
   const routineExercisesData = routineExercises.flatMap((exercise, exerciseIndex) => 
     exercise.sets.map((set, setIndex) => ({
       routine_id: routineData.id,
-      exercise_id: exercise.id.toString(), // Aseguramos que sea string
+      exercise_id: parseInt(exercise.id), // Convert string ID to number
       exercise_order: exerciseIndex + 1,
       set_number: setIndex + 1,
       reps_min: set.reps_min,
