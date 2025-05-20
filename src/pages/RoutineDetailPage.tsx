@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -68,7 +67,7 @@ const RoutineDetailPage: React.FC = () => {
         const { data: routineData, error: routineError } = await supabase
           .from('routines')
           .select('*')
-          .eq('id', routineId)
+          .eq('id', parseInt(routineId))
           .single();
           
         if (routineError) throw routineError;
@@ -77,7 +76,7 @@ const RoutineDetailPage: React.FC = () => {
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('routine_exercises')
           .select('*')
-          .eq('routine_id', routineId)
+          .eq('routine_id', parseInt(routineId))
           .order('exercise_order', { ascending: true })
           .order('set_number', { ascending: true });
           
@@ -122,8 +121,8 @@ const RoutineDetailPage: React.FC = () => {
             
           if (detailsError) throw detailsError;
           
-          // Map exercise details with sets
-          const detailsWithSets = exerciseIds.map(id => {
+          // Map exercise details with sets - fixed to match ExerciseDetail interface
+          const detailsWithSets: ExerciseDetail[] = exerciseIds.map(id => {
             const exerciseDetail = exerciseDetailsData.find((d: any) => d.id === id);
             const exerciseSets = groupedExercises[id].sets || [];
             
@@ -132,7 +131,12 @@ const RoutineDetailPage: React.FC = () => {
               name: exerciseDetail?.name || 'Unknown Exercise',
               muscle_group_main: exerciseDetail?.muscle_group_main,
               equipment_required: exerciseDetail?.equipment_required,
-              sets: exerciseSets
+              sets: exerciseSets.map(set => ({
+                set_number: set.set_number,
+                reps_min: set.reps_min,
+                reps_max: set.reps_max,
+                rest_seconds: set.rest_between_sets_seconds
+              }))
             };
           });
           

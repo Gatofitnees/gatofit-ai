@@ -4,34 +4,35 @@ import { useNavigate } from "react-router-dom";
 import { Clock, ChevronRight } from "lucide-react";
 import Button from "@/components/Button";
 
-interface RoutineProps {
+interface WorkoutRoutine {
   id: number;
   name: string;
   type?: string;
-  estimatedDurationMinutes?: number;
-  exerciseCount?: number;
-  onStartWorkout?: (id: number) => void;
+  description?: string;
+  estimated_duration_minutes?: number;
+  exercise_count?: number;
+  created_at: string;
 }
 
-const WorkoutListItem: React.FC<RoutineProps> = ({
-  id,
-  name,
-  type,
-  estimatedDurationMinutes,
-  exerciseCount,
+interface WorkoutListItemProps {
+  routine: WorkoutRoutine;
+  onStartWorkout: (id: number) => void;
+}
+
+const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
+  routine,
   onStartWorkout
 }) => {
   const navigate = useNavigate();
+  const { id, name, type, estimated_duration_minutes: estimatedDurationMinutes, exercise_count: exerciseCount } = routine;
   
   const handleItemClick = () => {
     navigate(`/workout/routine/${id}`);
   };
   
   const handleStartClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent the item click handler from firing
-    if (onStartWorkout) {
-      onStartWorkout(id);
-    }
+    e.stopPropagation();
+    onStartWorkout(id);
   };
 
   return (

@@ -1,5 +1,4 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
 import RoutineFormContainer from "@/features/workout/components/RoutineFormContainer";
@@ -49,9 +48,9 @@ const CreateRoutinePage: React.FC = () => {
     handleNavigateAway
   } = useCreateRoutine([]);
 
-  // Add navigation confirmation
+  // Add navigation confirmation - fixed implementation
   useEffect(() => {
-    const unblock = navigate((to) => {
+    const unblock = navigate.call(null, function(to: any) {
       // Allow direct navigation to select exercises page
       if (to.pathname === "/workout/select-exercises") {
         return true;
@@ -62,7 +61,11 @@ const CreateRoutinePage: React.FC = () => {
       return allowNavigation;
     });
 
-    return unblock;
+    return () => {
+      if (typeof unblock === 'function') {
+        unblock();
+      }
+    };
   }, [navigate, handleNavigateAway]);
   
   return (

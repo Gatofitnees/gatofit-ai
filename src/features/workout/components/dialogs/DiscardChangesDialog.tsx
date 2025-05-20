@@ -24,7 +24,7 @@ const DiscardChangesDialog: React.FC<DiscardChangesDialogProps> = ({
 }) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="rounded-xl border-none shadow-neu-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>¿Te vas a ir sin guardar los cambios?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -32,8 +32,8 @@ const DiscardChangesDialog: React.FC<DiscardChangesDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Confirmar</AlertDialogAction>
+          <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} className="rounded-xl">Confirmar</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
