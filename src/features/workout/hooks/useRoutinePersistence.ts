@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
@@ -24,8 +23,8 @@ export const useRoutinePersistence = (
         setRoutineName(name || "");
         setRoutineType(type || "");
         
-        // Only set exercises if we don't have any from location state
-        if (!location.state?.selectedExercises && exercises && exercises.length > 0) {
+        if (exercises && exercises.length > 0) {
+          // Keep the existing exercises and add any from location state
           setRoutineExercises(exercises);
         }
       } catch (error) {
@@ -44,15 +43,35 @@ export const useRoutinePersistence = (
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
   }, [routineName, routineType, routineExercises]);
 
-  // Load selected exercises from location state when available
+  // Handle exercises from location state (when returning from select exercises)
   useEffect(() => {
     if (location.state && location.state.selectedExercises) {
-      const exercises = location.state.selectedExercises.map((exercise: any) => ({
+      const newExercises = location.state.selectedExercises.map((exercise: any) => ({
         ...exercise,
         sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
       }));
       
-      setRoutineExercises(exercises);
+      // Merge new exercises with existing ones
+      setRoutineExercises(prevExercises => {
+        // Create a map of existing exercise IDs to avoid duplicates
+        const existingExerciseIds = new Set(prevExercises.map(ex => ex.id));
+        
+        // Filter out any new exercises that already exist
+        const uniqueNewExercises = newExercises.filter(
+          ex => !existingExerciseIds.has(ex.id)
+        );
+        
+        return [...prevExercises, ...uniqueNewExercises];
+      });
+      
+      // Clear the location state to prevent re-adding on navigation
+      if (window.history.state) {
+        const newState = { ...window.history.state };
+        if (newState.usr && newState.usr.selectedExercises) {
+          delete newState.usr.selectedExercises;
+          window.history.replaceState(newState, '');
+        }
+      }
     }
   }, [location.state, setRoutineExercises]);
 

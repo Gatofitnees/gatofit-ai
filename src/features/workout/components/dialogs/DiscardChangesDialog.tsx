@@ -24,16 +24,23 @@ const DiscardChangesDialog: React.FC<DiscardChangesDialogProps> = ({
 }) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="rounded-xl border-secondary bg-background/95 backdrop-blur-sm max-w-[90vw] sm:max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Te vas a ir sin guardar los cambios?</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-xl font-semibold">¿Te vas a ir sin guardar los cambios?</AlertDialogTitle>
+          <AlertDialogDescription className="text-muted-foreground">
             Los cambios no guardados se perderán.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Confirmar</AlertDialogAction>
+          <AlertDialogCancel className="rounded-xl bg-muted text-foreground hover:bg-muted/80">
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={onConfirm}
+            className="rounded-xl bg-primary text-white hover:bg-primary/90"
+          >
+            Confirmar
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

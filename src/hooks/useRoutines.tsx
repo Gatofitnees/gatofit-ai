@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -11,6 +11,7 @@ interface WorkoutRoutine {
   estimated_duration_minutes?: number;
   exercise_count?: number;
   created_at: string;
+  is_predefined?: boolean;
 }
 
 export const useRoutines = () => {
@@ -18,13 +19,33 @@ export const useRoutines = () => {
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchRoutines = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
+  const fetchRoutines = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      let query = supabase
+        .from('routines')
+        .select(`
+          *,
+          routine_exercises:routine_exercises(count)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (user) {
+        // If user is logged in, get their routines and predefined ones
+        query = query.or(`user_id.eq.${user.id},is_predefined.eq.true`);
+      } else {
+        // If user is not logged in, only get predefined routines
+        query = query.eq('is_predefined', true);
         
-        if (!user) {
-          // User not logged in, show demo routines
+        // If no predefined routines, show demo routines
+        const { count } = await supabase
+          .from('routines')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_predefined', true);
+        
+        if (count === 0) {
           setRoutines([
             {
               id: 1,
@@ -54,43 +75,41 @@ export const useRoutines = () => {
           setLoading(false);
           return;
         }
-
-        // Get user's routines with exercise count
-        const { data, error } = await supabase
-          .from('routines')
-          .select(`
-            *,
-            routine_exercises:routine_exercises(count)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          throw error;
-        }
-
-        if (data) {
-          // Transform data to include exercise count
-          const formattedData = data.map(routine => ({
-            ...routine,
-            exercise_count: routine.routine_exercises?.[0]?.count || 0
-          }));
-          setRoutines(formattedData);
-        }
-      } catch (error) {
-        console.error("Error fetching routines:", error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar las rutinas",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
       }
-    };
 
-    fetchRoutines();
+      const { data, error } = await query;
+          
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        // Transform data to include exercise count
+        const formattedData = data.map(routine => ({
+          ...routine,
+          exercise_count: routine.routine_exercises?.[0]?.count || 0
+        }));
+        setRoutines(formattedData);
+      }
+    } catch (error) {
+      console.error("Error fetching routines:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las rutinas",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  return { routines, loading };
+  useEffect(() => {
+    fetchRoutines();
+  }, [fetchRoutines]);
+
+  return { 
+    routines, 
+    loading,
+    refetch: fetchRoutines
+  };
 };

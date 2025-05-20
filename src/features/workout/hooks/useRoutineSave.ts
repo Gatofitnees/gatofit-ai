@@ -77,6 +77,7 @@ export const useRoutineSave = () => {
       toast({
         title: "¡Rutina creada!",
         description: `La rutina ${routineName} ha sido guardada correctamente`,
+        variant: "success"
       });
 
       // Clear form state from session storage after successful save
