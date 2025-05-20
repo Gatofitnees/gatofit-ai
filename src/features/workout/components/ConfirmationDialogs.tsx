@@ -20,7 +20,7 @@ interface NoExercisesDialogProps {
 export const NoExercisesDialog: React.FC<NoExercisesDialogProps> = ({ open, onOpenChange, onConfirm }) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-xl bg-background border-secondary/30">
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Continuar sin ejercicios?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -28,8 +28,8 @@ export const NoExercisesDialog: React.FC<NoExercisesDialogProps> = ({ open, onOp
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="rounded-xl bg-primary">Guardar</AlertDialogAction>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>Guardar</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -51,7 +51,7 @@ export const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
 }) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-xl bg-background border-secondary/30">
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmar guardado</AlertDialogTitle>
           <AlertDialogDescription>
@@ -59,14 +59,8 @@ export const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={onConfirm} 
-            disabled={isSubmitting}
-            className="rounded-xl bg-primary"
-          >
-            {isSubmitting ? "Guardando..." : "Confirmar"}
-          </AlertDialogAction>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} disabled={isSubmitting}>Confirmar</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

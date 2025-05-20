@@ -1,90 +1,98 @@
 
-import { useBeforeUnload } from "react-router-dom";
-import { useRoutinePersistence } from "./useRoutinePersistence";
-import { useRoutineUI } from "./useRoutineUI";
-import { useRoutineSave } from "./useRoutineSave";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { RoutineExercise } from "../types";
+import { useRoutineForm } from "./useRoutineForm";
+import { saveRoutine } from "../services/routineService";
 
 export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
-  // Use the extracted hooks
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNoExercisesDialog, setShowNoExercisesDialog] = useState(false);
+  const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
+  const [showExerciseOptionsSheet, setShowExerciseOptionsSheet] = useState(false);
+  const [showReorderSheet, setShowReorderSheet] = useState(false);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number | null>(null);
+  
   const {
     routineName,
+    setRoutineName,
     routineType,
+    setRoutineType,
     routineExercises,
+    setRoutineExercises,
     validationErrors,
     handleAddSet,
     handleSetUpdate,
     handleRemoveExercise,
     handleMoveExercise,
-    validateForm,
-    handleSelectExercises,
-    clearLocalStorage,
-    setRoutineName,
-    setRoutineType,
-    setRoutineExercises
-  } = useRoutinePersistence(initialExercises);
+    validateForm
+  } = useRoutineForm(initialExercises);
 
-  const {
-    isSubmitting,
-    setIsSubmitting,
-    showNoExercisesDialog,
-    setShowNoExercisesDialog,
-    showSaveConfirmDialog,
-    setShowSaveConfirmDialog,
-    showExitConfirmDialog,
-    setShowExitConfirmDialog,
-    showExerciseOptionsSheet,
-    setShowExerciseOptionsSheet,
-    showReorderSheet,
-    setShowReorderSheet,
-    currentExerciseIndex,
-    handleExerciseOptions,
-    handleReorderClick,
-    handleReorderSave,
-    handleAttemptNavigation,
-    handleConfirmExit: baseHandleConfirmExit
-  } = useRoutineUI();
-
-  const { handleSaveRoutine: baseSaveRoutine, handleSaveRoutineStart: baseSaveRoutineStart } = useRoutineSave();
-
-  // Warn before leaving the page if there are unsaved changes
-  useBeforeUnload((event) => {
-    if (routineName || routineType || routineExercises.length > 0) {
-      event.preventDefault();
-      return "¿Seguro que quieres salir? Perderás los cambios no guardados.";
+  // Updated to accept an optional event parameter to match the expected type
+  const handleSelectExercises = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault(); // Prevent form submission if event is provided
     }
-  });
-
-  // Wrap the handle confirm exit to pass the clearLocalStorage function
-  const handleConfirmExit = () => {
-    baseHandleConfirmExit(clearLocalStorage);
+    navigate("/workout/select-exercises");
   };
 
-  // Wrap the save routine function to pass all required parameters
-  const handleSaveRoutine = async () => {
-    await baseSaveRoutine(
-      routineName,
-      routineType,
-      routineExercises,
-      clearLocalStorage,
-      setIsSubmitting
-    );
-    setShowSaveConfirmDialog(false);
+  const handleExerciseOptions = (index: number) => {
+    setCurrentExerciseIndex(index);
+    setShowExerciseOptionsSheet(true);
   };
 
-  // Wrap the save routine start function to pass all required parameters
+  const handleReorderClick = () => {
+    setShowReorderSheet(true);
+  };
+
+  const handleReorderSave = () => {
+    setShowReorderSheet(false);
+  };
+
   const handleSaveRoutineStart = (e: React.MouseEvent) => {
-    baseSaveRoutineStart(
-      e,
-      routineName,
-      routineType,
-      routineExercises,
-      validateForm,
-      setShowNoExercisesDialog,
-      setShowSaveConfirmDialog
-    );
+    e.preventDefault(); // Prevent form submission
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    if (routineExercises.length === 0) {
+      setShowNoExercisesDialog(true);
+      return;
+    }
+    
+    setShowSaveConfirmDialog(true);
   };
-  
+
+  const handleSaveRoutine = async () => {
+    setIsSubmitting(true);
+
+    try {
+      const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
+
+      toast({
+        title: "¡Rutina creada!",
+        description: `La rutina ${routineName} ha sido guardada correctamente`,
+      });
+
+      navigate("/workout", { replace: true });
+    } catch (error) {
+      console.error("Error saving routine:", error);
+      toast({
+        title: "Error al guardar",
+        description: "Ha ocurrido un error al guardar la rutina",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+      setShowSaveConfirmDialog(false);
+    }
+  };
+
   return {
     // State
     routineName,
@@ -94,7 +102,6 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     isSubmitting,
     showNoExercisesDialog,
     showSaveConfirmDialog,
-    showExitConfirmDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
     currentExerciseIndex,
@@ -102,10 +109,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     // State setters
     setRoutineName,
     setRoutineType,
-    setRoutineExercises,
+    setRoutineExercises, // Make sure to export this function
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
-    setShowExitConfirmDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
     
@@ -119,8 +125,6 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     handleReorderClick,
     handleReorderSave,
     handleSaveRoutineStart,
-    handleSaveRoutine,
-    handleAttemptNavigation,
-    handleConfirmExit
+    handleSaveRoutine
   };
 };

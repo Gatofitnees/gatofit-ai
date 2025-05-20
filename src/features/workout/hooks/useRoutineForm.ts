@@ -14,14 +14,10 @@ interface ValidationErrors {
   type: boolean;
 }
 
-export function useRoutineForm(
-  initialExercises: RoutineExercise[] = [],
-  initialName: string = "",
-  initialType: string = ""
-) {
+export function useRoutineForm(initialExercises: RoutineExercise[] = []) {
   const { toast } = useToast();
-  const [routineName, setRoutineName] = useState(initialName);
-  const [routineType, setRoutineType] = useState(initialType);
+  const [routineName, setRoutineName] = useState("");
+  const [routineType, setRoutineType] = useState("");
   const [routineExercises, setRoutineExercises] = useState<RoutineExercise[]>(initialExercises);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
     name: false,
