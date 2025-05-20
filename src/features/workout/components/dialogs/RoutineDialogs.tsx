@@ -1,13 +1,20 @@
 
 import React from "react";
-import { NoExercisesDialog, SaveConfirmDialog } from "@/features/workout/components/ConfirmationDialogs";
+import { 
+  NoExercisesDialog, 
+  SaveConfirmDialog, 
+  DiscardChangesDialog 
+} from "@/features/workout/components/ConfirmationDialogs";
 
 interface RoutineDialogsProps {
   showNoExercisesDialog: boolean;
   setShowNoExercisesDialog: (show: boolean) => void;
   showSaveConfirmDialog: boolean;
   setShowSaveConfirmDialog: (show: boolean) => void;
+  showDiscardChangesDialog: boolean;
+  setShowDiscardChangesDialog: (show: boolean) => void;
   handleSaveRoutine: () => void;
+  handleDiscardChanges: () => void;
   isSubmitting: boolean;
 }
 
@@ -16,7 +23,10 @@ const RoutineDialogs: React.FC<RoutineDialogsProps> = ({
   setShowNoExercisesDialog,
   showSaveConfirmDialog,
   setShowSaveConfirmDialog,
+  showDiscardChangesDialog,
+  setShowDiscardChangesDialog,
   handleSaveRoutine,
+  handleDiscardChanges,
   isSubmitting
 }) => {
   return (
@@ -35,6 +45,12 @@ const RoutineDialogs: React.FC<RoutineDialogsProps> = ({
         onOpenChange={setShowSaveConfirmDialog}
         onConfirm={handleSaveRoutine}
         isSubmitting={isSubmitting}
+      />
+
+      <DiscardChangesDialog
+        open={showDiscardChangesDialog}
+        onOpenChange={setShowDiscardChangesDialog}
+        onConfirm={handleDiscardChanges}
       />
     </>
   );

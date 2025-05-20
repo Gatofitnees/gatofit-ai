@@ -20,7 +20,7 @@ export async function saveRoutine(
     .insert({
       name: routineName,
       user_id: user.id,
-      type: routineType, // Add routine type field
+      type: routineType,
       estimated_duration_minutes: routineExercises.length * 5, // Rough estimate
     })
     .select()

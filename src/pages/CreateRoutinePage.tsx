@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
 import RoutineFormContainer from "@/features/workout/components/RoutineFormContainer";
 import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs";
@@ -9,6 +9,7 @@ import { useCreateRoutine } from "@/features/workout/hooks/useCreateRoutine";
 
 const CreateRoutinePage: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     // State
     routineName,
@@ -18,6 +19,7 @@ const CreateRoutinePage: React.FC = () => {
     isSubmitting,
     showNoExercisesDialog,
     showSaveConfirmDialog,
+    showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
     currentExerciseIndex,
@@ -25,9 +27,10 @@ const CreateRoutinePage: React.FC = () => {
     // State setters
     setRoutineName,
     setRoutineType,
-    setRoutineExercises, // Fix 1: Now properly destructuring this from the hook
+    setRoutineExercises,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
+    setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
     
@@ -41,21 +44,26 @@ const CreateRoutinePage: React.FC = () => {
     handleReorderClick,
     handleReorderSave,
     handleSaveRoutineStart,
-    handleSaveRoutine
+    handleSaveRoutine,
+    handleDiscardChanges,
+    handleNavigateAway
   } = useCreateRoutine([]);
 
-  // Load selected exercises from location state when available
+  // Add navigation confirmation
   useEffect(() => {
-    if (location.state && location.state.selectedExercises) {
-      const exercises = location.state.selectedExercises.map((exercise: any) => ({
-        ...exercise,
-        sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
-      }));
+    const unblock = navigate((to) => {
+      // Allow direct navigation to select exercises page
+      if (to.pathname === "/workout/select-exercises") {
+        return true;
+      }
       
-      // Fix 2: Use the properly destructured setRoutineExercises
-      setRoutineExercises(exercises);
-    }
-  }, [location.state, setRoutineExercises]); // Fix 3: Added setRoutineExercises to the dependency array
+      // For other routes, check if we should confirm
+      const allowNavigation = handleNavigateAway(to.pathname);
+      return allowNavigation;
+    });
+
+    return unblock;
+  }, [navigate, handleNavigateAway]);
   
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -75,7 +83,7 @@ const CreateRoutinePage: React.FC = () => {
         handleSetUpdate={handleSetUpdate}
         handleExerciseOptions={handleExerciseOptions}
         handleReorderClick={handleReorderClick}
-        handleSelectExercises={handleSelectExercises} // Fix 4: Pass the handler directly without wrapping
+        handleSelectExercises={handleSelectExercises}
       />
 
       {/* Dialog Components */}
@@ -84,7 +92,10 @@ const CreateRoutinePage: React.FC = () => {
         setShowNoExercisesDialog={setShowNoExercisesDialog}
         showSaveConfirmDialog={showSaveConfirmDialog}
         setShowSaveConfirmDialog={setShowSaveConfirmDialog}
+        showDiscardChangesDialog={showDiscardChangesDialog}
+        setShowDiscardChangesDialog={setShowDiscardChangesDialog}
         handleSaveRoutine={handleSaveRoutine}
+        handleDiscardChanges={handleDiscardChanges}
         isSubmitting={isSubmitting}
       />
 

@@ -1,22 +1,28 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { RoutineExercise } from "../types";
 import { useRoutineForm } from "./useRoutineForm";
 import { saveRoutine } from "../services/routineService";
 
+const STORAGE_KEY = "createRoutineState";
+
 export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showNoExercisesDialog, setShowNoExercisesDialog] = useState(false);
   const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
+  const [showDiscardChangesDialog, setShowDiscardChangesDialog] = useState(false);
   const [showExerciseOptionsSheet, setShowExerciseOptionsSheet] = useState(false);
   const [showReorderSheet, setShowReorderSheet] = useState(false);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   
+  // Load form state from session storage on initial render
   const {
     routineName,
     setRoutineName,
@@ -32,10 +38,79 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     validateForm
   } = useRoutineForm(initialExercises);
 
-  // Updated to accept an optional event parameter to match the expected type
+  // Load state from sessionStorage on component mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      try {
+        const { name, type, exercises } = JSON.parse(savedState);
+        setRoutineName(name || "");
+        setRoutineType(type || "");
+        
+        // Only set exercises if we don't have any from location state
+        if (!location.state?.selectedExercises && exercises && exercises.length > 0) {
+          setRoutineExercises(exercises);
+        }
+      } catch (error) {
+        console.error("Error parsing saved routine state:", error);
+      }
+    }
+  }, []);
+
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      name: routineName,
+      type: routineType,
+      exercises: routineExercises
+    };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [routineName, routineType, routineExercises]);
+
+  // Load selected exercises from location state when available
+  useEffect(() => {
+    if (location.state && location.state.selectedExercises) {
+      const exercises = location.state.selectedExercises.map((exercise: any) => ({
+        ...exercise,
+        sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
+      }));
+      
+      setRoutineExercises(exercises);
+    }
+  }, [location.state, setRoutineExercises]);
+
+  // Handler for confirming discard changes
+  const handleDiscardChanges = useCallback(() => {
+    // Clear the form state from session storage
+    sessionStorage.removeItem(STORAGE_KEY);
+    
+    // Navigate to the pending route if there is one
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+    } else {
+      navigate("/workout");
+    }
+    
+    setShowDiscardChangesDialog(false);
+  }, [pendingNavigation, navigate]);
+
+  // Check for form changes before navigating away
+  const handleNavigateAway = useCallback((targetPath: string) => {
+    // Only show confirmation if form has been filled out
+    const hasChanges = routineName !== "" || routineType !== "" || routineExercises.length > 0;
+    
+    if (hasChanges) {
+      setPendingNavigation(targetPath);
+      setShowDiscardChangesDialog(true);
+      return false;
+    }
+    
+    return true;
+  }, [routineName, routineType, routineExercises]);
+
   const handleSelectExercises = (e?: React.MouseEvent) => {
     if (e) {
-      e.preventDefault(); // Prevent form submission if event is provided
+      e.preventDefault();
     }
     navigate("/workout/select-exercises");
   };
@@ -54,7 +129,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
   };
 
   const handleSaveRoutineStart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent form submission
+    e.preventDefault();
     
     if (!validateForm()) {
       return;
@@ -79,6 +154,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
         description: `La rutina ${routineName} ha sido guardada correctamente`,
       });
 
+      // Clear form state from session storage after successful save
+      sessionStorage.removeItem(STORAGE_KEY);
+      
       navigate("/workout", { replace: true });
     } catch (error) {
       console.error("Error saving routine:", error);
@@ -102,6 +180,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     isSubmitting,
     showNoExercisesDialog,
     showSaveConfirmDialog,
+    showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
     currentExerciseIndex,
@@ -109,9 +188,10 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     // State setters
     setRoutineName,
     setRoutineType,
-    setRoutineExercises, // Make sure to export this function
+    setRoutineExercises,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
+    setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
     
@@ -125,6 +205,8 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     handleReorderClick,
     handleReorderSave,
     handleSaveRoutineStart,
-    handleSaveRoutine
+    handleSaveRoutine,
+    handleDiscardChanges,
+    handleNavigateAway
   };
 };
