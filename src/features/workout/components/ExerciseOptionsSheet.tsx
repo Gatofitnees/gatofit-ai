@@ -30,7 +30,11 @@ const ExerciseOptionsSheet: React.FC<ExerciseOptionsSheetProps> = ({
             variant="secondary"
             fullWidth
             className="justify-start rounded-none px-4"
-            onClick={onReorderClick}
+            onClick={(e) => {
+              e.preventDefault();
+              onReorderClick();
+            }}
+            type="button"
           >
             <Grip className="mr-2 h-5 w-5" /> Reordenar
           </Button>
@@ -38,7 +42,11 @@ const ExerciseOptionsSheet: React.FC<ExerciseOptionsSheetProps> = ({
             variant="secondary"
             fullWidth
             className="justify-start rounded-none px-4"
-            onClick={onReplaceExercise}
+            onClick={(e) => {
+              e.preventDefault();
+              onReplaceExercise();
+            }}
+            type="button"
           >
             <Plus className="mr-2 h-5 w-5" /> Reemplazar ejercicio
           </Button>
@@ -46,7 +54,11 @@ const ExerciseOptionsSheet: React.FC<ExerciseOptionsSheetProps> = ({
             variant="outline"
             fullWidth
             className="justify-start rounded-none px-4 text-red-500"
-            onClick={onRemoveExercise}
+            onClick={(e) => {
+              e.preventDefault();
+              onRemoveExercise();
+            }}
+            type="button"
           >
             <Trash2 className="mr-2 h-5 w-5" /> Eliminar ejercicio
           </Button>

@@ -53,7 +53,8 @@ const CreateRoutinePage: React.FC = () => {
     }
   }, [location.state, setRoutineExercises]);
   
-  const handleSelectExercises = () => {
+  const handleSelectExercises = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission
     navigate("/workout/select-exercises");
   };
 
@@ -70,7 +71,9 @@ const CreateRoutinePage: React.FC = () => {
     setShowReorderSheet(false);
   };
 
-  const handleSaveRoutineStart = () => {
+  const handleSaveRoutineStart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission
+    
     if (!validateForm()) {
       return;
     }
@@ -118,6 +121,7 @@ const CreateRoutinePage: React.FC = () => {
           leftIcon={<Save className="h-4 w-4" />}
           onClick={handleSaveRoutineStart}
           disabled={isSubmitting}
+          type="button"
         >
           Guardar
         </Button>
@@ -127,7 +131,7 @@ const CreateRoutinePage: React.FC = () => {
         <Card>
           <CardHeader title="Crear Nueva Rutina" />
           <CardBody>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
               <RoutineForm
                 routineName={routineName}
                 routineType={routineType}
@@ -148,8 +152,9 @@ const CreateRoutinePage: React.FC = () => {
                 <Button 
                   variant={routineExercises.length > 0 ? "secondary" : "primary"}
                   fullWidth 
-                  leftIcon={<Save className="h-4 w-4" />}
+                  leftIcon={<Plus className="h-4 w-4" />}
                   onClick={handleSelectExercises}
+                  type="button"
                 >
                   {routineExercises.length > 0 ? 'Añadir más ejercicios' : 'Añadir Ejercicios'}
                 </Button>

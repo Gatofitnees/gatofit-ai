@@ -52,7 +52,7 @@ const SelectExercisesPage: React.FC = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
   }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
 
-  // Filter exercises based on search term and selected filters with improved multi-value handling
+  // Filter exercises based on search term and selected filters
   const filteredExercises = exercises.filter(exercise => {
     // Search term filter (name or muscle group)
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,6 +114,9 @@ const SelectExercisesPage: React.FC = () => {
       selectedExercises.includes(exercise.id)
     );
     
+    // Clear filters from session storage before navigating
+    resetFiltersInStorage();
+    
     // Navigate back to create routine with the selected exercises
     navigate("/workout/create", { 
       state: { selectedExercises: selectedExerciseObjects } 
@@ -123,6 +126,24 @@ const SelectExercisesPage: React.FC = () => {
   const handleCreateExercise = () => {
     navigate("/workout/create-exercise");
   };
+  
+  // Function to reset filters in sessionStorage
+  const resetFiltersInStorage = () => {
+    const currentState = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "{}");
+    const resetState = {
+      ...currentState,
+      searchTerm: "",
+      muscleFilters: [],
+      equipmentFilters: []
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
+  };
+
+  // Reset filters when navigating back
+  const handleNavigateBack = () => {
+    resetFiltersInStorage();
+    navigate("/workout/create");
+  };
 
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">
@@ -130,8 +151,9 @@ const SelectExercisesPage: React.FC = () => {
       <div className="sticky top-0 z-10 bg-background p-4 border-b border-muted/20">
         <div className="flex items-center mb-4">
           <button 
-            onClick={() => navigate("/workout/create")}
+            onClick={handleNavigateBack}
             className="mr-3 p-1 rounded-full hover:bg-secondary/50"
+            type="button"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -166,6 +188,7 @@ const SelectExercisesPage: React.FC = () => {
             size="sm"
             leftIcon={<Plus className="h-4 w-4" />}
             onClick={handleCreateExercise}
+            type="button"
           >
             Crear Ejercicio
           </Button>
@@ -187,6 +210,7 @@ const SelectExercisesPage: React.FC = () => {
             variant="primary"
             className="shadow-neu-float px-6 bg-blue-500 hover:bg-blue-600"
             onClick={handleAddExercises}
+            type="button"
           >
             Añadir {selectedExercises.length} ejercicios
           </Button>

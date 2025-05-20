@@ -27,7 +27,10 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={onReorderClick}
+            onClick={(e) => {
+              e.preventDefault(); // Prevent form submission
+              onReorderClick();
+            }}
           >
             Ordenar
           </Button>

@@ -36,7 +36,10 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
             variant="outline"
             size="sm"
             className="min-w-0 p-1"
-            onClick={() => onExerciseOptions(index)}
+            onClick={(e) => {
+              e.preventDefault(); // Prevent form submission
+              onExerciseOptions(index);
+            }}
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
@@ -55,7 +58,10 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
           variant="outline" 
           size="sm" 
           className="mt-2 w-full"
-          onClick={() => onAddSet(index)}
+          onClick={(e) => {
+            e.preventDefault(); // Prevent form submission
+            onAddSet(index);
+          }}
         >
           <Plus className="h-3 w-3 mr-1" /> Agregar serie
         </Button>

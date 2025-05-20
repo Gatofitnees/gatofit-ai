@@ -36,7 +36,11 @@ const ReorderSheet: React.FC<ReorderSheetProps> = ({
                   variant="outline"
                   size="sm"
                   className="mr-2 p-1 min-w-0"
-                  onClick={() => onRemoveExercise(index)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onRemoveExercise(index);
+                  }}
+                  type="button"
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -49,7 +53,11 @@ const ReorderSheet: React.FC<ReorderSheetProps> = ({
                       variant="outline"
                       size="sm"
                       className="p-1 min-w-0"
-                      onClick={() => onMoveExercise(index, index - 1)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onMoveExercise(index, index - 1);
+                      }}
+                      type="button"
                     >
                       ↑
                     </Button>
@@ -59,7 +67,11 @@ const ReorderSheet: React.FC<ReorderSheetProps> = ({
                       variant="outline"
                       size="sm"
                       className="p-1 min-w-0"
-                      onClick={() => onMoveExercise(index, index + 1)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onMoveExercise(index, index + 1);
+                      }}
+                      type="button"
                     >
                       ↓
                     </Button>
@@ -70,7 +82,7 @@ const ReorderSheet: React.FC<ReorderSheetProps> = ({
           </div>
         </div>
         <SheetFooter className="px-4">
-          <Button variant="primary" onClick={onSave}>Guardar</Button>
+          <Button variant="primary" onClick={onSave} type="button">Guardar</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
