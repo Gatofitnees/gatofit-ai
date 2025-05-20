@@ -1,15 +1,5 @@
 import { Exercise } from './exerciseTypes';
 
-interface Exercise {
-  id: number;
-  name: string;
-  muscle_group_main: string;
-  equipment_required?: string;
-  difficulty_level?: string;
-  video_url?: string;
-  description?: string;
-}
-
 // Chest exercises (IDs 3001-3050)
 export const chestExercises: Exercise[] = [
   {
