@@ -1,5 +1,6 @@
+
 import { Exercise } from './exercises/exerciseTypes';
-import { chestExercises } from './exercises/chestExercises';
+import { chestExercises } from './exercises/chest';
 import { shoulderExercises } from './exercises/shoulderExercises';
 import { legExercises } from './exercises/legExercises';
 import { armExercises } from './exercises/armExercises';
