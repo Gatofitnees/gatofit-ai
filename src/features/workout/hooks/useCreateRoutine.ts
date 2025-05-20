@@ -32,8 +32,11 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     validateForm
   } = useRoutineForm(initialExercises);
 
-  const handleSelectExercises = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent form submission
+  // Updated to accept an optional event parameter to match the expected type
+  const handleSelectExercises = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault(); // Prevent form submission if event is provided
+    }
     navigate("/workout/select-exercises");
   };
 
@@ -106,7 +109,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     // State setters
     setRoutineName,
     setRoutineType,
-    setRoutineExercises, // Make sure we export this function
+    setRoutineExercises, // Make sure to export this function
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowExerciseOptionsSheet,

@@ -13,7 +13,7 @@ interface RoutineSheetsProps {
   handleRemoveExercise: (index: number) => void;
   handleMoveExercise: (fromIndex: number, toIndex: number) => void;
   routineExercises: RoutineExercise[];
-  navigateToSelectExercises: (e?: React.MouseEvent) => void; // Update signature to make MouseEvent optional
+  navigateToSelectExercises: (e?: React.MouseEvent) => void; // Make MouseEvent optional
   handleReorderSave: () => void;
 }
 

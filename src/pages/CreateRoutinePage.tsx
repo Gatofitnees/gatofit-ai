@@ -25,11 +25,11 @@ const CreateRoutinePage: React.FC = () => {
     // State setters
     setRoutineName,
     setRoutineType,
+    setRoutineExercises, // Fix 1: Now properly destructuring this from the hook
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
-    // Don't destructure setRoutineExercises since it's not available
     
     // Handlers
     handleAddSet,
@@ -52,11 +52,10 @@ const CreateRoutinePage: React.FC = () => {
         sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
       }));
       
-      // Fix 1: Use the useCreateRoutine hook method instead of destructured setter
-      // We need to get the method from the hook itself since it's not part of the destructured values
-      useCreateRoutine([]).setRoutineExercises(exercises);
+      // Fix 2: Use the properly destructured setRoutineExercises
+      setRoutineExercises(exercises);
     }
-  }, [location.state]);
+  }, [location.state, setRoutineExercises]); // Fix 3: Added setRoutineExercises to the dependency array
   
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -76,8 +75,7 @@ const CreateRoutinePage: React.FC = () => {
         handleSetUpdate={handleSetUpdate}
         handleExerciseOptions={handleExerciseOptions}
         handleReorderClick={handleReorderClick}
-        // Fix 2: Create a wrapper function to match the expected type
-        handleSelectExercises={(e) => handleSelectExercises(e)}
+        handleSelectExercises={handleSelectExercises} // Fix 4: Pass the handler directly without wrapping
       />
 
       {/* Dialog Components */}
