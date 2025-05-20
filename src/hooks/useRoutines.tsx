@@ -2,20 +2,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-
-interface WorkoutRoutine {
-  id: number;
-  name: string;
-  type?: string;
-  description?: string;
-  estimated_duration_minutes?: number;
-  exercise_count?: number;
-  created_at: string;
-}
+import { RoutineData } from "@/features/workout/types";
 
 export const useRoutines = () => {
   const { toast } = useToast();
-  const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
+  const [routines, setRoutines] = useState<RoutineData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +23,8 @@ export const useRoutines = () => {
               type: "Fuerza",
               estimated_duration_minutes: 45,
               exercise_count: 8,
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              user_id: "demo" // Add user_id field for demo data
             },
             {
               id: 2,
@@ -40,7 +32,8 @@ export const useRoutines = () => {
               type: "Cardio",
               estimated_duration_minutes: 30,
               exercise_count: 12,
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              user_id: "demo" // Add user_id field for demo data
             },
             {
               id: 3,
@@ -48,7 +41,8 @@ export const useRoutines = () => {
               type: "Fuerza",
               estimated_duration_minutes: 50,
               exercise_count: 7,
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              user_id: "demo" // Add user_id field for demo data
             }
           ]);
           setLoading(false);
@@ -73,7 +67,9 @@ export const useRoutines = () => {
           // Transform data to include exercise count
           const formattedData = data.map(routine => ({
             ...routine,
-            exercise_count: routine.routine_exercises?.[0]?.count || 0
+            exercise_count: routine.routine_exercises?.[0]?.count || 0,
+            // Ensure type field is present for RoutineData compatibility
+            type: routine.description?.includes('Cardio') ? 'Cardio' : 'Fuerza'
           }));
           setRoutines(formattedData);
         }
