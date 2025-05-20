@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
@@ -50,7 +51,7 @@ const CreateRoutinePage: React.FC = () => {
 
   // Add navigation confirmation - fixed implementation
   useEffect(() => {
-    const unblock = navigate.call(null, function(to: any) {
+    const unblock = navigate((to) => {
       // Allow direct navigation to select exercises page
       if (to.pathname === "/workout/select-exercises") {
         return true;
