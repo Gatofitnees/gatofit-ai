@@ -1,15 +1,13 @@
 
-import React, { useEffect, useState, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React from "react";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
 import RoutineFormContainer from "@/features/workout/components/RoutineFormContainer";
 import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs";
 import RoutineSheets from "@/features/workout/components/sheets/RoutineSheets";
 import { useCreateRoutine } from "@/features/workout/hooks/useCreateRoutine";
+import { RoutineProvider } from "@/features/workout/contexts/RoutineContext";
 
-const CreateRoutinePage: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+const CreateRoutinePageContent: React.FC = () => {
   const {
     // State
     routineName,
@@ -27,7 +25,6 @@ const CreateRoutinePage: React.FC = () => {
     // State setters
     setRoutineName,
     setRoutineType,
-    setRoutineExercises,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowDiscardChangesDialog,
@@ -46,21 +43,8 @@ const CreateRoutinePage: React.FC = () => {
     handleSaveRoutineStart,
     handleSaveRoutine,
     handleDiscardChanges,
-    handleNavigateAway
+    handleBackClick
   } = useCreateRoutine([]);
-
-  // Custom navigation protection logic
-  const handleBackClick = useCallback(() => {
-    const hasChanges = routineName !== "" || routineType !== "" || routineExercises.length > 0;
-    
-    if (hasChanges) {
-      setShowDiscardChangesDialog(true);
-      return;
-    }
-    
-    // No changes, navigate directly
-    navigate("/workout");
-  }, [routineName, routineType, routineExercises, navigate, setShowDiscardChangesDialog]);
   
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -111,6 +95,14 @@ const CreateRoutinePage: React.FC = () => {
         handleReorderSave={handleReorderSave}
       />
     </div>
+  );
+};
+
+const CreateRoutinePage: React.FC = () => {
+  return (
+    <RoutineProvider>
+      <CreateRoutinePageContent />
+    </RoutineProvider>
   );
 };
 
