@@ -75,12 +75,14 @@ const RoutineDetailsPage: React.FC = () => {
           };
         });
         
-        // Combine the data
-        setRoutine({
+        // Combine the data with a default type value
+        const routineWithType = {
           ...routineData,
-          type: routineData.type || "strength", // Default type if missing
+          type: routineData.type || "strength", // Default type if missing from DB
           exercises: formattedExercises
-        });
+        };
+        
+        setRoutine(routineWithType);
       } catch (error) {
         console.error("Error fetching routine details:", error);
         toast({
@@ -172,23 +174,26 @@ const RoutineDetailsPage: React.FC = () => {
       </div>
       
       <Card className="mb-4">
-        <CardHeader title="Información">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="px-2 py-0.5 rounded-full bg-secondary">
-              {routine.type === "strength" ? "Fuerza" :
-               routine.type === "cardio" ? "Cardio" :
-               routine.type === "flexibility" ? "Flexibilidad" :
-               routine.type === "mixed" ? "Mixto" : "Personalizado"}
-            </span>
-            {routine.estimated_duration_minutes && (
-              <div className="flex items-center">
-                <Clock className="h-3.5 w-3.5 mr-1" />
-                {routine.estimated_duration_minutes} min
-              </div>
-            )}
-            <span>{routine.exercises.length} ejercicios</span>
-          </div>
-        </CardHeader>
+        <CardHeader 
+          title="Información"
+          subtitle={
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="px-2 py-0.5 rounded-full bg-secondary">
+                {routine.type === "strength" ? "Fuerza" :
+                 routine.type === "cardio" ? "Cardio" :
+                 routine.type === "flexibility" ? "Flexibilidad" :
+                 routine.type === "mixed" ? "Mixto" : "Personalizado"}
+              </span>
+              {routine.estimated_duration_minutes && (
+                <div className="flex items-center">
+                  <Clock className="h-3.5 w-3.5 mr-1" />
+                  {routine.estimated_duration_minutes} min
+                </div>
+              )}
+              <span>{routine.exercises.length} ejercicios</span>
+            </div>
+          }
+        />
         <CardBody>
           {routine.description && (
             <p className="text-sm mb-4">{routine.description}</p>
