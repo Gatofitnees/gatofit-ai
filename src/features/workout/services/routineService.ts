@@ -20,8 +20,8 @@ export async function saveRoutine(
     .insert({
       name: routineName,
       user_id: user.id,
-      type: routineType,
-      estimated_duration_minutes: calculateRoutineDuration(routineExercises),
+      type: routineType, // Add routine type field
+      estimated_duration_minutes: routineExercises.length * 5, // Rough estimate
     })
     .select()
     .single();
@@ -54,27 +54,4 @@ export async function saveRoutine(
   }
 
   return routineData;
-}
-
-// Helper function to calculate approximate routine duration
-function calculateRoutineDuration(exercises: RoutineExercise[]): number {
-  // Base time in minutes
-  let totalMinutes = 5; // Warm-up time
-  
-  exercises.forEach(exercise => {
-    // Count sets
-    const setCount = exercise.sets.length;
-    
-    // Average time per set (1-2 minutes) plus rest time
-    exercise.sets.forEach(set => {
-      // Exercise time (average 1 minute per set)
-      totalMinutes += 1;
-      
-      // Rest time between sets (convert from seconds to minutes)
-      totalMinutes += set.rest_seconds / 60;
-    });
-  });
-  
-  // Round to nearest 5 minutes
-  return Math.ceil(totalMinutes / 5) * 5;
 }

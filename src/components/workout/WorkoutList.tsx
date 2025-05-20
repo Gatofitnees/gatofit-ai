@@ -1,10 +1,19 @@
 
 import React from "react";
 import WorkoutListItem from "./WorkoutListItem";
-import { RoutineData } from "@/features/workout/types";
+
+interface WorkoutRoutine {
+  id: number;
+  name: string;
+  type?: string;
+  description?: string;
+  estimated_duration_minutes?: number;
+  exercise_count?: number;
+  created_at: string;
+}
 
 interface WorkoutListProps {
-  routines: RoutineData[];
+  routines: WorkoutRoutine[];
   loading: boolean;
   onStartWorkout: (id: number) => void;
 }

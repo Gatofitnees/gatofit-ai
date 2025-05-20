@@ -1,16 +1,14 @@
 
 import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
 import RoutineFormContainer from "@/features/workout/components/RoutineFormContainer";
 import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs";
 import RoutineSheets from "@/features/workout/components/sheets/RoutineSheets";
-import UnsavedChangesDialog from "@/features/workout/components/dialogs/UnsavedChangesDialog";
 import { useCreateRoutine } from "@/features/workout/hooks/useCreateRoutine";
 
 const CreateRoutinePage: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const {
     // State
     routineName,
@@ -22,18 +20,16 @@ const CreateRoutinePage: React.FC = () => {
     showSaveConfirmDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
-    showUnsavedChangesDialog,
     currentExerciseIndex,
     
     // State setters
     setRoutineName,
     setRoutineType,
-    setRoutineExercises,
+    setRoutineExercises, // Fix 1: Now properly destructuring this from the hook
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
-    setShowUnsavedChangesDialog,
     
     // Handlers
     handleAddSet,
@@ -45,8 +41,7 @@ const CreateRoutinePage: React.FC = () => {
     handleReorderClick,
     handleReorderSave,
     handleSaveRoutineStart,
-    handleSaveRoutine,
-    clearStateAndNavigate
+    handleSaveRoutine
   } = useCreateRoutine([]);
 
   // Load selected exercises from location state when available
@@ -57,9 +52,10 @@ const CreateRoutinePage: React.FC = () => {
         sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
       }));
       
+      // Fix 2: Use the properly destructured setRoutineExercises
       setRoutineExercises(exercises);
     }
-  }, [location.state, setRoutineExercises]);
+  }, [location.state, setRoutineExercises]); // Fix 3: Added setRoutineExercises to the dependency array
   
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -79,7 +75,7 @@ const CreateRoutinePage: React.FC = () => {
         handleSetUpdate={handleSetUpdate}
         handleExerciseOptions={handleExerciseOptions}
         handleReorderClick={handleReorderClick}
-        handleSelectExercises={handleSelectExercises}
+        handleSelectExercises={handleSelectExercises} // Fix 4: Pass the handler directly without wrapping
       />
 
       {/* Dialog Components */}
@@ -104,14 +100,6 @@ const CreateRoutinePage: React.FC = () => {
         routineExercises={routineExercises}
         navigateToSelectExercises={handleSelectExercises}
         handleReorderSave={handleReorderSave}
-      />
-      
-      {/* Unsaved Changes Dialog */}
-      <UnsavedChangesDialog
-        open={showUnsavedChangesDialog}
-        onOpenChange={setShowUnsavedChangesDialog}
-        onConfirm={clearStateAndNavigate}
-        onCancel={() => setShowUnsavedChangesDialog(false)}
       />
     </div>
   );

@@ -6,8 +6,6 @@ import { useExercises } from "@/hooks/useExercises";
 import ExerciseSearch from "@/components/exercise/ExerciseSearch";
 import ExerciseFilters from "@/components/exercise/ExerciseFilters";
 import ExerciseList from "@/components/exercise/ExerciseList";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 
 // Define state types for sessionStorage
 interface SelectExercisesState {
@@ -15,19 +13,14 @@ interface SelectExercisesState {
   searchTerm: string;
   muscleFilters: string[];
   equipmentFilters: string[];
-  fromDetailsPage?: boolean;
 }
 
 const SESSION_STORAGE_KEY = "selectExercisesState";
-const ROUTINE_SESSION_KEY = "currentRoutineData";
 
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
-  
-  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
   
   // Initialize state from session storage or with defaults
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,29 +28,18 @@ const SelectExercisesPage: React.FC = () => {
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   
-  // Check if we're coming back from exercise details page
-  const fromDetails = location.state?.fromDetails || false;
-  
-  // Load state from sessionStorage on component mount
+  // Load state from sessionStorage on component mount and reset selected exercises
   useEffect(() => {
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    
     if (savedState) {
       const parsedState = JSON.parse(savedState) as SelectExercisesState;
-      
-      // If we're coming from details page, keep the selected exercises
-      // Otherwise reset them (but keep other filters)
-      if (fromDetails) {
-        setSelectedExercises(parsedState.selectedExercises || []);
-      } else {
-        setSelectedExercises([]);
-      }
-      
+      // Reset selected exercises but keep other filters if needed
+      setSelectedExercises([]);
       setSearchTerm(parsedState.searchTerm || "");
       setMuscleFilters(parsedState.muscleFilters || []);
       setEquipmentFilters(parsedState.equipmentFilters || []);
     }
-  }, [fromDetails]);
+  }, []);
   
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
@@ -65,8 +47,7 @@ const SelectExercisesPage: React.FC = () => {
       selectedExercises,
       searchTerm,
       muscleFilters,
-      equipmentFilters,
-      fromDetailsPage: false
+      equipmentFilters
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
   }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
@@ -123,62 +104,22 @@ const SelectExercisesPage: React.FC = () => {
   };
 
   const handleExerciseDetails = (id: number) => {
-    // Mark in session storage that we're going to details page so we keep selections
-    const stateToSave = {
-      selectedExercises,
-      searchTerm,
-      muscleFilters,
-      equipmentFilters,
-      fromDetailsPage: true
-    };
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
-    
     // Navigate to the exercise details page
-    navigate(`/workout/exercise-details/${id}`, { 
-      state: { fromSelectExercises: true } 
-    });
+    navigate(`/workout/exercise-details/${id}`);
   };
 
   const handleAddExercises = () => {
-    setShowSaveConfirmation(true);
-  };
-
-  const confirmAddExercises = () => {
     // Get the selected exercise objects
     const selectedExerciseObjects = exercises.filter(exercise => 
       selectedExercises.includes(exercise.id)
     );
     
-    // Load existing routine data if any
-    const routineData = sessionStorage.getItem(ROUTINE_SESSION_KEY);
-    let routineName = "";
-    let routineType = "";
-    
-    if (routineData) {
-      const parsedData = JSON.parse(routineData);
-      routineName = parsedData.routineName || "";
-      routineType = parsedData.routineType || "";
-    }
-    
-    // Clear selection state but keep filter preferences
-    const resetState = {
-      selectedExercises: [],
-      searchTerm,
-      muscleFilters,
-      equipmentFilters
-    };
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
+    // Clear all state from session storage before navigating
+    resetSessionStorage();
     
     // Navigate back to create routine with the selected exercises
     navigate("/workout/create", { 
       state: { selectedExercises: selectedExerciseObjects } 
-    });
-    
-    // Show success toast
-    toast({
-      title: "Ejercicios añadidos",
-      description: `${selectedExerciseObjects.length} ejercicios añadidos a la rutina`,
-      variant: "success"
     });
   };
 
@@ -186,18 +127,21 @@ const SelectExercisesPage: React.FC = () => {
     navigate("/workout/create-exercise");
   };
   
+  // Function to completely reset session storage
+  const resetSessionStorage = () => {
+    const resetState = {
+      selectedExercises: [],
+      searchTerm: "",
+      muscleFilters: [],
+      equipmentFilters: []
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
+  };
+
   // Reset filters and selections when navigating back
   const handleNavigateBack = () => {
-    // Check if we have routine data to go back to
-    const routineData = sessionStorage.getItem(ROUTINE_SESSION_KEY);
-    
-    // If we have routine data, go back to create routine page
-    if (routineData) {
-      navigate("/workout/create");
-    } else {
-      // Otherwise go to workout page
-      navigate("/workout");
-    }
+    resetSessionStorage();
+    navigate("/workout/create");
   };
 
   return (
@@ -271,34 +215,6 @@ const SelectExercisesPage: React.FC = () => {
           </Button>
         </div>
       )}
-      
-      {/* Confirmation Dialog */}
-      <Dialog open={showSaveConfirmation} onOpenChange={setShowSaveConfirmation}>
-        <DialogContent className="rounded-xl sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Confirmar selección</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            ¿Estás seguro de que quieres añadir los {selectedExercises.length} ejercicios seleccionados a tu rutina?
-          </p>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowSaveConfirmation(false)}
-              className="rounded-lg"
-            >
-              Cancelar
-            </Button>
-            <Button 
-              variant="primary"
-              onClick={confirmAddExercises}
-              className="rounded-lg"
-            >
-              Confirmar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
