@@ -12,7 +12,10 @@ export const useRoutineNavigation = () => {
     routineExercises, 
     setShowDiscardChangesDialog,
     setPendingNavigation,
-    pendingNavigation
+    pendingNavigation,
+    setRoutineName,
+    setRoutineType,
+    setRoutineExercises
   } = useRoutineContext();
 
   // Obtener la función para limpiar el almacenamiento
@@ -20,9 +23,9 @@ export const useRoutineNavigation = () => {
     routineName,
     routineType,
     routineExercises,
-    () => {}, // Estas son funciones no-op ya que solo usamos la funcionalidad de limpieza
-    () => {},
-    () => {}
+    setRoutineName,
+    setRoutineType,
+    setRoutineExercises
   );
 
   // Handle navigation when there might be unsaved changes
