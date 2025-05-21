@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight, Dumbbell } from "lucide-react";
 import Button from "@/components/Button";
 
 interface WorkoutRoutine {
@@ -12,6 +12,7 @@ interface WorkoutRoutine {
   estimated_duration_minutes?: number;
   exercise_count?: number;
   created_at: string;
+  is_predefined?: boolean;
 }
 
 interface WorkoutListItemProps {
@@ -24,7 +25,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
   onStartWorkout
 }) => {
   const navigate = useNavigate();
-  const { id, name, type, estimated_duration_minutes: estimatedDurationMinutes, exercise_count: exerciseCount } = routine;
+  const { id, name, type, estimated_duration_minutes: estimatedDurationMinutes, exercise_count: exerciseCount, is_predefined } = routine;
   
   const handleItemClick = () => {
     navigate(`/workout/routine/${id}`);
@@ -42,7 +43,14 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
     >
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-medium text-base mb-1">{name}</h3>
+          <div className="flex items-center gap-1">
+            <h3 className="font-medium text-base mb-1">{name}</h3>
+            {is_predefined && (
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                Predefinida
+              </span>
+            )}
+          </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <Clock className="h-3.5 w-3.5 mr-1" />
             <span>{estimatedDurationMinutes || 30} min</span>

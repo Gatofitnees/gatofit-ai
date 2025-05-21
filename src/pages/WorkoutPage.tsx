@@ -17,12 +17,12 @@ const WorkoutPage: React.FC = () => {
   const { routines, loading, refetch } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Inicializar rutinas predefinidas cuando la página se carga
+  // Initialize predefined routines when the page loads
   useEffect(() => {
     const loadPredefinedRoutines = async () => {
       try {
         await initPredefinedRoutines();
-        // Recargar rutinas para incluir las predefinidas
+        // Reload routines to include the predefined ones
         refetch();
       } catch (error) {
         console.error("Error loading predefined routines:", error);
@@ -32,23 +32,23 @@ const WorkoutPage: React.FC = () => {
     loadPredefinedRoutines();
   }, [refetch]);
   
-  // Refrescar rutinas cuando volvemos a esta página
+  // Refresh routines when returning to this page
   useEffect(() => {
-    // Esta función se ejecutará cada vez que navegamos a esta página
+    // This function will run each time we navigate to this page
     refetch();
-    console.log("Refrescando rutinas en WorkoutPage");
+    console.log("Refreshing routines in WorkoutPage");
   }, [location.pathname, refetch]);
   
-  // Filtrar rutinas basadas en el término de búsqueda
+  // Filter routines based on search term
   const filteredRoutines = routines.filter(routine => 
     routine.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleStartWorkout = (routineId: number) => {
-    // En una futura implementación, esto navegaría a una página de sesión de entrenamiento
+    navigate(`/workout/routine/${routineId}`);
     toast({
       title: "¡Rutina iniciada!",
-      description: "Funcionalidad en desarrollo"
+      description: "Has comenzado una nueva sesión de entrenamiento"
     });
   };
   
