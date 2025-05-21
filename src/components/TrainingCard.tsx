@@ -4,30 +4,55 @@ import { Check, ChevronRight, Plus, Clock, Flame } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import Button from "./Button";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface WorkoutSummary {
+  id?: number;
+  name: string;
+  duration?: string;
+  calories?: number;
+  exercises?: string[];
+  date?: string;
+}
 
 interface TrainingCardProps {
   completed?: boolean;
-  workout?: {
-    name: string;
-    duration?: string;
-    calories?: number;
-    exercises?: string[];
-  };
+  workout?: WorkoutSummary;
   onStartWorkout: () => void;
   onViewDetails?: () => void;
+  loading?: boolean;
 }
 
 const TrainingCard: React.FC<TrainingCardProps> = ({
   completed = false,
   workout,
   onStartWorkout,
-  onViewDetails
+  onViewDetails,
+  loading = false
 }) => {
+  if (loading) {
+    return (
+      <Card className="mb-5">
+        <CardHeader 
+          title="Mi Entrenamiento" 
+          icon={<Clock className="h-5 w-5" />} 
+        />
+        <CardBody>
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-3/4 rounded-md" />
+            <Skeleton className="h-4 w-1/2 rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-5">
       <CardHeader 
         title={completed ? "Entrenamiento Completado" : "Mi Entrenamiento Hoy"} 
-        icon={completed ? <Check className="h-5 w-5 text-success" /> : <Clock className="h-5 w-5" />} 
+        icon={completed ? <Check className="h-5 w-5 text-primary" /> : <Clock className="h-5 w-5" />} 
       />
       <CardBody>
         {completed && workout ? (
@@ -85,13 +110,13 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
               variant="outline"
               size="sm"
               onClick={onViewDetails}
+              rightIcon={<ChevronRight className="h-4 w-4" />}
             >
               Ver Detalles
             </Button>
             <Button 
               variant="primary"
               size="sm"
-              rightIcon={<ChevronRight className="h-4 w-4" />}
               onClick={onStartWorkout}
             >
               Otro Entrenamiento

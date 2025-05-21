@@ -16,9 +16,15 @@ interface WorkoutListProps {
   routines: WorkoutRoutine[];
   loading: boolean;
   onStartWorkout: (id: number) => void;
+  onRoutineDeleted?: () => void;
 }
 
-const WorkoutList: React.FC<WorkoutListProps> = ({ routines, loading, onStartWorkout }) => {
+const WorkoutList: React.FC<WorkoutListProps> = ({ 
+  routines, 
+  loading, 
+  onStartWorkout,
+  onRoutineDeleted
+}) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -34,7 +40,8 @@ const WorkoutList: React.FC<WorkoutListProps> = ({ routines, loading, onStartWor
           <WorkoutListItem 
             key={routine.id} 
             routine={routine} 
-            onStartWorkout={onStartWorkout} 
+            onStartWorkout={onStartWorkout}
+            onRoutineDeleted={onRoutineDeleted}
           />
         ))
       ) : (

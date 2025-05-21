@@ -56,15 +56,15 @@ const WorkoutPage: React.FC = () => {
   );
 
   const handleStartWorkout = (routineId: number) => {
-    navigate(`/workout/routine/${routineId}`);
-    toast({
-      title: "¡Rutina iniciada!",
-      description: "Has comenzado una nueva sesión de entrenamiento"
-    });
+    navigate(`/workout/active/${routineId}`);
   };
   
   const handleCreateRoutine = () => {
     navigate("/workout/create");
+  };
+  
+  const handleRoutineDeleted = () => {
+    refetch();
   };
 
   return (
@@ -89,6 +89,7 @@ const WorkoutPage: React.FC = () => {
         routines={filteredRoutines}
         loading={loading && !initializing}
         onStartWorkout={handleStartWorkout}
+        onRoutineDeleted={handleRoutineDeleted}
       />
       
       {/* Create Routine Button */}
