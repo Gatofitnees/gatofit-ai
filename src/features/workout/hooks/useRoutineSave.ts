@@ -94,9 +94,13 @@ export const useRoutineSave = () => {
       // Clear form state from session storage after successful save
       clearStoredRoutine();
       
+      // First close the dialog
+      setShowSaveConfirmDialog(false);
+      
       // Set a timeout to ensure the toast is visible before navigating
       setTimeout(() => {
         // Navigate to /workout with replace: true to prevent going back to the creation page
+        console.log("Navegando a /workout después del guardado exitoso");
         navigate("/workout", { replace: true });
         setIsSubmitting(false);
       }, 1000);

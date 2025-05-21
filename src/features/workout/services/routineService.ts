@@ -110,6 +110,7 @@ export async function saveRoutine(
       }
 
       console.log("Exercise data prepared:", routineExercisesData.length, "sets");
+      console.log("Sample exercise data:", JSON.stringify(routineExercisesData[0]));
 
       // Insert all exercise data with better error handling
       const { error: exercisesError } = await supabase

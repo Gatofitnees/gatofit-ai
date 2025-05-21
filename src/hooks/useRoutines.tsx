@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface WorkoutRoutine {
   id: number;
@@ -28,7 +28,7 @@ export const useRoutines = () => {
         .from('routines')
         .select(`
           *,
-          routine_exercises:routine_exercises(count)
+          routine_exercises(count)
         `)
         .order('created_at', { ascending: false });
       
@@ -54,7 +54,7 @@ export const useRoutines = () => {
           exercise_count: routine.routine_exercises?.[0]?.count || 0
         }));
         
-        console.log("Routines fetched:", formattedData);
+        console.log("Routines fetched:", formattedData.length);
         setRoutines(formattedData);
       }
     } catch (error: any) {
