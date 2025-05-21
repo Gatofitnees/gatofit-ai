@@ -16,21 +16,24 @@ export const useRoutineSave = () => {
     routineExercises,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
-    setIsSubmitting
+    setIsSubmitting,
+    setRoutineName,
+    setRoutineType,
+    setRoutineExercises
   } = useRoutineContext();
   
   const { clearStoredRoutine } = useRoutinePersistence(
     routineName,
     routineType,
     routineExercises,
-    () => {}, // These are no-op functions since we're just using the clear functionality
-    () => {},
-    () => {}
+    setRoutineName,
+    setRoutineType,
+    setRoutineExercises
   );
 
   // Validate form before saving
   const validateForm = useCallback(() => {
-    if (!routineName) {
+    if (!routineName || routineName.trim() === '') {
       toast({
         title: "Error",
         description: "Escribe un nombre a la rutina",
@@ -39,7 +42,7 @@ export const useRoutineSave = () => {
       return false;
     }
     
-    if (!routineType) {
+    if (!routineType || routineType.trim() === '') {
       toast({
         title: "Error",
         description: "Selecciona el tipo de rutina",
@@ -71,7 +74,7 @@ export const useRoutineSave = () => {
   const handleSaveRoutine = useCallback(async () => {
     try {
       setIsSubmitting(true);
-      console.log("Guardando rutina:", { routineName, routineType, routineExercises });
+      console.log("Guardando rutina:", { routineName, routineType, exercises: routineExercises.length });
 
       const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
       console.log("Rutina guardada exitosamente:", savedRoutine);
@@ -83,27 +86,44 @@ export const useRoutineSave = () => {
         variant: "success"
       });
 
+      // Reset form state in context
+      setRoutineName('');
+      setRoutineType('');
+      setRoutineExercises([]);
+      
       // Clear form state from session storage after successful save
       clearStoredRoutine();
       
       // Set a timeout to ensure the toast is visible before navigating
-      // Use a longer timeout to make sure the user sees the success message
       setTimeout(() => {
         // Navigate to /workout with replace: true to prevent going back to the creation page
         navigate("/workout", { replace: true });
-      }, 2500);
+        setIsSubmitting(false);
+      }, 1000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving routine:", error);
       toast({
         title: "Error al guardar",
-        description: "Ha ocurrido un error al guardar la rutina. Por favor, intente más tarde.",
+        description: error.message || "Ha ocurrido un error al guardar la rutina. Por favor, intente más tarde.",
         variant: "destructive"
       });
       setIsSubmitting(false);
       setShowSaveConfirmDialog(false);
     }
-  }, [routineName, routineType, routineExercises, navigate, toast, clearStoredRoutine, setIsSubmitting, setShowSaveConfirmDialog]);
+  }, [
+    routineName, 
+    routineType, 
+    routineExercises, 
+    navigate, 
+    toast, 
+    clearStoredRoutine, 
+    setIsSubmitting, 
+    setShowSaveConfirmDialog,
+    setRoutineName,
+    setRoutineType,
+    setRoutineExercises
+  ]);
 
   return {
     handleSaveRoutineStart,

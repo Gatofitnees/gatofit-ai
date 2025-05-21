@@ -30,6 +30,8 @@ export const useRoutinePersistence = (
         }
       } catch (error) {
         console.error("Error parsing saved routine state:", error);
+        // En caso de error, limpiamos el storage para evitar errores futuros
+        sessionStorage.removeItem(STORAGE_KEY);
       }
     }
   }, [setRoutineName, setRoutineType, setRoutineExercises]);
@@ -77,9 +79,16 @@ export const useRoutinePersistence = (
     }
   }, [location.state, routineExercises, setRoutineExercises]);
 
-  // Clear session storage
+  // Clear session storage and reset form
   const clearStoredRoutine = () => {
+    console.log("Limpiando datos de rutina en sessionStorage");
     sessionStorage.removeItem(STORAGE_KEY);
+    // Opcionalmente, también podemos limpiar el estado aquí si queremos una limpieza inmediata
+    if (setRoutineName && setRoutineType && setRoutineExercises) {
+      setRoutineName("");
+      setRoutineType("");
+      setRoutineExercises([]);
+    }
   };
   
   return { clearStoredRoutine };
