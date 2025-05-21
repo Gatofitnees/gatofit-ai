@@ -1,23 +1,57 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Plus } from "lucide-react";
+import Button from "@/components/Button";
 import { useExercises } from "@/hooks/useExercises";
-import { useRoutine } from "@/contexts/RoutineContext";
-import { RoutineExercise } from "@/features/workout/types";
+import ExerciseSearch from "@/components/exercise/ExerciseSearch";
+import ExerciseFilters from "@/components/exercise/ExerciseFilters";
+import ExerciseList from "@/components/exercise/ExerciseList";
+
+// Define state types for sessionStorage
+interface SelectExercisesState {
+  selectedExercises: number[];
+  searchTerm: string;
+  muscleFilters: string[];
+  equipmentFilters: string[];
+}
+
+const SESSION_STORAGE_KEY = "selectExercisesState";
 
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
-  const { addExercises } = useRoutine();
   
-  // State
+  // Initialize state from session storage or with defaults
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
   
+  // Load state from sessionStorage on component mount and reset selected exercises
+  useEffect(() => {
+    const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (savedState) {
+      const parsedState = JSON.parse(savedState) as SelectExercisesState;
+      // Reset selected exercises but keep other filters if needed
+      setSelectedExercises([]);
+      setSearchTerm(parsedState.searchTerm || "");
+      setMuscleFilters(parsedState.muscleFilters || []);
+      setEquipmentFilters(parsedState.equipmentFilters || []);
+    }
+  }, []);
+  
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    const stateToSave: SelectExercisesState = {
+      selectedExercises,
+      searchTerm,
+      muscleFilters,
+      equipmentFilters
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
+
   // Filter exercises based on search term and selected filters
   const filteredExercises = exercises.filter(exercise => {
     // Search term filter (name or muscle group)
@@ -45,7 +79,7 @@ const SelectExercisesPage: React.FC = () => {
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
 
-  const handleToggleExercise = (id: string) => {
+  const handleExerciseSelect = (id: number) => {
     if (selectedExercises.includes(id)) {
       setSelectedExercises(selectedExercises.filter(exId => exId !== id));
     } else {
@@ -68,26 +102,45 @@ const SelectExercisesPage: React.FC = () => {
       setEquipmentFilters([...equipmentFilters, equipment]);
     }
   };
-  
-  const handleAddExercises = () => {
-    // Get the selected exercise objects
-    const selectedExerciseObjects = exercises
-      .filter(exercise => selectedExercises.includes(exercise.id.toString()))
-      .map(exercise => ({
-        id: exercise.id.toString(),
-        name: exercise.name,
-        muscle_group_main: exercise.muscle_group_main || '',
-        sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
-      })) as RoutineExercise[];
-    
-    // Add selected exercises to the routine
-    addExercises(selectedExerciseObjects);
-    
-    // Navigate back to create routine
-    navigate("/workout/create");
+
+  const handleExerciseDetails = (id: number) => {
+    // Navigate to the exercise details page
+    navigate(`/workout/exercise-details/${id}`);
   };
 
+  const handleAddExercises = () => {
+    // Get the selected exercise objects
+    const selectedExerciseObjects = exercises.filter(exercise => 
+      selectedExercises.includes(exercise.id)
+    );
+    
+    // Clear all state from session storage before navigating
+    resetSessionStorage();
+    
+    // Navigate back to create routine with the selected exercises
+    navigate("/workout/create", { 
+      state: { selectedExercises: selectedExerciseObjects } 
+    });
+  };
+
+  const handleCreateExercise = () => {
+    navigate("/workout/create-exercise");
+  };
+  
+  // Function to completely reset session storage
+  const resetSessionStorage = () => {
+    const resetState = {
+      selectedExercises: [],
+      searchTerm: "",
+      muscleFilters: [],
+      equipmentFilters: []
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
+  };
+
+  // Reset filters and selections when navigating back
   const handleNavigateBack = () => {
+    resetSessionStorage();
     navigate("/workout/create");
   };
 
@@ -106,86 +159,57 @@ const SelectExercisesPage: React.FC = () => {
           <h1 className="text-xl font-bold">Seleccionar Ejercicios</h1>
         </div>
 
-        {/* Search */}
-        <div>
-          <input
-            type="text"
-            placeholder="Buscar ejercicios..."
-            className="w-full p-2 rounded-xl border border-gray-200 bg-secondary"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+        {/* Search and Filter */}
+        <div className="flex items-center gap-2">
+          <ExerciseSearch 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           />
-        </div>
-        
-        {/* Filters */}
-        <div className="mt-2 flex flex-wrap gap-1">
-          <p className="text-xs w-full mb-1">Filtrar por músculo:</p>
-          {muscleGroups.slice(0, 5).map(muscle => (
-            <button
-              key={muscle}
-              onClick={() => handleMuscleFilterToggle(muscle)}
-              className={`text-xs px-2 py-1 rounded-full ${
-                muscleFilters.includes(muscle)
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              {muscle}
-            </button>
-          ))}
+          <ExerciseFilters 
+            muscleGroups={muscleGroups}
+            equipmentTypes={equipmentTypes}
+            muscleFilters={muscleFilters}
+            equipmentFilters={equipmentFilters}
+            onMuscleFilterToggle={handleMuscleFilterToggle}
+            onEquipmentFilterToggle={handleEquipmentFilterToggle}
+          />
         </div>
       </div>
 
-      {/* Exercises list */}
+      {/* Exercise List */}
       <div className="p-4">
-        <div className="flex justify-between mb-2">
+        <div className="flex justify-between items-center mb-4">
           <span className="text-sm text-muted-foreground">
             {filteredExercises.length} ejercicios encontrados
           </span>
-          <span className="text-sm text-blue-500 font-medium">
-            {selectedExercises.length} seleccionados
-          </span>
+          <Button 
+            variant="secondary"
+            size="sm"
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={handleCreateExercise}
+            type="button"
+          >
+            Crear Ejercicio
+          </Button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredExercises.map(exercise => (
-              <div
-                key={exercise.id}
-                onClick={() => handleToggleExercise(exercise.id.toString())}
-                className={`p-3 rounded-xl transition-all cursor-pointer ${
-                  selectedExercises.includes(exercise.id.toString())
-                    ? 'bg-blue-50 border border-blue-500'
-                    : 'bg-white border border-gray-100'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{exercise.name}</p>
-                    <p className="text-xs text-muted-foreground">{exercise.muscle_group_main}</p>
-                  </div>
-                  {selectedExercises.includes(exercise.id.toString()) && (
-                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <ExerciseList 
+          exercises={filteredExercises}
+          selectedExercises={selectedExercises}
+          onSelectExercise={handleExerciseSelect}
+          onViewDetails={handleExerciseDetails}
+          loading={loading}
+        />
       </div>
 
       {/* Selected Exercises Floating Button */}
       {selectedExercises.length > 0 && (
-        <div className="fixed bottom-8 left-0 right-0 p-4 flex justify-center z-50">
+        <div className="fixed bottom-20 left-0 right-0 p-4 flex justify-center">
           <Button
-            className="px-6 py-6 bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-2xl"
+            variant="primary"
+            className="shadow-neu-float px-6 bg-blue-500 hover:bg-blue-600"
             onClick={handleAddExercises}
+            type="button"
           >
             Añadir {selectedExercises.length} ejercicios
           </Button>

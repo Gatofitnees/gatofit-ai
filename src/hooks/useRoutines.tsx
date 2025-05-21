@@ -25,22 +25,23 @@ export const useRoutines = () => {
       console.log("Fetching routines...");
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        console.log("No authenticated user found");
-        setRoutines([]);
-        setLoading(false);
-        return;
-      }
-      
-      // Get all user routines plus predefined ones
-      const { data, error } = await supabase
+      let query = supabase
         .from('routines')
         .select(`
           *,
           routine_exercises(count)
         `)
-        .or(`user_id.eq.${user.id},is_predefined.eq.true`)
         .order('created_at', { ascending: false });
+      
+      if (user) {
+        // If user is logged in, get their routines and predefined ones
+        query = query.or(`user_id.eq.${user.id},is_predefined.eq.true`);
+      } else {
+        // If user is not logged in, only get predefined routines
+        query = query.eq('is_predefined', true);
+      }
+
+      const { data, error } = await query;
           
       if (error) {
         console.error("Error fetching routines:", error);
@@ -54,7 +55,7 @@ export const useRoutines = () => {
           exercise_count: routine.routine_exercises?.[0]?.count || 0
         }));
         
-        console.log("Routines fetched successfully:", formattedData.length);
+        console.log("Routines fetched:", formattedData.length);
         setRoutines(formattedData);
       }
     } catch (error: any) {
@@ -69,7 +70,6 @@ export const useRoutines = () => {
     }
   }, [toast]);
 
-  // Fetch routines on component mount
   useEffect(() => {
     fetchRoutines();
   }, [fetchRoutines]);

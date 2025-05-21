@@ -1,18 +1,18 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import WorkoutPage from "./pages/WorkoutPage";
 import NutritionPage from "./pages/NutritionPage";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import WorkoutPage from "./pages/WorkoutPage";
-import CreateRoutinePage from "./pages/CreateRoutinePage";
 import SelectExercisesPage from "./pages/SelectExercisesPage";
-import RoutineDetailPage from "./pages/RoutineDetailPage";
 import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
-import { RoutineProvider } from "@/contexts/RoutineContext";
+import CreateExercisePage from "./pages/CreateExercisePage";
+import CreateRoutinePage from "./pages/CreateRoutinePage";
+import RoutineDetailPage from "./pages/RoutineDetailPage";
 
 function App() {
   return (
@@ -31,15 +31,6 @@ function App() {
               }
             />
             <Route
-              path="/nutrition"
-              element={
-                <ProtectedRoute>
-                  <NutritionPage />
-                  <NavBar />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/workout"
               element={
                 <ProtectedRoute>
@@ -53,6 +44,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreateRoutinePage />
+                  <NavBar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/routine/:routineId"
+              element={
+                <ProtectedRoute>
+                  <RoutineDetailPage />
+                  <NavBar />
                 </ProtectedRoute>
               }
             />
@@ -60,9 +61,7 @@ function App() {
               path="/workout/select-exercises"
               element={
                 <ProtectedRoute>
-                  <RoutineProvider>
-                    <SelectExercisesPage />
-                  </RoutineProvider>
+                  <SelectExercisesPage />
                 </ProtectedRoute>
               }
             />
@@ -75,10 +74,18 @@ function App() {
               }
             />
             <Route
-              path="/workout/routine/:routineId"
+              path="/workout/create-exercise"
               element={
                 <ProtectedRoute>
-                  <RoutineDetailPage />
+                  <CreateExercisePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/nutrition"
+              element={
+                <ProtectedRoute>
+                  <NutritionPage />
                   <NavBar />
                 </ProtectedRoute>
               }
