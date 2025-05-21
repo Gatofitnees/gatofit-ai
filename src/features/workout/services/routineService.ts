@@ -39,10 +39,11 @@ export async function saveRoutine(
       console.log("Creating user profile");
       // Bypass RLS with custom endpoint if available
       try {
-        // Fix: Pass user_id as an object with named parameter
-        const { data: insertResult, error: insertError } = await supabase.rpc('create_user_profile', {
-          user_id: user.id
-        });
+        // Fix: Pass user_id correctly by using the correct typing
+        const { data: insertResult, error: insertError } = await supabase.rpc(
+          'create_user_profile', 
+          { user_id: user.id }
+        );
         
         if (insertError) {
           throw insertError;
