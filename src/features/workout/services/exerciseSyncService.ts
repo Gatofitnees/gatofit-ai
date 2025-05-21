@@ -45,10 +45,11 @@ export async function syncExercisesToDatabase() {
       name: exercise.name,
       muscle_group_main: exercise.muscle_group_main,
       equipment_required: exercise.equipment_required,
-      // Convert the difficulty level to match the enum in the database
       difficulty_level: normalizeDifficultyLevel(exercise.difficulty_level),
       video_url: exercise.video_url,
-      description: exercise.description
+      description: exercise.description,
+      // Set created_by_user_id to null for preloaded/system exercises
+      created_by_user_id: null
     }));
     
     // Insert missing exercises in batches to avoid timeouts
@@ -63,6 +64,7 @@ export async function syncExercisesToDatabase() {
         
       if (insertError) {
         console.error(`Error inserting batch ${i/batchSize + 1}:`, insertError);
+        console.error("Error details:", insertError.details, insertError.message);
         throw insertError;
       }
       
@@ -81,13 +83,15 @@ function normalizeDifficultyLevel(level?: string): DifficultyLevel | undefined {
   if (!level) return undefined;
   
   // Convert Spanish difficulty levels to English
-  if (level.toLowerCase() === "principiante") return "beginner";
-  if (level.toLowerCase() === "intermedio") return "intermediate";
-  if (level.toLowerCase() === "avanzado") return "advanced";
+  const lowerLevel = level.toLowerCase();
+  
+  if (lowerLevel === "principiante") return "beginner";
+  if (lowerLevel === "intermedio") return "intermediate";
+  if (lowerLevel === "avanzado") return "advanced";
   
   // If the level is already one of the accepted values, return it
-  if (["beginner", "intermediate", "advanced"].includes(level.toLowerCase())) {
-    return level.toLowerCase() as DifficultyLevel;
+  if (["beginner", "intermediate", "advanced"].includes(lowerLevel)) {
+    return lowerLevel as DifficultyLevel;
   }
   
   // Default to beginner if no match

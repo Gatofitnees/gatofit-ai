@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { saveRoutine } from "../services/routineService";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
+import { toast as sonnerToast } from "sonner";
 
 export const useRoutineSave = () => {
   const navigate = useNavigate();
@@ -70,17 +71,23 @@ export const useRoutineSave = () => {
     setShowSaveConfirmDialog(true);
   }, [validateForm, routineExercises, setShowNoExercisesDialog, setShowSaveConfirmDialog]);
 
-  // Save routine to database - simplified for reliability
+  // Save routine to database - improved for better reliability and feedback
   const handleSaveRoutine = useCallback(async () => {
     try {
       setIsSubmitting(true);
+      
+      // Show saving notification
+      sonnerToast.loading("Guardando rutina...");
       console.log("Starting to save routine");
 
-      // Save the routine first
+      // Save the routine
       const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
       console.log("Rutina guardada exitosamente:", savedRoutine);
       
-      // Reset form state first to avoid state issues
+      // Hide loading notification
+      sonnerToast.dismiss();
+      
+      // Reset form state to avoid state issues
       setRoutineName('');
       setRoutineType('');
       setRoutineExercises([]);
@@ -100,16 +107,21 @@ export const useRoutineSave = () => {
       console.log("Navigating to /workout after successful save");
       navigate("/workout");
       
-      // Reset submission state
-      setIsSubmitting(false);
-      
     } catch (error: any) {
       console.error("Error saving routine:", error);
+      
+      // Hide loading notification
+      sonnerToast.dismiss();
+      
+      // Show error toast
       toast({
         title: "Error al guardar",
         description: error.message || "Ha ocurrido un error al guardar la rutina. Por favor, intente más tarde.",
         variant: "destructive"
       });
+      
+    } finally {
+      // Reset submission state
       setIsSubmitting(false);
       setShowSaveConfirmDialog(false);
     }

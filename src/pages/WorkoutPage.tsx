@@ -17,11 +17,14 @@ const WorkoutPage: React.FC = () => {
   const location = useLocation();
   const { routines, loading, refetch } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
+  const [initializing, setInitializing] = useState(false);
   
   // Initialize predefined routines and sync exercises
   useEffect(() => {
     const initialize = async () => {
       try {
+        setInitializing(true);
+        
         // First ensure all exercises exist in the database
         await syncExercisesToDatabase();
         console.log("Exercise synchronization completed");
@@ -29,17 +32,23 @@ const WorkoutPage: React.FC = () => {
         // Then initialize predefined routines
         await initPredefinedRoutines();
         console.log("Predefined routines initialized");
-      } catch (error) {
-        console.error("Error loading predefined routines:", error);
+        
+        // Refetch routines after initialization
+        await refetch();
+      } catch (error: any) {
+        console.error("Error loading predefined data:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los datos predefinidos. Por favor, recargue la página e intente nuevamente.",
+          variant: "destructive"
+        });
+      } finally {
+        setInitializing(false);
       }
     };
     
     initialize();
-    
-    // Always refetch routines when this page is navigated to
-    console.log("Refreshing routines in WorkoutPage");
-    refetch();
-  }, [location.key, refetch]); 
+  }, [toast, refetch]); 
   
   // Filter routines based on search term
   const filteredRoutines = routines.filter(routine => 
@@ -67,11 +76,18 @@ const WorkoutPage: React.FC = () => {
         searchTerm={searchTerm} 
         onSearchChange={setSearchTerm} 
       />
+      
+      {initializing && (
+        <div className="text-center py-4">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Inicializando datos...</p>
+        </div>
+      )}
 
       {/* Routines List */}
       <WorkoutList 
         routines={filteredRoutines}
-        loading={loading}
+        loading={loading && !initializing}
         onStartWorkout={handleStartWorkout}
       />
       

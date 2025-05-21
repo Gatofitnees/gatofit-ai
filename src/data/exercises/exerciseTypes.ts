@@ -38,5 +38,6 @@ export function normalizeDifficulty(level: string): DifficultyLevel {
     return lowercaseLevel as DifficultyLevel;
   }
   
+  console.warn(`Unrecognized difficulty level: "${level}", defaulting to "beginner"`);
   return 'beginner'; // Default fallback
 }
