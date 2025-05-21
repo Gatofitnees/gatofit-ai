@@ -44,7 +44,7 @@ const WorkoutSummaryPage: React.FC = () => {
         const { data: workoutLog, error: workoutError } = await supabase
           .from('workout_logs')
           .select('*')
-          .eq('id', workoutId)
+          .eq('id', parseInt(workoutId))
           .single();
         
         if (workoutError) throw workoutError;
@@ -54,7 +54,7 @@ const WorkoutSummaryPage: React.FC = () => {
         const { data: exerciseDetails, error: detailsError } = await supabase
           .from('workout_log_exercise_details')
           .select('*')
-          .eq('workout_log_id', workoutId)
+          .eq('workout_log_id', parseInt(workoutId))
           .order('exercise_name_snapshot', { ascending: true })
           .order('set_number', { ascending: true });
         
@@ -266,7 +266,7 @@ const WorkoutSummaryPage: React.FC = () => {
         </Button>
         
         <Button 
-          variant="primary"
+          variant="default"
           onClick={() => navigate('/workout')}
         >
           Otro entrenamiento

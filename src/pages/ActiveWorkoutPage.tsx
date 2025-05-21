@@ -27,6 +27,11 @@ interface WorkoutExercise {
   equipment_required?: string;
 }
 
+interface PreviousData {
+  weight: number | null;
+  reps: number | null;
+}
+
 const ActiveWorkoutPage: React.FC = () => {
   const { routineId } = useParams<{ routineId: string }>();
   const navigate = useNavigate();
@@ -38,7 +43,7 @@ const ActiveWorkoutPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showExerciseDetails, setShowExerciseDetails] = useState<number | null>(null);
   const [showStatsDialog, setShowStatsDialog] = useState<number | null>(null);
-  const [previousData, setPreviousData] = useState<Record<number, { weight: number | null, reps: number | null }[]>>({});
+  const [previousData, setPreviousData] = useState<Record<number, PreviousData[]>>({});
 
   // Load exercise history for each exercise
   useEffect(() => {
@@ -66,7 +71,7 @@ const ActiveWorkoutPage: React.FC = () => {
         
         if (workoutLogDetails && workoutLogDetails.length > 0) {
           // Group by exercise_id
-          const exerciseHistory: Record<number, { weight: number | null, reps: number | null }[]> = {};
+          const exerciseHistory: Record<number, PreviousData[]> = {};
           
           workoutLogDetails.forEach(detail => {
             if (!exerciseHistory[detail.exercise_id]) {
@@ -301,7 +306,7 @@ const ActiveWorkoutPage: React.FC = () => {
         </div>
         
         <Button 
-          variant="primary"
+          variant="default"
           size="sm"
           onClick={handleSaveWorkout}
           disabled={isSaving}
@@ -413,7 +418,7 @@ const ActiveWorkoutPage: React.FC = () => {
       {/* Save button (bottom) */}
       <div className="fixed left-0 right-0 bottom-16 px-4 py-3 bg-background/80 backdrop-blur-md z-10 border-t border-white/5">
         <Button 
-          variant="primary" 
+          variant="default"
           className="w-full"
           onClick={handleSaveWorkout}
           disabled={isSaving}
@@ -465,15 +470,21 @@ const ActiveWorkoutPage: React.FC = () => {
               <p className="text-sm mb-2">
                 <span className="font-medium">Peso máximo:</span> 
                 <span className="ml-2 text-primary">
-                  {previousData[showStatsDialog || 0]?.reduce((max, set) => 
-                    set?.weight && (max === null || set.weight > max) ? set.weight : max, null) || '-'}
+                  {previousData[showStatsDialog || 0]?.reduce((max, current) => 
+                    current?.weight !== null && (max === null || (current.weight > (max as number))) 
+                      ? current.weight 
+                      : max, 
+                    null as number | null) || '-'}
                 </span> kg
               </p>
               <p className="text-sm">
                 <span className="font-medium">Repeticiones máximas:</span> 
                 <span className="ml-2 text-primary">
-                  {previousData[showStatsDialog || 0]?.reduce((max, set) => 
-                    set?.reps && (max === null || set.reps > max) ? set.reps : max, null) || '-'}
+                  {previousData[showStatsDialog || 0]?.reduce((max, current) => 
+                    current?.reps !== null && (max === null || (current.reps > (max as number))) 
+                      ? current.reps 
+                      : max,
+                    null as number | null) || '-'}
                 </span>
               </p>
             </div>

@@ -152,10 +152,11 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
               </Button>
               
               <Button 
-                variant="destructive" 
+                variant="outline" 
                 size="sm"
                 onClick={handleDeleteClick}
                 type="button"
+                className="text-red-500 hover:text-red-600"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
