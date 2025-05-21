@@ -26,6 +26,7 @@ interface Routine {
   name: string;
   description: string | null;
   estimated_duration_minutes: number | null;
+  type?: string; // Adding type property to the Routine interface
 }
 
 export const useRoutineDetail = (routineId: number | undefined) => {

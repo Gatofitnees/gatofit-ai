@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -319,7 +318,7 @@ const ActiveWorkoutPage: React.FC = () => {
       {/* Workout Info */}
       <div className="mb-6 p-3 bg-secondary/20 rounded-lg text-sm">
         <div className="flex items-center justify-between">
-          <span>Tipo: {routine.type || "General"}</span>
+          <span>Tipo: {routine.description || "General"}</span>
           <span>Tiempo estimado: {routine.estimated_duration_minutes || 30} min</span>
         </div>
       </div>
