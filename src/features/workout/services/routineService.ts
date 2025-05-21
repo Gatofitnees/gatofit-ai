@@ -23,14 +23,19 @@ export async function saveRoutine(
     console.log("Guardando rutina para usuario:", user.id);
 
     // Comprobar si el usuario tiene un perfil
-    const { data: profileData } = await supabase
+    const { data: profileData, error: profileCheckError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
       
+    if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+      console.error("Error comprobando perfil de usuario:", profileCheckError);
+    }
+      
     // Si el usuario no tiene perfil, crear uno básico
     if (!profileData) {
+      console.log("Creando perfil de usuario");
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({ id: user.id });
@@ -61,25 +66,36 @@ export async function saveRoutine(
     console.log("Rutina creada:", routineData);
 
     // Insertar ejercicios de la rutina
-    const routineExercisesData = routineExercises.flatMap((exercise, exerciseIndex) => 
-      exercise.sets.map((set, setIndex) => ({
-        routine_id: routineData.id,
-        exercise_id: parseInt(exercise.id), // Convertir ID de string a número
-        exercise_order: exerciseIndex + 1,
-        set_number: setIndex + 1,
-        reps_min: set.reps_min,
-        reps_max: set.reps_max,
-        rest_between_sets_seconds: set.rest_seconds
-      }))
-    );
+    const routineExercisesData = [];
+    
+    // Preparar datos para insertar en la tabla routine_exercises
+    for (let exerciseIndex = 0; exerciseIndex < routineExercises.length; exerciseIndex++) {
+      const exercise = routineExercises[exerciseIndex];
+      
+      for (let setIndex = 0; setIndex < exercise.sets.length; setIndex++) {
+        const set = exercise.sets[setIndex];
+        routineExercisesData.push({
+          routine_id: routineData.id,
+          exercise_id: parseInt(exercise.id), // Convertir ID de string a número
+          exercise_order: exerciseIndex + 1,
+          set_number: setIndex + 1,
+          reps_min: set.reps_min,
+          reps_max: set.reps_max,
+          rest_between_sets_seconds: set.rest_seconds
+        });
+      }
+    }
 
-    const { error: exercisesError } = await supabase
-      .from('routine_exercises')
-      .insert(routineExercisesData);
+    // Insertar todos los datos de ejercicios
+    if (routineExercisesData.length > 0) {
+      const { error: exercisesError } = await supabase
+        .from('routine_exercises')
+        .insert(routineExercisesData);
 
-    if (exercisesError) {
-      console.error("Error insertando datos de ejercicios:", exercisesError);
-      throw new Error(exercisesError.message);
+      if (exercisesError) {
+        console.error("Error insertando datos de ejercicios:", exercisesError);
+        throw new Error(exercisesError.message);
+      }
     }
 
     return routineData;

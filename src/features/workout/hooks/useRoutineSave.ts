@@ -76,17 +76,21 @@ export const useRoutineSave = () => {
       const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
       console.log("Rutina guardada exitosamente:", savedRoutine);
 
+      // Clear form state from session storage after successful save
+      clearStoredRoutine();
+      
       toast({
         title: "¡Rutina creada!",
         description: `La rutina ${routineName} ha sido guardada correctamente`,
         variant: "success"
       });
 
-      // Clear form state from session storage after successful save
-      clearStoredRoutine();
+      // Use a small timeout to allow the toast to be seen before navigating
+      setTimeout(() => {
+        // Navegar a /workout con replace: true para que el botón de retroceso no vuelva a la página de creación
+        navigate("/workout", { replace: true });
+      }, 500);
       
-      // Navegar a /workout con replace: true para que el botón de retroceso no vuelva a la página de creación
-      navigate("/workout", { replace: true });
     } catch (error) {
       console.error("Error saving routine:", error);
       toast({
@@ -94,7 +98,6 @@ export const useRoutineSave = () => {
         description: "Ha ocurrido un error al guardar la rutina. Por favor, intente más tarde.",
         variant: "destructive"
       });
-    } finally {
       setIsSubmitting(false);
       setShowSaveConfirmDialog(false);
     }

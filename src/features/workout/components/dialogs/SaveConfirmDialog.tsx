@@ -41,10 +41,10 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
             className="w-full rounded-xl bg-primary text-white hover:bg-primary/90 py-3"
           >
             {isSubmitting ? (
-              <>
+              <div className="flex items-center justify-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Guardando...
-              </>
+                <span>Guardando...</span>
+              </div>
             ) : (
               'Confirmar'
             )}
