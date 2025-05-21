@@ -1,26 +1,18 @@
 
+# This file is used to configure the Supabase project
+
 project_id = "mwgnpexeymgpzibnkiof"
 
 [api]
-enabled = true
+# Port to start the API server on
 port = 54321
-types_path = "types"
+# Schemas to expose in your API
+schemas = ["public", "storage"]
 
 [db]
+# Port to start the DB server on
 port = 54322
 
-[realtime]
-enabled = true
-
-[storage]
-enabled = true
-
 [functions]
-enabled = true
-
 [functions.create_user_profile]
 verify_jwt = true
-
-[studio]
-enabled = true
-port = 54323

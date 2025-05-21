@@ -37,33 +37,26 @@ export async function saveRoutine(
     // If the user doesn't have a profile, create a basic one
     if (!profileData) {
       console.log("Creating user profile");
-      // Bypass RLS with custom endpoint if available
-      try {
-        // Fix the TypeScript error by using a more direct approach
-        const { data: insertResult, error: insertError } = await supabase.functions.invoke(
-          'create_user_profile',
-          {
-            body: { user_id: user.id }
-          }
-        );
+      // Use the database function directly
+      const { data: insertResult, error: insertError } = await supabase
+        .rpc('create_user_profile', { user_id: user.id });
         
-        if (insertError) {
-          throw insertError;
-        }
+      if (insertError) {
+        console.error("Error creating profile via RPC:", insertError);
         
-        console.log("Profile created via function:", insertResult);
-      } catch (rpcError) {
-        // Fallback to direct insert if RPC isn't available
+        // Fallback to direct insert if RPC fails
         console.log("Falling back to direct insert for profile");
-        const { error: insertError } = await supabase
+        const { error: directInsertError } = await supabase
           .from('profiles')
           .insert({ id: user.id })
           .select();
           
-        if (insertError) {
-          console.error("Error creating user profile:", insertError);
-          throw new Error("No se pudo crear el perfil de usuario: " + insertError.message);
+        if (directInsertError) {
+          console.error("Error creating user profile:", directInsertError);
+          throw new Error("No se pudo crear el perfil de usuario: " + directInsertError.message);
         }
+      } else {
+        console.log("Profile created via RPC:", insertResult);
       }
     }
 

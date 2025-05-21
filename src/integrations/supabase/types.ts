@@ -628,7 +628,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_user_profile: {
+        Args: { user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       difficulty_level: "beginner" | "intermediate" | "advanced"
