@@ -8,6 +8,7 @@ import WorkoutSearchFilter from "@/components/workout/WorkoutSearchFilter";
 import WorkoutList from "@/components/workout/WorkoutList";
 import { useRoutines } from "@/hooks/useRoutines";
 import { initPredefinedRoutines } from "@/features/workout/services/predefinedRoutinesService";
+import { syncExercisesToDatabase } from "@/features/workout/services/exerciseSyncService";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const WorkoutPage: React.FC = () => {
@@ -17,10 +18,15 @@ const WorkoutPage: React.FC = () => {
   const { routines, loading, refetch } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Initialize predefined routines and refresh on navigation
+  // Initialize predefined routines and sync exercises
   useEffect(() => {
-    const loadPredefinedRoutines = async () => {
+    const initialize = async () => {
       try {
+        // First ensure all exercises exist in the database
+        await syncExercisesToDatabase();
+        console.log("Exercise synchronization completed");
+        
+        // Then initialize predefined routines
         await initPredefinedRoutines();
         console.log("Predefined routines initialized");
       } catch (error) {
@@ -28,12 +34,12 @@ const WorkoutPage: React.FC = () => {
       }
     };
     
-    loadPredefinedRoutines();
+    initialize();
     
     // Always refetch routines when this page is navigated to
     console.log("Refreshing routines in WorkoutPage");
     refetch();
-  }, [location.key, refetch]); // Use location.key to detect navigation events
+  }, [location.key, refetch]); 
   
   // Filter routines based on search term
   const filteredRoutines = routines.filter(routine => 

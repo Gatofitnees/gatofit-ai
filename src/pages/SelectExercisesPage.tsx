@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus } from "lucide-react";
@@ -114,12 +115,24 @@ const SelectExercisesPage: React.FC = () => {
       selectedExercises.includes(exercise.id)
     );
     
+    // Add default sets to each exercise
+    const exercisesWithSets = selectedExerciseObjects.map(exercise => ({
+      ...exercise,
+      sets: [
+        {
+          reps_min: 8,
+          reps_max: 12,
+          rest_seconds: 60
+        }
+      ]
+    }));
+    
     // Clear all state from session storage before navigating
     resetSessionStorage();
     
     // Navigate back to create routine with the selected exercises
     navigate("/workout/create", { 
-      state: { selectedExercises: selectedExerciseObjects } 
+      state: { selectedExercises: exercisesWithSets } 
     });
   };
 

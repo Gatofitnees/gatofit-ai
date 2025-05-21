@@ -1,6 +1,6 @@
 
 export interface ExerciseItem {
-  id: string;
+  id: number;
   name: string;
   muscle_group_main: string;
   equipment_required?: string;

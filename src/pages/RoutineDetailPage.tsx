@@ -18,7 +18,7 @@ const RoutineDetailPage: React.FC = () => {
     loading, 
     startingWorkout, 
     handleStartWorkout 
-  } = useRoutineDetail(routineId);
+  } = useRoutineDetail(routineId ? parseInt(routineId) : undefined);
   
   const handleBack = () => {
     navigate("/workout");

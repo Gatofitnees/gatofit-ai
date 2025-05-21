@@ -51,7 +51,7 @@ export async function saveRoutine(
       // Map exercises to the format expected by the database
       const routineExercisesData = routineExercises.map((exercise, index) => ({
         routine_id: routineData.id,
-        exercise_id: parseInt(exercise.id),
+        exercise_id: exercise.id, // Keep as number, no need to parseInt
         exercise_order: index + 1,
         sets: exercise.sets.length,
         reps_min: exercise.sets[0]?.reps_min || 0,
@@ -60,6 +60,7 @@ export async function saveRoutine(
       }));
 
       console.log("Saving routine exercises:", routineExercisesData.length);
+      console.log("Exercise IDs:", routineExercisesData.map(e => e.exercise_id));
 
       // Insert exercise data
       const { error: exercisesError } = await supabase
