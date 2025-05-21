@@ -27,7 +27,9 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
 }) => {
   // Use a simple click handler to ensure the onConfirm function is called
   const handleConfirmClick = () => {
-    onConfirm();
+    if (!isSubmitting) {
+      onConfirm();
+    }
   };
 
   return (

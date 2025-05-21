@@ -21,6 +21,7 @@ export async function saveRoutine(
     }
 
     console.log("Saving routine for user:", user.id);
+    console.log("Routine data:", { routineName, routineType, exercisesCount: routineExercises.length });
 
     // Create the routine
     const { data: routineData, error: routineError } = await supabase
@@ -47,9 +48,7 @@ export async function saveRoutine(
 
     // Insert routine exercises if any
     if (routineExercises.length > 0) {
-      console.log("Preparing to insert routine exercises");
-      
-      // Simplified structure for routine_exercises
+      // Map exercises to the format expected by the database
       const routineExercisesData = routineExercises.map((exercise, index) => ({
         routine_id: routineData.id,
         exercise_id: parseInt(exercise.id),
@@ -60,8 +59,7 @@ export async function saveRoutine(
         rest_between_sets_seconds: exercise.sets[0]?.rest_seconds || 60
       }));
 
-      console.log("Exercise data prepared:", routineExercisesData.length);
-      console.log("Sample exercise data:", JSON.stringify(routineExercisesData[0]));
+      console.log("Saving routine exercises:", routineExercisesData.length);
 
       // Insert exercise data
       const { error: exercisesError } = await supabase

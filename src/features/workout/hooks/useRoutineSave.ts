@@ -74,17 +74,19 @@ export const useRoutineSave = () => {
   const handleSaveRoutine = useCallback(async () => {
     try {
       setIsSubmitting(true);
-      console.log("Guardando rutina:", { 
-        routineName, 
-        routineType, 
-        exercises: routineExercises.length 
-      });
+      console.log("Starting to save routine");
 
       // Save the routine first
       const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
       console.log("Rutina guardada exitosamente:", savedRoutine);
       
-      // Close dialog first
+      // Reset form state first to avoid state issues
+      setRoutineName('');
+      setRoutineType('');
+      setRoutineExercises([]);
+      clearStoredRoutine();
+      
+      // Close dialog
       setShowSaveConfirmDialog(false);
       
       // Show success toast
@@ -93,16 +95,12 @@ export const useRoutineSave = () => {
         description: `La rutina ${routineName} ha sido guardada correctamente`,
         variant: "success"
       });
-
-      // Reset form state
-      setRoutineName('');
-      setRoutineType('');
-      setRoutineExercises([]);
-      clearStoredRoutine();
       
-      // Navigate immediately (no timeout)
-      console.log("Navegando a /workout después del guardado exitoso");
-      navigate("/workout", { replace: true });
+      // Navigate immediately after successful save
+      console.log("Navigating to /workout after successful save");
+      navigate("/workout");
+      
+      // Reset submission state
       setIsSubmitting(false);
       
     } catch (error: any) {

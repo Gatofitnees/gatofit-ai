@@ -22,6 +22,7 @@ export const useRoutines = () => {
   const fetchRoutines = useCallback(async () => {
     setLoading(true);
     try {
+      console.log("Fetching routines...");
       const { data: { user } } = await supabase.auth.getUser();
       
       let query = supabase

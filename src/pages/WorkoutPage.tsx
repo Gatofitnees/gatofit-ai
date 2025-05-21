@@ -22,6 +22,7 @@ const WorkoutPage: React.FC = () => {
     const loadPredefinedRoutines = async () => {
       try {
         await initPredefinedRoutines();
+        console.log("Predefined routines initialized");
       } catch (error) {
         console.error("Error loading predefined routines:", error);
       }
