@@ -43,6 +43,7 @@ export const useRoutines = () => {
       const { data, error } = await query;
           
       if (error) {
+        console.error("Error fetching routines:", error);
         throw error;
       }
 
@@ -56,7 +57,7 @@ export const useRoutines = () => {
         console.log("Routines fetched:", formattedData);
         setRoutines(formattedData);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching routines:", error);
       toast({
         title: "Error",

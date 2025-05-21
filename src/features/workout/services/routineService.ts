@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { RoutineExercise } from "../types";
+import { toast } from "@/hooks/use-toast";
 
 export async function saveRoutine(
   routineName: string,
@@ -67,7 +68,7 @@ export async function saveRoutine(
       throw new Error("No se recibieron datos de la rutina creada");
     }
 
-    console.log("Routine created:", routineData);
+    console.log("Routine created successfully:", routineData);
 
     // Insert routine exercises
     const routineExercisesData = [];
@@ -83,9 +84,9 @@ export async function saveRoutine(
           exercise_id: parseInt(exercise.id),
           exercise_order: exerciseIndex + 1,
           set_number: setIndex + 1,
-          reps_min: set.reps_min,
-          reps_max: set.reps_max,
-          rest_between_sets_seconds: set.rest_seconds
+          reps_min: set.reps_min || 0,  // Provide defaults to avoid null issues
+          reps_max: set.reps_max || 0,
+          rest_between_sets_seconds: set.rest_seconds || 60
         });
       }
     }

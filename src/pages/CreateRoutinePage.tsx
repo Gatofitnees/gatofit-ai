@@ -49,6 +49,7 @@ const CreateRoutinePageContent: React.FC = () => {
     handleBackClick
   } = useCreateRoutine([]);
   
+  // Add a beforeUnload event handler to warn about unsaved changes
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (routineName || routineType || routineExercises.length > 0) {

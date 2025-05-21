@@ -26,7 +26,7 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
   isSubmitting
 }) => {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={isSubmitting ? undefined : onOpenChange}>
       <AlertDialogContent className="rounded-xl border border-secondary bg-background/95 backdrop-blur-sm max-w-[90vw] sm:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-semibold text-center">Confirmar guardado</AlertDialogTitle>

@@ -87,10 +87,11 @@ export const useRoutineSave = () => {
       clearStoredRoutine();
       
       // Set a timeout to ensure the toast is visible before navigating
+      // Use a longer timeout to make sure the user sees the success message
       setTimeout(() => {
         // Navigate to /workout with replace: true to prevent going back to the creation page
         navigate("/workout", { replace: true });
-      }, 800);
+      }, 1500);
       
     } catch (error) {
       console.error("Error saving routine:", error);
