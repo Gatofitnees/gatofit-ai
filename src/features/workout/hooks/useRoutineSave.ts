@@ -91,7 +91,7 @@ export const useRoutineSave = () => {
       setTimeout(() => {
         // Navigate to /workout with replace: true to prevent going back to the creation page
         navigate("/workout", { replace: true });
-      }, 1500);
+      }, 2500);
       
     } catch (error) {
       console.error("Error saving routine:", error);

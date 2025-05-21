@@ -23,10 +23,10 @@ export async function saveRoutine(
 
     console.log("Saving routine for user:", user.id);
 
-    // Check if the user has a profile
+    // Check if the user has a profile - this is critical to avoid RLS errors
     const { data: profileData, error: profileCheckError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id')
       .eq('id', user.id)
       .single();
       
@@ -37,13 +37,29 @@ export async function saveRoutine(
     // If the user doesn't have a profile, create a basic one
     if (!profileData) {
       console.log("Creating user profile");
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({ id: user.id });
+      // Bypass RLS with custom endpoint if available
+      try {
+        const { data: insertResult, error: insertError } = await supabase.rpc('create_user_profile', {
+          user_id: user.id
+        });
         
-      if (profileError) {
-        console.error("Error creating user profile:", profileError);
-        throw new Error("No se pudo crear el perfil de usuario");
+        if (insertError) {
+          throw insertError;
+        }
+        
+        console.log("Profile created via RPC:", insertResult);
+      } catch (rpcError) {
+        // Fallback to direct insert if RPC isn't available
+        console.log("Falling back to direct insert for profile");
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: user.id })
+          .select();
+          
+        if (insertError) {
+          console.error("Error creating user profile:", insertError);
+          throw new Error("No se pudo crear el perfil de usuario: " + insertError.message);
+        }
       }
     }
 
