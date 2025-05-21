@@ -39,10 +39,10 @@ export async function saveRoutine(
       console.log("Creating user profile");
       // Bypass RLS with custom endpoint if available
       try {
-        // Fixed: Cast user_id to match expected parameter type
+        // Fix: Pass user_id with proper type casting to avoid TypeScript error
         const { data: insertResult, error: insertError } = await supabase.rpc(
           'create_user_profile', 
-          { user_id: user.id as any }
+          { user_id: user.id as unknown as Parameters<typeof supabase.rpc<any>>[1] }
         );
         
         if (insertError) {
