@@ -3,6 +3,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+interface ExerciseSet {
+  set_number: number;
+  reps_min: number;
+  reps_max: number;
+  rest_seconds: number;
+}
+
 interface ExerciseDetail {
   id: number;
   name: string;
@@ -10,6 +17,8 @@ interface ExerciseDetail {
   reps_min: number;
   reps_max: number;
   rest_between_sets_seconds: number;
+  muscle_group_main?: string;
+  equipment_required?: string;
 }
 
 interface Routine {
@@ -48,7 +57,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
 
         setRoutine(routineData);
 
-        // Fetch exercises for this routine
+        // Fetch exercises for this routine with more detailed info
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('routine_exercises')
           .select(`
@@ -58,7 +67,11 @@ export const useRoutineDetail = (routineId: number | undefined) => {
             reps_max,
             rest_between_sets_seconds,
             exercise_id,
-            exercises(name)
+            exercises(
+              name,
+              muscle_group_main,
+              equipment_required
+            )
           `)
           .eq('routine_id', routineId)
           .order('exercise_order', { ascending: true });
@@ -76,7 +89,9 @@ export const useRoutineDetail = (routineId: number | undefined) => {
             sets: ex.sets || 0,
             reps_min: ex.reps_min || 0,
             reps_max: ex.reps_max || 0,
-            rest_between_sets_seconds: ex.rest_between_sets_seconds || 60
+            rest_between_sets_seconds: ex.rest_between_sets_seconds || 60,
+            muscle_group_main: ex.exercises?.muscle_group_main,
+            equipment_required: ex.exercises?.equipment_required
           }));
 
           setExerciseDetails(formattedExercises);
