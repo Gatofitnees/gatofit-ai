@@ -1,13 +1,5 @@
 
-interface Exercise {
-  id: number;
-  name: string;
-  muscle_group_main: string;
-  equipment_required?: string;
-  difficulty_level?: string;
-  video_url?: string;
-  description?: string;
-}
+import { Exercise, DifficultyLevel } from "@/features/workout/types";
 
 // Cardio exercises (IDs 8001-8010)
 export const cardioExercises: Exercise[] = [
@@ -16,7 +8,7 @@ export const cardioExercises: Exercise[] = [
     name: "Bicicleta elíptica",
     muscle_group_main: "Cardio",
     equipment_required: "Maquina",
-    difficulty_level: "Principiante",
+    difficulty_level: "beginner", // Updated to match the enum
     description: "Ejercicio cardiovascular de bajo impacto en máquina elíptica.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/bicicleta-eliptica.mp4",
   },
@@ -25,7 +17,7 @@ export const cardioExercises: Exercise[] = [
     name: "Bicicleta estacionaria",
     muscle_group_main: "Cardio",
     equipment_required: "Maquina",
-    difficulty_level: "Principiante",
+    difficulty_level: "beginner", // Updated to match the enum
     description: "Ejercicio cardiovascular en bicicleta estática.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/bicicleta-estacionaria.mp4",
   },
@@ -34,7 +26,7 @@ export const cardioExercises: Exercise[] = [
     name: "Burpees",
     muscle_group_main: "Cardio",
     equipment_required: "Libre",
-    difficulty_level: "Intermedio",
+    difficulty_level: "intermediate", // Updated to match the enum
     description: "Ejercicio de alta intensidad que combina sentadilla, plancha y salto.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/burpee.mp4",
   },
@@ -43,7 +35,7 @@ export const cardioExercises: Exercise[] = [
     name: "Caminar",
     muscle_group_main: "Cardio",
     equipment_required: "Libre Maquina",
-    difficulty_level: "Principiante",
+    difficulty_level: "beginner", // Updated to match the enum
     description: "Actividad cardiovascular básica de bajo impacto.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/caminar.mp4",
   },
@@ -52,7 +44,7 @@ export const cardioExercises: Exercise[] = [
     name: "Caminata inclinado",
     muscle_group_main: "Cardio",
     equipment_required: "Libre Maquina",
-    difficulty_level: "Principiante",
+    difficulty_level: "beginner", // Updated to match the enum
     description: "Caminata en superficie o cinta con inclinación para mayor intensidad.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/caminata-inclinado.mp4",
   },
@@ -61,7 +53,7 @@ export const cardioExercises: Exercise[] = [
     name: "Correr",
     muscle_group_main: "Cardio",
     equipment_required: "Libre Maquina",
-    difficulty_level: "Intermedio",
+    difficulty_level: "intermediate", // Updated to match the enum
     description: "Actividad cardiovascular de mayor intensidad que la caminata.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/correr.mp4",
   },
@@ -70,7 +62,7 @@ export const cardioExercises: Exercise[] = [
     name: "Cuerda de batalla",
     muscle_group_main: "Cardio",
     equipment_required: "Libre",
-    difficulty_level: "Intermedio",
+    difficulty_level: "intermediate", // Updated to match the enum
     description: "Ejercicio con cuerdas pesadas que combina cardio y fuerza.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/cuerda-de-batalla.mp4",
   },
@@ -79,7 +71,7 @@ export const cardioExercises: Exercise[] = [
     name: "Remo",
     muscle_group_main: "Cardio",
     equipment_required: "Maquina",
-    difficulty_level: "Principiante",
+    difficulty_level: "beginner", // Updated to match the enum
     description: "Ejercicio cardiovascular en máquina de remo que también trabaja músculos.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/remo.mp4",
   },
@@ -88,7 +80,7 @@ export const cardioExercises: Exercise[] = [
     name: "Saltar",
     muscle_group_main: "Cardio",
     equipment_required: "Libre",
-    difficulty_level: "Principiante",
+    difficulty_level: "beginner", // Updated to match the enum
     description: "Ejercicio cardiovascular básico que implica saltos continuos.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/saltar.mp4",
   },
@@ -97,7 +89,7 @@ export const cardioExercises: Exercise[] = [
     name: "Saltos de cajón",
     muscle_group_main: "Cardio",
     equipment_required: "Libre",
-    difficulty_level: "Intermedio",
+    difficulty_level: "intermediate", // Updated to match the enum
     description: "Saltos explosivos sobre un cajón o plataforma elevada.",
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Cardio/saltos-de-cajon.mp4",
   },

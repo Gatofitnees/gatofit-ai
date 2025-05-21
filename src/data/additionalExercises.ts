@@ -1,5 +1,5 @@
 
-import { Exercise } from './exercises/exerciseTypes';
+import { Exercise } from '@/features/workout/types';
 import { forearmExercises } from './exercises/forearmExercises';
 import { abdominalExercises } from './exercises/abdominalExercises';
 import { cardioExercises } from './exercises/cardioExercises';

@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { preloadedExercises } from "@/data/preloadedExercises";
 import { additionalExercises } from "@/data/additionalExercises";
-import { Exercise } from "../types";
+import { Exercise, DifficultyLevel } from "../types";
 
 // This function ensures that preloaded exercises exist in the database
 export async function syncExercisesToDatabase() {
@@ -39,23 +39,27 @@ export async function syncExercisesToDatabase() {
     
     console.log(`Preparing to insert ${exercisesToInsert.length} exercises`);
     
+    // Map exercises to ensure difficulty_level is of the correct type
+    const formattedExercises = exercisesToInsert.map(exercise => ({
+      id: exercise.id,
+      name: exercise.name,
+      muscle_group_main: exercise.muscle_group_main,
+      equipment_required: exercise.equipment_required,
+      // Convert the difficulty level to match the enum in the database
+      difficulty_level: normalizeDifficultyLevel(exercise.difficulty_level),
+      video_url: exercise.video_url,
+      description: exercise.description
+    }));
+    
     // Insert missing exercises in batches to avoid timeouts
     const batchSize = 20;
-    for (let i = 0; i < exercisesToInsert.length; i += batchSize) {
-      const batch = exercisesToInsert.slice(i, i + batchSize);
+    for (let i = 0; i < formattedExercises.length; i += batchSize) {
+      const batch = formattedExercises.slice(i, i + batchSize);
       
       // Insert a batch of exercises - ensuring the types match
       const { error: insertError } = await supabase
         .from('exercises')
-        .insert(batch.map(exercise => ({
-          id: exercise.id,
-          name: exercise.name,
-          muscle_group_main: exercise.muscle_group_main,
-          equipment_required: exercise.equipment_required,
-          difficulty_level: exercise.difficulty_level,
-          video_url: exercise.video_url,
-          description: exercise.description
-        })));
+        .insert(batch);
         
       if (insertError) {
         console.error(`Error inserting batch ${i/batchSize + 1}:`, insertError);
@@ -70,4 +74,23 @@ export async function syncExercisesToDatabase() {
     console.error("Error synchronizing exercises:", error);
     throw error;
   }
+}
+
+// Helper function to normalize difficulty level values
+function normalizeDifficultyLevel(level?: string): DifficultyLevel | undefined {
+  if (!level) return undefined;
+  
+  // Convert Spanish difficulty levels to English
+  if (level.toLowerCase() === "principiante") return "beginner";
+  if (level.toLowerCase() === "intermedio") return "intermediate";
+  if (level.toLowerCase() === "avanzado") return "advanced";
+  
+  // If the level is already one of the accepted values, return it
+  if (["beginner", "intermediate", "advanced"].includes(level.toLowerCase())) {
+    return level.toLowerCase() as DifficultyLevel;
+  }
+  
+  // Default to beginner if no match
+  console.warn(`Unrecognized difficulty level: "${level}", defaulting to "beginner"`);
+  return "beginner";
 }
