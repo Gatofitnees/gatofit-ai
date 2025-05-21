@@ -65,7 +65,12 @@ export const useRoutineNavigation = () => {
 
   // Handle navigating when discard is confirmed
   const handleDiscardChanges = useCallback(() => {
-    // Limpiar el storage de la rutina para que no persista
+    // Reset form state in context
+    setRoutineName('');
+    setRoutineType('');
+    setRoutineExercises([]);
+    
+    // Clear form state from session storage after discarding
     clearStoredRoutine();
     
     // Navigate to the pending route if there is one
@@ -76,7 +81,15 @@ export const useRoutineNavigation = () => {
     }
     
     setShowDiscardChangesDialog(false);
-  }, [pendingNavigation, navigate, setShowDiscardChangesDialog, clearStoredRoutine]);
+  }, [
+    pendingNavigation, 
+    navigate, 
+    setShowDiscardChangesDialog, 
+    clearStoredRoutine,
+    setRoutineName,
+    setRoutineType,
+    setRoutineExercises
+  ]);
 
   return {
     handleNavigateAway,

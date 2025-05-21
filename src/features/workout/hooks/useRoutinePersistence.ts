@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
@@ -21,12 +20,16 @@ export const useRoutinePersistence = (
     if (savedState) {
       try {
         const { name, type, exercises } = JSON.parse(savedState);
-        setRoutineName(name || "");
-        setRoutineType(type || "");
         
-        if (exercises && exercises.length > 0) {
-          // Keep the existing exercises and add any from location state
-          setRoutineExercises(exercises);
+        // Only load from storage if the context state is empty
+        if (!routineName && !routineType && routineExercises.length === 0) {
+          setRoutineName(name || "");
+          setRoutineType(type || "");
+          
+          if (exercises && exercises.length > 0) {
+            // Keep the existing exercises and add any from location state
+            setRoutineExercises(exercises);
+          }
         }
       } catch (error) {
         console.error("Error parsing saved routine state:", error);
@@ -83,12 +86,6 @@ export const useRoutinePersistence = (
   const clearStoredRoutine = () => {
     console.log("Limpiando datos de rutina en sessionStorage");
     sessionStorage.removeItem(STORAGE_KEY);
-    // Opcionalmente, también podemos limpiar el estado aquí si queremos una limpieza inmediata
-    if (setRoutineName && setRoutineType && setRoutineExercises) {
-      setRoutineName("");
-      setRoutineType("");
-      setRoutineExercises([]);
-    }
   };
   
   return { clearStoredRoutine };
