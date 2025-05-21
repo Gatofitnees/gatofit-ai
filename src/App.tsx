@@ -7,6 +7,11 @@ import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import WorkoutPage from "./pages/WorkoutPage";
+import CreateRoutinePage from "./pages/CreateRoutinePage";
+import SelectExercisesPage from "./pages/SelectExercisesPage";
+import RoutineDetailPage from "./pages/RoutineDetailPage";
+import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
 
 function App() {
   return (
@@ -29,6 +34,48 @@ function App() {
               element={
                 <ProtectedRoute>
                   <NutritionPage />
+                  <NavBar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout"
+              element={
+                <ProtectedRoute>
+                  <WorkoutPage />
+                  <NavBar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/create"
+              element={
+                <ProtectedRoute>
+                  <CreateRoutinePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/select-exercises"
+              element={
+                <ProtectedRoute>
+                  <SelectExercisesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/exercise-details/:id"
+              element={
+                <ProtectedRoute>
+                  <ExerciseDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout/routine/:routineId"
+              element={
+                <ProtectedRoute>
+                  <RoutineDetailPage />
                   <NavBar />
                 </ProtectedRoute>
               }
