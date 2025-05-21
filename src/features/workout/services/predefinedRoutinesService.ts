@@ -1,297 +1,320 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Exercise } from "@/data/exercises/exerciseTypes";
-import { preloadedExercises } from "@/data/preloadedExercises";
 
-// Find exercises by name
-const findExerciseByName = (name: string): Exercise | undefined => {
-  return preloadedExercises.find(exercise => 
-    exercise.name.toLowerCase().includes(name.toLowerCase())
-  );
+// Predefined routine for chest workout
+const chestRoutine = {
+  name: "Rutina de Pecho y Triceps",
+  description: "Rutina para desarrollar fuerza y tamaño en el pecho y tríceps",
+  type: "upper_body",
+  is_predefined: true,
+  estimated_duration_minutes: 45,
+  exercises: [
+    {
+      name: "Press de banca",
+      muscle_group_main: "chest",
+      equipment_required: "barbell",
+      sets: [
+        { set_number: 1, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 90 },
+        { set_number: 2, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 3, reps_min: 8, reps_max: 10, rest_between_sets_seconds: 90 }
+      ]
+    },
+    {
+      name: "Press inclinado con mancuernas",
+      muscle_group_main: "chest",
+      equipment_required: "dumbbell",
+      sets: [
+        { set_number: 1, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 90 },
+        { set_number: 2, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 3, reps_min: 8, reps_max: 10, rest_between_sets_seconds: 90 }
+      ]
+    },
+    {
+      name: "Aperturas con cable",
+      muscle_group_main: "chest",
+      equipment_required: "cable",
+      sets: [
+        { set_number: 1, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 2, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 3, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 }
+      ]
+    },
+    {
+      name: "Extensiones de tríceps con cuerda",
+      muscle_group_main: "triceps",
+      equipment_required: "cable",
+      sets: [
+        { set_number: 1, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 2, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 3, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 }
+      ]
+    },
+    {
+      name: "Fondos en banco",
+      muscle_group_main: "triceps",
+      equipment_required: "bodyweight",
+      sets: [
+        { set_number: 1, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 2, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 3, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 }
+      ]
+    }
+  ]
 };
 
-// Create predefined Pecho y Tríceps routine
-export const createPredefinedChestRoutine = async () => {
+// Predefined routine for full body workout
+const fullBodyRoutine = {
+  name: "Entrenamiento Full Body",
+  description: "Entrenamiento completo para todo el cuerpo en una sesión",
+  type: "full_body",
+  is_predefined: true,
+  estimated_duration_minutes: 60,
+  exercises: [
+    {
+      name: "Sentadillas",
+      muscle_group_main: "quadriceps",
+      equipment_required: "barbell",
+      sets: [
+        { set_number: 1, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 2, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 3, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 }
+      ]
+    },
+    {
+      name: "Press militar",
+      muscle_group_main: "shoulders",
+      equipment_required: "barbell",
+      sets: [
+        { set_number: 1, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 2, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 3, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 }
+      ]
+    },
+    {
+      name: "Remo con barra",
+      muscle_group_main: "back",
+      equipment_required: "barbell",
+      sets: [
+        { set_number: 1, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 2, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 },
+        { set_number: 3, reps_min: 10, reps_max: 12, rest_between_sets_seconds: 90 }
+      ]
+    },
+    {
+      name: "Peso muerto",
+      muscle_group_main: "lower_back",
+      equipment_required: "barbell",
+      sets: [
+        { set_number: 1, reps_min: 8, reps_max: 10, rest_between_sets_seconds: 120 },
+        { set_number: 2, reps_min: 8, reps_max: 10, rest_between_sets_seconds: 120 },
+        { set_number: 3, reps_min: 8, reps_max: 10, rest_between_sets_seconds: 120 }
+      ]
+    },
+    {
+      name: "Curl de bíceps con barra",
+      muscle_group_main: "biceps",
+      equipment_required: "barbell",
+      sets: [
+        { set_number: 1, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 2, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 },
+        { set_number: 3, reps_min: 12, reps_max: 15, rest_between_sets_seconds: 60 }
+      ]
+    },
+    {
+      name: "Abdominales",
+      muscle_group_main: "abs",
+      equipment_required: "bodyweight",
+      sets: [
+        { set_number: 1, reps_min: 15, reps_max: 20, rest_between_sets_seconds: 60 },
+        { set_number: 2, reps_min: 15, reps_max: 20, rest_between_sets_seconds: 60 },
+        { set_number: 3, reps_min: 15, reps_max: 20, rest_between_sets_seconds: 60 }
+      ]
+    }
+  ]
+};
+
+// Predefined routine for HIIT cardio workout
+const hiitCardioRoutine = {
+  name: "HIIT Cardio",
+  description: "Entrenamiento de alta intensidad para mejorar la resistencia cardiovascular",
+  type: "cardio",
+  is_predefined: true,
+  estimated_duration_minutes: 30,
+  exercises: [
+    {
+      name: "Burpees",
+      muscle_group_main: "full_body",
+      equipment_required: "bodyweight",
+      sets: [
+        { set_number: 1, reps_min: 10, reps_max: 15, rest_between_sets_seconds: 30 },
+        { set_number: 2, reps_min: 10, reps_max: 15, rest_between_sets_seconds: 30 },
+        { set_number: 3, reps_min: 10, reps_max: 15, rest_between_sets_seconds: 30 },
+        { set_number: 4, reps_min: 10, reps_max: 15, rest_between_sets_seconds: 30 }
+      ]
+    },
+    {
+      name: "Mountain climbers",
+      muscle_group_main: "core",
+      equipment_required: "bodyweight",
+      sets: [
+        { set_number: 1, reps_min: 20, reps_max: 30, rest_between_sets_seconds: 30 },
+        { set_number: 2, reps_min: 20, reps_max: 30, rest_between_sets_seconds: 30 },
+        { set_number: 3, reps_min: 20, reps_max: 30, rest_between_sets_seconds: 30 },
+        { set_number: 4, reps_min: 20, reps_max: 30, rest_between_sets_seconds: 30 }
+      ]
+    },
+    {
+      name: "Jumping jacks",
+      muscle_group_main: "full_body",
+      equipment_required: "bodyweight",
+      sets: [
+        { set_number: 1, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 },
+        { set_number: 2, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 },
+        { set_number: 3, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 },
+        { set_number: 4, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 }
+      ]
+    },
+    {
+      name: "High knees",
+      muscle_group_main: "legs",
+      equipment_required: "bodyweight",
+      sets: [
+        { set_number: 1, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 },
+        { set_number: 2, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 },
+        { set_number: 3, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 },
+        { set_number: 4, reps_min: 30, reps_max: 40, rest_between_sets_seconds: 30 }
+      ]
+    }
+  ]
+};
+
+// Get or create a predefined exercise
+const getOrCreateExercise = async (exerciseName: string, muscleGroup: string, equipment: string) => {
+  // Try to find the exercise first
+  const { data: existingExercise, error: searchError } = await supabase
+    .from('exercises')
+    .select('id')
+    .eq('name', exerciseName)
+    .eq('muscle_group_main', muscleGroup)
+    .single();
+
+  if (searchError && searchError.code !== 'PGRST116') {
+    throw searchError;
+  }
+
+  if (existingExercise) {
+    return existingExercise.id;
+  }
+
+  // If exercise doesn't exist, create it
+  const { data: newExercise, error: insertError } = await supabase
+    .from('exercises')
+    .insert({
+      name: exerciseName,
+      muscle_group_main: muscleGroup,
+      equipment_required: equipment
+    })
+    .select('id')
+    .single();
+
+  if (insertError) {
+    console.error("Error creating exercise", insertError);
+    throw insertError;
+  }
+
+  return newExercise.id;
+};
+
+// Create a predefined routine
+const createPredefinedRoutine = async (routine: any) => {
   try {
-    // Check if the routine already exists
-    const { data: existingRoutines } = await supabase
+    // Check if routine already exists
+    const { data: existingRoutine, error: searchError } = await supabase
       .from('routines')
-      .select('*')
-      .eq('name', 'Pecho y Tríceps')
+      .select('id')
+      .eq('name', routine.name)
       .eq('is_predefined', true)
       .maybeSingle();
-    
-    // If the routine already exists, don't create it again
-    if (existingRoutines) {
-      console.log('Predefined chest routine already exists');
-      return;
+
+    if (searchError) {
+      console.error("Error checking existing routine", searchError);
+      throw searchError;
     }
-    
+
+    // If routine already exists, don't recreate it
+    if (existingRoutine) {
+      console.log(`Routine "${routine.name}" already exists with id ${existingRoutine.id}`);
+      return existingRoutine.id;
+    }
+
     // Create the routine
-    const { data: routineData, error: routineError } = await supabase
+    const { data: newRoutine, error: routineError } = await supabase
       .from('routines')
       .insert({
-        name: 'Pecho y Tríceps',
-        description: 'Rutina predefinida para trabajar pecho y tríceps',
-        is_predefined: true,
-        type: 'strength',
-        estimated_duration_minutes: 45
+        name: routine.name,
+        description: routine.description,
+        type: routine.type,
+        is_predefined: routine.is_predefined,
+        estimated_duration_minutes: routine.estimated_duration_minutes
       })
-      .select()
+      .select('id')
       .single();
-    
+
     if (routineError) {
+      console.error(`Error creating predefined ${routine.name} routine:`, routineError);
       throw routineError;
     }
-    
-    // List of exercises to add
-    const exercisesToAdd = [
-      { name: 'Press inclinado en Smith', sets: 3 },
-      { name: 'Press banca plano', sets: 3 },
-      { name: 'Aperturas en máquina', sets: 3 },
-      { name: 'Extensión de tríceps', sets: 3 },
-      { name: 'Elevaciones laterales', sets: 3 }
-    ];
-    
-    // Prepare exercises data for batch insert
-    const exercisesData = [];
-    
-    for (let i = 0; i < exercisesToAdd.length; i++) {
-      const exerciseInfo = exercisesToAdd[i];
-      const exercise = findExerciseByName(exerciseInfo.name);
+
+    console.log(`Created routine "${routine.name}" with id ${newRoutine.id}`);
+
+    // Process exercises
+    for (let i = 0; i < routine.exercises.length; i++) {
+      const exercise = routine.exercises[i];
       
-      if (exercise) {
-        // Add sets for this exercise
-        for (let setNum = 1; setNum <= exerciseInfo.sets; setNum++) {
-          exercisesData.push({
-            routine_id: routineData.id,
-            exercise_id: parseInt(exercise.id.toString()), // Convertimos a número explícitamente
+      // Get or create exercise
+      const exerciseId = await getOrCreateExercise(
+        exercise.name,
+        exercise.muscle_group_main,
+        exercise.equipment_required
+      );
+
+      // Add sets for this exercise
+      for (const set of exercise.sets) {
+        const { error: setError } = await supabase
+          .from('routine_exercises')
+          .insert({
+            routine_id: newRoutine.id,
+            exercise_id: exerciseId,
             exercise_order: i + 1,
-            set_number: setNum,
-            reps_min: 8,
-            reps_max: 12,
-            rest_between_sets_seconds: 60
+            set_number: set.set_number,
+            reps_min: set.reps_min,
+            reps_max: set.reps_max,
+            rest_between_sets_seconds: set.rest_between_sets_seconds
           });
+
+        if (setError) {
+          console.error("Error creating exercise set", setError);
+          throw setError;
         }
-      } else {
-        console.warn(`Exercise not found: ${exerciseInfo.name}`);
       }
     }
-    
-    // Insert routine exercises if we found any
-    if (exercisesData.length > 0) {
-      const { error: exercisesError } = await supabase
-        .from('routine_exercises')
-        .insert(exercisesData);
-      
-      if (exercisesError) {
-        throw exercisesError;
-      }
-    }
-    
-    console.log('Predefined chest routine created successfully');
-    return routineData;
-    
+
+    return newRoutine.id;
   } catch (error) {
-    console.error('Error creating predefined chest routine:', error);
+    console.error("Error in createPredefinedRoutine:", error);
     throw error;
   }
 };
 
-// Create predefined Full Body Workout routine
-export const createPredefinedFullBodyRoutine = async () => {
-  try {
-    // Check if the routine already exists
-    const { data: existingRoutines } = await supabase
-      .from('routines')
-      .select('*')
-      .eq('name', 'Full Body Workout')
-      .eq('is_predefined', true)
-      .maybeSingle();
-    
-    // If the routine already exists, don't create it again
-    if (existingRoutines) {
-      console.log('Predefined full body routine already exists');
-      return;
-    }
-    
-    // Create the routine
-    const { data: routineData, error: routineError } = await supabase
-      .from('routines')
-      .insert({
-        name: 'Full Body Workout',
-        description: 'Rutina completa para trabajar todo el cuerpo en una sesión',
-        is_predefined: true,
-        type: 'strength',
-        estimated_duration_minutes: 60
-      })
-      .select()
-      .single();
-    
-    if (routineError) {
-      throw routineError;
-    }
-    
-    // List of exercises to add with more variety
-    const exercisesToAdd = [
-      { name: 'Sentadilla', sets: 4 },
-      { name: 'Press banca plano', sets: 3 },
-      { name: 'Peso muerto', sets: 4 },
-      { name: 'Dominadas', sets: 3 },
-      { name: 'Curl Biceps', sets: 3 },
-      { name: 'Extensión de tríceps', sets: 3 },
-      { name: 'Elevaciones laterales', sets: 3 },
-      { name: 'Abdominal crunch', sets: 3 }
-    ];
-    
-    // Prepare exercises data for batch insert
-    const exercisesData = [];
-    
-    for (let i = 0; i < exercisesToAdd.length; i++) {
-      const exerciseInfo = exercisesToAdd[i];
-      const exercise = findExerciseByName(exerciseInfo.name);
-      
-      if (exercise) {
-        // Add sets for this exercise
-        for (let setNum = 1; setNum <= exerciseInfo.sets; setNum++) {
-          // Vary the reps and rest for more realism
-          const repsMin = exercise.name.includes('Sentadilla') || exercise.name.includes('Peso muerto') ? 5 : 8;
-          const repsMax = exercise.name.includes('Sentadilla') || exercise.name.includes('Peso muerto') ? 8 : 12;
-          const rest = exercise.name.includes('Sentadilla') || exercise.name.includes('Peso muerto') ? 120 : 60;
-          
-          exercisesData.push({
-            routine_id: routineData.id,
-            exercise_id: parseInt(exercise.id.toString()),
-            exercise_order: i + 1,
-            set_number: setNum,
-            reps_min: repsMin,
-            reps_max: repsMax,
-            rest_between_sets_seconds: rest
-          });
-        }
-      } else {
-        console.warn(`Exercise not found: ${exerciseInfo.name}`);
-      }
-    }
-    
-    // Insert routine exercises if we found any
-    if (exercisesData.length > 0) {
-      const { error: exercisesError } = await supabase
-        .from('routine_exercises')
-        .insert(exercisesData);
-      
-      if (exercisesError) {
-        throw exercisesError;
-      }
-    }
-    
-    console.log('Predefined full body routine created successfully');
-    return routineData;
-    
-  } catch (error) {
-    console.error('Error creating predefined full body routine:', error);
-    throw error;
-  }
-};
-
-// Create a predefined HIIT Cardio routine
-export const createPredefinedHiitRoutine = async () => {
-  try {
-    // Check if the routine already exists
-    const { data: existingRoutines } = await supabase
-      .from('routines')
-      .select('*')
-      .eq('name', 'HIIT Quemagrasa')
-      .eq('is_predefined', true)
-      .maybeSingle();
-    
-    // If the routine already exists, don't create it again
-    if (existingRoutines) {
-      console.log('Predefined HIIT routine already exists');
-      return;
-    }
-    
-    // Create the routine
-    const { data: routineData, error: routineError } = await supabase
-      .from('routines')
-      .insert({
-        name: 'HIIT Quemagrasa',
-        description: 'Rutina de alta intensidad para quemar grasa en poco tiempo',
-        is_predefined: true,
-        type: 'cardio',
-        estimated_duration_minutes: 30
-      })
-      .select()
-      .single();
-    
-    if (routineError) {
-      throw routineError;
-    }
-    
-    // List of exercises to add - focusing on cardio exercises
-    const exercisesToAdd = [
-      { name: 'Burpees', sets: 4 },
-      { name: 'Mountain climbers', sets: 4 },
-      { name: 'Jumping jacks', sets: 4 },
-      { name: 'High knees', sets: 4 },
-      { name: 'Jumping rope', sets: 4 },
-      { name: 'Sprints', sets: 4 }
-    ];
-    
-    // Prepare exercises data for batch insert
-    const exercisesData = [];
-    
-    for (let i = 0; i < exercisesToAdd.length; i++) {
-      const exerciseInfo = exercisesToAdd[i];
-      const exercise = findExerciseByName(exerciseInfo.name);
-      
-      if (exercise) {
-        // For HIIT, we'll use time-based sets instead of reps
-        for (let setNum = 1; setNum <= exerciseInfo.sets; setNum++) {
-          exercisesData.push({
-            routine_id: routineData.id,
-            exercise_id: parseInt(exercise.id.toString()),
-            exercise_order: i + 1,
-            set_number: setNum,
-            reps_min: 0, // For time-based exercises
-            reps_max: 0, // For time-based exercises
-            rest_between_sets_seconds: 30 // Short rest for HIIT
-          });
-        }
-      } else {
-        console.warn(`Exercise not found: ${exerciseInfo.name}`);
-      }
-    }
-    
-    // Insert routine exercises if we found any
-    if (exercisesData.length > 0) {
-      const { error: exercisesError } = await supabase
-        .from('routine_exercises')
-        .insert(exercisesData);
-      
-      if (exercisesError) {
-        throw exercisesError;
-      }
-    }
-    
-    console.log('Predefined HIIT routine created successfully');
-    return routineData;
-    
-  } catch (error) {
-    console.error('Error creating predefined HIIT routine:', error);
-    throw error;
-  }
-};
-
-// Initialize predefined routines
+// Initialize all predefined routines
 export const initPredefinedRoutines = async () => {
   try {
-    // Create all predefined routines
-    await createPredefinedChestRoutine();
-    await createPredefinedFullBodyRoutine();
-    await createPredefinedHiitRoutine();
+    await createPredefinedRoutine(chestRoutine);
+    await createPredefinedRoutine(fullBodyRoutine);
+    await createPredefinedRoutine(hiitCardioRoutine);
     console.log("All predefined routines initialized successfully");
   } catch (error) {
-    console.error('Error initializing predefined routines:', error);
+    console.error("Error initializing predefined routines:", error);
+    throw error;
   }
 };

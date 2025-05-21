@@ -3,6 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, ChevronRight, Dumbbell } from "lucide-react";
 import Button from "@/components/Button";
+import { Badge } from "@/components/ui/badge";
 
 interface WorkoutRoutine {
   id: number;

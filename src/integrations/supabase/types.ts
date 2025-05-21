@@ -384,6 +384,7 @@ export type Database = {
           id: number
           is_predefined: boolean
           name: string
+          type: string | null
           updated_at: string
           user_id: string | null
         }
@@ -394,6 +395,7 @@ export type Database = {
           id?: number
           is_predefined?: boolean
           name: string
+          type?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -404,6 +406,7 @@ export type Database = {
           id?: number
           is_predefined?: boolean
           name?: string
+          type?: string | null
           updated_at?: string
           user_id?: string | null
         }
