@@ -1,11 +1,13 @@
 
+import { DifficultyLevel } from '@/features/workout/types';
+
 // Define the Exercise type to be used across all exercise files
 export interface Exercise {
   id: number;
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
-  difficulty_level?: string;
+  difficulty_level?: DifficultyLevel;
   video_url?: string;
   description?: string;
 }

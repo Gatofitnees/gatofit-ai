@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { preloadedExercises } from "@/data/preloadedExercises";
 import { additionalExercises } from "@/data/additionalExercises";
-import { Exercise } from "@/data/exercises/exerciseTypes";
+import { Exercise } from "@/features/workout/types";
 
 export const useExercises = () => {
   const { toast } = useToast();
@@ -23,7 +22,7 @@ export const useExercises = () => {
         }
         
         if (data && data.length > 0) {
-          setExercises(data);
+          setExercises(data as Exercise[]);
         } else {
           // If no data returned from DB, use preloaded exercises
           // Combine both preloaded and additional exercises
