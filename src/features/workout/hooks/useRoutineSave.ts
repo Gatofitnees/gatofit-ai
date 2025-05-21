@@ -69,10 +69,12 @@ export const useRoutineSave = () => {
 
   // Save routine to database
   const handleSaveRoutine = useCallback(async () => {
-    setIsSubmitting(true);
-
     try {
+      setIsSubmitting(true);
+      console.log("Guardando rutina:", { routineName, routineType, routineExercises });
+
       const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
+      console.log("Rutina guardada exitosamente:", savedRoutine);
 
       toast({
         title: "¡Rutina creada!",
@@ -83,8 +85,8 @@ export const useRoutineSave = () => {
       // Clear form state from session storage after successful save
       clearStoredRoutine();
       
-      // Explicitly set replace: true to replace the current route in history
-      // This ensures back button works correctly
+      // Explícitamente establecer replace: true para reemplazar la ruta actual en el historial
+      // Esto asegura que el botón de retroceso funcione correctamente
       navigate("/workout", { replace: true });
     } catch (error) {
       console.error("Error saving routine:", error);

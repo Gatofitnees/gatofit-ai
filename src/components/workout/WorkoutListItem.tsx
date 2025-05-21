@@ -47,9 +47,9 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
           <div className="flex items-center gap-1">
             <h3 className="font-medium text-base mb-1">{name}</h3>
             {is_predefined && (
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+              <Badge className="ml-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                 Predefinida
-              </span>
+              </Badge>
             )}
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
@@ -68,11 +68,12 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
       
       <div className="mt-3">
         <Button 
-          variant="secondary" 
+          variant="primary" 
           size="sm"
           onClick={handleStartClick}
           type="button"
         >
+          <Dumbbell className="w-4 h-4 mr-1" />
           Iniciar
         </Button>
       </div>
