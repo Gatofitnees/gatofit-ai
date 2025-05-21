@@ -36,12 +36,9 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
         </AlertDialogHeader>
         <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
           <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault(); // Prevenir el comportamiento por defecto
-              onConfirm(); // Llamar a la función onConfirm
-            }}
+            onClick={onConfirm}
             disabled={isSubmitting}
-            className="w-full rounded-xl bg-blue-500 text-white hover:bg-blue-600 py-3"
+            className="w-full rounded-xl bg-primary text-white hover:bg-primary/90 py-3"
           >
             {isSubmitting ? (
               <>

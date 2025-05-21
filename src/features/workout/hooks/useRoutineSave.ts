@@ -85,14 +85,13 @@ export const useRoutineSave = () => {
       // Clear form state from session storage after successful save
       clearStoredRoutine();
       
-      // Explícitamente establecer replace: true para reemplazar la ruta actual en el historial
-      // Esto asegura que el botón de retroceso funcione correctamente
+      // Navegar a /workout con replace: true para que el botón de retroceso no vuelva a la página de creación
       navigate("/workout", { replace: true });
     } catch (error) {
       console.error("Error saving routine:", error);
       toast({
         title: "Error al guardar",
-        description: "Ha ocurrido un error al guardar la rutina",
+        description: "Ha ocurrido un error al guardar la rutina. Por favor, intente más tarde.",
         variant: "destructive"
       });
     } finally {
