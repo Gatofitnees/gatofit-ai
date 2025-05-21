@@ -17,27 +17,22 @@ const WorkoutPage: React.FC = () => {
   const { routines, loading, refetch } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Initialize predefined routines when the page loads
+  // Initialize predefined routines and refresh on navigation
   useEffect(() => {
     const loadPredefinedRoutines = async () => {
       try {
         await initPredefinedRoutines();
-        // Reload routines to include the predefined ones
-        refetch();
       } catch (error) {
         console.error("Error loading predefined routines:", error);
       }
     };
     
     loadPredefinedRoutines();
-  }, [refetch]);
-  
-  // Refresh routines when returning to this page
-  useEffect(() => {
-    // This function will run each time we navigate to this page
-    refetch();
+    
+    // Always refetch routines when this page is navigated to
     console.log("Refreshing routines in WorkoutPage");
-  }, [location.pathname, refetch]);
+    refetch();
+  }, [location.key, refetch]); // Use location.key to detect navigation events
   
   // Filter routines based on search term
   const filteredRoutines = routines.filter(routine => 

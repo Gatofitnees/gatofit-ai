@@ -25,6 +25,11 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
   onConfirm,
   isSubmitting
 }) => {
+  // Use a simple click handler to ensure the onConfirm function is called
+  const handleConfirmClick = () => {
+    onConfirm();
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={isSubmitting ? undefined : onOpenChange}>
       <AlertDialogContent className="rounded-xl border border-secondary bg-background/95 backdrop-blur-sm max-w-[90vw] sm:max-w-md">
@@ -36,7 +41,7 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
         </AlertDialogHeader>
         <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={handleConfirmClick}
             disabled={isSubmitting}
             className="w-full rounded-xl bg-primary text-white hover:bg-primary/90 py-3"
           >

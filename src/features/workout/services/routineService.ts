@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { RoutineExercise } from "../types";
-import { toast } from "@/hooks/use-toast";
 
 export async function saveRoutine(
   routineName: string,
@@ -23,47 +22,7 @@ export async function saveRoutine(
 
     console.log("Saving routine for user:", user.id);
 
-    // Check if the user has a profile - this is critical to avoid RLS errors
-    const { data: profileData, error: profileCheckError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-      
-    if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-      console.error("Error checking user profile:", profileCheckError);
-    }
-      
-    // If the user doesn't have a profile, create a basic one
-    if (!profileData) {
-      console.log("Creating user profile");
-      
-      // Use the RPC function to create a profile
-      const { data: insertResult, error: insertError } = await supabase
-        .rpc('create_user_profile', { user_id: user.id });
-        
-      if (insertError) {
-        console.error("Error creating profile via RPC:", insertError);
-        
-        // Fallback to direct insert if RPC fails
-        console.log("Falling back to direct insert for profile");
-        const { error: directInsertError } = await supabase
-          .from('profiles')
-          .insert({ id: user.id })
-          .select();
-          
-        if (directInsertError) {
-          console.error("Error creating user profile:", directInsertError);
-          throw new Error("No se pudo crear el perfil de usuario: " + directInsertError.message);
-        }
-      } else {
-        console.log("Profile created via RPC:", insertResult);
-      }
-    }
-
-    // Insert routine with better error handling
-    console.log("Creating routine:", { routineName, routineType, exercises: routineExercises.length });
-    
+    // Create the routine
     const { data: routineData, error: routineError } = await supabase
       .from('routines')
       .insert({
@@ -86,33 +45,25 @@ export async function saveRoutine(
 
     console.log("Routine created successfully:", routineData);
 
-    // Insert routine exercises
+    // Insert routine exercises if any
     if (routineExercises.length > 0) {
       console.log("Preparing to insert routine exercises");
-      const routineExercisesData = [];
       
-      // Prepare data for inserting into the routine_exercises table
-      for (let exerciseIndex = 0; exerciseIndex < routineExercises.length; exerciseIndex++) {
-        const exercise = routineExercises[exerciseIndex];
-        
-        for (let setIndex = 0; setIndex < exercise.sets.length; setIndex++) {
-          const set = exercise.sets[setIndex];
-          routineExercisesData.push({
-            routine_id: routineData.id,
-            exercise_id: parseInt(exercise.id),
-            exercise_order: exerciseIndex + 1,
-            set_number: setIndex + 1,
-            reps_min: set.reps_min || 0,
-            reps_max: set.reps_max || 0,
-            rest_between_sets_seconds: set.rest_seconds || 60
-          });
-        }
-      }
+      // Simplified structure for routine_exercises
+      const routineExercisesData = routineExercises.map((exercise, index) => ({
+        routine_id: routineData.id,
+        exercise_id: parseInt(exercise.id),
+        exercise_order: index + 1,
+        sets: exercise.sets.length,
+        reps_min: exercise.sets[0]?.reps_min || 0,
+        reps_max: exercise.sets[0]?.reps_max || 0,
+        rest_between_sets_seconds: exercise.sets[0]?.rest_seconds || 60
+      }));
 
-      console.log("Exercise data prepared:", routineExercisesData.length, "sets");
+      console.log("Exercise data prepared:", routineExercisesData.length);
       console.log("Sample exercise data:", JSON.stringify(routineExercisesData[0]));
 
-      // Insert all exercise data with better error handling
+      // Insert exercise data
       const { error: exercisesError } = await supabase
         .from('routine_exercises')
         .insert(routineExercisesData);
@@ -121,7 +72,6 @@ export async function saveRoutine(
         console.error("Error inserting exercise data:", exercisesError);
         
         // Try to clean up the incomplete routine
-        console.log("Cleaning up incomplete routine:", routineData.id);
         await supabase
           .from('routines')
           .delete()
@@ -131,8 +81,6 @@ export async function saveRoutine(
       }
       
       console.log("Routine exercises saved successfully");
-    } else {
-      console.log("No exercises to save");
     }
 
     return routineData;
@@ -147,10 +95,7 @@ function calculateEstimatedDuration(exercises: RoutineExercise[]): number {
   // Base time: 5 minutes per exercise
   const baseTime = exercises.length * 5;
   
-  // Add additional time for each set (including rest time)
-  const setCount = exercises.reduce((total, ex) => total + ex.sets.length, 0);
-  
-  // Calculate rest time more accurately based on actual rest seconds
+  // Add additional time for rest
   const totalRestSeconds = exercises.reduce((total, ex) => {
     return total + ex.sets.reduce((setTotal, set) => setTotal + (set.rest_seconds || 60), 0);
   }, 0);

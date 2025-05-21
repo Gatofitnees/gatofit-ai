@@ -70,15 +70,23 @@ export const useRoutineSave = () => {
     setShowSaveConfirmDialog(true);
   }, [validateForm, routineExercises, setShowNoExercisesDialog, setShowSaveConfirmDialog]);
 
-  // Save routine to database
+  // Save routine to database - simplified for reliability
   const handleSaveRoutine = useCallback(async () => {
     try {
       setIsSubmitting(true);
-      console.log("Guardando rutina:", { routineName, routineType, exercises: routineExercises.length });
+      console.log("Guardando rutina:", { 
+        routineName, 
+        routineType, 
+        exercises: routineExercises.length 
+      });
 
+      // Save the routine first
       const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
       console.log("Rutina guardada exitosamente:", savedRoutine);
-
+      
+      // Close dialog first
+      setShowSaveConfirmDialog(false);
+      
       // Show success toast
       toast({
         title: "¡Rutina creada!",
@@ -86,24 +94,16 @@ export const useRoutineSave = () => {
         variant: "success"
       });
 
-      // Reset form state in context
+      // Reset form state
       setRoutineName('');
       setRoutineType('');
       setRoutineExercises([]);
-      
-      // Clear form state from session storage after successful save
       clearStoredRoutine();
       
-      // First close the dialog
-      setShowSaveConfirmDialog(false);
-      
-      // Set a timeout to ensure the toast is visible before navigating
-      setTimeout(() => {
-        // Navigate to /workout with replace: true to prevent going back to the creation page
-        console.log("Navegando a /workout después del guardado exitoso");
-        navigate("/workout", { replace: true });
-        setIsSubmitting(false);
-      }, 1000);
+      // Navigate immediately (no timeout)
+      console.log("Navegando a /workout después del guardado exitoso");
+      navigate("/workout", { replace: true });
+      setIsSubmitting(false);
       
     } catch (error: any) {
       console.error("Error saving routine:", error);
