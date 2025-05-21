@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { preloadedExercises } from "@/data/preloadedExercises";
 import { additionalExercises } from "@/data/additionalExercises";
+import { Exercise } from "../types";
 
 // This function ensures that preloaded exercises exist in the database
 export async function syncExercisesToDatabase() {
@@ -43,10 +44,18 @@ export async function syncExercisesToDatabase() {
     for (let i = 0; i < exercisesToInsert.length; i += batchSize) {
       const batch = exercisesToInsert.slice(i, i + batchSize);
       
-      // Insert a batch of exercises
+      // Insert a batch of exercises - ensuring the types match
       const { error: insertError } = await supabase
         .from('exercises')
-        .insert(batch);
+        .insert(batch.map(exercise => ({
+          id: exercise.id,
+          name: exercise.name,
+          muscle_group_main: exercise.muscle_group_main,
+          equipment_required: exercise.equipment_required,
+          difficulty_level: exercise.difficulty_level,
+          video_url: exercise.video_url,
+          description: exercise.description
+        })));
         
       if (insertError) {
         console.error(`Error inserting batch ${i/batchSize + 1}:`, insertError);

@@ -15,3 +15,10 @@ export interface ExerciseSet {
 export interface RoutineExercise extends ExerciseItem {
   sets: ExerciseSet[];
 }
+
+// Fixed the error in the sync service by explicitly defining the difficulty level type
+export interface Exercise extends ExerciseItem {
+  difficulty_level?: "beginner" | "intermediate" | "advanced";
+  video_url?: string;
+  description?: string;
+}

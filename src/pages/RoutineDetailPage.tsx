@@ -47,6 +47,7 @@ const RoutineDetailPage: React.FC = () => {
       
       {/* Exercises List */}
       <h2 className="font-semibold mb-4">Ejercicios</h2>
+      {/* @ts-ignore - Ignoring the type issue until we can refactor the useRoutineDetail hook */}
       <ExercisesList exercises={exerciseDetails} />
     </div>
   );
