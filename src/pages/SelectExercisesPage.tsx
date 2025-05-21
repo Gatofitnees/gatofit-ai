@@ -5,6 +5,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useExercises } from "@/hooks/useExercises";
 import { useRoutine } from "@/contexts/RoutineContext";
+import { RoutineExercise } from "@/features/workout/types";
 
 const SelectExercisesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -71,13 +72,13 @@ const SelectExercisesPage: React.FC = () => {
   const handleAddExercises = () => {
     // Get the selected exercise objects
     const selectedExerciseObjects = exercises
-      .filter(exercise => selectedExercises.includes(exercise.id))
+      .filter(exercise => selectedExercises.includes(exercise.id.toString()))
       .map(exercise => ({
-        id: exercise.id,
+        id: exercise.id.toString(),
         name: exercise.name,
-        muscle_group_main: exercise.muscle_group_main,
+        muscle_group_main: exercise.muscle_group_main || '',
         sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
-      }));
+      })) as RoutineExercise[];
     
     // Add selected exercises to the routine
     addExercises(selectedExerciseObjects);
@@ -155,9 +156,9 @@ const SelectExercisesPage: React.FC = () => {
             {filteredExercises.map(exercise => (
               <div
                 key={exercise.id}
-                onClick={() => handleToggleExercise(exercise.id)}
+                onClick={() => handleToggleExercise(exercise.id.toString())}
                 className={`p-3 rounded-xl transition-all cursor-pointer ${
-                  selectedExercises.includes(exercise.id)
+                  selectedExercises.includes(exercise.id.toString())
                     ? 'bg-blue-50 border border-blue-500'
                     : 'bg-white border border-gray-100'
                 }`}
@@ -167,7 +168,7 @@ const SelectExercisesPage: React.FC = () => {
                     <p className="font-medium">{exercise.name}</p>
                     <p className="text-xs text-muted-foreground">{exercise.muscle_group_main}</p>
                   </div>
-                  {selectedExercises.includes(exercise.id) && (
+                  {selectedExercises.includes(exercise.id.toString()) && (
                     <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
                       <Check className="h-3 w-3 text-white" />
                     </div>

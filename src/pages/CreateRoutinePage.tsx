@@ -160,7 +160,7 @@ const RoutineForm: React.FC = () => {
           <h1 className="text-xl font-bold">Crear Rutina</h1>
         </div>
         <Button 
-          variant="primary"
+          variant="default"
           size="sm"
           onClick={handleSaveClick}
           disabled={isSubmitting}

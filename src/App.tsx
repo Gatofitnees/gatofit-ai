@@ -12,6 +12,7 @@ import CreateRoutinePage from "./pages/CreateRoutinePage";
 import SelectExercisesPage from "./pages/SelectExercisesPage";
 import RoutineDetailPage from "./pages/RoutineDetailPage";
 import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
+import { RoutineProvider } from "@/contexts/RoutineContext";
 
 function App() {
   return (
@@ -59,7 +60,9 @@ function App() {
               path="/workout/select-exercises"
               element={
                 <ProtectedRoute>
-                  <SelectExercisesPage />
+                  <RoutineProvider>
+                    <SelectExercisesPage />
+                  </RoutineProvider>
                 </ProtectedRoute>
               }
             />

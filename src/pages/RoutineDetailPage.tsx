@@ -47,7 +47,7 @@ const RoutineDetailPage: React.FC = () => {
         const { data: routineData, error: routineError } = await supabase
           .from('routines')
           .select('*')
-          .eq('id', routineId)
+          .eq('id', parseInt(routineId))
           .single();
         
         if (routineError) {
@@ -69,7 +69,7 @@ const RoutineDetailPage: React.FC = () => {
               name
             )
           `)
-          .eq('routine_id', routineId)
+          .eq('routine_id', parseInt(routineId))
           .order('exercise_order', { ascending: true });
         
         if (exercisesError) {
