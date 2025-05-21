@@ -6,8 +6,11 @@ import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs
 import RoutineSheets from "@/features/workout/components/sheets/RoutineSheets";
 import { useCreateRoutine } from "@/features/workout/hooks/useCreateRoutine";
 import { RoutineProvider } from "@/features/workout/contexts/RoutineContext";
+import { useToast } from "@/hooks/use-toast";
 
 const CreateRoutinePageContent: React.FC = () => {
+  const { toast } = useToast();
+  
   const {
     // State
     routineName,
@@ -45,6 +48,19 @@ const CreateRoutinePageContent: React.FC = () => {
     handleDiscardChanges,
     handleBackClick
   } = useCreateRoutine([]);
+  
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (routineName || routineType || routineExercises.length > 0) {
+        const message = "¿Está seguro que desea salir? Los cambios no guardados se perderán.";
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [routineName, routineType, routineExercises]);
   
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">

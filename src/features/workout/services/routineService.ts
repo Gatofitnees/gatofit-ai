@@ -8,11 +8,11 @@ export async function saveRoutine(
   routineExercises: RoutineExercise[]
 ) {
   try {
-    // Obtener usuario actual
+    // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError) {
-      console.error("Error obteniendo usuario:", userError);
+      console.error("Error getting user:", userError);
       throw new Error("No se pudo obtener información del usuario");
     }
     
@@ -20,9 +20,9 @@ export async function saveRoutine(
       throw new Error("Usuario no autenticado");
     }
 
-    console.log("Guardando rutina para usuario:", user.id);
+    console.log("Saving routine for user:", user.id);
 
-    // Comprobar si el usuario tiene un perfil
+    // Check if the user has a profile
     const { data: profileData, error: profileCheckError } = await supabase
       .from('profiles')
       .select('*')
@@ -30,23 +30,23 @@ export async function saveRoutine(
       .single();
       
     if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-      console.error("Error comprobando perfil de usuario:", profileCheckError);
+      console.error("Error checking user profile:", profileCheckError);
     }
       
-    // Si el usuario no tiene perfil, crear uno básico
+    // If the user doesn't have a profile, create a basic one
     if (!profileData) {
-      console.log("Creando perfil de usuario");
+      console.log("Creating user profile");
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({ id: user.id });
         
       if (profileError) {
-        console.error("Error creando perfil de usuario:", profileError);
+        console.error("Error creating user profile:", profileError);
         throw new Error("No se pudo crear el perfil de usuario");
       }
     }
 
-    // Insertar rutina
+    // Insert routine with better error handling
     const { data: routineData, error: routineError } = await supabase
       .from('routines')
       .insert({
@@ -59,16 +59,20 @@ export async function saveRoutine(
       .single();
 
     if (routineError) {
-      console.error("Error creando rutina:", routineError);
-      throw new Error(routineError.message);
+      console.error("Error creating routine:", routineError);
+      throw new Error(routineError.message || "Error al crear la rutina");
     }
 
-    console.log("Rutina creada:", routineData);
+    if (!routineData) {
+      throw new Error("No se recibieron datos de la rutina creada");
+    }
 
-    // Insertar ejercicios de la rutina
+    console.log("Routine created:", routineData);
+
+    // Insert routine exercises
     const routineExercisesData = [];
     
-    // Preparar datos para insertar en la tabla routine_exercises
+    // Prepare data for inserting into the routine_exercises table
     for (let exerciseIndex = 0; exerciseIndex < routineExercises.length; exerciseIndex++) {
       const exercise = routineExercises[exerciseIndex];
       
@@ -76,7 +80,7 @@ export async function saveRoutine(
         const set = exercise.sets[setIndex];
         routineExercisesData.push({
           routine_id: routineData.id,
-          exercise_id: parseInt(exercise.id), // Convertir ID de string a número
+          exercise_id: parseInt(exercise.id),
           exercise_order: exerciseIndex + 1,
           set_number: setIndex + 1,
           reps_min: set.reps_min,
@@ -86,33 +90,47 @@ export async function saveRoutine(
       }
     }
 
-    // Insertar todos los datos de ejercicios
+    // Insert all exercise data with better error handling
     if (routineExercisesData.length > 0) {
       const { error: exercisesError } = await supabase
         .from('routine_exercises')
         .insert(routineExercisesData);
 
       if (exercisesError) {
-        console.error("Error insertando datos de ejercicios:", exercisesError);
-        throw new Error(exercisesError.message);
+        console.error("Error inserting exercise data:", exercisesError);
+        
+        // Try to clean up the incomplete routine
+        await supabase
+          .from('routines')
+          .delete()
+          .eq('id', routineData.id);
+          
+        throw new Error("Error al guardar los ejercicios de la rutina");
       }
     }
 
     return routineData;
-  } catch (error) {
-    console.error("Error en saveRoutine:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("Error in saveRoutine:", error);
+    throw error instanceof Error ? error : new Error("Error desconocido al guardar la rutina");
   }
 }
 
-// Función auxiliar para calcular la duración estimada
+// Function to calculate estimated duration
 function calculateEstimatedDuration(exercises: RoutineExercise[]): number {
-  // Cálculo básico: 5 minutos por ejercicio de base
+  // Base time: 5 minutes per exercise
   const baseTime = exercises.length * 5;
   
-  // Sumar tiempo adicional por cada set (estimando tiempo de descanso)
+  // Add additional time for each set (including rest time)
   const setCount = exercises.reduce((total, ex) => total + ex.sets.length, 0);
-  const setTime = setCount * 2; // 2 minutos por set (incluyendo descanso)
   
-  return baseTime + setTime;
+  // Calculate rest time more accurately based on actual rest seconds
+  const totalRestSeconds = exercises.reduce((total, ex) => {
+    return total + ex.sets.reduce((setTotal, set) => setTotal + (set.rest_seconds || 60), 0);
+  }, 0);
+  
+  // Convert rest seconds to minutes and add to base time
+  const restMinutes = Math.ceil(totalRestSeconds / 60);
+  
+  return baseTime + restMinutes;
 }

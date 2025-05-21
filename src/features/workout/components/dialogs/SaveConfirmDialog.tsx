@@ -27,7 +27,7 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
 }) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-xl border-secondary bg-background/95 backdrop-blur-sm max-w-[90vw] sm:max-w-md">
+      <AlertDialogContent className="rounded-xl border border-secondary bg-background/95 backdrop-blur-sm max-w-[90vw] sm:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-semibold text-center">Confirmar guardado</AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground text-center">
@@ -49,7 +49,10 @@ const SaveConfirmDialog: React.FC<SaveConfirmDialogProps> = ({
               'Confirmar'
             )}
           </AlertDialogAction>
-          <AlertDialogCancel className="w-full rounded-xl bg-gray-800 text-white hover:bg-gray-700 py-3">
+          <AlertDialogCancel 
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-gray-800 text-white hover:bg-gray-700 py-3"
+          >
             Cancelar
           </AlertDialogCancel>
         </AlertDialogFooter>
