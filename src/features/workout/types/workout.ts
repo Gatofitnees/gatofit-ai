@@ -12,7 +12,7 @@ export interface WorkoutExercise {
   id: number;
   name: string;
   sets: WorkoutSet[];
-  muscle_group_main?: string;
+  muscle_group_main: string;
   equipment_required?: string;
   notes: string;
 }

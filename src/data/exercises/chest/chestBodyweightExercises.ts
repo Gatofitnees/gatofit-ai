@@ -1,9 +1,10 @@
+
 import { Exercise, normalizeDifficulty } from '../exerciseTypes';
 
 // Chest exercises using bodyweight (IDs 3047-3060)
 export const chestBodyweightExercises: Exercise[] = [
   {
-    id: 3005,
+    id: 3047,
     name: "Flexiones con palmas invertidas",
     muscle_group_main: "Pecho",
     equipment_required: "Libre",
@@ -12,7 +13,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/flexiones-con-palmas-invertidas.mp4",
   },
   {
-    id: 3006,
+    id: 3048,
     name: "Flexiones de pecho",
     muscle_group_main: "Pecho",
     equipment_required: "Libre",
@@ -21,7 +22,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/flexiones-de-pecho.mp4",
   },
   {
-    id: 3007,
+    id: 3049,
     name: "Flexiones de pecho abiertas",
     muscle_group_main: "Pecho",
     equipment_required: "Libre",
@@ -30,7 +31,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/flexiones-de-pecho-abiertas.mp4",
   },
   {
-    id: 3008,
+    id: 3050,
     name: "Flexiones de pecho cerradas",
     muscle_group_main: "Pecho Tríceps",
     equipment_required: "Libre",
@@ -39,7 +40,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/flexiones-de-pecho-cerradas.mp4",
   },
   {
-    id: 3009,
+    id: 3051,
     name: "Flexiones de pecho declinadas",
     muscle_group_main: "Pecho",
     equipment_required: "Libre",
@@ -48,7 +49,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/flexiones-de-pecho-declinadas.mp4",
   },
   {
-    id: 3010,
+    id: 3052,
     name: "Flexiones de pecho diamante",
     muscle_group_main: "Pecho Tríceps",
     equipment_required: "Libre",
@@ -57,7 +58,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/flexiones-de-pecho-diamante.mp4",
   },
   {
-    id: 3011,
+    id: 3053,
     name: "Fondos con sillas",
     muscle_group_main: "Pecho Tríceps",
     equipment_required: "Libre",
@@ -66,7 +67,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/fondos-con-sillas.mp4",
   },
   {
-    id: 3012,
+    id: 3054,
     name: "Fondos para pecho",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina Libre",
@@ -75,7 +76,7 @@ export const chestBodyweightExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/fondos-para-pecho.mp4",
   },
   {
-    id: 3018,
+    id: 3055,
     name: "Press en piso",
     muscle_group_main: "Pecho",
     equipment_required: "Libre",

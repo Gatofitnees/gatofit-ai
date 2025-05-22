@@ -1,9 +1,10 @@
+
 import { Exercise, normalizeDifficulty } from '../exerciseTypes';
 
 // Chest exercises with dumbbells (IDs 3017-3027)
 export const chestDumbbellExercises: Exercise[] = [
   {
-    id: 3020,
+    id: 3017,
     name: "Press inclinado con mancuernas",
     muscle_group_main: "Pecho",
     equipment_required: "Mancuerna",
@@ -12,7 +13,7 @@ export const chestDumbbellExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-inclinado-con-mancuernas.mp4",
   },
   {
-    id: 3024,
+    id: 3018,
     name: "Press plano con mancuernas",
     muscle_group_main: "Pecho",
     equipment_required: "Mancuerna",
@@ -21,7 +22,7 @@ export const chestDumbbellExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-plano-con-mancuernas.mp4",
   },
   {
-    id: 3030,
+    id: 3019,
     name: "Pull over con mancuernas",
     muscle_group_main: "Pecho Espalda",
     equipment_required: "Mancuerna",
@@ -30,7 +31,7 @@ export const chestDumbbellExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/pullo-over-con-mancuernas.mp4",
   },
   {
-    id: 3031,
+    id: 3020,
     name: "Aperturas con mancuernas",
     muscle_group_main: "Pecho",
     equipment_required: "Mancuerna",
@@ -39,7 +40,7 @@ export const chestDumbbellExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-mancuernas.mp4",
   },
   {
-    id: 3032,
+    id: 3021,
     name: "Aperturas con mancuernas en banco inclinado",
     muscle_group_main: "Pecho",
     equipment_required: "Mancuerna",
