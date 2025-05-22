@@ -1,9 +1,11 @@
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRoutineContext } from "../contexts/RoutineContext";
 
 export function useWorkoutNavigation(routineId?: number) {
   const navigate = useNavigate();
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   
   // Wrap the useRoutineContext in a try-catch to handle cases where it might not be available
   // This makes the hook more resilient
@@ -17,13 +19,19 @@ export function useWorkoutNavigation(routineId?: number) {
   }
   
   const handleBack = () => {
-    const confirmLeave = window.confirm(
-      "¿Estás seguro de que deseas abandonar el entrenamiento? Los datos no guardados se perderán."
-    );
-    
-    if (confirmLeave) {
-      navigate("/workout");
-    }
+    // Show the discard changes dialog instead of window.confirm
+    setShowDiscardDialog(true);
+  };
+
+  const confirmDiscardChanges = () => {
+    // User confirmed to discard changes
+    setShowDiscardDialog(false);
+    navigate("/workout");
+  };
+
+  const cancelDiscardChanges = () => {
+    // User canceled discard action
+    setShowDiscardDialog(false);
   };
 
   const handleViewExerciseDetails = (exerciseId: number) => {
@@ -44,6 +52,9 @@ export function useWorkoutNavigation(routineId?: number) {
   return {
     handleBack,
     handleViewExerciseDetails,
-    handleAddExercise
+    handleAddExercise,
+    showDiscardDialog,
+    confirmDiscardChanges,
+    cancelDiscardChanges
   };
 }

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams } from "react-router-dom";
 import { 
@@ -10,6 +9,8 @@ import {
   SaveButton
 } from "@/features/workout/components/active-workout";
 import { useActiveWorkout } from "@/features/workout/hooks/useActiveWorkout";
+import DiscardChangesDialog from "@/features/workout/components/dialogs/DiscardChangesDialog";
+import { Button } from "@/components/ui/button";
 
 const ActiveWorkoutPage: React.FC = () => {
   const { routineId } = useParams<{ routineId: string }>();
@@ -20,6 +21,7 @@ const ActiveWorkoutPage: React.FC = () => {
     loading,
     isSaving,
     showStatsDialog,
+    showDiscardDialog,
     isReorderMode,
     handleInputChange,
     handleExerciseNotesChange,
@@ -29,6 +31,8 @@ const ActiveWorkoutPage: React.FC = () => {
     handleReorderDrag,
     handleViewExerciseDetails,
     handleAddExercise,
+    confirmDiscardChanges,
+    cancelDiscardChanges,
     setShowStatsDialog,
     handleToggleReorderMode
   } = useActiveWorkout(routineId ? parseInt(routineId) : undefined);
@@ -78,11 +82,19 @@ const ActiveWorkoutPage: React.FC = () => {
         onAddExercise={handleAddExercise}
       />
       
-      {/* Save button (bottom) */}
-      <SaveButton 
-        isSaving={isSaving}
-        onClick={handleSaveWorkout}
-      />
+      {/* Save button (only at the bottom of the exercise list) */}
+      {exercises.length > 0 && (
+        <div className="mt-6 mb-20">
+          <Button 
+            variant="default"
+            className="w-full"
+            onClick={handleSaveWorkout}
+            disabled={isSaving}
+          >
+            {isSaving ? "Guardando entrenamiento..." : "Guardar entrenamiento"}
+          </Button>
+        </div>
+      )}
       
       {/* Statistics Dialog */}
       {currentStatsExercise && (
@@ -96,6 +108,13 @@ const ActiveWorkoutPage: React.FC = () => {
           })) : []}
         />
       )}
+
+      {/* Discard Changes Dialog */}
+      <DiscardChangesDialog
+        open={showDiscardDialog}
+        onOpenChange={cancelDiscardChanges}
+        onConfirm={confirmDiscardChanges}
+      />
     </div>
   );
 };

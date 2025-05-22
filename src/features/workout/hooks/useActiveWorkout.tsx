@@ -29,7 +29,10 @@ export function useActiveWorkout(routineId: number | undefined) {
   const {
     handleBack,
     handleViewExerciseDetails,
-    handleAddExercise
+    handleAddExercise,
+    showDiscardDialog,
+    confirmDiscardChanges,
+    cancelDiscardChanges
   } = useWorkoutNavigation(routineId);
 
   return {
@@ -38,6 +41,7 @@ export function useActiveWorkout(routineId: number | undefined) {
     loading,
     isSaving,
     showStatsDialog,
+    showDiscardDialog,
     isReorderMode,
     handleInputChange,
     handleExerciseNotesChange,
@@ -47,6 +51,8 @@ export function useActiveWorkout(routineId: number | undefined) {
     handleReorderDrag,
     handleViewExerciseDetails,
     handleAddExercise,
+    confirmDiscardChanges,
+    cancelDiscardChanges,
     setShowStatsDialog,
     handleToggleReorderMode
   };

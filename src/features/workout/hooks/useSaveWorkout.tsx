@@ -47,7 +47,7 @@ export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exer
         throw workoutError || new Error("No se pudo guardar el entrenamiento");
       }
       
-      // Save exercise details
+      // Save exercise details - including manually added sets
       const exerciseDetailsToSave = exercises.flatMap((exercise) => 
         exercise.sets
           .filter(set => set.weight !== null || set.reps !== null) // Only save sets with data
@@ -77,7 +77,7 @@ export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exer
         description: "Tu entrenamiento ha sido registrado correctamente."
       });
       
-      // Navigate to home page (changed from "/" to "/home" to match the requested route)
+      // Navigate to home page to show the workout summary
       navigate("/home");
       
     } catch (error: any) {
