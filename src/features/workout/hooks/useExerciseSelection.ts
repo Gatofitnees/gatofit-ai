@@ -10,6 +10,7 @@ interface SelectExercisesState {
   searchTerm: string;
   muscleFilters: string[];
   equipmentFilters: string[];
+  previouslySelectedIds?: number[]; // Add this to track previously selected exercises
 }
 
 const SESSION_STORAGE_KEY = "selectExercisesState";
@@ -31,26 +32,35 @@ export const useExerciseSelection = () => {
   const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
+  const [previouslySelectedIds, setPreviouslySelectedIds] = useState<number[]>([]);
 
-  // Reset selection state when component mounts
-  // But keep filter preferences
+  // Initialize the component with previously selected exercises data when available
   useEffect(() => {
-    // Reset selected exercises array when the component mounts
-    setSelectedExercises([]);
+    // Check if there are already selected exercises in the location state
+    // that were passed from the routine creation/edit page
+    if (location.state && location.state.currentExercises) {
+      // Extract the IDs of already selected exercises
+      const existingIds = location.state.currentExercises.map((ex: any) => ex.id);
+      setPreviouslySelectedIds(existingIds);
+      console.log("Previously selected exercise IDs:", existingIds);
+    }
     
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState) as SelectExercisesState;
-        // Recuperar solo los filtros, no los ejercicios seleccionados
+        // Recuperar solo los filtros, no los ejercicios seleccionados para esta sesión
         setSearchTerm(parsedState.searchTerm || "");
         setMuscleFilters(parsedState.muscleFilters || []);
         setEquipmentFilters(parsedState.equipmentFilters || []);
+        
+        // Don't load previously selected exercises from session storage
+        // as we want a fresh selection each time
       } catch (error) {
         console.error("Error parsing exercise selection state:", error);
       }
     }
-  }, []);
+  }, [location.state]);
 
   // Save filtering state to sessionStorage whenever it changes
   useEffect(() => {
@@ -58,10 +68,11 @@ export const useExerciseSelection = () => {
       selectedExercises,
       searchTerm,
       muscleFilters,
-      equipmentFilters
+      equipmentFilters,
+      previouslySelectedIds
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
-  }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
+  }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters, previouslySelectedIds]);
 
   // Filter exercises based on search term and selected filters
   const filteredExercises = exercises.filter(exercise => {
@@ -176,6 +187,7 @@ export const useExerciseSelection = () => {
     equipmentFilters,
     searchTerm,
     loading,
+    previouslySelectedIds,
     setSearchTerm,
     handleExerciseSelect,
     handleMuscleFilterToggle,

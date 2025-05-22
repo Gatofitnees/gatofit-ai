@@ -17,6 +17,7 @@ interface ExerciseListProps {
   onSelectExercise: (id: number) => void;
   onViewDetails: (id: number) => void;
   loading: boolean;
+  previouslySelectedIds?: number[]; // Add this prop to mark previously selected exercises
 }
 
 const ExerciseList: React.FC<ExerciseListProps> = ({ 
@@ -24,7 +25,8 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   selectedExercises, 
   onSelectExercise,
   onViewDetails,
-  loading
+  loading,
+  previouslySelectedIds = []
 }) => {
   if (loading) {
     return (
@@ -37,15 +39,21 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   return (
     <div className="space-y-3">
       {exercises && exercises.length > 0 ? (
-        exercises.map(exercise => (
-          <ExerciseItem 
-            key={exercise.id}
-            exercise={exercise}
-            isSelected={selectedExercises.includes(exercise.id)}
-            onSelect={onSelectExercise}
-            onViewDetails={onViewDetails}
-          />
-        ))
+        exercises.map(exercise => {
+          // Check if this exercise is already in the routine
+          const isAlreadySelected = previouslySelectedIds.includes(exercise.id);
+          
+          return (
+            <ExerciseItem 
+              key={exercise.id}
+              exercise={exercise}
+              isSelected={selectedExercises.includes(exercise.id)}
+              onSelect={onSelectExercise}
+              onViewDetails={onViewDetails}
+              isAlreadyInRoutine={isAlreadySelected} // Pass this flag to the ExerciseItem
+            />
+          );
+        })
       ) : (
         <div className="text-center py-8 text-muted-foreground">
           No se encontraron ejercicios

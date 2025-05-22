@@ -16,6 +16,7 @@ const SelectExercisesPage: React.FC = () => {
     equipmentFilters,
     searchTerm,
     loading,
+    previouslySelectedIds,
     setSearchTerm,
     handleExerciseSelect,
     handleMuscleFilterToggle,
@@ -54,6 +55,7 @@ const SelectExercisesPage: React.FC = () => {
           onSelectExercise={handleExerciseSelect}
           onViewDetails={handleExerciseDetails}
           loading={loading}
+          previouslySelectedIds={previouslySelectedIds} // Pass previously selected IDs
         />
       </div>
 

@@ -1,23 +1,12 @@
 
 import React from "react";
-import { Info, Dumbbell } from "lucide-react";
-import { Card, CardBody } from "@/components/Card";
-import { Checkbox } from "@/components/ui/checkbox";
-import Button from "@/components/Button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { ChevronRight, Check } from "lucide-react";
 
 interface Exercise {
   id: number;
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
-  difficulty_level?: string;
-  video_url?: string;
 }
 
 interface ExerciseItemProps {
@@ -25,49 +14,77 @@ interface ExerciseItemProps {
   isSelected: boolean;
   onSelect: (id: number) => void;
   onViewDetails: (id: number) => void;
+  isAlreadyInRoutine?: boolean;
 }
 
-const ExerciseItem: React.FC<ExerciseItemProps> = ({ exercise, isSelected, onSelect, onViewDetails }) => {
+const ExerciseItem: React.FC<ExerciseItemProps> = ({ 
+  exercise, 
+  isSelected, 
+  onSelect, 
+  onViewDetails,
+  isAlreadyInRoutine = false
+}) => {
   return (
-    <Card className="hover:scale-[1.01] transition-transform duration-300">
-      <CardBody>
-        <div className="flex items-center">
-          <Checkbox
-            id={`select-${exercise.id}`}
-            checked={isSelected}
-            onCheckedChange={() => onSelect(exercise.id)}
-            className="mr-3 h-5 w-5 rounded-full bg-background"
-          />
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-            <Dumbbell className="h-5 w-5 text-primary" />
+    <div 
+      className={`relative p-3 rounded-lg border flex items-center space-x-3 ${
+        isSelected 
+          ? 'border-primary/70 bg-primary/10' 
+          : 'border-border/50 hover:border-border'
+      } ${
+        isAlreadyInRoutine ? 'opacity-60' : ''
+      }`}
+    >
+      {/* Exercise info */}
+      <div 
+        className="flex-1 cursor-pointer" 
+        onClick={() => onSelect(exercise.id)}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-medium text-base">
+              {exercise.name}
+              {isAlreadyInRoutine && (
+                <span className="text-xs ml-2 bg-secondary/60 text-secondary-foreground/70 px-2 py-0.5 rounded-full">
+                  Ya añadido
+                </span>
+              )}
+            </h3>
+            <div className="flex flex-wrap gap-1 mt-1">
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                {exercise.muscle_group_main}
+              </span>
+              {exercise.equipment_required && (
+                <span className="text-xs bg-secondary/40 text-muted-foreground px-2 py-0.5 rounded-full">
+                  {exercise.equipment_required}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex-1">
-            <h3 className="font-medium">{exercise.name}</h3>
-            <span className="text-xs text-muted-foreground">{exercise.muscle_group_main}</span>
-            {exercise.equipment_required && (
-              <span className="text-xs text-muted-foreground ml-2">· {exercise.equipment_required}</span>
-            )}
+          
+          {/* Selection indicator */}
+          <div 
+            className={`w-5 h-5 rounded-full flex items-center justify-center ${
+              isSelected ? 'bg-primary text-white' : 'border border-muted-foreground/30'
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(exercise.id);
+            }}
+          >
+            {isSelected && <Check className="h-3 w-3" />}
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="min-w-0 p-1"
-                  onClick={() => onViewDetails(exercise.id)}
-                >
-                  <Info className="h-4 w-4 text-primary" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Ver detalles</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
-      </CardBody>
-    </Card>
+      </div>
+      
+      {/* Details button */}
+      <button 
+        onClick={() => onViewDetails(exercise.id)}
+        className="p-1.5 rounded-full hover:bg-muted"
+        aria-label="View exercise details"
+      >
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </button>
+    </div>
   );
 };
 

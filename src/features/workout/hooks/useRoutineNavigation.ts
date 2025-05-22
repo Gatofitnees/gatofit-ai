@@ -64,8 +64,12 @@ export const useRoutineNavigation = (editRoutineId?: number) => {
     
     // Pasamos la URL de retorno según si estamos en modo edición o creación
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
-    navigate(`/workout/select-exercises?returnTo=${returnPath}`);
-  }, [navigate, editRoutineId]);
+    
+    // Pass the current exercises to the selection page to prevent duplicates
+    navigate(`/workout/select-exercises?returnTo=${returnPath}`, {
+      state: { currentExercises: routineExercises }
+    });
+  }, [navigate, editRoutineId, routineExercises]);
 
   // Handle navigating when discard is confirmed
   const handleDiscardChanges = useCallback(() => {

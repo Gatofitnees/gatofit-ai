@@ -83,8 +83,12 @@ export const useRoutinePersistence = (
       );
       
       // Actualizar los ejercicios con el array completo
-      setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
-      console.log("Añadiendo nuevos ejercicios a los existentes:", uniqueNewExercises.length);
+      if (uniqueNewExercises.length > 0) {
+        setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
+        console.log("Añadiendo nuevos ejercicios a los existentes:", uniqueNewExercises.length);
+      } else {
+        console.log("No hay nuevos ejercicios para añadir");
+      }
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
       if (window.history.state) {
