@@ -26,7 +26,7 @@ export function useWorkoutNavigation(routineId?: number) {
   const confirmDiscardChanges = () => {
     // User confirmed to discard changes
     setShowDiscardDialog(false);
-    navigate("/workout");
+    navigate("/workout", { replace: true });
   };
 
   const cancelDiscardChanges = () => {

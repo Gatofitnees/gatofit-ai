@@ -54,6 +54,7 @@ export function useActiveWorkout(routineId: number | undefined) {
     confirmDiscardChanges,
     cancelDiscardChanges,
     setShowStatsDialog,
-    handleToggleReorderMode
+    handleToggleReorderMode,
+    workoutStartTime
   };
 }

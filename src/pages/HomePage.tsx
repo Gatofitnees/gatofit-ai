@@ -74,10 +74,17 @@ const HomePage: React.FC = () => {
       
       setLoading(true);
       try {
-        // Format date as YYYY-MM-DD
-        const dateString = selectedDate.toISOString().split('T')[0];
+        // Format date as YYYY-MM-DD for start of day
+        const startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
         
-        // Get workout logs for the selected date
+        // Format date as YYYY-MM-DD for end of day
+        const endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        console.log(`Fetching workouts between ${startDate.toISOString()} and ${endDate.toISOString()}`);
+        
+        // Get workout logs for the selected date using date range instead of LIKE
         const { data: workoutLogs, error } = await supabase
           .from('workout_logs')
           .select(`
@@ -89,11 +96,17 @@ const HomePage: React.FC = () => {
             workout_log_exercise_details(exercise_name_snapshot)
           `)
           .eq('user_id', user.id)
-          .like('workout_date', `${dateString}%`)
+          .gte('workout_date', startDate.toISOString())
+          .lt('workout_date', endDate.toISOString())
           .order('workout_date', { ascending: false })
           .limit(1);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error en la consulta:", error);
+          throw error;
+        }
+        
+        console.log("Resultado de la consulta:", workoutLogs);
         
         if (workoutLogs && workoutLogs.length > 0) {
           const workout = workoutLogs[0];

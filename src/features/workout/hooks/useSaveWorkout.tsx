@@ -78,7 +78,7 @@ export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exer
       });
       
       // Navigate to home page to show the workout summary
-      navigate("/home");
+      navigate("/home", { replace: true });
       
     } catch (error: any) {
       console.error("Error al guardar entrenamiento:", error);
