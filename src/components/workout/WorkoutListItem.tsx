@@ -1,37 +1,30 @@
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Clock, ChevronRight, Dumbbell, Edit, Trash2 } from "lucide-react";
-import Button from "@/components/Button";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import React, { useState } from "react";
+import { Edit, MoreVertical, PlayCircle, Trash } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { Card } from "@/components/Card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface WorkoutRoutine {
-  id: number;
-  name: string;
-  type?: string;
-  description?: string;
-  estimated_duration_minutes?: number;
-  exercise_count?: number;
-  created_at: string;
-  is_predefined?: boolean;
-}
+import { toast } from "sonner";
 
 interface WorkoutListItemProps {
-  routine: WorkoutRoutine;
-  onStartWorkout: (id: number) => void;
-  onRoutineDeleted?: () => void;
+  routine: {
+    id: number;
+    name: string;
+    type?: string;
+    description?: string;
+    exercise_count?: number;
+    estimated_duration_minutes?: number;
+    is_predefined?: boolean;
+  };
+  onStartWorkout: (routineId: number) => void;
+  onRoutineDeleted: () => void;
 }
 
 const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
@@ -39,153 +32,135 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
   onStartWorkout,
   onRoutineDeleted
 }) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { id, name, type, estimated_duration_minutes: estimatedDurationMinutes, exercise_count: exerciseCount, is_predefined } = routine;
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  const { toast: uiToast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  const handleItemClick = () => {
-    navigate(`/workout/routine/${id}`);
-  };
+  // Determina los textos a mostrar según el tipo de rutina
+  const typeLabel = routine.type 
+    ? routine.type.charAt(0).toUpperCase() + routine.type.slice(1) 
+    : "General";
   
-  const handleStartClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onStartWorkout(id);
-  };
-
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/workout/edit/${id}`);
-  };
-
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowDeleteDialog(true);
-  };
-
-  const handleDeleteRoutine = async () => {
+  const exerciseLabel = routine.exercise_count === 1 
+    ? "1 ejercicio"
+    : `${routine.exercise_count} ejercicios`;
+  
+  const timeLabel = routine.estimated_duration_minutes
+    ? `${routine.estimated_duration_minutes} min`
+    : "15-30 min";
+    
+  const handleDelete = async () => {
     try {
       setIsDeleting(true);
+      toast.loading("Eliminando rutina...");
       
-      const { error } = await supabase
+      // Primero eliminamos los ejercicios de la rutina
+      const { error: exerciseError } = await supabase
+        .from('routine_exercises')
+        .delete()
+        .eq('routine_id', routine.id);
+        
+      if (exerciseError) throw exerciseError;
+      
+      // Luego eliminamos la rutina
+      const { error: routineError } = await supabase
         .from('routines')
         .delete()
-        .eq('id', id);
+        .eq('id', routine.id);
+        
+      if (routineError) throw routineError;
       
-      if (error) {
-        throw error;
-      }
-      
-      toast({
+      toast.dismiss();
+      uiToast({
         title: "Rutina eliminada",
-        description: `La rutina "${name}" ha sido eliminada correctamente.`
+        description: "La rutina ha sido eliminada correctamente",
+        variant: "success"
       });
       
-      if (onRoutineDeleted) {
-        onRoutineDeleted();
-      }
+      onRoutineDeleted();
     } catch (error: any) {
-      console.error('Error al eliminar rutina:', error);
-      toast({
+      console.error("Error deleting routine:", error);
+      toast.dismiss();
+      uiToast({
         title: "Error",
         description: "No se pudo eliminar la rutina. Inténtalo de nuevo.",
         variant: "destructive"
       });
     } finally {
       setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
+  };
+  
+  const handleEditRoutine = () => {
+    window.location.href = `/workout/edit/${routine.id}`;
   };
 
   return (
-    <>
-      <div 
-        className="bg-secondary/40 border border-white/5 rounded-xl shadow-neu-button p-4 mb-4 hover:shadow-neu-button-hover transition-all cursor-pointer backdrop-blur-sm"
-        onClick={handleItemClick}
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-1">
-              <h3 className="font-medium text-base mb-1">{name}</h3>
-              {is_predefined && (
-                <Badge className="ml-1 text-xs bg-primary/30 text-primary-foreground px-2 py-0.5 rounded-full">
-                  Predefinida
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Clock className="h-3.5 w-3.5 mr-1" />
-              <span>{estimatedDurationMinutes || 30} min</span>
-              {exerciseCount !== undefined && (
-                <span className="ml-2">• {exerciseCount} ejercicios</span>
-              )}
-              {type && (
-                <span className="ml-2">• {type}</span>
-              )}
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-none" onClick={() => onStartWorkout(routine.id)}>
+      <div className="p-4">
+        {/* Título y Menú */}
+        <div className="flex justify-between mb-1">
+          <h3 className="font-bold text-lg truncate">
+            {routine.name}
+          </h3>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <button className="p-1 rounded-full hover:bg-secondary/30">
+                <MoreVertical className="h-5 w-5 text-gray-500" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-sm border border-secondary">
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditRoutine();
+                }}
+                disabled={routine.is_predefined || isDeleting}
+                className="cursor-pointer"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
+                disabled={routine.is_predefined || isDeleting}
+                className="text-destructive cursor-pointer focus:text-destructive"
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
-        <div className="mt-3 flex gap-2">
-          <Button 
-            variant="primary" 
-            size="sm"
-            onClick={handleStartClick}
-            type="button"
-            className="flex-1"
-          >
-            <Dumbbell className="w-4 h-4 mr-1" />
-            Iniciar
-          </Button>
+        {/* Detalles */}
+        <div className="text-sm text-muted-foreground mb-3">
+          {typeLabel} • {exerciseLabel}
+        </div>
+        
+        {/* Botones y tiempo */}
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-muted-foreground">
+            Duración: {timeLabel}
+          </div>
           
-          {!is_predefined && (
-            <div className="flex gap-2">
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={handleEditClick}
-                type="button"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleDeleteClick}
-                type="button"
-                className="text-red-500 hover:text-red-600"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onStartWorkout(routine.id);
+            }}
+            className="flex items-center justify-center gap-1 text-sm font-medium text-primary"
+          >
+            <PlayCircle className="h-4 w-4" />
+            <span>Empezar</span>
+          </button>
         </div>
       </div>
-      
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-card border border-white/5">
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar rutina?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar la rutina "{name}"? Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteRoutine} 
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Eliminando..." : "Eliminar"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </Card>
   );
 };
 

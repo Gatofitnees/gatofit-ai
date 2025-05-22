@@ -14,6 +14,7 @@ interface RoutineDialogsProps {
   handleSaveRoutine: () => void;
   handleDiscardChanges: () => void;
   isSubmitting: boolean;
+  isEditing?: boolean;
 }
 
 const RoutineDialogs: React.FC<RoutineDialogsProps> = ({
@@ -25,29 +26,27 @@ const RoutineDialogs: React.FC<RoutineDialogsProps> = ({
   setShowDiscardChangesDialog,
   handleSaveRoutine,
   handleDiscardChanges,
-  isSubmitting
+  isSubmitting,
+  isEditing = false
 }) => {
   return (
     <>
       <NoExercisesDialog 
-        open={showNoExercisesDialog} 
-        onOpenChange={setShowNoExercisesDialog}
-        onConfirm={() => {
-          setShowNoExercisesDialog(false);
-          setShowSaveConfirmDialog(true);
-        }} 
+        isOpen={showNoExercisesDialog}
+        onClose={() => setShowNoExercisesDialog(false)}
       />
-
+      
       <SaveConfirmDialog 
-        open={showSaveConfirmDialog} 
-        onOpenChange={setShowSaveConfirmDialog}
-        onConfirm={handleSaveRoutine}
-        isSubmitting={isSubmitting}
+        isOpen={showSaveConfirmDialog}
+        onClose={() => setShowSaveConfirmDialog(false)}
+        onSave={handleSaveRoutine}
+        isLoading={isSubmitting}
+        isEditing={isEditing}
       />
-
-      <DiscardChangesDialog
-        open={showDiscardChangesDialog}
-        onOpenChange={setShowDiscardChangesDialog}
+      
+      <DiscardChangesDialog 
+        isOpen={showDiscardChangesDialog}
+        onClose={() => setShowDiscardChangesDialog(false)}
         onConfirm={handleDiscardChanges}
       />
     </>

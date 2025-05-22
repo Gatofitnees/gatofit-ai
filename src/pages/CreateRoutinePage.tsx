@@ -1,5 +1,6 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
 import RoutineFormContainer from "@/features/workout/components/RoutineFormContainer";
 import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs";
@@ -10,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const CreateRoutinePageContent: React.FC = () => {
   const { toast } = useToast();
+  const { routineId } = useParams<{ routineId?: string }>();
+  const isEditing = !!routineId;
   
   const {
     // State
@@ -46,8 +49,19 @@ const CreateRoutinePageContent: React.FC = () => {
     handleSaveRoutineStart,
     handleSaveRoutine,
     handleDiscardChanges,
-    handleBackClick
-  } = useCreateRoutine([]);
+    handleBackClick,
+    
+    // Loading/Editing state
+    loadRoutineData,
+    isLoading
+  } = useCreateRoutine([], isEditing ? parseInt(routineId) : undefined);
+  
+  // Cargar datos de la rutina si estamos en modo edición
+  useEffect(() => {
+    if (isEditing && routineId) {
+      loadRoutineData(parseInt(routineId));
+    }
+  }, [isEditing, routineId, loadRoutineData]);
   
   // Add a beforeUnload event handler to warn about unsaved changes
   React.useEffect(() => {
@@ -63,12 +77,22 @@ const CreateRoutinePageContent: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [routineName, routineType, routineExercises]);
   
+  // Mostrar loader si está cargando datos para edición
+  if (isEditing && isLoading) {
+    return (
+      <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <RoutinePageHeader 
         onSaveClick={handleSaveRoutineStart}
         onBackClick={handleBackClick}
         isSubmitting={isSubmitting} 
+        isEditing={isEditing}
       />
       
       <RoutineFormContainer
@@ -83,6 +107,7 @@ const CreateRoutinePageContent: React.FC = () => {
         handleExerciseOptions={handleExerciseOptions}
         handleReorderClick={handleReorderClick}
         handleSelectExercises={handleSelectExercises}
+        isEditing={isEditing}
       />
 
       {/* Dialog Components */}
@@ -96,6 +121,7 @@ const CreateRoutinePageContent: React.FC = () => {
         handleSaveRoutine={handleSaveRoutine}
         handleDiscardChanges={handleDiscardChanges}
         isSubmitting={isSubmitting}
+        isEditing={isEditing}
       />
 
       {/* Sheet Components */}

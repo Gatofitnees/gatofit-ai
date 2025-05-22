@@ -1,52 +1,37 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import Button from "@/components/Button";
-import { Save, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 
 interface RoutinePageHeaderProps {
+  onBackClick: () => void;
   onSaveClick: (e: React.MouseEvent) => void;
-  onBackClick?: () => void;
   isSubmitting: boolean;
+  isEditing?: boolean;
 }
 
 const RoutinePageHeader: React.FC<RoutinePageHeaderProps> = ({ 
-  onSaveClick, 
-  onBackClick, 
-  isSubmitting 
+  onBackClick,
+  onSaveClick,
+  isSubmitting,
+  isEditing = false
 }) => {
-  const navigate = useNavigate();
-
-  const handleBackClick = () => {
-    if (onBackClick) {
-      onBackClick();
-    } else {
-      navigate("/workout");
-    }
-  };
-
   return (
-    <div className="flex justify-between items-center mb-6">
-      <div className="flex items-center">
-        <button 
-          onClick={handleBackClick}
-          className="mr-3 p-1 rounded-full hover:bg-secondary/50 transition-colors"
-          type="button"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-xl font-bold">Crear Rutina</h1>
-      </div>
-      <Button 
-        variant="primary" 
-        size="sm"
-        leftIcon={isSubmitting ? null : <Save className="h-4 w-4" />}
+    <div className="flex items-center justify-between mb-4">
+      <button onClick={onBackClick} className="p-2 rounded-full hover:bg-secondary/40">
+        <ArrowLeft className="h-5 w-5 text-primary" />
+      </button>
+      
+      <h1 className="text-xl font-semibold">
+        {isEditing ? 'Editar Rutina' : 'Nueva Rutina'}
+      </h1>
+      
+      <button 
         onClick={onSaveClick}
         disabled={isSubmitting}
-        type="button"
+        className={`p-2 rounded-full ${isSubmitting ? 'opacity-50' : 'hover:bg-secondary/40'}`}
       >
-        {isSubmitting ? 'Guardando...' : 'Guardar'}
-      </Button>
+        <Save className="h-5 w-5 text-primary" />
+      </button>
     </div>
   );
 };

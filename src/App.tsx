@@ -12,7 +12,6 @@ import SelectExercisesPage from "./pages/SelectExercisesPage";
 import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
 import CreateExercisePage from "./pages/CreateExercisePage";
 import CreateRoutinePage from "./pages/CreateRoutinePage";
-import RoutineDetailPage from "./pages/RoutineDetailPage";
 import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
 import WorkoutSummaryPage from "./pages/WorkoutSummaryPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
@@ -47,16 +46,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreateRoutinePage />
-                  <NavBar />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/workout/routine/:routineId"
+              path="/workout/edit/:routineId"
               element={
                 <ProtectedRoute>
-                  <RoutineDetailPage />
-                  <NavBar />
+                  <CreateRoutinePage />
                 </ProtectedRoute>
               }
             />

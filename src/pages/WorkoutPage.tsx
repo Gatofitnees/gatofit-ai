@@ -9,12 +9,11 @@ import WorkoutList from "@/components/workout/WorkoutList";
 import { useRoutines } from "@/hooks/useRoutines";
 import { initPredefinedRoutines } from "@/features/workout/services/predefinedRoutinesService";
 import { syncExercisesToDatabase } from "@/features/workout/services/exerciseSyncService";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const WorkoutPage: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
   const { routines, loading, refetch } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
   const [initializing, setInitializing] = useState(false);
@@ -56,6 +55,7 @@ const WorkoutPage: React.FC = () => {
   );
 
   const handleStartWorkout = (routineId: number) => {
+    // Ir directamente a la pantalla activa sin pasar por la previsualización
     navigate(`/workout/active/${routineId}`);
   };
   

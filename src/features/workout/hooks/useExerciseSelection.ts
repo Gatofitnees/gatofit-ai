@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
 import { ExerciseItem } from "../types";
 
@@ -15,7 +16,15 @@ const SESSION_STORAGE_KEY = "selectExercisesState";
 
 export const useExerciseSelection = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
+
+  // Obtener la ruta de retorno de la URL
+  const getReturnPath = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const returnTo = searchParams.get('returnTo');
+    return returnTo || '/workout/create';
+  };
 
   // Initialize state from session storage or with defaults
   const [searchTerm, setSearchTerm] = useState("");
@@ -116,7 +125,7 @@ export const useExerciseSelection = () => {
 
   const handleNavigateBack = () => {
     resetSessionStorage();
-    navigate("/workout/create");
+    navigate(getReturnPath());
   };
 
   const handleCreateExercise = () => {
@@ -144,8 +153,8 @@ export const useExerciseSelection = () => {
     // Clear all state from session storage before navigating
     resetSessionStorage();
     
-    // Navigate back to create routine with the selected exercises
-    navigate("/workout/create", { 
+    // Navigate back to the return path with the selected exercises
+    navigate(getReturnPath(), { 
       state: { selectedExercises: exercisesWithSets } 
     });
   };

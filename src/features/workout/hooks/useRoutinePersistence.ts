@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
@@ -10,13 +11,20 @@ export const useRoutinePersistence = (
   routineExercises: RoutineExercise[],
   setRoutineName: (name: string) => void,
   setRoutineType: (type: string) => void,
-  setRoutineExercises: (exercises: RoutineExercise[]) => void
+  setRoutineExercises: (exercises: RoutineExercise[]) => void,
+  editRoutineId?: number
 ) => {
   const location = useLocation();
+  const storageKey = editRoutineId ? `${STORAGE_KEY}_${editRoutineId}` : STORAGE_KEY;
 
   // Load state from sessionStorage on component mount
   useEffect(() => {
-    const savedState = sessionStorage.getItem(STORAGE_KEY);
+    // Si estamos editando, no cargamos del almacenamiento hasta que se carguen los datos del backend
+    if (editRoutineId) {
+      return;
+    }
+    
+    const savedState = sessionStorage.getItem(storageKey);
     if (savedState) {
       try {
         const { name, type, exercises } = JSON.parse(savedState);
@@ -34,10 +42,10 @@ export const useRoutinePersistence = (
       } catch (error) {
         console.error("Error parsing saved routine state:", error);
         // En caso de error, limpiamos el storage para evitar errores futuros
-        sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(storageKey);
       }
     }
-  }, [setRoutineName, setRoutineType, setRoutineExercises]);
+  }, [setRoutineName, setRoutineType, setRoutineExercises, storageKey, editRoutineId]);
 
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
@@ -46,8 +54,8 @@ export const useRoutinePersistence = (
       type: routineType,
       exercises: routineExercises
     };
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-  }, [routineName, routineType, routineExercises]);
+    sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+  }, [routineName, routineType, routineExercises, storageKey]);
 
   // Handle exercises from location state (when returning from select exercises)
   useEffect(() => {
@@ -85,7 +93,7 @@ export const useRoutinePersistence = (
   // Clear session storage and reset form
   const clearStoredRoutine = () => {
     console.log("Limpiando datos de rutina en sessionStorage");
-    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(storageKey);
   };
   
   return { clearStoredRoutine };

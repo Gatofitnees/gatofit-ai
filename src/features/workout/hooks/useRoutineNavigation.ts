@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRoutineContext } from '../contexts/RoutineContext';
 import { useRoutinePersistence } from './useRoutinePersistence';
 
-export const useRoutineNavigation = () => {
+export const useRoutineNavigation = (editRoutineId?: number) => {
   const navigate = useNavigate();
   const { 
     routineName, 
@@ -25,7 +25,8 @@ export const useRoutineNavigation = () => {
     routineExercises,
     setRoutineName,
     setRoutineType,
-    setRoutineExercises
+    setRoutineExercises,
+    editRoutineId
   );
 
   // Handle navigation when there might be unsaved changes
@@ -60,8 +61,11 @@ export const useRoutineNavigation = () => {
     if (e) {
       e.preventDefault();
     }
-    navigate("/workout/select-exercises");
-  }, [navigate]);
+    
+    // Pasamos la URL de retorno según si estamos en modo edición o creación
+    const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
+    navigate(`/workout/select-exercises?returnTo=${returnPath}`);
+  }, [navigate, editRoutineId]);
 
   // Handle navigating when discard is confirmed
   const handleDiscardChanges = useCallback(() => {

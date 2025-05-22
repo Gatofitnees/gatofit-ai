@@ -19,7 +19,13 @@ export function useWorkoutNavigation(routineId?: number) {
   };
 
   const handleAddExercise = () => {
-    navigate(`/workout/select-exercises?returnTo=/workout/active/${routineId}`);
+    // Ahora pasamos la ruta de retorno como parámetro para volver a la pantalla correcta
+    // Ya sea /workout/create para nuevas rutinas o /workout/edit/:id para edición
+    if (routineId) {
+      navigate(`/workout/select-exercises?returnTo=/workout/edit/${routineId}`);
+    } else {
+      navigate(`/workout/select-exercises?returnTo=/workout/create`);
+    }
   };
 
   return {

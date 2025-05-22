@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
 import { useRoutineNavigation } from "./useRoutineNavigation";
@@ -7,8 +7,13 @@ import { useRoutineSheets } from "./useRoutineSheets";
 import { useRoutineSave } from "./useRoutineSave";
 import { useRoutineForm } from "./useRoutineForm";
 import { RoutineExercise } from "../types";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
+export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editRoutineId?: number) => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  
   // Get context state and setters
   const { 
     routineName,
@@ -52,7 +57,8 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     routineExercises,
     setRoutineName,
     setRoutineType,
-    setRoutineExercises
+    setRoutineExercises,
+    editRoutineId
   );
   
   // Set up navigation handlers
@@ -61,7 +67,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     handleBackClick,
     handleSelectExercises,
     handleDiscardChanges 
-  } = useRoutineNavigation();
+  } = useRoutineNavigation(editRoutineId);
   
   // Set up sheet handlers
   const { 
@@ -74,7 +80,75 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
   const { 
     handleSaveRoutineStart,
     handleSaveRoutine 
-  } = useRoutineSave();
+  } = useRoutineSave(editRoutineId);
+
+  // Función para cargar los datos de la rutina a editar
+  const loadRoutineData = useCallback(async (routineId: number) => {
+    setIsLoading(true);
+    try {
+      // Obtener datos de la rutina
+      const { data: routineData, error: routineError } = await supabase
+        .from('routines')
+        .select('*')
+        .eq('id', routineId)
+        .single();
+
+      if (routineError || !routineData) {
+        throw routineError || new Error("No se encontró la rutina");
+      }
+
+      // Establecer nombre y tipo
+      setRoutineName(routineData.name);
+      setRoutineType(routineData.type || "");
+
+      // Obtener ejercicios de la rutina
+      const { data: routineExercisesData, error: exercisesError } = await supabase
+        .from('routine_exercises')
+        .select(`
+          *,
+          exercise:exercise_id(*)
+        `)
+        .eq('routine_id', routineId)
+        .order('exercise_order', { ascending: true });
+
+      if (exercisesError) {
+        throw exercisesError;
+      }
+
+      if (routineExercisesData && routineExercisesData.length > 0) {
+        // Formatear datos de ejercicios
+        const formattedExercises = routineExercisesData.map(item => {
+          const exerciseData = item.exercise as any;
+          return {
+            id: exerciseData.id,
+            name: exerciseData.name,
+            muscle_group_main: exerciseData.muscle_group_main,
+            equipment_required: exerciseData.equipment_required,
+            sets: Array(item.sets || 1).fill({}).map((_, idx) => ({
+              set_number: idx + 1,
+              reps_min: item.reps_min || 8,
+              reps_max: item.reps_max || 12,
+              rest_seconds: item.rest_between_sets_seconds || 60
+            })),
+            notes: ""
+          };
+        });
+
+        setRoutineExercises(formattedExercises);
+      }
+
+      console.log("Rutina cargada para edición:", routineData.name);
+    } catch (error: any) {
+      console.error("Error al cargar la rutina:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar la rutina para editar",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setRoutineName, setRoutineType, setRoutineExercises, toast]);
 
   return {
     // State
@@ -89,6 +163,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     showExerciseOptionsSheet,
     showReorderSheet,
     currentExerciseIndex,
+    isLoading,
     
     // State setters
     setRoutineName,
@@ -113,6 +188,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = []) => {
     handleSaveRoutine,
     handleDiscardChanges,
     handleNavigateAway,
-    handleBackClick
+    handleBackClick,
+    
+    // Carga de datos para edición
+    loadRoutineData
   };
 };

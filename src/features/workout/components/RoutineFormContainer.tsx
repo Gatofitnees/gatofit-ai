@@ -21,7 +21,8 @@ interface RoutineFormContainerProps {
   handleSetUpdate: (exerciseIndex: number, setIndex: number, field: string, value: number) => void;
   handleExerciseOptions: (index: number) => void;
   handleReorderClick: () => void;
-  handleSelectExercises: (e: React.MouseEvent) => void; // Keep the expected type
+  handleSelectExercises: (e: React.MouseEvent) => void;
+  isEditing?: boolean;
 }
 
 const RoutineFormContainer: React.FC<RoutineFormContainerProps> = ({
@@ -36,11 +37,12 @@ const RoutineFormContainer: React.FC<RoutineFormContainerProps> = ({
   handleExerciseOptions,
   handleReorderClick,
   handleSelectExercises,
+  isEditing = false,
 }) => {
   return (
     <div className="animate-fade-in">
       <Card>
-        <CardHeader title="Crear Nueva Rutina" />
+        <CardHeader title={isEditing ? "Editar Rutina" : "Crear Nueva Rutina"} />
         <CardBody>
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             <RoutineForm

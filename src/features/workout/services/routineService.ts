@@ -119,6 +119,119 @@ export async function saveRoutine(
   }
 }
 
+// Nueva función para actualizar rutinas existentes
+export async function updateRoutine(
+  routineId: number,
+  routineName: string,
+  routineType: string,
+  routineExercises: RoutineExercise[]
+) {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw userError || new Error("Usuario no autenticado");
+    }
+
+    console.log(`Updating routine #${routineId} for user:`, user.id);
+
+    // Verificar que la rutina pertenece al usuario actual
+    const { data: existingRoutine, error: routineCheckError } = await supabase
+      .from('routines')
+      .select('user_id')
+      .eq('id', routineId)
+      .single();
+      
+    if (routineCheckError) {
+      throw new Error("Error al verificar la rutina: " + routineCheckError.message);
+    }
+    
+    if (!existingRoutine) {
+      throw new Error("Rutina no encontrada");
+    }
+    
+    if (existingRoutine.user_id !== user.id) {
+      throw new Error("No tienes permiso para editar esta rutina");
+    }
+
+    // Check if exercises exist in the database
+    if (routineExercises.length > 0) {
+      const exerciseIds = routineExercises.map(e => e.id);
+      const { data: existingExercises, error: checkError } = await supabase
+        .from('exercises')
+        .select('id')
+        .in('id', exerciseIds);
+      
+      if (checkError) {
+        throw new Error("Error al verificar los ejercicios: " + checkError.message);
+      }
+      
+      const existingIds = new Set(existingExercises?.map(e => e.id) || []);
+      const missingIds = exerciseIds.filter(id => !existingIds.has(id));
+      
+      if (missingIds.length > 0) {
+        throw new Error(`Algunos ejercicios no existen en la base de datos (IDs: ${missingIds.join(', ')}).`);
+      }
+    }
+
+    // Update the routine basic info
+    const { data: updatedRoutine, error: updateError } = await supabase
+      .from('routines')
+      .update({
+        name: routineName,
+        type: routineType,
+        estimated_duration_minutes: calculateEstimatedDuration(routineExercises),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', routineId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new Error("Error al actualizar la rutina: " + updateError.message);
+    }
+
+    // Delete all existing exercise mappings
+    const { error: deleteError } = await supabase
+      .from('routine_exercises')
+      .delete()
+      .eq('routine_id', routineId);
+      
+    if (deleteError) {
+      throw new Error("Error al actualizar los ejercicios: " + deleteError.message);
+    }
+
+    // Insert the updated exercises
+    if (routineExercises.length > 0) {
+      const routineExercisesData = routineExercises.map((exercise, index) => ({
+        routine_id: routineId,
+        exercise_id: exercise.id,
+        exercise_order: index + 1,
+        sets: exercise.sets.length,
+        reps_min: exercise.sets[0]?.reps_min || 0,
+        reps_max: exercise.sets[0]?.reps_max || 0,
+        rest_between_sets_seconds: exercise.sets[0]?.rest_seconds || 60
+      }));
+
+      const { error: insertError } = await supabase
+        .from('routine_exercises')
+        .insert(routineExercisesData);
+
+      if (insertError) {
+        throw new Error("Error al actualizar los ejercicios: " + insertError.message);
+      }
+    }
+
+    console.log("Routine updated successfully:", updatedRoutine);
+    return updatedRoutine;
+    
+  } catch (error: any) {
+    console.error("Error in updateRoutine:", error);
+    throw error instanceof Error ? error : new Error("Error desconocido al actualizar la rutina");
+  }
+}
+
 // Function to calculate estimated duration
 function calculateEstimatedDuration(exercises: RoutineExercise[]): number {
   // Base time: 5 minutes per exercise

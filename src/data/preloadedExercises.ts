@@ -1,19 +1,46 @@
 
-import { Exercise, DifficultyLevel } from '@/features/workout/types';
-import { chestExercises } from './exercises/chest';
-import { shoulderExercises } from './exercises/shoulderExercises';
-import { legExercises } from './exercises/legExercises';
-import { armExercises } from './exercises/armExercises';
+import { preloadedExercises as chestExercises } from "./exercises/chest";
+import { backExercises } from "./exercises/backExercises";
+import { shoulderExercises } from "./exercises/shoulderExercises";
+import { armExercises } from "./exercises/armExercises";
+import { legExercises } from "./exercises/legExercises";
+import { abdominalExercises } from "./exercises/abdominalExercises";
+import { cardioExercises } from "./exercises/cardioExercises";
+import { forearmExercises } from "./exercises/forearmExercises";
 
-// Helper function to safely cast exercise arrays
-const castExercises = (exercises: any[]): Exercise[] => {
-  return exercises as Exercise[];
-};
+// Ejercicios a eliminar por ser duplicados o por solicitud del usuario
+const exercisesToRemove = [
+  "Abdominal crunch", 
+  "Pull-up", 
+  "Deadlift", 
+  "Peso muerto",
+  "Dominadas", 
+  "Burpees",
+  "Mountain climbers", 
+  "Push-up", 
+  "Bench Press", 
+  "Squat", 
+  "Sentadilla"
+];
 
-// Combine all exercise arrays
-export const preloadedExercises: Exercise[] = [
-  ...castExercises(chestExercises),
-  ...castExercises(shoulderExercises),
-  ...castExercises(legExercises),
-  ...castExercises(armExercises),
+// Filtrar todos los ejercicios para eliminar los duplicados
+const filteredChestExercises = chestExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+const filteredBackExercises = backExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+const filteredShoulderExercises = shoulderExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+const filteredArmExercises = armExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+const filteredLegExercises = legExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+const filteredAbdominalExercises = abdominalExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+const filteredCardioExercises = cardioExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+const filteredForearmExercises = forearmExercises.filter(ex => !exercisesToRemove.includes(ex.name));
+
+// Combinar todos los ejercicios filtrados
+export const preloadedExercises = [
+  ...filteredChestExercises,
+  ...filteredBackExercises,
+  ...filteredShoulderExercises,
+  ...filteredArmExercises,
+  ...filteredLegExercises,
+  ...filteredAbdominalExercises,
+  ...filteredCardioExercises,
+  ...filteredForearmExercises
 ];

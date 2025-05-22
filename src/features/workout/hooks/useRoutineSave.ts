@@ -2,12 +2,12 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { saveRoutine } from "../services/routineService";
+import { saveRoutine, updateRoutine } from "../services/routineService";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
 import { toast as sonnerToast } from "sonner";
 
-export const useRoutineSave = () => {
+export const useRoutineSave = (editRoutineId?: number) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -29,7 +29,8 @@ export const useRoutineSave = () => {
     routineExercises,
     setRoutineName,
     setRoutineType,
-    setRoutineExercises
+    setRoutineExercises,
+    editRoutineId
   );
 
   // Validate form before saving
@@ -77,12 +78,31 @@ export const useRoutineSave = () => {
       setIsSubmitting(true);
       
       // Show saving notification
-      sonnerToast.loading("Guardando rutina...");
-      console.log("Starting to save routine");
+      sonnerToast.loading(editRoutineId ? "Actualizando rutina..." : "Guardando rutina...");
+      console.log(editRoutineId ? "Actualizando rutina existente" : "Guardando nueva rutina");
 
-      // Save the routine
-      const savedRoutine = await saveRoutine(routineName, routineType, routineExercises);
-      console.log("Rutina guardada exitosamente:", savedRoutine);
+      let savedRoutine;
+      
+      if (editRoutineId) {
+        // Actualizar rutina existente
+        savedRoutine = await updateRoutine(
+          editRoutineId,
+          routineName, 
+          routineType, 
+          routineExercises
+        );
+      } else {
+        // Guardar nueva rutina
+        savedRoutine = await saveRoutine(
+          routineName, 
+          routineType, 
+          routineExercises
+        );
+      }
+      
+      console.log(editRoutineId 
+        ? "Rutina actualizada exitosamente:" 
+        : "Rutina guardada exitosamente:", savedRoutine);
       
       // Hide loading notification
       sonnerToast.dismiss();
@@ -98,8 +118,10 @@ export const useRoutineSave = () => {
       
       // Show success toast
       toast({
-        title: "¡Rutina creada!",
-        description: `La rutina ${routineName} ha sido guardada correctamente`,
+        title: editRoutineId ? "¡Rutina actualizada!" : "¡Rutina creada!",
+        description: editRoutineId 
+          ? `La rutina ${routineName} ha sido actualizada correctamente` 
+          : `La rutina ${routineName} ha sido guardada correctamente`,
         variant: "success"
       });
       
@@ -108,15 +130,15 @@ export const useRoutineSave = () => {
       navigate("/workout");
       
     } catch (error: any) {
-      console.error("Error saving routine:", error);
+      console.error(editRoutineId ? "Error actualizando rutina:" : "Error guardando rutina:", error);
       
       // Hide loading notification
       sonnerToast.dismiss();
       
       // Show error toast
       toast({
-        title: "Error al guardar",
-        description: error.message || "Ha ocurrido un error al guardar la rutina. Por favor, intente más tarde.",
+        title: editRoutineId ? "Error al actualizar" : "Error al guardar",
+        description: error.message || "Ha ocurrido un error. Por favor, intente más tarde.",
         variant: "destructive"
       });
       
@@ -126,6 +148,7 @@ export const useRoutineSave = () => {
       setShowSaveConfirmDialog(false);
     }
   }, [
+    editRoutineId,
     routineName, 
     routineType, 
     routineExercises, 
