@@ -1,11 +1,15 @@
 
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRoutineContext } from '../contexts/RoutineContext';
 import { useRoutinePersistence } from './useRoutinePersistence';
+import { useToast } from "@/hooks/use-toast";
 
 export const useRoutineNavigation = (editRoutineId?: number) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  
   const { 
     routineName, 
     routineType, 
@@ -62,6 +66,30 @@ export const useRoutineNavigation = (editRoutineId?: number) => {
       e.preventDefault();
     }
     
+    // Verificar si la ruta actual ya tiene ejercicios seleccionados
+    const locationState = location.state as { selectedExercises?: any[] } | undefined;
+    
+    if (locationState?.selectedExercises && Array.isArray(locationState.selectedExercises)) {
+      // Si hay ejercicios seleccionados en el state (provenientes de la página de detalles)
+      const newExercises = locationState.selectedExercises.map(ex => ({
+        ...ex,
+        sets: ex.sets || [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
+      }));
+      
+      // Añadir los ejercicios seleccionados a los actuales
+      setRoutineExercises([...routineExercises, ...newExercises]);
+      
+      // Mostrar notificación
+      toast({
+        title: "Ejercicio añadido",
+        description: `${newExercises.length} ejercicio(s) añadido(s) a la rutina`,
+      });
+      
+      // Limpiar el state para evitar duplicados si el usuario refresca
+      window.history.replaceState({}, document.title);
+      return;
+    }
+    
     // Save current state before navigating
     const stateToSave = {
       name: routineName,
@@ -75,7 +103,16 @@ export const useRoutineNavigation = (editRoutineId?: number) => {
     // Pasamos la URL de retorno según si estamos en modo edición o creación
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
     navigate(`/workout/select-exercises?returnTo=${returnPath}`);
-  }, [navigate, editRoutineId, routineName, routineType, routineExercises]);
+  }, [
+    navigate, 
+    editRoutineId, 
+    routineName, 
+    routineType, 
+    routineExercises, 
+    setRoutineExercises, 
+    location.state,
+    toast
+  ]);
 
   // Handle navigating when discard is confirmed
   const handleDiscardChanges = useCallback(() => {

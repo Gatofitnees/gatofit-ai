@@ -51,7 +51,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     handleMoveExercise
   } = useRoutineForm(routineExercises, routineName, routineType, setRoutineExercises);
   
-  // Get sheet helpers - Fix the error by passing only the required parameters
+  // Get sheet helpers - Fix: pass only the required parameters
   const {
     handleExerciseOptions,
     handleReorderClick,
@@ -77,7 +77,15 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
   } = useRoutineSave(editRoutineId);
   
   // Get persistence helper
-  const { clearStoredRoutine } = useRoutinePersistence();
+  const { clearStoredRoutine } = useRoutinePersistence(
+    routineName,
+    routineType,
+    routineExercises,
+    setRoutineName,
+    setRoutineType,
+    setRoutineExercises,
+    editRoutineId
+  );
   
   // Load routine data if in edit mode
   const loadRoutineData = useCallback(async (routineId: number) => {

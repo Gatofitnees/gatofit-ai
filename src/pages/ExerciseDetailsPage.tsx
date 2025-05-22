@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Dumbbell } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Button from "@/components/Button";
 import { supabase } from "@/integrations/supabase/client";
 import { useExercises } from "@/hooks/useExercises";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import ExerciseHistoryDialog from "@/components/exercise/ExerciseHistoryDialog";
 
 interface Exercise {
@@ -23,10 +23,24 @@ interface Exercise {
 const ExerciseDetailsPage: React.FC = () => {
   const { id } = useParams<{id: string}>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { exercises, loading: exercisesLoading } = useExercises();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Función para obtener la ruta de retorno
+  const getReturnPath = () => {
+    // Intentar obtener primero desde el state
+    const state = location.state as { from?: string } | undefined;
+    if (state?.from) return state.from;
+    
+    // Si no hay state, intentar con los queryParams
+    const searchParams = new URLSearchParams(location.search);
+    const returnTo = searchParams.get('returnTo');
+    
+    return returnTo || '/workout/select-exercises';
+  };
 
   useEffect(() => {
     const fetchExerciseDetails = async () => {
@@ -68,8 +82,29 @@ const ExerciseDetailsPage: React.FC = () => {
   }, [id, exercises, toast]);
 
   const handleAddToRoutine = () => {
-    // Add to routine and navigate back - preserving state
-    navigate(-1);
+    if (!exercise) return;
+    
+    // Verificar si estamos creando una rutina
+    const returnPath = getReturnPath();
+    const isCreatingRoutine = returnPath.includes('/workout/create') || returnPath.includes('/workout/edit');
+    
+    if (isCreatingRoutine) {
+      // Si venimos de creación de rutina, añadimos este ejercicio
+      navigate(returnPath, {
+        state: { 
+          selectedExercises: [exercise],
+          fromExerciseDetails: true 
+        }
+      });
+      
+      toast({
+        title: "Ejercicio añadido",
+        description: `${exercise.name} ha sido añadido a la rutina`,
+      });
+    } else {
+      // Si no, simplemente volvemos atrás
+      navigate(-1);
+    }
   };
 
   const handleEditExercise = () => {

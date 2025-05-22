@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
 import { ExerciseItem } from "../types";
+import { useToast } from "@/hooks/use-toast";
 
 // Define state types for sessionStorage
 interface SelectExercisesState {
@@ -14,6 +16,7 @@ interface SelectExercisesState {
 const SESSION_STORAGE_KEY = "selectExercisesState";
 
 export const useExerciseSelection = () => {
+  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
@@ -111,6 +114,15 @@ export const useExerciseSelection = () => {
   };
 
   const handleExerciseDetails = (id: number) => {
+    // Save current selection state before navigating
+    const stateToSave: SelectExercisesState = {
+      selectedExercises,
+      searchTerm,
+      muscleFilters,
+      equipmentFilters
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
+    
     // Navigate to the exercise details page
     navigate(`/workout/exercise-details/${id}`);
   };
@@ -134,12 +146,27 @@ export const useExerciseSelection = () => {
   const handleAddExercises = () => {
     // Get the selected exercise objects
     const selectedExerciseObjects = exercises.filter(exercise => 
-      selectedExercises.includes(exercise.id)
+      selectedExercises.includes(Number(exercise.id))
     );
+    
+    if (selectedExerciseObjects.length === 0) {
+      toast({
+        title: "Sin ejercicios seleccionados",
+        description: "Por favor, selecciona al menos un ejercicio para añadir",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Navigate back to the return path with the selected exercises
     navigate(getReturnPath(), { 
       state: { selectedExercises: selectedExerciseObjects } 
+    });
+    
+    // Show success notification
+    toast({
+      title: "Ejercicios añadidos",
+      description: `Se han añadido ${selectedExerciseObjects.length} ejercicios a la rutina`,
     });
     
     // Reset only selections, keep filters for next time
