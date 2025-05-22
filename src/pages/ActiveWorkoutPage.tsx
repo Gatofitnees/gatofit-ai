@@ -1,13 +1,13 @@
 
 import React from "react";
 import { useParams } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { 
   WorkoutHeader,
   ExerciseList,
-  ExerciseStatistics
+  ExerciseStatistics,
+  LoadingSkeleton,
+  RoutineNotFound,
+  SaveButton
 } from "@/features/workout/components/active-workout";
 import { useActiveWorkout } from "@/features/workout/hooks/useActiveWorkout";
 
@@ -34,54 +34,11 @@ const ActiveWorkoutPage: React.FC = () => {
   } = useActiveWorkout(routineId ? parseInt(routineId) : undefined);
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2"
-            onClick={handleBack}
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <Skeleton className="h-8 w-40" />
-        </div>
-        
-        <div className="space-y-4">
-          <Skeleton className="h-20 w-full rounded-xl" />
-          <Skeleton className="h-20 w-full rounded-xl" />
-          <Skeleton className="h-20 w-full rounded-xl" />
-        </div>
-      </div>
-    );
+    return <LoadingSkeleton onBack={handleBack} />;
   }
   
   if (!routine) {
-    return (
-      <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2"
-            onClick={handleBack}
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-xl font-semibold">Rutina no encontrada</h1>
-        </div>
-        
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">
-            La rutina que estás buscando no existe o ha sido eliminada.
-          </p>
-          <Button onClick={() => handleBack()}>
-            Volver a Mis Rutinas
-          </Button>
-        </div>
-      </div>
-    );
+    return <RoutineNotFound onBack={handleBack} />;
   }
 
   // Find the exercise that matches the current statistics dialog
@@ -122,16 +79,10 @@ const ActiveWorkoutPage: React.FC = () => {
       />
       
       {/* Save button (bottom) */}
-      <div className="fixed left-0 right-0 bottom-16 px-4 py-3 bg-background/80 backdrop-blur-md z-10 border-t border-white/5">
-        <Button 
-          variant="default"
-          className="w-full"
-          onClick={handleSaveWorkout}
-          disabled={isSaving}
-        >
-          {isSaving ? "Guardando entrenamiento..." : "Guardar entrenamiento"}
-        </Button>
-      </div>
+      <SaveButton 
+        isSaving={isSaving}
+        onClick={handleSaveWorkout}
+      />
       
       {/* Statistics Dialog */}
       {currentStatsExercise && (
