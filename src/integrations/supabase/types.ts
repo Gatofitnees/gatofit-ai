@@ -629,7 +629,7 @@ export type Database = {
     }
     Functions: {
       create_user_profile: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: Json
       }
     }

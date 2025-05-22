@@ -53,7 +53,18 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
       setIsDeleting(true);
       toast.loading("Eliminando rutina...");
       
-      // Primero eliminamos los ejercicios de la rutina
+      // Primero eliminamos los logs de entrenamiento asociados a esta rutina
+      const { error: workoutLogsError } = await supabase
+        .from('workout_logs')
+        .delete()
+        .eq('routine_id', routine.id);
+        
+      if (workoutLogsError) {
+        console.error("Error deleting workout logs:", workoutLogsError);
+        // Continuamos con la eliminación de la rutina incluso si hay un error en los logs
+      }
+      
+      // Luego eliminamos los ejercicios de la rutina
       const { error: exerciseError } = await supabase
         .from('routine_exercises')
         .delete()
@@ -61,7 +72,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
         
       if (exerciseError) throw exerciseError;
       
-      // Luego eliminamos la rutina
+      // Finalmente eliminamos la rutina
       const { error: routineError } = await supabase
         .from('routines')
         .delete()

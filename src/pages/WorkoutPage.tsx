@@ -29,18 +29,17 @@ const WorkoutPage: React.FC = () => {
         console.log("Exercise synchronization completed");
         
         // Then initialize predefined routines
-        await initPredefinedRoutines();
-        console.log("Predefined routines initialized");
+        const success = await initPredefinedRoutines();
+        if (success) {
+          console.log("Predefined routines initialization completed");
+        }
         
         // Refetch routines after initialization
         await refetch();
       } catch (error: any) {
         console.error("Error loading predefined data:", error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los datos predefinidos. Por favor, recargue la página e intente nuevamente.",
-          variant: "destructive"
-        });
+        // Don't show error toast to the user, just log it to console
+        // This prevents showing error messages for non-critical functionality
       } finally {
         setInitializing(false);
       }
