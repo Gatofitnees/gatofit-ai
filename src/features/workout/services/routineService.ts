@@ -74,13 +74,14 @@ export async function saveRoutine(
 
     console.log("Routine created successfully:", routineData);
 
-    // Insert routine exercises if any
+    // Insert routine exercises if any, preserving the original order
     if (routineExercises.length > 0) {
       // Map exercises to the format expected by the database
+      // Explicitly set exercise_order to match the array index (starting from 1)
       const routineExercisesData = routineExercises.map((exercise, index) => ({
         routine_id: routineData.id,
         exercise_id: exercise.id,
-        exercise_order: index + 1,
+        exercise_order: index + 1, // Ensure order is preserved
         sets: exercise.sets.length,
         reps_min: exercise.sets[0]?.reps_min || 0,
         reps_max: exercise.sets[0]?.reps_max || 0,
@@ -88,7 +89,7 @@ export async function saveRoutine(
       }));
 
       console.log("Saving routine exercises:", routineExercisesData.length);
-      console.log("Exercise IDs:", routineExercisesData.map(e => e.exercise_id));
+      console.log("Exercise IDs with order:", routineExercisesData.map(e => `${e.exercise_id} (order: ${e.exercise_order})`));
 
       // Insert exercise data
       const { error: exercisesError } = await supabase

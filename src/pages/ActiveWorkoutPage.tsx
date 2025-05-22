@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, ChevronRight, BarChart2 } from "lucide-react";
+import { ArrowLeft, Save, ChevronRight, BarChart2, Plus, GripVertical, Pencil, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useRoutineDetail } from "@/features/workout/hooks/useRoutineDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 interface WorkoutSet {
   set_number: number;
@@ -24,6 +28,7 @@ interface WorkoutExercise {
   sets: WorkoutSet[];
   muscle_group_main?: string;
   equipment_required?: string;
+  notes: string;
 }
 
 interface PreviousData {
@@ -43,6 +48,8 @@ const ActiveWorkoutPage: React.FC = () => {
   const [showExerciseDetails, setShowExerciseDetails] = useState<number | null>(null);
   const [showStatsDialog, setShowStatsDialog] = useState<number | null>(null);
   const [previousData, setPreviousData] = useState<Record<number, PreviousData[]>>({});
+  const [isReorderMode, setIsReorderMode] = useState<boolean>(false);
+  const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
 
   // Load exercise history for each exercise
   useEffect(() => {
@@ -60,6 +67,7 @@ const ActiveWorkoutPage: React.FC = () => {
             set_number,
             weight_kg_used,
             reps_completed,
+            notes,
             workout_log_id,
             workout_log:workout_logs(workout_date)
           `)
@@ -71,6 +79,7 @@ const ActiveWorkoutPage: React.FC = () => {
         if (workoutLogDetails && workoutLogDetails.length > 0) {
           // Group by exercise_id
           const exerciseHistory: Record<number, PreviousData[]> = {};
+          const notesMap: Record<number, string> = {};
           
           workoutLogDetails.forEach(detail => {
             if (!exerciseHistory[detail.exercise_id]) {
@@ -83,10 +92,16 @@ const ActiveWorkoutPage: React.FC = () => {
                 weight: detail.weight_kg_used,
                 reps: detail.reps_completed
               };
+
+              // Store notes for the exercise
+              if (detail.notes && !notesMap[detail.exercise_id]) {
+                notesMap[detail.exercise_id] = detail.notes;
+              }
             }
           });
           
           setPreviousData(exerciseHistory);
+          setExerciseNotesMap(notesMap);
         }
       } catch (error) {
         console.error("Error fetching previous workout data:", error);
@@ -118,28 +133,49 @@ const ActiveWorkoutPage: React.FC = () => {
           name: ex.name,
           sets: formattedSets,
           muscle_group_main: ex.muscle_group_main,
-          equipment_required: ex.equipment_required
+          equipment_required: ex.equipment_required,
+          notes: exerciseNotesMap[ex.id] || ""
         };
       });
 
       setExercises(formattedExercises);
     }
-  }, [exerciseDetails, previousData]);
+  }, [exerciseDetails, previousData, exerciseNotesMap]);
 
   const handleInputChange = (
     exerciseIndex: number, 
     setIndex: number, 
-    field: 'weight' | 'reps' | 'notes', 
+    field: 'weight' | 'reps', 
     value: string
   ) => {
     const updatedExercises = [...exercises];
     
-    if (field === 'notes') {
-      updatedExercises[exerciseIndex].sets[setIndex].notes = value;
-    } else {
-      const numValue = value === '' ? null : Number(value);
-      updatedExercises[exerciseIndex].sets[setIndex][field] = numValue;
-    }
+    const numValue = value === '' ? null : Number(value);
+    updatedExercises[exerciseIndex].sets[setIndex][field] = numValue;
+    
+    setExercises(updatedExercises);
+  };
+
+  const handleExerciseNotesChange = (exerciseIndex: number, notes: string) => {
+    const updatedExercises = [...exercises];
+    updatedExercises[exerciseIndex].notes = notes;
+    setExercises(updatedExercises);
+  };
+
+  const handleAddSet = (exerciseIndex: number) => {
+    const updatedExercises = [...exercises];
+    const exercise = updatedExercises[exerciseIndex];
+    const lastSet = exercise.sets[exercise.sets.length - 1];
+    
+    // Add new set with values copied from the last set
+    exercise.sets.push({
+      set_number: exercise.sets.length + 1,
+      weight: lastSet?.weight || null,
+      reps: lastSet?.reps || null,
+      notes: "",
+      previous_weight: null,
+      previous_reps: null
+    });
     
     setExercises(updatedExercises);
   };
@@ -152,6 +188,16 @@ const ActiveWorkoutPage: React.FC = () => {
     if (confirmLeave) {
       navigate("/workout");
     }
+  };
+
+  const handleReorderDrag = (result: any) => {
+    if (!result.destination) return; // Dropped outside the list
+    
+    const items = Array.from(exercises);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    setExercises(items);
   };
 
   const handleSaveWorkout = async () => {
@@ -185,7 +231,7 @@ const ActiveWorkoutPage: React.FC = () => {
       }
       
       // Save exercise details
-      const exerciseDetailsToSave = exercises.flatMap(exercise => 
+      const exerciseDetailsToSave = exercises.flatMap((exercise, index) => 
         exercise.sets
           .filter(set => set.weight !== null || set.reps !== null) // Only save sets with data
           .map(set => ({
@@ -195,7 +241,7 @@ const ActiveWorkoutPage: React.FC = () => {
             set_number: set.set_number,
             weight_kg_used: set.weight,
             reps_completed: set.reps,
-            notes: set.notes
+            notes: exercise.notes // Use the exercise-level notes
           }))
       );
       
@@ -235,6 +281,10 @@ const ActiveWorkoutPage: React.FC = () => {
     // Could be improved with more data about the workout
     const baseCaloriesPerMinute = 8;
     return Math.round(durationMinutes * baseCaloriesPerMinute);
+  };
+
+  const handleViewExerciseDetails = (exerciseId: number) => {
+    navigate(`/workout/exercise-details/${exerciseId}`);
   };
 
   if (loading) {
@@ -304,15 +354,25 @@ const ActiveWorkoutPage: React.FC = () => {
           <h1 className="text-xl font-semibold">{routine.name}</h1>
         </div>
         
-        <Button 
-          variant="default"
-          size="sm"
-          onClick={handleSaveWorkout}
-          disabled={isSaving}
-        >
-          <Save className="h-4 w-4 mr-1" />
-          {isSaving ? "Guardando..." : "Guardar"}
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            variant={isReorderMode ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setIsReorderMode(!isReorderMode)}
+          >
+            {isReorderMode ? "Terminar" : "Reordenar"}
+          </Button>
+          
+          <Button 
+            variant="default"
+            size="sm"
+            onClick={handleSaveWorkout}
+            disabled={isSaving}
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {isSaving ? "Guardando..." : "Guardar"}
+          </Button>
+        </div>
       </div>
       
       {/* Workout Info */}
@@ -323,96 +383,173 @@ const ActiveWorkoutPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Exercises */}
-      <div className="space-y-6">
-        {exercises.map((exercise, exerciseIndex) => (
-          <Card key={`${exercise.id}-${exerciseIndex}`} className="bg-secondary/40 border border-white/5 overflow-hidden p-0">
-            <div className="p-4">
-              {/* Exercise Header */}
-              <div className="flex items-center justify-between mb-3">
-                <div 
-                  className="flex-1 cursor-pointer" 
-                  onClick={() => setShowExerciseDetails(exercise.id)}
-                >
-                  <h3 className="font-medium text-base">{exercise.name}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {exercise.muscle_group_main}
-                    {exercise.equipment_required && ` • ${exercise.equipment_required}`}
-                  </p>
+      {/* Reorder Mode */}
+      {isReorderMode ? (
+        <DragDropContext onDragEnd={handleReorderDrag}>
+          <Droppable droppableId="droppable">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="space-y-2"
+              >
+                {exercises.map((exercise, index) => (
+                  <Draggable key={exercise.id.toString()} draggableId={exercise.id.toString()} index={index}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className="p-3 bg-secondary/40 rounded-lg border border-white/10 flex items-center"
+                      >
+                        <GripVertical className="h-5 w-5 mr-3 text-muted-foreground" />
+                        <span className="font-medium">{exercise.name}</span>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      ) : (
+        /* Exercises */
+        <div className="space-y-6">
+          {exercises.map((exercise, exerciseIndex) => (
+            <Card key={`${exercise.id}-${exerciseIndex}`} className="bg-secondary/40 border border-white/5 overflow-hidden p-0">
+              <div className="p-4">
+                {/* Exercise Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => handleViewExerciseDetails(exercise.id)}
+                  >
+                    <h3 className="font-medium text-base">{exercise.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {exercise.muscle_group_main}
+                      {exercise.equipment_required && ` • ${exercise.equipment_required}`}
+                    </p>
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowStatsDialog(exercise.id)}
+                  >
+                    <BarChart2 className="h-4 w-4 mr-1" />
+                    Estadísticas
+                  </Button>
                 </div>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowStatsDialog(exercise.id)}
-                >
-                  <BarChart2 className="h-4 w-4 mr-1" />
-                  Estadísticas
-                </Button>
-              </div>
-              
-              {/* Sets */}
-              <div className="space-y-3">
-                {exercise.sets.map((set, setIndex) => (
-                  <div key={`set-${setIndex}`} className="p-3 bg-background/50 rounded-lg border border-white/5">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <div className="h-6 w-6 rounded-full bg-primary/30 flex items-center justify-center text-sm mr-2">
-                          {set.set_number}
-                        </div>
-                        <span className="text-sm font-medium">Serie {set.set_number}</span>
-                      </div>
-                      
-                      {(set.previous_weight !== null || set.previous_reps !== null) && (
-                        <div className="text-xs text-muted-foreground">
-                          <span className="font-semibold">Ant: </span>
-                          {set.previous_weight !== null ? `${set.previous_weight}kg` : '-'} x {set.previous_reps !== null ? set.previous_reps : '-'}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div>
-                        <label className="text-xs text-muted-foreground block mb-1">Peso (kg)</label>
-                        <input
-                          type="number"
-                          className="w-full bg-background border border-white/10 rounded p-2 text-sm"
-                          value={set.weight !== null ? set.weight : ''}
-                          onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-                          min="0"
-                          step="0.5"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="text-xs text-muted-foreground block mb-1">Repeticiones</label>
-                        <input
-                          type="number"
-                          className="w-full bg-background border border-white/10 rounded p-2 text-sm"
-                          value={set.reps !== null ? set.reps : ''}
-                          onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-                          min="0"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1">Notas (opcional)</label>
-                      <input
-                        type="text"
-                        className="w-full bg-background border border-white/10 rounded p-2 text-sm"
-                        value={set.notes}
-                        onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'notes', e.target.value)}
-                        placeholder="Ej: Fallé en la última rep"
-                      />
-                    </div>
+                {/* Sets */}
+                <div className="space-y-3">
+                  {/* Header for the table-like layout */}
+                  <div className="grid grid-cols-4 gap-2 px-2">
+                    <div className="text-xs font-medium text-muted-foreground">Serie</div>
+                    <div className="text-xs font-medium text-muted-foreground">Ant</div>
+                    <div className="text-xs font-medium text-muted-foreground">Peso</div>
+                    <div className="text-xs font-medium text-muted-foreground">Reps</div>
                   </div>
-                ))}
+                  
+                  {exercise.sets.map((set, setIndex) => (
+                    <div key={`set-${setIndex}`} className="bg-background/50 rounded-lg border border-white/5 p-2">
+                      <div className="grid grid-cols-4 gap-2">
+                        {/* Serie column */}
+                        <div className="flex items-center">
+                          <div className="h-6 w-6 rounded-full bg-primary/30 flex items-center justify-center text-sm">
+                            {set.set_number}
+                          </div>
+                        </div>
+                        
+                        {/* Anterior column */}
+                        <div className="text-xs text-muted-foreground flex items-center">
+                          {set.previous_weight !== null && set.previous_reps !== null 
+                            ? `${set.previous_weight}kg × ${set.previous_reps}` 
+                            : '-'}
+                        </div>
+                        
+                        {/* Peso column */}
+                        <div>
+                          <Input
+                            type="number"
+                            className="w-full h-8 text-sm"
+                            value={set.weight !== null ? set.weight : ''}
+                            onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
+                            min="0"
+                            step="0.5"
+                            placeholder="kg"
+                          />
+                        </div>
+                        
+                        {/* Reps column */}
+                        <div>
+                          <Input
+                            type="number"
+                            className="w-full h-8 text-sm"
+                            value={set.reps !== null ? set.reps : ''}
+                            onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
+                            min="0"
+                            placeholder="reps"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Exercise Actions */}
+                <div className="mt-3 flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleAddSet(exerciseIndex)}
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    Añadir serie
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      // Toggle notes input visibility or focus if already visible
+                      const updatedExercises = [...exercises];
+                      const current = updatedExercises[exerciseIndex];
+                      setExercises(updatedExercises);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Notas
+                  </Button>
+                </div>
+                
+                {/* Notes textarea */}
+                <div className="mt-2">
+                  <Textarea
+                    placeholder="Notas sobre este ejercicio..."
+                    className="w-full text-sm"
+                    value={exercise.notes}
+                    onChange={(e) => handleExerciseNotesChange(exerciseIndex, e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+          
+          {/* Add Exercise Button */}
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => navigate(`/workout/select-exercises?returnTo=/workout/active/${routineId}`)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Añadir ejercicio
+          </Button>
+        </div>
+      )}
       
       {/* Save button (bottom) */}
       <div className="fixed left-0 right-0 bottom-16 px-4 py-3 bg-background/80 backdrop-blur-md z-10 border-t border-white/5">
@@ -426,33 +563,6 @@ const ActiveWorkoutPage: React.FC = () => {
           {isSaving ? "Guardando entrenamiento..." : "Guardar entrenamiento"}
         </Button>
       </div>
-      
-      {/* Exercise Details Dialog */}
-      <Dialog open={showExerciseDetails !== null} onOpenChange={() => setShowExerciseDetails(null)}>
-        <DialogContent className="bg-background border border-white/5 sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {exercises.find(ex => ex.id === showExerciseDetails)?.name || "Detalles del ejercicio"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <div className="aspect-video bg-secondary/30 rounded-lg mb-4 flex items-center justify-center">
-              <p className="text-muted-foreground text-sm">Video del ejercicio</p>
-            </div>
-            
-            <h4 className="font-medium mb-2">Músculos trabajados</h4>
-            <p className="text-sm text-muted-foreground mb-4">
-              {exercises.find(ex => ex.id === showExerciseDetails)?.muscle_group_main || "No especificado"}
-            </p>
-            
-            <h4 className="font-medium mb-2">Equipamiento</h4>
-            <p className="text-sm text-muted-foreground mb-4">
-              {exercises.find(ex => ex.id === showExerciseDetails)?.equipment_required || "No requiere equipamiento específico"}
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
       
       {/* Statistics Dialog */}
       <Dialog open={showStatsDialog !== null} onOpenChange={() => setShowStatsDialog(null)}>
@@ -469,21 +579,21 @@ const ActiveWorkoutPage: React.FC = () => {
               <p className="text-sm mb-2">
                 <span className="font-medium">Peso máximo:</span> 
                 <span className="ml-2 text-primary">
-                  {previousData[showStatsDialog || 0]?.reduce((max, current) => 
-                    current?.weight !== null && (max === null || (current.weight > (max as number))) 
-                      ? current.weight 
-                      : max, 
-                    null as number | null) || '-'}
+                  {previousData[showStatsDialog || 0]?.reduce((max, current) => {
+                    if (!current || current.weight === null) return max;
+                    if (max === null) return current.weight;
+                    return Math.max(max, current.weight);
+                  }, null as number | null) || '-'}
                 </span> kg
               </p>
               <p className="text-sm">
                 <span className="font-medium">Repeticiones máximas:</span> 
                 <span className="ml-2 text-primary">
-                  {previousData[showStatsDialog || 0]?.reduce((max, current) => 
-                    current?.reps !== null && (max === null || (current.reps > (max as number))) 
-                      ? current.reps 
-                      : max,
-                    null as number | null) || '-'}
+                  {previousData[showStatsDialog || 0]?.reduce((max, current) => {
+                    if (!current || current.reps === null) return max;
+                    if (max === null) return current.reps;
+                    return Math.max(max, current.reps);
+                  }, null as number | null) || '-'}
                 </span>
               </p>
             </div>

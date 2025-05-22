@@ -58,7 +58,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
 
         setRoutine(routineData);
 
-        // Fetch exercises for this routine with more detailed info
+        // Fetch exercises for this routine with more detailed info and ensure correct ordering
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('routine_exercises')
           .select(`
@@ -68,6 +68,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
             reps_max,
             rest_between_sets_seconds,
             exercise_id,
+            exercise_order,
             exercises(
               name,
               muscle_group_main,
