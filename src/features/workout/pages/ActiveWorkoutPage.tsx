@@ -21,14 +21,17 @@ const ActiveWorkoutPage: React.FC = () => {
     loading,
     isSaving,
     showStatsDialog,
+    isReorderMode,
     handleInputChange,
     handleExerciseNotesChange,
     handleAddSet,
     handleBack,
     handleSaveWorkout,
+    handleReorderDrag,
     handleViewExerciseDetails,
     handleAddExercise,
     setShowStatsDialog,
+    handleToggleReorderMode,
     inViewRef,
     isInView
   } = useActiveWorkout(routineIdNum);
@@ -53,18 +56,12 @@ const ActiveWorkoutPage: React.FC = () => {
           onNotesChange={handleExerciseNotesChange}
           onAddSet={handleAddSet}
           onViewDetails={handleViewExerciseDetails}
+          isReorderMode={isReorderMode}
+          onReorderDrag={handleReorderDrag}
+          onShowStats={setShowStatsDialog}
+          onAddExercise={handleAddExercise}
+          routineId={routineId}
         />
-
-        <div className="mt-6 mb-4">
-          <Button 
-            variant="outline" 
-            onClick={handleAddExercise}
-            className="w-full flex items-center justify-center gap-2"
-          >
-            <Plus size={16} />
-            Añadir otro ejercicio
-          </Button>
-        </div>
         
         {/* Invisible element to detect when we've scrolled to the bottom */}
         <div ref={inViewRef} className="h-4"></div>

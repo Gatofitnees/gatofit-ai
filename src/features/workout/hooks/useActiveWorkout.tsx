@@ -18,14 +18,14 @@ const convertToWorkoutExercises = (exercises: any[]): WorkoutExercise[] => {
     notes: "",
     sets: exercise.sets && Array.isArray(exercise.sets) 
       ? exercise.sets 
-      : Array(exercise.sets || 1).fill({
-          set_number: 1,
+      : Array(exercise.sets || 1).fill(0).map((_, i) => ({
+          set_number: i + 1,
           weight: null,
           reps: null,
           notes: "",
           previous_weight: null,
           previous_reps: null
-        })
+        }))
   }));
 };
 
@@ -47,7 +47,9 @@ export function useActiveWorkout(routineId: number | undefined) {
     setShowStatsDialog,
     handleToggleReorderMode,
     appendExercises
-  } = useExerciseData(exerciseDetails ? convertToWorkoutExercises(exerciseDetails) : []);
+  } = useExerciseData(
+    exerciseDetails ? convertToWorkoutExercises(exerciseDetails) : []
+  );
 
   const {
     isSaving,
@@ -60,7 +62,6 @@ export function useActiveWorkout(routineId: number | undefined) {
     handleAddExercise
   } = useWorkoutNavigation(routineId, appendExercises);
 
-  // This will ensure that when new exercises are added, they're properly added to the existing list
   useEffect(() => {
     if (exerciseDetails && exerciseDetails.length > 0) {
       // Only update if we're getting new exercises that should be added
