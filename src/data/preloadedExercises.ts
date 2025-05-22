@@ -10,7 +10,7 @@ import { forearmExercises } from "./exercises/forearmExercises";
 
 // Ejercicios a eliminar por ser duplicados o por solicitud del usuario
 const exercisesToRemove = [
-  "Abdominal crunch", 
+  /workout/exercise-details/1 , 
   "Pull-up", 
   "Deadlift", 
   "Peso muerto",
