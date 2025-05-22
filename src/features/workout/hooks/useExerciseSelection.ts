@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
@@ -6,7 +5,6 @@ import { ExerciseItem } from "../types";
 
 // Define state types for sessionStorage
 interface SelectExercisesState {
-  selectedExercises: number[];
   searchTerm: string;
   muscleFilters: string[];
   equipmentFilters: string[];
@@ -37,8 +35,8 @@ export const useExerciseSelection = () => {
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
       const parsedState = JSON.parse(savedState) as SelectExercisesState;
-      // Reset selected exercises but keep other filters if needed
-      setSelectedExercises([]);
+      // Keep selected exercises empty (will be handled by location state)
+      // but restore filters and search term
       setSearchTerm(parsedState.searchTerm || "");
       setMuscleFilters(parsedState.muscleFilters || []);
       setEquipmentFilters(parsedState.equipmentFilters || []);
@@ -48,13 +46,12 @@ export const useExerciseSelection = () => {
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
     const stateToSave: SelectExercisesState = {
-      selectedExercises,
       searchTerm,
       muscleFilters,
       equipmentFilters
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
-  }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
+  }, [searchTerm, muscleFilters, equipmentFilters]);
 
   // Filter exercises based on search term and selected filters
   const filteredExercises = exercises.filter(exercise => {
@@ -115,7 +112,6 @@ export const useExerciseSelection = () => {
   // Reset session storage and navigate back
   const resetSessionStorage = () => {
     const resetState = {
-      selectedExercises: [],
       searchTerm: "",
       muscleFilters: [],
       equipmentFilters: []
@@ -154,6 +150,7 @@ export const useExerciseSelection = () => {
     resetSessionStorage();
     
     // Navigate back to the return path with the selected exercises
+    console.log("Returning to:", getReturnPath(), "with", exercisesWithSets.length, "exercises");
     navigate(getReturnPath(), { 
       state: { selectedExercises: exercisesWithSets } 
     });

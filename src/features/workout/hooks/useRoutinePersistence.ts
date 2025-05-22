@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
@@ -60,6 +59,7 @@ export const useRoutinePersistence = (
   // Handle exercises from location state (when returning from select exercises)
   useEffect(() => {
     if (location.state && location.state.selectedExercises) {
+      console.log("Received selected exercises:", location.state.selectedExercises.length);
       const newExercises = location.state.selectedExercises.map((exercise: any) => ({
         ...exercise,
         sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
@@ -76,17 +76,13 @@ export const useRoutinePersistence = (
         ex => !existingExerciseIds.has(ex.id)
       );
       
+      console.log("Adding unique exercises:", uniqueNewExercises.length);
+      
       // Actualizar los ejercicios con el array completo
       setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
-      if (window.history.state) {
-        const newState = { ...window.history.state };
-        if (newState.usr && newState.usr.selectedExercises) {
-          delete newState.usr.selectedExercises;
-          window.history.replaceState(newState, '');
-        }
-      }
+      window.history.replaceState({}, document.title, location.pathname + location.search);
     }
   }, [location.state, routineExercises, setRoutineExercises]);
 
