@@ -69,18 +69,26 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     const today = new Date();
     const range: Date[] = [];
     
-    // Include days before today and days after
-    for (let i = -10; i <= 20; i++) {
+    // Include 30 days before today and one day after
+    for (let i = -30; i <= 1; i++) {
       range.push(addDays(today, i));
     }
     
     setDateRange(range);
     
-    // Auto-scroll on component mount to show current day on the left
+    // Auto-scroll on component mount to show current day in the proper position
     setTimeout(() => {
       if (scrollContainerRef.current) {
-        // Reset scroll to show today on the left
-        scrollContainerRef.current.scrollLeft = 0;
+        // Calculate scroll position to put today as the second-to-last item visible
+        const cardWidth = 72; // approximate width of each card + gap (64px + 8px)
+        const containerWidth = scrollContainerRef.current.clientWidth;
+        const todayIndex = 30; // Index of today in our dateRange (since we have 30 days before)
+        const itemsInView = Math.floor(containerWidth / cardWidth);
+        
+        // Calculate position to show today as the second-to-last item
+        const scrollPosition = Math.max(0, (todayIndex - itemsInView + 2) * cardWidth);
+        
+        scrollContainerRef.current.scrollLeft = scrollPosition;
       }
     }, 100);
   }, []);

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import Button from "../components/Button";
 import UserHeader from "../components/UserHeader";
 import DaySelector from "../components/DaySelector";
@@ -9,6 +9,7 @@ import TrainingCard from "../components/TrainingCard";
 import MacrosCard from "../components/MacrosCard";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Plus } from "lucide-react";
 
 interface WorkoutSummary {
   id: number;
@@ -27,8 +28,9 @@ const HomePage: React.FC = () => {
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
   
-  // Example data - In a real implementation, this would come from Supabase
+  // Datos de ejemplo - En una implementación real vendrían de Supabase
   const username = user?.user_metadata?.name || user?.email?.split('@')[0] || "Usuario";
   const userProgress = 75;
   
@@ -38,6 +40,33 @@ const HomePage: React.FC = () => {
     carbs: { current: 130, target: 200 },
     fats: { current: 35, target: 65 }
   };
+
+  // Carga las fechas con entrenamientos al inicio
+  useEffect(() => {
+    const fetchWorkoutDates = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('workout_logs')
+          .select('workout_date')
+          .eq('user_id', user.id)
+          .order('workout_date', { ascending: false })
+          .limit(50);
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const dates = data.map(item => new Date(item.workout_date));
+          setDatesWithWorkouts(dates);
+        }
+      } catch (error) {
+        console.error("Error al cargar fechas de entrenamientos:", error);
+      }
+    };
+    
+    fetchWorkoutDates();
+  }, [user]);
 
   useEffect(() => {
     const fetchDailyWorkout = async () => {
@@ -141,11 +170,7 @@ const HomePage: React.FC = () => {
       {/* Day selector */}
       <DaySelector 
         onSelectDate={handleDateSelect}
-        datesWithRecords={[
-          new Date(),
-          new Date(new Date().setDate(new Date().getDate() - 2)),
-          new Date(new Date().setDate(new Date().getDate() - 5))
-        ]}
+        datesWithRecords={datesWithWorkouts}
       />
 
       {/* Training card */}
@@ -162,6 +187,17 @@ const HomePage: React.FC = () => {
         macros={macros}
         onAddFood={handleAddFood} 
       />
+      
+      {/* Botón flotante para añadir comida */}
+      <div className="fixed right-4 bottom-20 z-30">
+        <Button
+          variant="primary"
+          className="rounded-full h-14 w-14 shadow-lg"
+          onClick={handleAddFood}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 };

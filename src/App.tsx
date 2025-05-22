@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
 import NutritionPage from "./pages/NutritionPage";
@@ -25,6 +25,12 @@ function App() {
             <Route path="/onboarding/*" element={<OnboardingFlow />} />
             <Route
               path="/"
+              element={
+                <Navigate to="/home" replace />
+              }
+            />
+            <Route
+              path="/home"
               element={
                 <ProtectedRoute>
                   <HomePage />

@@ -77,8 +77,8 @@ export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exer
         description: "Tu entrenamiento ha sido registrado correctamente."
       });
       
-      // Navigate to home page
-      navigate("/");
+      // Navigate to home page (changed from "/" to "/home" to match the requested route)
+      navigate("/home");
       
     } catch (error: any) {
       console.error("Error al guardar entrenamiento:", error);
