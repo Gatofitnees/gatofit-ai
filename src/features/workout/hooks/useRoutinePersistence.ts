@@ -84,28 +84,29 @@ export const useRoutinePersistence = (
       
       // Actualizar los ejercicios con el array completo
       if (uniqueNewExercises.length > 0) {
-        // Si debemos agregar a los existentes, concatenamos los arrays
-        if (shouldAddToExisting) {
-          const updatedExercises = [...routineExercises, ...uniqueNewExercises];
-          setRoutineExercises(updatedExercises);
-          console.log("Ejercicios actualizados, total:", updatedExercises.length);
-        } else {
-          // De lo contrario reemplazamos (comportamiento anterior)
-          setRoutineExercises(uniqueNewExercises);
-          console.log("Ejercicios reemplazados, total:", uniqueNewExercises.length);
-        }
+        // Siempre añadimos a los existentes, no reemplazamos
+        const updatedExercises = [...routineExercises, ...uniqueNewExercises];
+        setRoutineExercises(updatedExercises);
+        console.log("Ejercicios actualizados, total:", updatedExercises.length);
       }
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
+      // Usamos history.replaceState en lugar de depender del cleanup del useEffect
       if (window.history.state) {
-        const newState = { ...window.history.state };
-        if (newState.usr && newState.usr.selectedExercises) {
-          delete newState.usr.selectedExercises;
-          window.history.replaceState(newState, '');
-        }
+        window.history.replaceState(
+          { 
+            ...window.history.state, 
+            usr: { 
+              ...window.history.state.usr, 
+              selectedExercises: null,
+              shouldAddToExisting: null
+            } 
+          }, 
+          ''
+        );
       }
     }
-  }, [location.state, routineExercises, setRoutineExercises]);
+  }, [location.state, setRoutineExercises]);
 
   // Limpiar sessionStorage y resetear el formulario
   const clearStoredRoutine = () => {

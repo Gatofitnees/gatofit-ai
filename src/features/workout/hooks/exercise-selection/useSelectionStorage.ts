@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SelectExercisesState, SESSION_STORAGE_KEY } from "./types";
 import { useLocation } from "react-router-dom";
@@ -18,17 +17,21 @@ export const useSelectionStorage = () => {
       // Extract the IDs of already selected exercises
       const existingIds = location.state.currentExercises.map((ex: any) => ex.id);
       setPreviouslySelectedIds(existingIds);
-      console.log("Previously selected exercise IDs:", existingIds);
+      console.log("Previously selected exercise IDs set from state:", existingIds);
     }
     
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState) as SelectExercisesState;
-        // Recover only filters, not the selected exercises for this session
+        // Recover filters and search term, but don't load selected exercises
+        // to avoid issues with multiple selection sessions
         setSearchTerm(parsedState.searchTerm || "");
         setMuscleFilters(parsedState.muscleFilters || []);
         setEquipmentFilters(parsedState.equipmentFilters || []);
+        
+        // We don't restore the selected exercises to avoid confusion between sessions
+        // setSelectedExercises(parsedState.selectedExercises || []);
       } catch (error) {
         console.error("Error parsing exercise selection state:", error);
       }
@@ -50,6 +53,7 @@ export const useSelectionStorage = () => {
   // Reset only selected exercises in session storage
   const resetSessionStorage = () => {
     const currentState = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "{}");
+    // Keep filters but reset selected exercises
     const resetState = {
       ...currentState,
       selectedExercises: []
