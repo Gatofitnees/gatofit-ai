@@ -2,7 +2,8 @@
 import { useCallback, useState } from "react";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
-import { useRoutineNavigation } from "./useRoutineNavigation";
+// Updated import path to use the new location from the navigation folder
+import { useRoutineNavigation } from "./navigation";
 import { useRoutineSheets } from "./useRoutineSheets";
 import { useRoutineSave } from "./useRoutineSave";
 import { useRoutineForm } from "./useRoutineForm";
