@@ -66,28 +66,23 @@ export const useRoutinePersistence = (
   // Manejar ejercicios desde el state de location (al regresar de select exercises)
   useEffect(() => {
     if (location.state && location.state.selectedExercises) {
-      const newExercises = location.state.selectedExercises.map((exercise: any) => ({
-        ...exercise,
-        sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
-      }));
-      
-      // Crear una copia de los ejercicios actuales
-      const updatedExercises = [...routineExercises];
+      const newExercises = location.state.selectedExercises;
+      console.log("Nuevos ejercicios recibidos:", newExercises.length);
       
       // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
-      const existingExerciseIds = new Set(updatedExercises.map(ex => ex.id));
+      const existingExerciseIds = new Set(routineExercises.map(ex => ex.id));
       
       // Filtrar ejercicios nuevos para evitar duplicados
       const uniqueNewExercises = newExercises.filter(
-        ex => !existingExerciseIds.has(ex.id)
+        (ex: any) => !existingExerciseIds.has(ex.id)
       );
+      
+      console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
       
       // Actualizar los ejercicios con el array completo
       if (uniqueNewExercises.length > 0) {
-        setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
-        console.log("Añadiendo nuevos ejercicios a los existentes:", uniqueNewExercises.length);
-      } else {
-        console.log("No hay nuevos ejercicios para añadir");
+        setRoutineExercises([...routineExercises, ...uniqueNewExercises]);
+        console.log("Ejercicios actualizados, total:", [...routineExercises, ...uniqueNewExercises].length);
       }
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
