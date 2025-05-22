@@ -67,7 +67,9 @@ function App() {
               path="/workout/active/:routineId"
               element={
                 <ProtectedRoute>
-                  <ActiveWorkoutPage />
+                  <RoutineProvider>
+                    <ActiveWorkoutPage />
+                  </RoutineProvider>
                 </ProtectedRoute>
               }
             />

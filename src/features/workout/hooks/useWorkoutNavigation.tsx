@@ -4,7 +4,17 @@ import { useRoutineContext } from "../contexts/RoutineContext";
 
 export function useWorkoutNavigation(routineId?: number) {
   const navigate = useNavigate();
-  const { routineExercises } = useRoutineContext();
+  
+  // Wrap the useRoutineContext in a try-catch to handle cases where it might not be available
+  // This makes the hook more resilient
+  let routineExercises: any[] = [];
+  try {
+    const context = useRoutineContext();
+    routineExercises = context.routineExercises;
+  } catch (error) {
+    // If context not available, fallback to empty array
+    console.warn("RoutineContext not available, using fallback");
+  }
   
   const handleBack = () => {
     const confirmLeave = window.confirm(
