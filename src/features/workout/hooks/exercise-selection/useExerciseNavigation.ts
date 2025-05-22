@@ -55,34 +55,14 @@ export const useExerciseNavigation = () => {
     // Get the return path
     const returnPath = getReturnPath();
     
-    // Get current routine exercises to pass them along to maintain state
-    // This is important for when a user has already selected exercises previously
-    let currentRoutineState = null;
-    
-    // Retrieve current routine data from session storage
-    const routineId = returnPath.includes('edit/') ? returnPath.split('edit/')[1] : undefined;
-    const storageKey = routineId ? `createRoutineState_${routineId}` : "createRoutineState";
-    const savedRoutineState = sessionStorage.getItem(storageKey);
-    
-    if (savedRoutineState) {
-      try {
-        const parsedState = JSON.parse(savedRoutineState);
-        if (parsedState.exercises && parsedState.exercises.length > 0) {
-          currentRoutineState = parsedState.exercises;
-        }
-      } catch (error) {
-        console.error("Error parsing saved routine state:", error);
-      }
-    }
-    
     console.log("Añadiendo ejercicios y volviendo a:", returnPath);
     console.log("Ejercicios seleccionados:", exercisesWithSets.length);
     
-    // Navigate back with the selected exercises AND the current state
+    // Navigate back with the selected exercises
     navigate(returnPath, { 
       state: { 
         selectedExercises: exercisesWithSets,
-        currentExercises: currentRoutineState // Pass current exercises for reference 
+        shouldAddToExisting: true // Flag to indicate we want to add to existing exercises
       } 
     });
   };
