@@ -50,6 +50,7 @@ const CreateRoutinePageContent: React.FC = () => {
     handleSaveRoutine,
     handleDiscardChanges,
     handleBackClick,
+    updateValidationErrors,
     
     // Loading/Editing state
     loadRoutineData,
@@ -62,6 +63,11 @@ const CreateRoutinePageContent: React.FC = () => {
       loadRoutineData(parseInt(routineId));
     }
   }, [isEditing, routineId, loadRoutineData]);
+
+  // Update validation errors when fields change
+  useEffect(() => {
+    updateValidationErrors();
+  }, [routineName, routineType, updateValidationErrors]);
   
   // Add a beforeUnload event handler to warn about unsaved changes
   React.useEffect(() => {

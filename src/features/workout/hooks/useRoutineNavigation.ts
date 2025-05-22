@@ -56,16 +56,26 @@ export const useRoutineNavigation = (editRoutineId?: number) => {
     navigate("/workout");
   }, [routineName, routineType, routineExercises, navigate, setShowDiscardChangesDialog]);
 
-  // Navigate to select exercises page
+  // Navigate to select exercises page - preserve current routine state
   const handleSelectExercises = useCallback((e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
     }
     
+    // Save current state before navigating
+    const stateToSave = {
+      name: routineName,
+      type: routineType,
+      exercises: routineExercises
+    };
+    
+    const storageKey = editRoutineId ? `createRoutineState_${editRoutineId}` : "createRoutineState";
+    sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    
     // Pasamos la URL de retorno según si estamos en modo edición o creación
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
     navigate(`/workout/select-exercises?returnTo=${returnPath}`);
-  }, [navigate, editRoutineId]);
+  }, [navigate, editRoutineId, routineName, routineType, routineExercises]);
 
   // Handle navigating when discard is confirmed
   const handleDiscardChanges = useCallback(() => {

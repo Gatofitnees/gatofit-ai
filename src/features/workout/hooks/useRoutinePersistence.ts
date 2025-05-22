@@ -29,15 +29,12 @@ export const useRoutinePersistence = (
       try {
         const { name, type, exercises } = JSON.parse(savedState);
         
-        // Only load from storage if the context state is empty
-        if (!routineName && !routineType && routineExercises.length === 0) {
-          setRoutineName(name || "");
-          setRoutineType(type || "");
-          
-          if (exercises && exercises.length > 0) {
-            // Keep the existing exercises and add any from location state
-            setRoutineExercises(exercises);
-          }
+        // Set state from storage if we have values
+        setRoutineName(name || "");
+        setRoutineType(type || "");
+        
+        if (exercises && exercises.length > 0) {
+          setRoutineExercises(exercises);
         }
       } catch (error) {
         console.error("Error parsing saved routine state:", error);
@@ -49,12 +46,15 @@ export const useRoutinePersistence = (
 
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
-    const stateToSave = {
-      name: routineName,
-      type: routineType,
-      exercises: routineExercises
-    };
-    sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    // Only save if we have data to save
+    if (routineName || routineType || routineExercises.length > 0) {
+      const stateToSave = {
+        name: routineName,
+        type: routineType,
+        exercises: routineExercises
+      };
+      sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    }
   }, [routineName, routineType, routineExercises, storageKey]);
 
   // Handle exercises from location state (when returning from select exercises)

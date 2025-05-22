@@ -7,7 +7,6 @@ import WorkoutHeader from "@/components/workout/WorkoutHeader";
 import WorkoutSearchFilter from "@/components/workout/WorkoutSearchFilter";
 import WorkoutList from "@/components/workout/WorkoutList";
 import { useRoutines } from "@/hooks/useRoutines";
-import { initPredefinedRoutines } from "@/features/workout/services/predefinedRoutinesService";
 import { syncExercisesToDatabase } from "@/features/workout/services/exerciseSyncService";
 import { useNavigate } from "react-router-dom";
 
@@ -18,28 +17,20 @@ const WorkoutPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [initializing, setInitializing] = useState(false);
   
-  // Initialize predefined routines and sync exercises
+  // Sync exercises only
   useEffect(() => {
     const initialize = async () => {
       try {
         setInitializing(true);
         
-        // First ensure all exercises exist in the database
+        // Ensure all exercises exist in the database
         await syncExercisesToDatabase();
         console.log("Exercise synchronization completed");
-        
-        // Then initialize predefined routines
-        const success = await initPredefinedRoutines();
-        if (success) {
-          console.log("Predefined routines initialization completed");
-        }
         
         // Refetch routines after initialization
         await refetch();
       } catch (error: any) {
-        console.error("Error loading predefined data:", error);
-        // Don't show error toast to the user, just log it to console
-        // This prevents showing error messages for non-critical functionality
+        console.error("Error loading exercise data:", error);
       } finally {
         setInitializing(false);
       }
@@ -54,7 +45,6 @@ const WorkoutPage: React.FC = () => {
   );
 
   const handleStartWorkout = (routineId: number) => {
-    // Ir directamente a la pantalla activa sin pasar por la previsualización
     navigate(`/workout/active/${routineId}`);
   };
   

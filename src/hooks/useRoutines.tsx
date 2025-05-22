@@ -34,11 +34,13 @@ export const useRoutines = () => {
         .order('created_at', { ascending: false });
       
       if (user) {
-        // If user is logged in, get their routines and predefined ones
-        query = query.or(`user_id.eq.${user.id},is_predefined.eq.true`);
+        // If user is logged in, get their routines only
+        query = query.eq('user_id', user.id);
       } else {
-        // If user is not logged in, only get predefined routines
-        query = query.eq('is_predefined', true);
+        // If user is not logged in, return empty array
+        setRoutines([]);
+        setLoading(false);
+        return;
       }
 
       const { data, error } = await query;

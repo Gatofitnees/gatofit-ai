@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
@@ -36,12 +35,16 @@ export const useExerciseSelection = () => {
   useEffect(() => {
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
-      const parsedState = JSON.parse(savedState) as SelectExercisesState;
-      // Reset selected exercises but keep other filters if needed
-      setSelectedExercises([]);
-      setSearchTerm(parsedState.searchTerm || "");
-      setMuscleFilters(parsedState.muscleFilters || []);
-      setEquipmentFilters(parsedState.equipmentFilters || []);
+      try {
+        const parsedState = JSON.parse(savedState) as SelectExercisesState;
+        // Reset selected exercises but keep other filters if needed
+        setSelectedExercises([]);
+        setSearchTerm(parsedState.searchTerm || "");
+        setMuscleFilters(parsedState.muscleFilters || []);
+        setEquipmentFilters(parsedState.equipmentFilters || []);
+      } catch (error) {
+        console.error("Error parsing session storage:", error);
+      }
     }
   }, []);
 
@@ -112,19 +115,15 @@ export const useExerciseSelection = () => {
     navigate(`/workout/exercise-details/${id}`);
   };
 
-  // Reset session storage and navigate back
-  const resetSessionStorage = () => {
+  const handleNavigateBack = () => {
+    // Reset selection-specific state but keep filters
     const resetState = {
       selectedExercises: [],
-      searchTerm: "",
-      muscleFilters: [],
-      equipmentFilters: []
+      searchTerm,
+      muscleFilters,
+      equipmentFilters
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
-  };
-
-  const handleNavigateBack = () => {
-    resetSessionStorage();
     navigate(getReturnPath());
   };
 
@@ -138,25 +137,19 @@ export const useExerciseSelection = () => {
       selectedExercises.includes(exercise.id)
     );
     
-    // Add default sets to each exercise
-    const exercisesWithSets = selectedExerciseObjects.map(exercise => ({
-      ...exercise,
-      sets: [
-        {
-          reps_min: 8,
-          reps_max: 12,
-          rest_seconds: 60
-        }
-      ]
-    }));
-    
-    // Clear all state from session storage before navigating
-    resetSessionStorage();
-    
     // Navigate back to the return path with the selected exercises
     navigate(getReturnPath(), { 
-      state: { selectedExercises: exercisesWithSets } 
+      state: { selectedExercises: selectedExerciseObjects } 
     });
+    
+    // Reset only selections, keep filters for next time
+    const resetState = {
+      selectedExercises: [],
+      searchTerm,
+      muscleFilters,
+      equipmentFilters
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
   };
 
   return {

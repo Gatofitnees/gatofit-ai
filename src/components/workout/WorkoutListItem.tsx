@@ -21,7 +21,6 @@ interface WorkoutListItemProps {
     description?: string;
     exercise_count?: number;
     estimated_duration_minutes?: number;
-    is_predefined?: boolean;
   };
   onStartWorkout: (routineId: number) => void;
   onRoutineDeleted: () => void;
@@ -128,7 +127,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                     e.stopPropagation();
                     handleEditRoutine();
                   }}
-                  disabled={routine.is_predefined || isDeleting}
+                  disabled={isDeleting}
                   className="cursor-pointer"
                 >
                   <Edit className="mr-2 h-4 w-4" />
@@ -140,7 +139,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                     e.stopPropagation();
                     handleDelete();
                   }}
-                  disabled={routine.is_predefined || isDeleting}
+                  disabled={isDeleting}
                   className="text-destructive cursor-pointer focus:text-destructive"
                 >
                   <Trash className="mr-2 h-4 w-4" />
