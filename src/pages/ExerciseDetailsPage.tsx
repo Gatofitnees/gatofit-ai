@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Dumbbell } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Button from "@/components/Button";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useExercises } from "@/hooks/useExercises";
 import { useToast } from "@/components/ui/use-toast";
 import ExerciseHistoryDialog from "@/components/exercise/ExerciseHistoryDialog";
+import { toast as sonnerToast } from "sonner";
 
 interface Exercise {
   id: number | string;
@@ -23,10 +24,18 @@ interface Exercise {
 const ExerciseDetailsPage: React.FC = () => {
   const { id } = useParams<{id: string}>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { exercises, loading: exercisesLoading } = useExercises();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Obtener la ruta de retorno de la URL
+  const getReturnPath = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const returnTo = searchParams.get('returnTo');
+    return returnTo || '/workout';
+  };
 
   useEffect(() => {
     const fetchExerciseDetails = async () => {
@@ -68,8 +77,55 @@ const ExerciseDetailsPage: React.FC = () => {
   }, [id, exercises, toast]);
 
   const handleAddToRoutine = () => {
-    // Add to routine and navigate back - preserving state
-    navigate(-1);
+    // Verificar si venimos de una rutina en creación
+    const searchParams = new URLSearchParams(location.search);
+    const returnTo = searchParams.get('returnTo');
+    
+    if (returnTo && returnTo.includes('/workout/create')) {
+      // Añadir el ejercicio a la rutina en creación
+      if (exercise) {
+        // Preparar el ejercicio para agregarlo a la rutina
+        const exerciseToAdd = {
+          ...exercise,
+          sets: [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
+        };
+        
+        // Mostrar notificación
+        sonnerToast.success("Ejercicio añadido a la rutina");
+        
+        // Navegar de vuelta a la pantalla de creación de rutina con el ejercicio
+        navigate('/workout/create', { 
+          state: { selectedExercises: [exerciseToAdd] } 
+        });
+      }
+    } else if (returnTo && returnTo.includes('/workout/active/')) {
+      // Añadir el ejercicio al entrenamiento activo
+      if (exercise) {
+        // Preparar el ejercicio para agregarlo al entrenamiento activo
+        const exerciseToAdd = {
+          ...exercise,
+          sets: [{ 
+            set_number: 1, 
+            weight: null, 
+            reps: null, 
+            notes: "", 
+            previous_weight: null, 
+            previous_reps: null 
+          }]
+        };
+        
+        // Mostrar notificación
+        sonnerToast.success("Ejercicio añadido al entrenamiento");
+        
+        // Navegar de vuelta a la pantalla de entrenamiento activo con el ejercicio
+        navigate(getReturnPath(), { 
+          state: { selectedExercises: [exerciseToAdd] } 
+        });
+      }
+    } else {
+      // Si no venimos de una rutina, simplemente volvemos
+      navigate(-1);
+    }
   };
 
   const handleEditExercise = () => {

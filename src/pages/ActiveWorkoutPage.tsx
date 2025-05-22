@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { 
   WorkoutHeader,
@@ -10,9 +10,16 @@ import {
   SaveButton
 } from "@/features/workout/components/active-workout";
 import { useActiveWorkout } from "@/features/workout/hooks/useActiveWorkout";
+import { useInView } from "react-intersection-observer";
 
 const ActiveWorkoutPage: React.FC = () => {
   const { routineId } = useParams<{ routineId: string }>();
+  const [isBottomReached, setIsBottomReached] = useState(false);
+
+  // Crear un observer para detectar cuando llegamos al final de la lista
+  const { ref: bottomRef, inView: bottomVisible } = useInView({
+    threshold: 0.1,
+  });
   
   const {
     routine,
@@ -32,6 +39,11 @@ const ActiveWorkoutPage: React.FC = () => {
     setShowStatsDialog,
     handleToggleReorderMode
   } = useActiveWorkout(routineId ? parseInt(routineId) : undefined);
+
+  // Actualizar estado cuando el elemento inferior es visible
+  useEffect(() => {
+    setIsBottomReached(bottomVisible);
+  }, [bottomVisible]);
 
   if (loading) {
     return <LoadingSkeleton onBack={handleBack} />;
@@ -78,10 +90,14 @@ const ActiveWorkoutPage: React.FC = () => {
         onAddExercise={handleAddExercise}
       />
       
+      {/* Elemento invisible para detectar cuando llegamos al final */}
+      <div ref={bottomRef} className="h-4 w-full" />
+      
       {/* Save button (bottom) */}
       <SaveButton 
         isSaving={isSaving}
         onClick={handleSaveWorkout}
+        show={isBottomReached}
       />
       
       {/* Statistics Dialog */}
