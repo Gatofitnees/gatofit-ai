@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
@@ -113,7 +114,7 @@ export const useExerciseSelection = () => {
 
   const handleExerciseDetails = (id: number) => {
     // Navigate to the exercise details page
-    navigate(`/workout/exercise-details/${id}`);
+    navigate(`/workout/exercise-details/${id}?returnTo=${encodeURIComponent('/workout/select-exercises' + location.search)}`);
   };
 
   // Reset session storage and navigate back
@@ -133,7 +134,7 @@ export const useExerciseSelection = () => {
   };
 
   const handleCreateExercise = () => {
-    navigate("/workout/create-exercise");
+    navigate("/workout/create-exercise?returnTo=" + encodeURIComponent('/workout/select-exercises' + location.search));
   };
 
   const handleAddExercises = () => {

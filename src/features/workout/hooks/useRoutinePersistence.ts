@@ -29,7 +29,7 @@ export const useRoutinePersistence = (
       try {
         const { name, type, exercises } = JSON.parse(savedState);
         
-        // Solo cargamos desde almacenamiento si el estado del contexto está vacío o ya tenemos datos
+        // Solo cargamos desde almacenamiento si el estado del contexto está vacío
         if (!routineName) {
           setRoutineName(name || "");
         }
@@ -39,7 +39,6 @@ export const useRoutinePersistence = (
         }
         
         if (exercises && exercises.length > 0 && routineExercises.length === 0) {
-          // Mantener los ejercicios existentes
           setRoutineExercises(exercises);
         }
       } catch (error) {
@@ -48,16 +47,20 @@ export const useRoutinePersistence = (
         sessionStorage.removeItem(storageKey);
       }
     }
-  }, [setRoutineName, setRoutineType, setRoutineExercises, storageKey, editRoutineId]);
+  }, [setRoutineName, setRoutineType, setRoutineExercises, storageKey, editRoutineId, routineName, routineType, routineExercises.length]);
 
   // Guardar estado en sessionStorage cuando cambia
   useEffect(() => {
-    const stateToSave = {
-      name: routineName,
-      type: routineType,
-      exercises: routineExercises
-    };
-    sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    // Solo guardamos si hay algo que guardar
+    if (routineName || routineType || routineExercises.length > 0) {
+      const stateToSave = {
+        name: routineName,
+        type: routineType,
+        exercises: routineExercises
+      };
+      sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+      console.log("Estado guardado en sessionStorage:", stateToSave);
+    }
   }, [routineName, routineType, routineExercises, storageKey]);
 
   // Manejar ejercicios desde el state de location (al regresar de select exercises)
@@ -81,6 +84,7 @@ export const useRoutinePersistence = (
       
       // Actualizar los ejercicios con el array completo
       setRoutineExercises([...updatedExercises, ...uniqueNewExercises]);
+      console.log("Añadiendo nuevos ejercicios a los existentes:", uniqueNewExercises.length);
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
       if (window.history.state) {
