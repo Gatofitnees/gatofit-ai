@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
@@ -62,8 +61,20 @@ export const useExerciseSelection = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
   }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
 
+  // Debugging for exercises
+  useEffect(() => {
+    console.log("Exercises loaded:", exercises.length, exercises);
+  }, [exercises]);
+
   // Filter exercises based on search term and selected filters
   const filteredExercises = exercises.filter(exercise => {
+    // Debugging
+    if (!exercise) return false;
+    if (!exercise.name) {
+      console.warn("Exercise without name found:", exercise);
+      return false;
+    }
+
     // Search term filter (name or muscle group)
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (exercise.muscle_group_main?.toLowerCase() || '').includes(searchTerm.toLowerCase());
@@ -88,6 +99,11 @@ export const useExerciseSelection = () => {
 
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
+
+  // Debugging for filtered exercises
+  useEffect(() => {
+    console.log("Filtered exercises:", filteredExercises.length, filteredExercises);
+  }, [filteredExercises]);
 
   const handleExerciseSelect = (id: number) => {
     if (selectedExercises.includes(id)) {

@@ -66,15 +66,22 @@ export const useRoutineNavigation = (editRoutineId?: number) => {
       e.preventDefault();
     }
     
+    console.log("handleSelectExercises called");
+    
     // Verificar si la ruta actual ya tiene ejercicios seleccionados
     const locationState = location.state as { selectedExercises?: any[] } | undefined;
+    console.log("Location state:", locationState);
     
     if (locationState?.selectedExercises && Array.isArray(locationState.selectedExercises)) {
       // Si hay ejercicios seleccionados en el state (provenientes de la página de detalles)
+      console.log("Selected exercises from state:", locationState.selectedExercises);
+      
       const newExercises = locationState.selectedExercises.map(ex => ({
         ...ex,
         sets: ex.sets || [{ reps_min: 8, reps_max: 12, rest_seconds: 60 }]
       }));
+      
+      console.log("New exercises to add:", newExercises);
       
       // Añadir los ejercicios seleccionados a los actuales
       setRoutineExercises([...routineExercises, ...newExercises]);
@@ -96,6 +103,8 @@ export const useRoutineNavigation = (editRoutineId?: number) => {
       type: routineType,
       exercises: routineExercises
     };
+    
+    console.log("Saving routine state to sessionStorage:", stateToSave);
     
     const storageKey = editRoutineId ? `createRoutineState_${editRoutineId}` : "createRoutineState";
     sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));

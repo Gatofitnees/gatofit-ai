@@ -34,23 +34,25 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
     );
   }
 
+  if (!exercises || exercises.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No se encontraron ejercicios
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {exercises.length > 0 ? (
-        exercises.map(exercise => (
-          <ExerciseItem 
-            key={exercise.id}
-            exercise={exercise}
-            isSelected={selectedExercises.includes(exercise.id)}
-            onSelect={onSelectExercise}
-            onViewDetails={onViewDetails}
-          />
-        ))
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          No se encontraron ejercicios
-        </div>
-      )}
+      {exercises.map((exercise) => (
+        <ExerciseItem 
+          key={exercise.id}
+          exercise={exercise}
+          isSelected={selectedExercises.includes(exercise.id)}
+          onSelect={onSelectExercise}
+          onViewDetails={onViewDetails}
+        />
+      ))}
     </div>
   );
 };

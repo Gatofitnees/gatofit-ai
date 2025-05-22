@@ -12,17 +12,20 @@ export const useRoutineSheets = (
   
   // Handle opening the exercise options sheet
   const handleExerciseOptions = useCallback((index: number) => {
+    console.log("Opening exercise options for index:", index);
     setCurrentExerciseIndex(index);
     setShowExerciseOptionsSheet(true);
   }, [setCurrentExerciseIndex, setShowExerciseOptionsSheet]);
 
   // Handle opening the reorder sheet
   const handleReorderClick = useCallback(() => {
+    console.log("Opening reorder sheet");
     setShowReorderSheet(true);
   }, [setShowReorderSheet]);
 
   // Handle saving the exercise order after reordering
   const handleReorderSave = useCallback(() => {
+    console.log("Saving reordered exercises");
     setShowReorderSheet(false);
     
     // Show a toast notification when reordering is saved
