@@ -17,6 +17,7 @@ export const useExerciseSelection = () => {
     equipmentFilters,
     setEquipmentFilters,
     previouslySelectedIds,
+    setPreviouslySelectedIds,
     resetSessionStorage
   } = useSelectionStorage();
 
@@ -65,6 +66,7 @@ export const useExerciseSelection = () => {
     loading,
     previouslySelectedIds,
     setSearchTerm,
+    setPreviouslySelectedIds,
     handleExerciseSelect,
     handleMuscleFilterToggle: handleMuscleFilterToggleWrapper,
     handleEquipmentFilterToggle: handleEquipmentFilterToggleWrapper,

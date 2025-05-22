@@ -1,12 +1,15 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import ExerciseList from "@/components/exercise/ExerciseList";
 import ExerciseSelectionHeader from "@/features/workout/components/exercise-selection/ExerciseSelectionHeader";
 import ExerciseListActions from "@/features/workout/components/exercise-selection/ExerciseListActions";
 import SelectionFloatingButton from "@/features/workout/components/exercise-selection/SelectionFloatingButton";
 import { useExerciseSelection } from "@/features/workout/hooks/useExerciseSelection";
+import { useLocation } from "react-router-dom";
 
 const SelectExercisesPage: React.FC = () => {
+  const location = useLocation();
+  
   const {
     filteredExercises,
     selectedExercises,
@@ -18,6 +21,7 @@ const SelectExercisesPage: React.FC = () => {
     loading,
     previouslySelectedIds,
     setSearchTerm,
+    setPreviouslySelectedIds,
     handleExerciseSelect,
     handleMuscleFilterToggle,
     handleEquipmentFilterToggle,
@@ -26,6 +30,15 @@ const SelectExercisesPage: React.FC = () => {
     handleCreateExercise,
     handleAddExercises
   } = useExerciseSelection();
+  
+  // Effect to set previously selected IDs from location state
+  useEffect(() => {
+    if (location.state && location.state.currentExercises) {
+      const existingIds = location.state.currentExercises.map((ex: any) => ex.id);
+      setPreviouslySelectedIds(existingIds);
+      console.log("Previously selected exercise IDs set from state:", existingIds);
+    }
+  }, [location.state, setPreviouslySelectedIds]);
 
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">
@@ -55,7 +68,7 @@ const SelectExercisesPage: React.FC = () => {
           onSelectExercise={handleExerciseSelect}
           onViewDetails={handleExerciseDetails}
           loading={loading}
-          previouslySelectedIds={previouslySelectedIds} // Pass previously selected IDs
+          previouslySelectedIds={previouslySelectedIds}
         />
       </div>
 

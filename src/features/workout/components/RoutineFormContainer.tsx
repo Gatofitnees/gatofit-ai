@@ -66,7 +66,10 @@ const RoutineFormContainer: React.FC<RoutineFormContainerProps> = ({
                 variant={routineExercises.length > 0 ? "secondary" : "primary"}
                 fullWidth 
                 leftIcon={<Plus className="h-4 w-4" />}
-                onClick={handleSelectExercises}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSelectExercises(e);
+                }}
                 type="button"
               >
                 {routineExercises.length > 0 ? 'Añadir más ejercicios' : 'Añadir Ejercicios'}
