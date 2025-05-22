@@ -63,9 +63,13 @@ export async function saveRoutine(
       .select()
       .single();
 
-    if (routineError || !routineData) {
+    if (routineError) {
       console.error("Error creating routine:", routineError);
-      throw new Error(routineError?.message || "Error al crear la rutina");
+      throw new Error(routineError.message || "Error al crear la rutina");
+    }
+
+    if (!routineData) {
+      throw new Error("No se recibieron datos de la rutina creada");
     }
 
     console.log("Routine created successfully:", routineData);
@@ -78,7 +82,7 @@ export async function saveRoutine(
         routine_id: routineData.id,
         exercise_id: exercise.id,
         exercise_order: index + 1, // Ensure order is preserved
-        sets: exercise.sets.length, // Usar la cantidad real de series
+        sets: exercise.sets.length,
         reps_min: exercise.sets[0]?.reps_min || 0,
         reps_max: exercise.sets[0]?.reps_max || 0,
         rest_between_sets_seconds: exercise.sets[0]?.rest_seconds || 60

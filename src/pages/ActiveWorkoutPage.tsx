@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import { 
   WorkoutHeader,
@@ -10,17 +10,9 @@ import {
   SaveButton
 } from "@/features/workout/components/active-workout";
 import { useActiveWorkout } from "@/features/workout/hooks/useActiveWorkout";
-import { useInView } from "react-intersection-observer";
 
 const ActiveWorkoutPage: React.FC = () => {
   const { routineId } = useParams<{ routineId: string }>();
-  const [isBottomReached, setIsBottomReached] = useState(false);
-
-  // Crear un observer para detectar cuando llegamos al final de la lista
-  const { ref: bottomRef, inView: bottomVisible } = useInView({
-    threshold: 0.1,
-    triggerOnce: false
-  });
   
   const {
     routine,
@@ -40,15 +32,6 @@ const ActiveWorkoutPage: React.FC = () => {
     setShowStatsDialog,
     handleToggleReorderMode
   } = useActiveWorkout(routineId ? parseInt(routineId) : undefined);
-
-  // Actualizar estado cuando el elemento inferior es visible
-  useEffect(() => {
-    if (bottomVisible) {
-      setIsBottomReached(true);
-    } else {
-      setIsBottomReached(false);
-    }
-  }, [bottomVisible]);
 
   if (loading) {
     return <LoadingSkeleton onBack={handleBack} />;
@@ -76,7 +59,7 @@ const ActiveWorkoutPage: React.FC = () => {
       {/* Workout Info */}
       <div className="mb-6 p-3 bg-secondary/20 rounded-lg text-sm">
         <div className="flex items-center justify-between">
-          <span>Tipo: {routine.description || routine.type || "General"}</span>
+          <span>Tipo: {routine.description || "General"}</span>
           <span>Tiempo estimado: {routine.estimated_duration_minutes || 30} min</span>
         </div>
       </div>
@@ -95,14 +78,10 @@ const ActiveWorkoutPage: React.FC = () => {
         onAddExercise={handleAddExercise}
       />
       
-      {/* Elemento invisible para detectar cuando llegamos al final */}
-      <div ref={bottomRef} className="h-20 w-full mt-4" />
-      
       {/* Save button (bottom) */}
       <SaveButton 
         isSaving={isSaving}
         onClick={handleSaveWorkout}
-        show={isBottomReached}
       />
       
       {/* Statistics Dialog */}

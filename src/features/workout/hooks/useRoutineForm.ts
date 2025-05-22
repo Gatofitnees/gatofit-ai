@@ -25,9 +25,6 @@ export function useRoutineForm(
       name: !routineName,
       type: !routineType
     });
-    
-    // Retorna true si todos los campos son válidos
-    return !(!routineName || !routineType);
   }, [routineName, routineType]);
 
   // Add a set to an exercise

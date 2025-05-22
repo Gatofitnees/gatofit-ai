@@ -119,7 +119,7 @@ export const useExerciseSelection = () => {
 
   // Reset session storage and navigate back
   const resetSessionStorage = () => {
-    // Solo limpiamos los ejercicios seleccionados pero mantenemos los filtros
+    // Solo limpiamos los ejercicios seleccionados
     const currentState = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "{}");
     const resetState = {
       ...currentState,
