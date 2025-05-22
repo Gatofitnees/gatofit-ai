@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { preloadedExercises } from "@/data/preloadedExercises";
 import { additionalExercises } from "@/data/additionalExercises";
 import { Exercise } from "@/features/workout/types";
@@ -14,7 +13,6 @@ export const useExercises = () => {
   useEffect(() => {
     const fetchExercises = async () => {
       try {
-        console.log("Fetching exercises from Supabase...");
         const { data, error } = await supabase
           .from('exercises')
           .select('*');
@@ -24,21 +22,17 @@ export const useExercises = () => {
         }
         
         if (data && data.length > 0) {
-          console.log("Loaded exercises from Supabase:", data.length);
           setExercises(data as Exercise[]);
         } else {
           // If no data returned from DB, use preloaded exercises
           // Combine both preloaded and additional exercises
-          console.log("No exercises found in database, loading preloaded exercises");
           const allExercises = [...preloadedExercises, ...additionalExercises];
-          console.log("Preloaded exercises:", allExercises.length);
           setExercises(allExercises);
         }
       } catch (error) {
         console.error('Error fetching exercises:', error);
         // Fallback to preloaded exercises if fetch fails
         const allExercises = [...preloadedExercises, ...additionalExercises];
-        console.log("Falling back to preloaded exercises due to error");
         setExercises(allExercises);
         toast({
           title: "Error",

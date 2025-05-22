@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import ExerciseList from "@/components/exercise/ExerciseList";
 import ExerciseSelectionHeader from "@/features/workout/components/exercise-selection/ExerciseSelectionHeader";
 import ExerciseListActions from "@/features/workout/components/exercise-selection/ExerciseListActions";
@@ -25,13 +25,6 @@ const SelectExercisesPage: React.FC = () => {
     handleCreateExercise,
     handleAddExercises
   } = useExerciseSelection();
-
-  // Debug con useEffect
-  useEffect(() => {
-    console.log("SelectExercisesPage rendered");
-    console.log("Filtered exercises count:", filteredExercises.length);
-    console.log("Loading state:", loading);
-  }, [filteredExercises, loading]);
 
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto">

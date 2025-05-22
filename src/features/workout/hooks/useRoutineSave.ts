@@ -35,26 +35,25 @@ export const useRoutineSave = (editRoutineId?: number) => {
 
   // Validate form before saving
   const validateForm = useCallback(() => {
-    let valid = true;
-    let errorMessage = "";
-    
     if (!routineName || routineName.trim() === '') {
-      valid = false;
-      errorMessage = "Debes escribir un nombre para la rutina";
-    } else if (!routineType || routineType.trim() === '') {
-      valid = false;
-      errorMessage = "Debes seleccionar el tipo de rutina";
-    }
-    
-    if (!valid) {
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Escribe un nombre a la rutina",
         variant: "destructive"
       });
+      return false;
     }
     
-    return valid;
+    if (!routineType || routineType.trim() === '') {
+      toast({
+        title: "Error",
+        description: "Selecciona el tipo de rutina",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
   }, [routineName, routineType, toast]);
 
   // Start the save routine process

@@ -1,23 +1,21 @@
 
-import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { RoutineExercise } from "../types";
+import { useCallback, useState } from "react";
 import { useRoutineContext } from "../contexts/RoutineContext";
-import { useRoutineForm } from "./useRoutineForm";
-import { useRoutineSheets } from "./useRoutineSheets";
-import { useRoutineNavigation } from "./useRoutineNavigation";
-import { useRoutineSave } from "./useRoutineSave";
 import { useRoutinePersistence } from "./useRoutinePersistence";
+import { useRoutineNavigation } from "./useRoutineNavigation";
+import { useRoutineSheets } from "./useRoutineSheets";
+import { useRoutineSave } from "./useRoutineSave";
+import { useRoutineForm } from "./useRoutineForm";
+import { RoutineExercise } from "../types";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editRoutineId?: number) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-
-  // Get all context variables
-  const {
+  
+  // Get context state and setters
+  const { 
     routineName,
     routineType,
     routineExercises,
@@ -28,56 +26,32 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     showExerciseOptionsSheet,
     showReorderSheet,
     currentExerciseIndex,
-    
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    setIsSubmitting,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
-    setCurrentExerciseIndex
   } = useRoutineContext();
-  
-  // Get form helpers
+
+  // Initialize form handling
   const {
     validationErrors,
-    updateValidationErrors,
     handleAddSet,
     handleSetUpdate,
     handleRemoveExercise,
-    handleMoveExercise
-  } = useRoutineForm(routineExercises, routineName, routineType, setRoutineExercises);
-  
-  // Get sheet helpers - Fix: pass only the required parameters
-  const {
-    handleExerciseOptions,
-    handleReorderClick,
-    handleReorderSave
-  } = useRoutineSheets(
-    setShowExerciseOptionsSheet, 
-    setShowReorderSheet, 
-    setCurrentExerciseIndex
+    handleMoveExercise,
+  } = useRoutineForm(
+    routineExercises, 
+    routineName, 
+    routineType, 
+    setRoutineExercises
   );
   
-  // Get navigation helpers
-  const {
-    handleNavigateAway,
-    handleBackClick,
-    handleSelectExercises,
-    handleDiscardChanges
-  } = useRoutineNavigation(editRoutineId);
-  
-  // Get save helpers
-  const {
-    handleSaveRoutineStart,
-    handleSaveRoutine
-  } = useRoutineSave(editRoutineId);
-  
-  // Get persistence helper
-  const { clearStoredRoutine } = useRoutinePersistence(
+  // Set up persistence
+  useRoutinePersistence(
     routineName,
     routineType,
     routineExercises,
@@ -87,99 +61,94 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     editRoutineId
   );
   
-  // Load routine data if in edit mode
+  // Set up navigation handlers
+  const { 
+    handleNavigateAway,
+    handleBackClick,
+    handleSelectExercises,
+    handleDiscardChanges 
+  } = useRoutineNavigation(editRoutineId);
+  
+  // Set up sheet handlers
+  const { 
+    handleExerciseOptions,
+    handleReorderClick,
+    handleReorderSave 
+  } = useRoutineSheets();
+  
+  // Set up save handlers
+  const { 
+    handleSaveRoutineStart,
+    handleSaveRoutine 
+  } = useRoutineSave(editRoutineId);
+
+  // Función para cargar los datos de la rutina a editar
   const loadRoutineData = useCallback(async (routineId: number) => {
     setIsLoading(true);
     try {
-      // Fetch routine details
+      // Obtener datos de la rutina
       const { data: routineData, error: routineError } = await supabase
         .from('routines')
         .select('*')
         .eq('id', routineId)
         .single();
-        
-      if (routineError) {
-        throw routineError;
+
+      if (routineError || !routineData) {
+        throw routineError || new Error("No se encontró la rutina");
       }
-      
-      if (!routineData) {
-        throw new Error(`No routine found with ID ${routineId}`);
-      }
-      
-      // Update routine details in state
+
+      // Establecer nombre y tipo
       setRoutineName(routineData.name);
-      setRoutineType(routineData.type || '');
-      
-      // Fetch routine exercises
-      const { data: exercisesData, error: exercisesError } = await supabase
+      setRoutineType(routineData.type || "");
+
+      // Obtener ejercicios de la rutina
+      const { data: routineExercisesData, error: exercisesError } = await supabase
         .from('routine_exercises')
         .select(`
           *,
-          exercise:exercise_id (
-            id,
-            name,
-            muscle_group_main,
-            equipment_required,
-            video_url
-          )
+          exercise:exercise_id(*)
         `)
         .eq('routine_id', routineId)
         .order('exercise_order', { ascending: true });
-        
+
       if (exercisesError) {
         throw exercisesError;
       }
-      
-      if (exercisesData && exercisesData.length > 0) {
-        // Transform data to match RoutineExercise format
-        const formattedExercises: RoutineExercise[] = [];
-        
-        // Group exercises by exercise_id and collect sets
-        const exerciseMap = new Map();
-        
-        exercisesData.forEach(item => {
-          const exerciseId = item.exercise_id;
-          
-          if (!exerciseMap.has(exerciseId)) {
-            // Create new exercise entry
-            exerciseMap.set(exerciseId, {
-              id: item.exercise.id,
-              name: item.exercise.name,
-              muscle_group_main: item.exercise.muscle_group_main,
-              equipment_required: item.exercise.equipment_required,
-              video_url: item.exercise.video_url,
-              sets: []
-            });
-          }
-          
-          // Add set to the exercise
-          exerciseMap.get(exerciseId).sets.push({
-            reps_min: item.reps_min,
-            reps_max: item.reps_max,
-            rest_seconds: item.rest_between_sets_seconds
-          });
+
+      if (routineExercisesData && routineExercisesData.length > 0) {
+        // Formatear datos de ejercicios
+        const formattedExercises = routineExercisesData.map(item => {
+          const exerciseData = item.exercise as any;
+          return {
+            id: exerciseData.id,
+            name: exerciseData.name,
+            muscle_group_main: exerciseData.muscle_group_main,
+            equipment_required: exerciseData.equipment_required,
+            sets: Array(item.sets || 1).fill({}).map((_, idx) => ({
+              set_number: idx + 1,
+              reps_min: item.reps_min || 8,
+              reps_max: item.reps_max || 12,
+              rest_seconds: item.rest_between_sets_seconds || 60
+            })),
+            notes: ""
+          };
         });
-        
-        // Convert map to array
-        exerciseMap.forEach(exercise => {
-          formattedExercises.push(exercise);
-        });
-        
+
         setRoutineExercises(formattedExercises);
       }
-      
+
+      console.log("Rutina cargada para edición:", routineData.name);
     } catch (error: any) {
-      console.error("Error loading routine data:", error);
+      console.error("Error al cargar la rutina:", error);
       toast({
         title: "Error",
-        description: "No se pudo cargar los datos de la rutina",
+        description: "No se pudo cargar la rutina para editar",
         variant: "destructive"
       });
-      navigate("/workout");
     } finally {
       setIsLoading(false);
     }
-  }, [setRoutineName, setRoutineType, setRoutineExercises, toast, navigate]);
+  }, [setRoutineName, setRoutineType, setRoutineExercises, toast]);
 
   return {
     // State
@@ -194,10 +163,12 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     showExerciseOptionsSheet,
     showReorderSheet,
     currentExerciseIndex,
+    isLoading,
     
     // State setters
     setRoutineName,
     setRoutineType,
+    setRoutineExercises,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowDiscardChangesDialog,
@@ -216,11 +187,10 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     handleSaveRoutineStart,
     handleSaveRoutine,
     handleDiscardChanges,
+    handleNavigateAway,
     handleBackClick,
-    updateValidationErrors,
     
-    // Loading/Editing state
-    loadRoutineData,
-    isLoading
+    // Carga de datos para edición
+    loadRoutineData
   };
 };

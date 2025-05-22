@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
 import { ExerciseItem } from "../types";
-import { useToast } from "@/hooks/use-toast";
 
 // Define state types for sessionStorage
 interface SelectExercisesState {
@@ -15,7 +15,6 @@ interface SelectExercisesState {
 const SESSION_STORAGE_KEY = "selectExercisesState";
 
 export const useExerciseSelection = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
@@ -37,16 +36,12 @@ export const useExerciseSelection = () => {
   useEffect(() => {
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
-      try {
-        const parsedState = JSON.parse(savedState) as SelectExercisesState;
-        // Reset selected exercises but keep other filters if needed
-        setSelectedExercises([]);
-        setSearchTerm(parsedState.searchTerm || "");
-        setMuscleFilters(parsedState.muscleFilters || []);
-        setEquipmentFilters(parsedState.equipmentFilters || []);
-      } catch (error) {
-        console.error("Error parsing session storage:", error);
-      }
+      const parsedState = JSON.parse(savedState) as SelectExercisesState;
+      // Reset selected exercises but keep other filters if needed
+      setSelectedExercises([]);
+      setSearchTerm(parsedState.searchTerm || "");
+      setMuscleFilters(parsedState.muscleFilters || []);
+      setEquipmentFilters(parsedState.equipmentFilters || []);
     }
   }, []);
 
@@ -61,20 +56,8 @@ export const useExerciseSelection = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
   }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters]);
 
-  // Debugging for exercises
-  useEffect(() => {
-    console.log("Exercises loaded:", exercises.length, exercises);
-  }, [exercises]);
-
   // Filter exercises based on search term and selected filters
   const filteredExercises = exercises.filter(exercise => {
-    // Debugging
-    if (!exercise) return false;
-    if (!exercise.name) {
-      console.warn("Exercise without name found:", exercise);
-      return false;
-    }
-
     // Search term filter (name or muscle group)
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (exercise.muscle_group_main?.toLowerCase() || '').includes(searchTerm.toLowerCase());
@@ -99,11 +82,6 @@ export const useExerciseSelection = () => {
 
     return matchesSearch && matchesMuscle && matchesEquipment;
   });
-
-  // Debugging for filtered exercises
-  useEffect(() => {
-    console.log("Filtered exercises:", filteredExercises.length, filteredExercises);
-  }, [filteredExercises]);
 
   const handleExerciseSelect = (id: number) => {
     if (selectedExercises.includes(id)) {
@@ -130,28 +108,23 @@ export const useExerciseSelection = () => {
   };
 
   const handleExerciseDetails = (id: number) => {
-    // Save current selection state before navigating
-    const stateToSave: SelectExercisesState = {
-      selectedExercises,
-      searchTerm,
-      muscleFilters,
-      equipmentFilters
-    };
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
-    
     // Navigate to the exercise details page
     navigate(`/workout/exercise-details/${id}`);
   };
 
-  const handleNavigateBack = () => {
-    // Reset selection-specific state but keep filters
+  // Reset session storage and navigate back
+  const resetSessionStorage = () => {
     const resetState = {
       selectedExercises: [],
-      searchTerm,
-      muscleFilters,
-      equipmentFilters
+      searchTerm: "",
+      muscleFilters: [],
+      equipmentFilters: []
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
+  };
+
+  const handleNavigateBack = () => {
+    resetSessionStorage();
     navigate(getReturnPath());
   };
 
@@ -162,37 +135,28 @@ export const useExerciseSelection = () => {
   const handleAddExercises = () => {
     // Get the selected exercise objects
     const selectedExerciseObjects = exercises.filter(exercise => 
-      selectedExercises.includes(Number(exercise.id))
+      selectedExercises.includes(exercise.id)
     );
     
-    if (selectedExerciseObjects.length === 0) {
-      toast({
-        title: "Sin ejercicios seleccionados",
-        description: "Por favor, selecciona al menos un ejercicio para añadir",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Add default sets to each exercise
+    const exercisesWithSets = selectedExerciseObjects.map(exercise => ({
+      ...exercise,
+      sets: [
+        {
+          reps_min: 8,
+          reps_max: 12,
+          rest_seconds: 60
+        }
+      ]
+    }));
+    
+    // Clear all state from session storage before navigating
+    resetSessionStorage();
     
     // Navigate back to the return path with the selected exercises
     navigate(getReturnPath(), { 
-      state: { selectedExercises: selectedExerciseObjects } 
+      state: { selectedExercises: exercisesWithSets } 
     });
-    
-    // Show success notification
-    toast({
-      title: "Ejercicios añadidos",
-      description: `Se han añadido ${selectedExerciseObjects.length} ejercicios a la rutina`,
-    });
-    
-    // Reset only selections, keep filters for next time
-    const resetState = {
-      selectedExercises: [],
-      searchTerm,
-      muscleFilters,
-      equipmentFilters
-    };
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
   };
 
   return {
