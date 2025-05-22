@@ -1,5 +1,5 @@
 
-import { preloadedExercises as chestExercises } from "./exercises/chest";
+import { chestExercises } from "./exercises/chest";
 import { backExercises } from "./exercises/backExercises";
 import { shoulderExercises } from "./exercises/shoulderExercises";
 import { armExercises } from "./exercises/armExercises";

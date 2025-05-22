@@ -32,8 +32,9 @@ const RoutineDialogs: React.FC<RoutineDialogsProps> = ({
   return (
     <>
       <NoExercisesDialog 
-        isOpen={showNoExercisesDialog}
-        onClose={() => setShowNoExercisesDialog(false)}
+        open={showNoExercisesDialog}
+        onOpenChange={setShowNoExercisesDialog}
+        onConfirm={handleSaveRoutine}
       />
       
       <SaveConfirmDialog 
@@ -45,8 +46,8 @@ const RoutineDialogs: React.FC<RoutineDialogsProps> = ({
       />
       
       <DiscardChangesDialog 
-        isOpen={showDiscardChangesDialog}
-        onClose={() => setShowDiscardChangesDialog(false)}
+        open={showDiscardChangesDialog}
+        onOpenChange={setShowDiscardChangesDialog}
         onConfirm={handleDiscardChanges}
       />
     </>
