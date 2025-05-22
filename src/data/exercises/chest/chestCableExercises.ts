@@ -1,9 +1,10 @@
+
 import { Exercise, normalizeDifficulty } from '../exerciseTypes';
 
 // Chest exercises with cables (IDs 3039-3046)
 export const chestCableExercises: Exercise[] = [
   {
-    id: 3001,
+    id: 3039,
     name: "Aperturas con banda",
     muscle_group_main: "Pecho",
     equipment_required: "Banda",
@@ -12,7 +13,7 @@ export const chestCableExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-con-banda.mp4",
   },
   {
-    id: 3002,
+    id: 3040,
     name: "Aperturas en polea baja",
     muscle_group_main: "Pecho",
     equipment_required: "Polea",
@@ -21,7 +22,7 @@ export const chestCableExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-polea-baja.mp4",
   },
   {
-    id: 3003,
+    id: 3041,
     name: "Aperturas en polea media",
     muscle_group_main: "Pecho",
     equipment_required: "Polea",
@@ -30,7 +31,7 @@ export const chestCableExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-polea-media.mp4",
   },
   {
-    id: 3004,
+    id: 3042,
     name: "Aperturas en polea media con banco",
     muscle_group_main: "Pecho",
     equipment_required: "Polea",
@@ -39,7 +40,7 @@ export const chestCableExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/aperturas-en-polea-media-con-banco.mp4",
   },
   {
-    id: 3019,
+    id: 3043,
     name: "Press en polea",
     muscle_group_main: "Pecho",
     equipment_required: "Polea",
@@ -48,7 +49,7 @@ export const chestCableExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-en-polea.mp4",
   },
   {
-    id: 3021,
+    id: 3044,
     name: "Press inclinado en polea con banco",
     muscle_group_main: "Pecho",
     equipment_required: "Polea",
@@ -57,7 +58,7 @@ export const chestCableExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-inclinado-en-polea-con-banco.mp4",
   },
   {
-    id: 3026,
+    id: 3045,
     name: "Press plano en polea",
     muscle_group_main: "Pecho",
     equipment_required: "Polea",
@@ -66,7 +67,7 @@ export const chestCableExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-plano-en-polea.mp4",
   },
   {
-    id: 3034,
+    id: 3046,
     name: "Aperturas en polea alta",
     muscle_group_main: "Pecho",
     equipment_required: "Polea",

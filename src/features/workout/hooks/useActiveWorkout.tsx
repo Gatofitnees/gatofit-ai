@@ -1,13 +1,40 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoutineDetail } from "./useRoutineDetail";
 import { useExerciseData } from "./useExerciseData";
 import { useSaveWorkout } from "./useSaveWorkout";
 import { useWorkoutNavigation } from "./useWorkoutNavigation";
+import { useInView } from "react-intersection-observer";
+import { WorkoutExercise } from "../types/workout";
+import { RoutineExercise } from "../types";
+
+// Helper function to convert ExerciseDetail to WorkoutExercise
+const convertToWorkoutExercises = (exercises: any[]): WorkoutExercise[] => {
+  return exercises.map(exercise => ({
+    id: exercise.id,
+    name: exercise.name,
+    muscle_group_main: exercise.muscle_group_main || "",
+    equipment_required: exercise.equipment_required,
+    notes: "",
+    sets: exercise.sets && Array.isArray(exercise.sets) 
+      ? exercise.sets 
+      : Array(exercise.sets || 1).fill(0).map((_, i) => ({
+          set_number: i + 1,
+          weight: null,
+          reps: null,
+          notes: "",
+          previous_weight: null,
+          previous_reps: null
+        }))
+  }));
+};
 
 export function useActiveWorkout(routineId: number | undefined) {
   const [workoutStartTime] = useState<Date>(new Date());
   const { routine, exerciseDetails, loading } = useRoutineDetail(routineId);
+  const { ref, inView } = useInView({
+    threshold: 0.5,
+  });
   
   const {
     exercises,
@@ -18,8 +45,11 @@ export function useActiveWorkout(routineId: number | undefined) {
     handleAddSet,
     handleReorderDrag,
     setShowStatsDialog,
-    handleToggleReorderMode
-  } = useExerciseData(exerciseDetails);
+    handleToggleReorderMode,
+    appendExercises
+  } = useExerciseData(
+    exerciseDetails ? convertToWorkoutExercises(exerciseDetails) : []
+  );
 
   const {
     isSaving,
@@ -30,7 +60,14 @@ export function useActiveWorkout(routineId: number | undefined) {
     handleBack,
     handleViewExerciseDetails,
     handleAddExercise
-  } = useWorkoutNavigation(routineId);
+  } = useWorkoutNavigation(routineId, appendExercises);
+
+  useEffect(() => {
+    if (exerciseDetails && exerciseDetails.length > 0) {
+      // Only update if we're getting new exercises that should be added
+      // This prevents overriding user input when navigating back
+    }
+  }, [exerciseDetails]);
 
   return {
     routine,
@@ -48,6 +85,8 @@ export function useActiveWorkout(routineId: number | undefined) {
     handleViewExerciseDetails,
     handleAddExercise,
     setShowStatsDialog,
-    handleToggleReorderMode
+    handleToggleReorderMode,
+    inViewRef: ref,
+    isInView: inView
   };
 }

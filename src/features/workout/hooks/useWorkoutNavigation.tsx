@@ -1,32 +1,53 @@
 
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { RoutineExercise } from "../types";
+import { toast } from "sonner";
+import { WorkoutExercise } from "../types/workout";
 
-export function useWorkoutNavigation(routineId?: number) {
+export function useWorkoutNavigation(
+  routineId: number | undefined,
+  appendExercises?: (exercises: RoutineExercise[] | WorkoutExercise[]) => void
+) {
   const navigate = useNavigate();
-  
-  const handleBack = () => {
-    const confirmLeave = window.confirm(
-      "¿Estás seguro de que deseas abandonar el entrenamiento? Los datos no guardados se perderán."
-    );
+  const location = useLocation();
+
+  const handleBack = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
+
+  const handleViewExerciseDetails = useCallback((exerciseId: number) => {
+    // Save current URL to return to after viewing details
+    const returnPath = location.pathname + location.search;
+    navigate(`/workout/exercise-details/${exerciseId}?returnTo=${encodeURIComponent(returnPath)}`);
+  }, [navigate, location]);
+
+  const handleAddExercise = useCallback(() => {
+    // Determine if we're on the active workout screen or creating a routine
+    const isActiveWorkout = location.pathname.includes('/active');
+    const returnPath = location.pathname + location.search;
     
-    if (confirmLeave) {
-      navigate("/workout");
-    }
-  };
+    navigate(`/workout/select-exercises?returnTo=${encodeURIComponent(returnPath)}${routineId ? `&routineId=${routineId}` : ''}`);
+  }, [navigate, location, routineId]);
 
-  const handleViewExerciseDetails = (exerciseId: number) => {
-    navigate(`/workout/exercise-details/${exerciseId}`);
-  };
-
-  const handleAddExercise = () => {
-    // Ahora pasamos la ruta de retorno como parámetro para volver a la pantalla correcta
-    // Ya sea /workout/create para nuevas rutinas o /workout/edit/:id para edición
-    if (routineId) {
-      navigate(`/workout/select-exercises?returnTo=/workout/edit/${routineId}`);
-    } else {
-      navigate(`/workout/select-exercises?returnTo=/workout/create`);
-    }
-  };
+  // This function will be called when returning from select-exercises with new exercises
+  useEffect(() => {
+    const handleLocationState = () => {
+      const state = location.state as { selectedExercises?: RoutineExercise[] } | null;
+      
+      if (state?.selectedExercises && appendExercises) {
+        appendExercises(state.selectedExercises);
+        
+        // Show confirmation toast
+        toast.success("Ejercicios añadidos correctamente");
+        
+        // Clear the location state to avoid duplicate additions
+        navigate(location.pathname + location.search, { replace: true });
+      }
+    };
+    
+    handleLocationState();
+  }, [location, appendExercises, navigate]);
 
   return {
     handleBack,

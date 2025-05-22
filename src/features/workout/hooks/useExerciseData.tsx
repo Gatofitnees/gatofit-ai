@@ -1,158 +1,140 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { WorkoutExercise, WorkoutSet, PreviousData } from "../types/workout";
+import { useState, useEffect, useCallback } from "react";
+import { RoutineExercise } from "../types";
+import { WorkoutExercise, WorkoutSet } from "../types/workout";
 
-export function useExerciseData(exerciseDetails: any[]) {
+export function useExerciseData(initialExercises: WorkoutExercise[] | undefined) {
   const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
-  const [previousData, setPreviousData] = useState<Record<number, PreviousData[]>>({});
-  const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
-  const [showExerciseDetails, setShowExerciseDetails] = useState<number | null>(null);
   const [showStatsDialog, setShowStatsDialog] = useState<number | null>(null);
-  const [isReorderMode, setIsReorderMode] = useState<boolean>(false);
-
-  // Load exercise history for each exercise
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  
+  // Initialize exercises from initial data
   useEffect(() => {
-    if (!exerciseDetails.length) return;
+    if (initialExercises && initialExercises.length > 0 && exercises.length === 0) {
+      setExercises(initialExercises);
+    }
+  }, [initialExercises, exercises.length]);
+  
+  // Function to append new exercises to the existing ones, without duplicates
+  const appendExercises = useCallback((newExercises: RoutineExercise[] | WorkoutExercise[]) => {
+    if (!newExercises || newExercises.length === 0) return;
     
-    const fetchPreviousData = async () => {
-      try {
-        const exerciseIds = exerciseDetails.map(ex => ex.id);
-        
-        // Fetch the latest workout log for these exercises
-        const { data: workoutLogDetails, error } = await supabase
-          .from('workout_log_exercise_details')
-          .select(`
-            exercise_id,
-            set_number,
-            weight_kg_used,
-            reps_completed,
-            notes,
-            workout_log_id,
-            workout_log:workout_logs(workout_date)
-          `)
-          .in('exercise_id', exerciseIds)
-          .order('workout_log_id', { ascending: false });
-          
-        if (error) throw error;
-        
-        if (workoutLogDetails && workoutLogDetails.length > 0) {
-          // Group by exercise_id
-          const exerciseHistory: Record<number, PreviousData[]> = {};
-          const notesMap: Record<number, string> = {};
-          
-          workoutLogDetails.forEach(detail => {
-            if (!exerciseHistory[detail.exercise_id]) {
-              exerciseHistory[detail.exercise_id] = [];
-            }
-            
-            // Add the set data if it matches the current position
-            if (detail.set_number && detail.set_number <= 20) { // Limit to 20 sets
-              exerciseHistory[detail.exercise_id][detail.set_number - 1] = {
-                weight: detail.weight_kg_used,
-                reps: detail.reps_completed
-              };
-
-              // Store notes for the exercise
-              if (detail.notes && !notesMap[detail.exercise_id]) {
-                notesMap[detail.exercise_id] = detail.notes;
-              }
-            }
-          });
-          
-          setPreviousData(exerciseHistory);
-          setExerciseNotesMap(notesMap);
-        }
-      } catch (error) {
-        console.error("Error fetching previous workout data:", error);
-      }
-    };
-    
-    fetchPreviousData();
-  }, [exerciseDetails]);
-
-  // Initialize workout exercises from routine details
-  useEffect(() => {
-    if (exerciseDetails.length > 0) {
-      const formattedExercises: WorkoutExercise[] = exerciseDetails.map(ex => {
-        // Create formatted sets
-        const formattedSets: WorkoutSet[] = Array.from(
-          { length: ex.sets || 0 },
-          (_, i) => ({
-            set_number: i + 1,
+    setExercises(prev => {
+      // Create a Set of existing exercise IDs for quick lookup
+      const existingIds = new Set(prev.map(e => e.id));
+      
+      // Convert and filter out any duplicates from newExercises
+      const convertedExercises = newExercises.map(e => {
+        // Check if it's already a WorkoutExercise or needs conversion
+        if ('notes' in e) {
+          return e as WorkoutExercise;
+        } else {
+          // Convert RoutineExercise to WorkoutExercise
+          const routineEx = e as RoutineExercise;
+          const workoutSets: WorkoutSet[] = routineEx.sets.map((set, idx) => ({
+            set_number: idx + 1,
             weight: null,
             reps: null,
             notes: "",
-            previous_weight: previousData[ex.id]?.[i]?.weight || null,
-            previous_reps: previousData[ex.id]?.[i]?.reps || null
-          })
-        );
-
-        return {
-          id: ex.id,
-          name: ex.name,
-          sets: formattedSets,
-          muscle_group_main: ex.muscle_group_main,
-          equipment_required: ex.equipment_required,
-          notes: exerciseNotesMap[ex.id] || ""
-        };
+            previous_weight: null,
+            previous_reps: null
+          }));
+          
+          return {
+            id: routineEx.id,
+            name: routineEx.name,
+            muscle_group_main: routineEx.muscle_group_main || "",
+            equipment_required: routineEx.equipment_required,
+            notes: "",
+            sets: workoutSets
+          };
+        }
       });
-
-      setExercises(formattedExercises);
-    }
-  }, [exerciseDetails, previousData, exerciseNotesMap]);
-
-  const handleInputChange = (
-    exerciseIndex: number, 
-    setIndex: number, 
-    field: 'weight' | 'reps', 
-    value: string
-  ) => {
-    const updatedExercises = [...exercises];
-    
-    const numValue = value === '' ? null : Number(value);
-    updatedExercises[exerciseIndex].sets[setIndex][field] = numValue;
-    
-    setExercises(updatedExercises);
-  };
-
-  const handleExerciseNotesChange = (exerciseIndex: number, notes: string) => {
-    const updatedExercises = [...exercises];
-    updatedExercises[exerciseIndex].notes = notes;
-    setExercises(updatedExercises);
-  };
-
-  const handleAddSet = (exerciseIndex: number) => {
-    const updatedExercises = [...exercises];
-    const exercise = updatedExercises[exerciseIndex];
-    const lastSet = exercise.sets[exercise.sets.length - 1];
-    
-    // Add new set with values copied from the last set
-    exercise.sets.push({
-      set_number: exercise.sets.length + 1,
-      weight: lastSet?.weight || null,
-      reps: lastSet?.reps || null,
-      notes: "",
-      previous_weight: null,
-      previous_reps: null
+      
+      // Filter out duplicates
+      const uniqueNewExercises = convertedExercises.filter(e => !existingIds.has(e.id)) as WorkoutExercise[];
+      
+      // Combine existing and new exercises
+      return [...prev, ...uniqueNewExercises];
     });
-    
-    setExercises(updatedExercises);
-  };
+  }, []);
 
-  const handleReorderDrag = (result: any) => {
-    if (!result.destination) return; // Dropped outside the list
-    
-    const items = Array.from(exercises);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    setExercises(items);
-  };
+  // Handle input change in weight/reps fields
+  const handleInputChange = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: string) => {
+    setExercises(prevExercises => {
+      const newExercises = [...prevExercises];
+      const numericValue = value === '' ? null : Number(value);
+      
+      if (newExercises[exerciseIndex] && newExercises[exerciseIndex].sets[setIndex]) {
+        newExercises[exerciseIndex].sets[setIndex] = {
+          ...newExercises[exerciseIndex].sets[setIndex],
+          [field]: numericValue
+        };
+      }
+      
+      return newExercises;
+    });
+  }, []);
 
-  const handleToggleReorderMode = () => {
-    setIsReorderMode(!isReorderMode);
-  };
+  // Handle exercise note changes
+  const handleExerciseNotesChange = useCallback((exerciseIndex: number, notes: string) => {
+    setExercises(prevExercises => {
+      const newExercises = [...prevExercises];
+      if (newExercises[exerciseIndex]) {
+        newExercises[exerciseIndex] = {
+          ...newExercises[exerciseIndex],
+          notes
+        };
+      }
+      return newExercises;
+    });
+  }, []);
+
+  // Handle adding a set to an exercise
+  const handleAddSet = useCallback((exerciseIndex: number) => {
+    setExercises(prevExercises => {
+      const newExercises = [...prevExercises];
+      if (!newExercises[exerciseIndex]) return prevExercises;
+      
+      const lastSet = newExercises[exerciseIndex].sets[newExercises[exerciseIndex].sets.length - 1];
+      const newSetNumber = newExercises[exerciseIndex].sets.length + 1;
+      
+      newExercises[exerciseIndex].sets = [
+        ...newExercises[exerciseIndex].sets,
+        {
+          set_number: newSetNumber,
+          weight: lastSet?.weight || null,
+          reps: lastSet?.reps || null,
+          notes: "",
+          previous_weight: null,
+          previous_reps: null
+        }
+      ];
+      
+      return newExercises;
+    });
+  }, []);
+
+  // Handle reorder drag
+  const handleReorderDrag = useCallback((result: any) => {
+    if (!result.destination) return;
+    
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+    
+    if (sourceIndex === destinationIndex) return;
+    
+    setExercises(prevExercises => {
+      const newExercises = [...prevExercises];
+      const [removed] = newExercises.splice(sourceIndex, 1);
+      newExercises.splice(destinationIndex, 0, removed);
+      return newExercises;
+    });
+  }, []);
+
+  const handleToggleReorderMode = useCallback(() => {
+    setIsReorderMode(prev => !prev);
+  }, []);
 
   return {
     exercises,
@@ -163,6 +145,8 @@ export function useExerciseData(exerciseDetails: any[]) {
     handleAddSet,
     handleReorderDrag,
     setShowStatsDialog,
-    handleToggleReorderMode
+    handleToggleReorderMode,
+    appendExercises,
+    setExercises
   };
 }
