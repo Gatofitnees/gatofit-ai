@@ -1,7 +1,6 @@
 
 import React from "react";
 import { ChevronDown } from "lucide-react";
-import { Card, CardBody, CardHeader } from "@/components/Card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RoutineFormProps {
@@ -28,15 +27,18 @@ const RoutineForm: React.FC<RoutineFormProps> = ({
       <input 
         type="text" 
         placeholder="Ej: Día de Pierna" 
-        className={`w-full h-10 rounded-xl px-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button ${validationErrors.name ? 'ring-1 ring-destructive' : ''}`}
+        className={`w-full h-10 rounded-xl px-4 bg-secondary border ${validationErrors.name ? 'border-destructive ring-1 ring-destructive' : 'border-transparent'} focus:ring-1 focus:ring-primary outline-none shadow-neu-button`}
         value={routineName}
         onChange={(e) => onNameChange(e.target.value)}
       />
+      {validationErrors.name && (
+        <p className="mt-1 text-xs text-destructive">Este campo es obligatorio</p>
+      )}
       
       <div className="mt-4">
         <label className="block text-sm font-medium mb-1">Tipo de Rutina</label>
         <Select value={routineType} onValueChange={onTypeChange}>
-          <SelectTrigger className={`w-full h-10 rounded-xl px-4 bg-secondary border-none focus:ring-1 focus:ring-primary outline-none shadow-neu-button ${validationErrors.type ? 'ring-1 ring-destructive' : ''}`}>
+          <SelectTrigger className={`w-full h-10 rounded-xl px-4 bg-secondary border ${validationErrors.type ? 'border-destructive ring-1 ring-destructive' : 'border-transparent'} focus:ring-1 focus:ring-primary outline-none shadow-neu-button`}>
             <SelectValue placeholder="Seleccionar tipo" />
             <ChevronDown className="h-4 w-4 text-primary" />
           </SelectTrigger>
@@ -50,6 +52,9 @@ const RoutineForm: React.FC<RoutineFormProps> = ({
             </SelectGroup>
           </SelectContent>
         </Select>
+        {validationErrors.type && (
+          <p className="mt-1 text-xs text-destructive">Este campo es obligatorio</p>
+        )}
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
 
   return (
     <div className="space-y-3">
-      {exercises.length > 0 ? (
+      {exercises && exercises.length > 0 ? (
         exercises.map(exercise => (
           <ExerciseItem 
             key={exercise.id}

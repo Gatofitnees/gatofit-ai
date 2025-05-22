@@ -1,5 +1,86 @@
 
 import { Exercise } from '@/features/workout/types';
 
-// Export an empty array as we're removing the additional exercises
-export const additionalExercises: Exercise[] = [];
+// Añadimos los ejercicios de espalda solicitados
+export const additionalExercises: Exercise[] = [
+  {
+    id: 9001,
+    name: "Dominada",
+    muscle_group_main: "Espalda",
+    equipment_required: "Libre",
+    difficulty_level: "intermediate",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/dominada-agarre-medio-prono.mp4",
+  },
+  {
+    id: 9002,
+    name: "Dominada agarre supino",
+    muscle_group_main: "Espalda",
+    equipment_required: "Libre",
+    difficulty_level: "intermediate",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/dominada-agarre-supino.mp4",
+  },
+  {
+    id: 9003,
+    name: "Dominada agarre supino con sillas",
+    muscle_group_main: "Espalda",
+    equipment_required: "Libre",
+    difficulty_level: "beginner",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/dominada-agarre-supino-con-sillas.mp4",
+  },
+  {
+    id: 9004,
+    name: "Dominada prono con silla",
+    muscle_group_main: "Espalda",
+    equipment_required: "Libre",
+    difficulty_level: "beginner",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/dominada-prono-prono-con-silla.mp4",
+  },
+  {
+    id: 9005,
+    name: "Encogimientos con barra",
+    muscle_group_main: "Trapecio",
+    equipment_required: "Barra",
+    difficulty_level: "intermediate",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/encogimientos-con-barra.mp4",
+  },
+  {
+    id: 9006,
+    name: "Encogimientos con mancuernas",
+    muscle_group_main: "Trapecio",
+    equipment_required: "Mancuerna",
+    difficulty_level: "beginner",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/encogimientos-con-mancuernas.mp4",
+  },
+  {
+    id: 9007,
+    name: "Encogimientos declinado con barra",
+    muscle_group_main: "Trapecio",
+    equipment_required: "Barra",
+    difficulty_level: "advanced",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/encogimientos-declinado-con-barra.mp4",
+  },
+  {
+    id: 9008,
+    name: "Encogimientos declinado",
+    muscle_group_main: "Trapecio",
+    equipment_required: "Mancuerna",
+    difficulty_level: "intermediate",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/encogimientos-declinado.mp4",
+  },
+  {
+    id: 9009,
+    name: "Encogimientos en polea",
+    muscle_group_main: "Trapecio",
+    equipment_required: "Polea",
+    difficulty_level: "beginner",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/encogimientos-en-polea.mp4",
+  },
+  {
+    id: 9010,
+    name: "Encogimientos en smith",
+    muscle_group_main: "Trapecio",
+    equipment_required: "Maquina",
+    difficulty_level: "beginner",
+    video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Espalda/encogimientos-en-smith.mp4",
+  },
+];

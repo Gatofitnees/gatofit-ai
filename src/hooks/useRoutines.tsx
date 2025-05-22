@@ -31,14 +31,17 @@ export const useRoutines = () => {
           *,
           routine_exercises(count)
         `)
+        .eq('is_predefined', false) // Solo traer rutinas no predefinidas
         .order('created_at', { ascending: false });
       
       if (user) {
-        // If user is logged in, get their routines and predefined ones
-        query = query.or(`user_id.eq.${user.id},is_predefined.eq.true`);
+        // Si el usuario está autenticado, traer solo sus rutinas
+        query = query.eq('user_id', user.id);
       } else {
-        // If user is not logged in, only get predefined routines
-        query = query.eq('is_predefined', true);
+        // Si no hay usuario autenticado, no traer nada
+        setRoutines([]);
+        setLoading(false);
+        return;
       }
 
       const { data, error } = await query;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useExercises } from "@/hooks/useExercises";
@@ -32,20 +31,27 @@ export const useExerciseSelection = () => {
   const [muscleFilters, setMuscleFilters] = useState<string[]>([]);
   const [equipmentFilters, setEquipmentFilters] = useState<string[]>([]);
 
-  // Load state from sessionStorage on component mount
+  // Reset selection state when component mounts
+  // But keep filter preferences
   useEffect(() => {
+    // Reset selected exercises array when the component mounts
+    setSelectedExercises([]);
+    
     const savedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
-      const parsedState = JSON.parse(savedState) as SelectExercisesState;
-      // Reset selected exercises but keep other filters if needed
-      setSelectedExercises([]);
-      setSearchTerm(parsedState.searchTerm || "");
-      setMuscleFilters(parsedState.muscleFilters || []);
-      setEquipmentFilters(parsedState.equipmentFilters || []);
+      try {
+        const parsedState = JSON.parse(savedState) as SelectExercisesState;
+        // Recuperar solo los filtros, no los ejercicios seleccionados
+        setSearchTerm(parsedState.searchTerm || "");
+        setMuscleFilters(parsedState.muscleFilters || []);
+        setEquipmentFilters(parsedState.equipmentFilters || []);
+      } catch (error) {
+        console.error("Error parsing exercise selection state:", error);
+      }
     }
   }, []);
 
-  // Save state to sessionStorage whenever it changes
+  // Save filtering state to sessionStorage whenever it changes
   useEffect(() => {
     const stateToSave: SelectExercisesState = {
       selectedExercises,
@@ -65,18 +71,16 @@ export const useExerciseSelection = () => {
     // Muscle filter
     let matchesMuscle = true;
     if (muscleFilters.length > 0) {
-      const exerciseMuscles = exercise.muscle_group_main ? exercise.muscle_group_main.split(" ").map(m => m.trim()) : [];
       matchesMuscle = muscleFilters.some(filter => 
-        exerciseMuscles.some(muscle => muscle === filter)
+        exercise.muscle_group_main?.toLowerCase().includes(filter.toLowerCase())
       );
     }
 
     // Equipment filter
     let matchesEquipment = true;
     if (equipmentFilters.length > 0) {
-      const exerciseEquipment = exercise.equipment_required ? exercise.equipment_required.split(" ").map(e => e.trim()) : [];
       matchesEquipment = equipmentFilters.some(filter => 
-        exerciseEquipment.some(equipment => equipment === filter)
+        exercise.equipment_required?.toLowerCase().includes(filter.toLowerCase())
       );
     }
 
@@ -114,11 +118,11 @@ export const useExerciseSelection = () => {
 
   // Reset session storage and navigate back
   const resetSessionStorage = () => {
+    // Solo limpiamos los ejercicios seleccionados
+    const currentState = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "{}");
     const resetState = {
-      selectedExercises: [],
-      searchTerm: "",
-      muscleFilters: [],
-      equipmentFilters: []
+      ...currentState,
+      selectedExercises: []
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
   };
@@ -150,10 +154,13 @@ export const useExerciseSelection = () => {
       ]
     }));
     
-    // Clear all state from session storage before navigating
+    // Clear selected exercises from session storage
     resetSessionStorage();
     
     // Navigate back to the return path with the selected exercises
+    console.log("Añadiendo ejercicios y volviendo a:", getReturnPath());
+    console.log("Ejercicios seleccionados:", exercisesWithSets.length);
+    
     navigate(getReturnPath(), { 
       state: { selectedExercises: exercisesWithSets } 
     });
