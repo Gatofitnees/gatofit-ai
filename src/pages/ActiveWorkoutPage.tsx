@@ -1,40 +1,18 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, ChevronRight, BarChart2, Plus, GripVertical, Pencil, Copy } from "lucide-react";
+import { Save, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useRoutineDetail } from "@/features/workout/hooks/useRoutineDetail";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-
-interface WorkoutSet {
-  set_number: number;
-  weight: number | null;
-  reps: number | null;
-  notes: string;
-  previous_weight: number | null;
-  previous_reps: number | null;
-}
-
-interface WorkoutExercise {
-  id: number;
-  name: string;
-  sets: WorkoutSet[];
-  muscle_group_main?: string;
-  equipment_required?: string;
-  notes: string;
-}
-
-interface PreviousData {
-  weight: number | null;
-  reps: number | null;
-}
+import { useRoutineDetail } from "@/features/workout/hooks/useRoutineDetail";
+import { WorkoutSet, WorkoutExercise, PreviousData } from "@/features/workout/types/workout";
+import { 
+  WorkoutHeader,
+  ExerciseList,
+  ExerciseStatistics
+} from "@/features/workout/components/active-workout";
 
 const ActiveWorkoutPage: React.FC = () => {
   const { routineId } = useParams<{ routineId: string }>();
@@ -287,6 +265,10 @@ const ActiveWorkoutPage: React.FC = () => {
     navigate(`/workout/exercise-details/${exerciseId}`);
   };
 
+  const handleAddExercise = () => {
+    navigate(`/workout/select-exercises?returnTo=/workout/active/${routineId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -338,42 +320,20 @@ const ActiveWorkoutPage: React.FC = () => {
     );
   }
 
+  // Find the exercise that matches the current statistics dialog
+  const currentStatsExercise = exercises.find(ex => ex.id === showStatsDialog);
+
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2"
-            onClick={handleBack}
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-xl font-semibold">{routine.name}</h1>
-        </div>
-        
-        <div className="flex space-x-2">
-          <Button 
-            variant={isReorderMode ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => setIsReorderMode(!isReorderMode)}
-          >
-            {isReorderMode ? "Terminar" : "Reordenar"}
-          </Button>
-          
-          <Button 
-            variant="default"
-            size="sm"
-            onClick={handleSaveWorkout}
-            disabled={isSaving}
-          >
-            <Save className="h-4 w-4 mr-1" />
-            {isSaving ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
-      </div>
+      <WorkoutHeader 
+        routineName={routine.name}
+        isReorderMode={isReorderMode}
+        isSaving={isSaving}
+        onBack={handleBack}
+        onToggleReorder={() => setIsReorderMode(!isReorderMode)}
+        onSave={handleSaveWorkout}
+      />
       
       {/* Workout Info */}
       <div className="mb-6 p-3 bg-secondary/20 rounded-lg text-sm">
@@ -383,173 +343,19 @@ const ActiveWorkoutPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Reorder Mode */}
-      {isReorderMode ? (
-        <DragDropContext onDragEnd={handleReorderDrag}>
-          <Droppable droppableId="droppable">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-2"
-              >
-                {exercises.map((exercise, index) => (
-                  <Draggable key={exercise.id.toString()} draggableId={exercise.id.toString()} index={index}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="p-3 bg-secondary/40 rounded-lg border border-white/10 flex items-center"
-                      >
-                        <GripVertical className="h-5 w-5 mr-3 text-muted-foreground" />
-                        <span className="font-medium">{exercise.name}</span>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-      ) : (
-        /* Exercises */
-        <div className="space-y-6">
-          {exercises.map((exercise, exerciseIndex) => (
-            <Card key={`${exercise.id}-${exerciseIndex}`} className="bg-secondary/40 border border-white/5 overflow-hidden p-0">
-              <div className="p-4">
-                {/* Exercise Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <div 
-                    className="flex-1 cursor-pointer" 
-                    onClick={() => handleViewExerciseDetails(exercise.id)}
-                  >
-                    <h3 className="font-medium text-base">{exercise.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {exercise.muscle_group_main}
-                      {exercise.equipment_required && ` • ${exercise.equipment_required}`}
-                    </p>
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowStatsDialog(exercise.id)}
-                  >
-                    <BarChart2 className="h-4 w-4 mr-1" />
-                    Estadísticas
-                  </Button>
-                </div>
-                
-                {/* Sets */}
-                <div className="space-y-3">
-                  {/* Header for the table-like layout */}
-                  <div className="grid grid-cols-4 gap-2 px-2">
-                    <div className="text-xs font-medium text-muted-foreground">Serie</div>
-                    <div className="text-xs font-medium text-muted-foreground">Ant</div>
-                    <div className="text-xs font-medium text-muted-foreground">Peso</div>
-                    <div className="text-xs font-medium text-muted-foreground">Reps</div>
-                  </div>
-                  
-                  {exercise.sets.map((set, setIndex) => (
-                    <div key={`set-${setIndex}`} className="bg-background/50 rounded-lg border border-white/5 p-2">
-                      <div className="grid grid-cols-4 gap-2">
-                        {/* Serie column */}
-                        <div className="flex items-center">
-                          <div className="h-6 w-6 rounded-full bg-primary/30 flex items-center justify-center text-sm">
-                            {set.set_number}
-                          </div>
-                        </div>
-                        
-                        {/* Anterior column */}
-                        <div className="text-xs text-muted-foreground flex items-center">
-                          {set.previous_weight !== null && set.previous_reps !== null 
-                            ? `${set.previous_weight}kg × ${set.previous_reps}` 
-                            : '-'}
-                        </div>
-                        
-                        {/* Peso column */}
-                        <div>
-                          <Input
-                            type="number"
-                            className="w-full h-8 text-sm"
-                            value={set.weight !== null ? set.weight : ''}
-                            onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-                            min="0"
-                            step="0.5"
-                            placeholder="kg"
-                          />
-                        </div>
-                        
-                        {/* Reps column */}
-                        <div>
-                          <Input
-                            type="number"
-                            className="w-full h-8 text-sm"
-                            value={set.reps !== null ? set.reps : ''}
-                            onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-                            min="0"
-                            placeholder="reps"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Exercise Actions */}
-                <div className="mt-3 flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleAddSet(exerciseIndex)}
-                  >
-                    <Copy className="h-3 w-3 mr-1" />
-                    Añadir serie
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => {
-                      // Toggle notes input visibility or focus if already visible
-                      const updatedExercises = [...exercises];
-                      const current = updatedExercises[exerciseIndex];
-                      setExercises(updatedExercises);
-                    }}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Notas
-                  </Button>
-                </div>
-                
-                {/* Notes textarea */}
-                <div className="mt-2">
-                  <Textarea
-                    placeholder="Notas sobre este ejercicio..."
-                    className="w-full text-sm"
-                    value={exercise.notes}
-                    onChange={(e) => handleExerciseNotesChange(exerciseIndex, e.target.value)}
-                  />
-                </div>
-              </div>
-            </Card>
-          ))}
-          
-          {/* Add Exercise Button */}
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => navigate(`/workout/select-exercises?returnTo=/workout/active/${routineId}`)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Añadir ejercicio
-          </Button>
-        </div>
-      )}
+      {/* Exercise List */}
+      <ExerciseList 
+        exercises={exercises}
+        isReorderMode={isReorderMode}
+        routineId={routineId}
+        onReorderDrag={handleReorderDrag}
+        onInputChange={handleInputChange}
+        onAddSet={handleAddSet}
+        onNotesChange={handleExerciseNotesChange}
+        onViewDetails={handleViewExerciseDetails}
+        onShowStats={(exerciseId) => setShowStatsDialog(exerciseId)}
+        onAddExercise={handleAddExercise}
+      />
       
       {/* Save button (bottom) */}
       <div className="fixed left-0 right-0 bottom-16 px-4 py-3 bg-background/80 backdrop-blur-md z-10 border-t border-white/5">
@@ -565,46 +371,14 @@ const ActiveWorkoutPage: React.FC = () => {
       </div>
       
       {/* Statistics Dialog */}
-      <Dialog open={showStatsDialog !== null} onOpenChange={() => setShowStatsDialog(null)}>
-        <DialogContent className="bg-background border border-white/5 sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Estadísticas: {exercises.find(ex => ex.id === showStatsDialog)?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <div className="bg-secondary/20 rounded-lg p-4 mb-4">
-              <h4 className="font-medium mb-2">Mejores marcas</h4>
-              <p className="text-sm mb-2">
-                <span className="font-medium">Peso máximo:</span> 
-                <span className="ml-2 text-primary">
-                  {previousData[showStatsDialog || 0]?.reduce((max, current) => {
-                    if (!current || current.weight === null) return max;
-                    if (max === null) return current.weight;
-                    return Math.max(max, current.weight);
-                  }, null as number | null) || '-'}
-                </span> kg
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">Repeticiones máximas:</span> 
-                <span className="ml-2 text-primary">
-                  {previousData[showStatsDialog || 0]?.reduce((max, current) => {
-                    if (!current || current.reps === null) return max;
-                    if (max === null) return current.reps;
-                    return Math.max(max, current.reps);
-                  }, null as number | null) || '-'}
-                </span>
-              </p>
-            </div>
-            
-            <h4 className="font-medium mb-2">Historial reciente</h4>
-            <p className="text-sm text-muted-foreground">
-              No hay suficientes datos para mostrar el historial.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {currentStatsExercise && (
+        <ExerciseStatistics 
+          exerciseName={currentStatsExercise.name}
+          showStatsDialog={showStatsDialog !== null}
+          onCloseDialog={() => setShowStatsDialog(null)}
+          previousData={previousData[showStatsDialog || 0] || []}
+        />
+      )}
     </div>
   );
 };
