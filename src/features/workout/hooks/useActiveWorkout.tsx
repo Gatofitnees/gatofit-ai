@@ -157,10 +157,40 @@ export const useActiveWorkout = (routineId?: number) => {
         const existingIds = new Set(currentExercises.map(ex => ex.id));
         
         // Filtrar solo los ejercicios nuevos
-        const uniqueNewExercises = newExercises.filter((ex: any) => !existingIds.has(ex.id));
+        const uniqueNewExercises = newExercises
+          .filter((ex: any) => !existingIds.has(ex.id))
+          .map((ex: any) => {
+            // Asegurar que cada ejercicio tenga el formato correcto con sets
+            if (!ex.sets || ex.sets.length === 0) {
+              // Si no tiene sets, crear sets por defecto
+              return {
+                ...ex,
+                sets: Array(3).fill(0).map((_, idx) => ({
+                  set_number: idx + 1,
+                  weight: null,
+                  reps: null,
+                  notes: "",
+                  previous_weight: null,
+                  previous_reps: null
+                })),
+                notes: ""
+              };
+            }
+            return {
+              ...ex,
+              notes: ex.notes || ""
+            };
+          });
         
         // Añadir los nuevos ejercicios al final
         return [...currentExercises, ...uniqueNewExercises];
+      });
+      
+      // Mostrar confirmación de ejercicios añadidos
+      toast({
+        title: "Ejercicios añadidos",
+        description: `Se han añadido ${newExercises.length} ejercicio(s) al entrenamiento`,
+        variant: "default"
       });
       
       // Limpiar el estado para evitar duplicaciones
@@ -172,7 +202,7 @@ export const useActiveWorkout = (routineId?: number) => {
         }
       }
     }
-  }, [location.state]);
+  }, [location.state, toast]);
 
   const handleInputChange = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: string) => {
     // Solo permitir valores numéricos o vacíos

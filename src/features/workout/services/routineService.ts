@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { RoutineExercise } from "../types";
 import { toast } from "sonner";
@@ -63,13 +62,9 @@ export async function saveRoutine(
       .select()
       .single();
 
-    if (routineError) {
+    if (routineError || !routineData) {
       console.error("Error creating routine:", routineError);
-      throw new Error(routineError.message || "Error al crear la rutina");
-    }
-
-    if (!routineData) {
-      throw new Error("No se recibieron datos de la rutina creada");
+      throw new Error(routineError?.message || "Error al crear la rutina");
     }
 
     console.log("Routine created successfully:", routineData);
@@ -82,7 +77,7 @@ export async function saveRoutine(
         routine_id: routineData.id,
         exercise_id: exercise.id,
         exercise_order: index + 1, // Ensure order is preserved
-        sets: exercise.sets.length,
+        sets: exercise.sets.length, // Usar la cantidad real de series
         reps_min: exercise.sets[0]?.reps_min || 0,
         reps_max: exercise.sets[0]?.reps_max || 0,
         rest_between_sets_seconds: exercise.sets[0]?.rest_seconds || 60
@@ -120,7 +115,7 @@ export async function saveRoutine(
 }
 
 // Nueva función para actualizar rutinas existentes
-export async function updateRoutine(
+export function updateRoutine(
   routineId: number,
   routineName: string,
   routineType: string,

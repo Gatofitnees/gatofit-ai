@@ -19,6 +19,7 @@ const ActiveWorkoutPage: React.FC = () => {
   // Crear un observer para detectar cuando llegamos al final de la lista
   const { ref: bottomRef, inView: bottomVisible } = useInView({
     threshold: 0.1,
+    triggerOnce: false
   });
   
   const {
@@ -42,7 +43,11 @@ const ActiveWorkoutPage: React.FC = () => {
 
   // Actualizar estado cuando el elemento inferior es visible
   useEffect(() => {
-    setIsBottomReached(bottomVisible);
+    if (bottomVisible) {
+      setIsBottomReached(true);
+    } else {
+      setIsBottomReached(false);
+    }
   }, [bottomVisible]);
 
   if (loading) {
@@ -71,7 +76,7 @@ const ActiveWorkoutPage: React.FC = () => {
       {/* Workout Info */}
       <div className="mb-6 p-3 bg-secondary/20 rounded-lg text-sm">
         <div className="flex items-center justify-between">
-          <span>Tipo: {routine.description || "General"}</span>
+          <span>Tipo: {routine.description || routine.type || "General"}</span>
           <span>Tiempo estimado: {routine.estimated_duration_minutes || 30} min</span>
         </div>
       </div>
@@ -91,7 +96,7 @@ const ActiveWorkoutPage: React.FC = () => {
       />
       
       {/* Elemento invisible para detectar cuando llegamos al final */}
-      <div ref={bottomRef} className="h-4 w-full" />
+      <div ref={bottomRef} className="h-20 w-full mt-4" />
       
       {/* Save button (bottom) */}
       <SaveButton 

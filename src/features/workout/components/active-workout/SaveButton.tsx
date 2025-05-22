@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 
 interface SaveButtonProps {
   isSaving: boolean;
@@ -19,7 +20,17 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ isSaving, onClick, show 
         onClick={onClick}
         disabled={isSaving}
       >
-        {isSaving ? "Guardando entrenamiento..." : "Guardar entrenamiento"}
+        {isSaving ? (
+          <>
+            <span className="animate-pulse mr-2">•</span>
+            Guardando entrenamiento...
+          </>
+        ) : (
+          <>
+            <Save className="h-4 w-4 mr-2" />
+            Guardar entrenamiento
+          </>
+        )}
       </Button>
     </div>
   );
