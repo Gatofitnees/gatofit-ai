@@ -1,34 +1,28 @@
 
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useRoutineContext } from '../contexts/RoutineContext';
-import { useRoutinePersistence } from './useRoutinePersistence';
+import { NavigateFunction } from 'react-router-dom';
+import { RoutineNavigationState, RoutineNavigationActions } from './types';
 
-export const useRoutineNavigation = (editRoutineId?: number) => {
-  const navigate = useNavigate();
-  const { 
-    routineName, 
-    routineType, 
-    routineExercises, 
-    setShowDiscardChangesDialog,
-    setPendingNavigation,
-    pendingNavigation,
-    setRoutineName,
-    setRoutineType,
-    setRoutineExercises
-  } = useRoutineContext();
+interface NavigationHandlersProps extends RoutineNavigationState {
+  clearStoredRoutine: () => void;
+  navigate: NavigateFunction;
+  editRoutineId?: number;
+}
 
-  // Obtener la función para limpiar el almacenamiento
-  const { clearStoredRoutine } = useRoutinePersistence(
-    routineName,
-    routineType,
-    routineExercises,
-    setRoutineName,
-    setRoutineType,
-    setRoutineExercises,
-    editRoutineId
-  );
-
+export const useNavigationHandlers = ({
+  routineName,
+  routineType,
+  routineExercises,
+  pendingNavigation,
+  setShowDiscardChangesDialog,
+  setPendingNavigation,
+  setRoutineName,
+  setRoutineType,
+  setRoutineExercises,
+  clearStoredRoutine,
+  navigate,
+  editRoutineId
+}: NavigationHandlersProps): RoutineNavigationActions => {
   // Handle navigation when there might be unsaved changes
   const handleNavigateAway = useCallback((targetPath: string) => {
     // Only show confirmation if form has been filled out
@@ -62,7 +56,7 @@ export const useRoutineNavigation = (editRoutineId?: number) => {
       e.preventDefault();
     }
     
-    // Pasamos la URL de retorno según si estamos en modo edición o creación
+    // Pass the return URL based on whether we're in edit mode or create mode
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
     
     // Pass the current exercises to the selection page to prevent duplicates
