@@ -1,12 +1,13 @@
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { RoutineExercise } from "../types";
 import { toast } from "sonner";
+import { WorkoutExercise } from "../types/workout";
 
 export function useWorkoutNavigation(
   routineId: number | undefined,
-  appendExercises?: (exercises: RoutineExercise[]) => void
+  appendExercises?: (exercises: RoutineExercise[] | WorkoutExercise[]) => void
 ) {
   const navigate = useNavigate();
   const location = useLocation();

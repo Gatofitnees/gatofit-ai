@@ -42,7 +42,9 @@ const ActiveWorkoutPage: React.FC = () => {
   }
 
   // Find the exercise that matches the current statistics dialog
-  const currentStatsExercise = exercises.find(ex => ex.id === showStatsDialog);
+  const currentStatsExercise = typeof showStatsDialog === 'number' 
+    ? exercises.find(ex => ex.id === showStatsDialog) 
+    : null;
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -90,10 +92,10 @@ const ActiveWorkoutPage: React.FC = () => {
           exerciseName={currentStatsExercise.name}
           showStatsDialog={showStatsDialog !== null}
           onCloseDialog={() => setShowStatsDialog(null)}
-          previousData={showStatsDialog ? currentStatsExercise.sets.map(set => ({
+          previousData={currentStatsExercise.sets.map(set => ({
             weight: set.previous_weight,
             reps: set.previous_reps
-          })) : []}
+          }))}
         />
       )}
     </div>

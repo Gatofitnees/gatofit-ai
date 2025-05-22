@@ -82,8 +82,8 @@ const ActiveWorkoutPage: React.FC = () => {
       </div>
       
       <StatsDialog 
-        open={showStatsDialog} 
-        onClose={() => setShowStatsDialog(false)} 
+        open={showStatsDialog !== null} 
+        onClose={() => setShowStatsDialog(null)} 
       />
     </div>
   );

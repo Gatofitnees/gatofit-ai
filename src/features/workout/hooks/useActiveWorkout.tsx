@@ -5,6 +5,29 @@ import { useExerciseData } from "./useExerciseData";
 import { useSaveWorkout } from "./useSaveWorkout";
 import { useWorkoutNavigation } from "./useWorkoutNavigation";
 import { useInView } from "react-intersection-observer";
+import { WorkoutExercise } from "../types/workout";
+import { RoutineExercise } from "../types";
+
+// Helper function to convert ExerciseDetail to WorkoutExercise
+const convertToWorkoutExercises = (exercises: any[]): WorkoutExercise[] => {
+  return exercises.map(exercise => ({
+    id: exercise.id,
+    name: exercise.name,
+    muscle_group_main: exercise.muscle_group_main || "",
+    equipment_required: exercise.equipment_required,
+    notes: "",
+    sets: exercise.sets && Array.isArray(exercise.sets) 
+      ? exercise.sets 
+      : Array(exercise.sets || 1).fill({
+          set_number: 1,
+          weight: null,
+          reps: null,
+          notes: "",
+          previous_weight: null,
+          previous_reps: null
+        })
+  }));
+};
 
 export function useActiveWorkout(routineId: number | undefined) {
   const [workoutStartTime] = useState<Date>(new Date());
@@ -24,7 +47,7 @@ export function useActiveWorkout(routineId: number | undefined) {
     setShowStatsDialog,
     handleToggleReorderMode,
     appendExercises
-  } = useExerciseData(exerciseDetails);
+  } = useExerciseData(exerciseDetails ? convertToWorkoutExercises(exerciseDetails) : []);
 
   const {
     isSaving,
