@@ -4,7 +4,7 @@ import { Exercise, normalizeDifficulty } from '../exerciseTypes';
 // Chest exercises with barbell (IDs 3001-3016)
 export const chestBarbellExercises: Exercise[] = [
   {
-    id: 3001,
+    id: 3014,
     name: "Press banca declinado",
     muscle_group_main: "Pecho",
     equipment_required: "Barra",
@@ -13,7 +13,7 @@ export const chestBarbellExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-banca-declinado.mp4",
   },
   {
-    id: 3002,
+    id: 3015,
     name: "Press banca inclinado",
     muscle_group_main: "Pecho",
     equipment_required: "Barra",
@@ -22,7 +22,7 @@ export const chestBarbellExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-banca-inclinado.mp4",
   },
   {
-    id: 3003,
+    id: 3016,
     name: "Press banca plano",
     muscle_group_main: "Pecho",
     equipment_required: "Barra",

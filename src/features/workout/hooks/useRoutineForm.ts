@@ -22,11 +22,9 @@ export function useRoutineForm(
   // Update validation errors when inputs change
   const updateValidationErrors = useCallback(() => {
     setValidationErrors({
-      name: !routineName.trim(),
-      type: !routineType.trim()
+      name: !routineName,
+      type: !routineType
     });
-    
-    return !routineName.trim() || !routineType.trim();
   }, [routineName, routineType]);
 
   // Add a set to an exercise

@@ -1,10 +1,9 @@
-
 import { Exercise, normalizeDifficulty } from '../exerciseTypes';
 
 // Chest exercises using machines (IDs 3028-3038)
 export const chestMachineExercises: Exercise[] = [
   {
-    id: 3028,
+    id: 3013,
     name: "Peck deck",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -13,7 +12,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/peckdeck.mp4",
   },
   {
-    id: 3029,
+    id: 3017,
     name: "Press declinado hammer",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -22,7 +21,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-banca-declinado.mp4",
   },
   {
-    id: 3030,
+    id: 3022,
     name: "Press inclinado en smith",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -31,7 +30,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-inclinado-en-smith.mp4",
   },
   {
-    id: 3031,
+    id: 3023,
     name: "Press inclinado hammer",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -40,7 +39,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-inclinado-hammer.mp4",
   },
   {
-    id: 3032,
+    id: 3025,
     name: "Press plano en maquina",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -49,7 +48,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-plano-en-maquina.mp4",
   },
   {
-    id: 3033,
+    id: 3027,
     name: "Press plano en smith",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -58,7 +57,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-plano-en-smith.mp4",
   },
   {
-    id: 3034,
+    id: 3028,
     name: "Press sentado en maquina",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -67,7 +66,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-sentado-en-maquina.mp4",
   },
   {
-    id: 3035,
+    id: 3029,
     name: "Press sentado hammer",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
@@ -76,7 +75,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-sentado-hammer.mp4",
   },
   {
-    id: 3036,
+    id: 3033,
     name: "Aperturas en maquina",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
