@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { RoutineExercise } from "../types";
 import { toast } from "sonner";
@@ -115,7 +116,7 @@ export async function saveRoutine(
 }
 
 // Nueva función para actualizar rutinas existentes
-export function updateRoutine(
+export async function updateRoutine(
   routineId: number,
   routineName: string,
   routineType: string,
