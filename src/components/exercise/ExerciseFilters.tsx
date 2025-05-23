@@ -16,19 +16,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface ExerciseFiltersProps {
   muscleGroups: string[];
   equipmentTypes: string[];
-  muscleFilters: string[];
-  equipmentFilters: string[];
-  onMuscleFilterToggle: (muscle: string) => void;
-  onEquipmentFilterToggle: (equipment: string) => void;
+  selectedMuscleGroups: string[];
+  selectedEquipmentTypes: string[];
+  onMuscleGroupToggle: (muscle: string) => void;
+  onEquipmentTypeToggle: (equipment: string) => void;
 }
 
 const ExerciseFilters: React.FC<ExerciseFiltersProps> = ({
   muscleGroups,
   equipmentTypes,
-  muscleFilters,
-  equipmentFilters,
-  onMuscleFilterToggle,
-  onEquipmentFilterToggle
+  selectedMuscleGroups,
+  selectedEquipmentTypes,
+  onMuscleGroupToggle,
+  onEquipmentTypeToggle
 }) => {
   return (
     <Sheet>
@@ -53,8 +53,8 @@ const ExerciseFilters: React.FC<ExerciseFiltersProps> = ({
               <div key={muscle} className="flex items-center space-x-2">
                 <Checkbox 
                   id={`muscle-${muscle}`} 
-                  checked={muscleFilters.includes(muscle)}
-                  onCheckedChange={() => onMuscleFilterToggle(muscle)}
+                  checked={selectedMuscleGroups.includes(muscle)}
+                  onCheckedChange={() => onMuscleGroupToggle(muscle)}
                 />
                 <label 
                   htmlFor={`muscle-${muscle}`}
@@ -72,8 +72,8 @@ const ExerciseFilters: React.FC<ExerciseFiltersProps> = ({
               <div key={equipment} className="flex items-center space-x-2">
                 <Checkbox 
                   id={`equipment-${equipment}`}
-                  checked={equipmentFilters.includes(equipment)}
-                  onCheckedChange={() => onEquipmentFilterToggle(equipment)}
+                  checked={selectedEquipmentTypes.includes(equipment)}
+                  onCheckedChange={() => onEquipmentTypeToggle(equipment)}
                 />
                 <label 
                   htmlFor={`equipment-${equipment}`}

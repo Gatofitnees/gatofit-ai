@@ -20,6 +20,7 @@ const SelectExercisesPage: React.FC = () => {
     searchTerm,
     loading,
     previouslySelectedIds,
+    isActiveWorkout,
     setSearchTerm,
     setPreviouslySelectedIds,
     handleExerciseSelect,
@@ -53,6 +54,7 @@ const SelectExercisesPage: React.FC = () => {
         onMuscleFilterToggle={handleMuscleFilterToggle}
         onEquipmentFilterToggle={handleEquipmentFilterToggle}
         onNavigateBack={handleNavigateBack}
+        isActiveWorkout={isActiveWorkout}
       />
 
       {/* Exercise List with Actions */}
@@ -60,6 +62,7 @@ const SelectExercisesPage: React.FC = () => {
         <ExerciseListActions 
           exerciseCount={filteredExercises.length}
           onCreateExercise={handleCreateExercise}
+          isActiveWorkout={isActiveWorkout}
         />
 
         <ExerciseList 
@@ -76,6 +79,7 @@ const SelectExercisesPage: React.FC = () => {
       <SelectionFloatingButton 
         selectedCount={selectedExercises.length}
         onAddExercises={handleAddExercises}
+        isActiveWorkout={isActiveWorkout}
       />
     </div>
   );
