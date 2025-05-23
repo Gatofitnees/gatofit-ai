@@ -67,10 +67,12 @@ export const useRoutinePersistence = (
   useEffect(() => {
     if (location.state && location.state.selectedExercises) {
       const newExercises = location.state.selectedExercises;
-      const shouldAddToExisting = location.state.shouldAddToExisting === true;
+      // FIX: Consideramos shouldAddToExisting siempre true por defecto
+      const shouldAddToExisting = location.state.shouldAddToExisting !== false;
       
       console.log("Nuevos ejercicios recibidos:", newExercises.length);
       console.log("Debe añadirse a existentes:", shouldAddToExisting);
+      console.log("Ejercicios existentes antes:", routineExercises.length);
       
       // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
       const existingExerciseIds = new Set(routineExercises.map(ex => ex.id));
@@ -82,15 +84,12 @@ export const useRoutinePersistence = (
       
       console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
       
+      // FIX IMPORTANTE: Siempre añadimos los ejercicios nuevos a los existentes
+      // No debemos usar el flag shouldAddToExisting para determinar esto
       if (uniqueNewExercises.length > 0) {
-        // IMPORTANTE: Siempre combinamos con los ejercicios existentes
-        // Este es el cambio clave - asegurarnos de que siempre combinamos con los existentes
-        const updatedExercises = shouldAddToExisting 
-          ? [...routineExercises, ...uniqueNewExercises]
-          : uniqueNewExercises;
-          
+        const updatedExercises = [...routineExercises, ...uniqueNewExercises];
+        console.log("Ejercicios actualizados después de combinar:", updatedExercises.length);
         setRoutineExercises(updatedExercises);
-        console.log("Ejercicios actualizados, total:", updatedExercises.length);
       }
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar

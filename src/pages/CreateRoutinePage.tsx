@@ -6,10 +6,9 @@ import RoutineFormContainer from "@/features/workout/components/RoutineFormConta
 import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs";
 import RoutineSheets from "@/features/workout/components/sheets/RoutineSheets";
 import { useCreateRoutine } from "@/features/workout/hooks/useCreateRoutine";
-import { RoutineProvider } from "@/features/workout/contexts/RoutineContext";
 import { useToast } from "@/hooks/use-toast";
 
-const CreateRoutinePageContent: React.FC = () => {
+const CreateRoutinePage: React.FC = () => {
   const { toast } = useToast();
   const { routineId } = useParams<{ routineId?: string }>();
   const isEditing = !!routineId;
@@ -138,14 +137,6 @@ const CreateRoutinePageContent: React.FC = () => {
         handleReorderSave={handleReorderSave}
       />
     </div>
-  );
-};
-
-const CreateRoutinePage: React.FC = () => {
-  return (
-    <RoutineProvider>
-      <CreateRoutinePageContent />
-    </RoutineProvider>
   );
 };
 

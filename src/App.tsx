@@ -21,103 +21,101 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="bg-background text-foreground min-h-screen">
-          <Routes>
-            <Route path="/onboarding/*" element={<OnboardingFlow />} />
-            <Route
-              path="/"
-              element={
-                <Navigate to="/home" replace />
-              }
-            />
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                  <NavBar />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout"
-              element={
-                <ProtectedRoute>
-                  <WorkoutPage />
-                  <NavBar />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout/create"
-              element={
-                <ProtectedRoute>
-                  <CreateRoutinePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout/edit/:routineId"
-              element={
-                <ProtectedRoute>
-                  <CreateRoutinePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout/active/:routineId"
-              element={
-                <ProtectedRoute>
-                  <RoutineProvider>
+          <RoutineProvider>
+            <Routes>
+              <Route path="/onboarding/*" element={<OnboardingFlow />} />
+              <Route
+                path="/"
+                element={
+                  <Navigate to="/home" replace />
+                }
+              />
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                    <NavBar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout"
+                element={
+                  <ProtectedRoute>
+                    <WorkoutPage />
+                    <NavBar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/create"
+                element={
+                  <ProtectedRoute>
+                    <CreateRoutinePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/edit/:routineId"
+                element={
+                  <ProtectedRoute>
+                    <CreateRoutinePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/active/:routineId"
+                element={
+                  <ProtectedRoute>
                     <ActiveWorkoutPage />
-                  </RoutineProvider>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout/summary/:workoutId"
-              element={
-                <ProtectedRoute>
-                  <WorkoutSummaryPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout/select-exercises"
-              element={
-                <ProtectedRoute>
-                  <RoutineProvider>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/summary/:workoutId"
+                element={
+                  <ProtectedRoute>
+                    <WorkoutSummaryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/select-exercises"
+                element={
+                  <ProtectedRoute>
                     <SelectExercisesPage />
-                  </RoutineProvider>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout/exercise-details/:id"
-              element={
-                <ProtectedRoute>
-                  <ExerciseDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workout/create-exercise"
-              element={
-                <ProtectedRoute>
-                  <CreateExercisePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/nutrition"
-              element={
-                <ProtectedRoute>
-                  <NutritionPage />
-                  <NavBar />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/exercise-details/:id"
+                element={
+                  <ProtectedRoute>
+                    <ExerciseDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/create-exercise"
+                element={
+                  <ProtectedRoute>
+                    <CreateExercisePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/nutrition"
+                element={
+                  <ProtectedRoute>
+                    <NutritionPage />
+                    <NavBar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </RoutineProvider>
         </div>
       </Router>
     </AuthProvider>
