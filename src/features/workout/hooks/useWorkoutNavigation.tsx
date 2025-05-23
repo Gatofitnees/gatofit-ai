@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRoutineContext } from "../contexts/RoutineContext";
+import { WorkoutExercise } from "../types/workout";
 
-export function useWorkoutNavigation(routineId?: number) {
+export function useWorkoutNavigation(routineId?: number, currentExercises?: WorkoutExercise[]) {
   const navigate = useNavigate();
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   
@@ -39,13 +40,34 @@ export function useWorkoutNavigation(routineId?: number) {
   };
 
   const handleAddExercise = () => {
-    // Ahora pasamos la ruta de retorno como parámetro para volver a la pantalla correcta
-    // Ya sea /workout/create para nuevas rutinas o /workout/edit/:id para edición
-    const returnTo = routineId ? `/workout/edit/${routineId}` : "/workout/create";
+    // Determinar la ruta de retorno según el contexto
+    let returnTo: string;
+    let exercisesToPass: any[] = [];
     
-    // Pasamos los ejercicios actuales para evitar duplicados
+    if (routineId) {
+      // Si estamos en el contexto de una rutina (creación/edición)
+      returnTo = routineId ? `/workout/edit/${routineId}` : "/workout/create";
+      exercisesToPass = routineExercises;
+    } else if (currentExercises && routineId) {
+      // Si estamos en un entrenamiento activo con ID
+      returnTo = `/workout/active/${routineId}`;
+      exercisesToPass = currentExercises;
+    } else if (currentExercises) {
+      // Entrenamiento activo sin ID (fallback)
+      returnTo = "/workout/active";
+      exercisesToPass = currentExercises;
+    } else {
+      // Caso base (fallback)
+      returnTo = "/workout/create";
+      exercisesToPass = [];
+    }
+    
+    // Navegar con el estado apropiado
     navigate(`/workout/select-exercises?returnTo=${returnTo}`, {
-      state: { currentExercises: routineExercises }
+      state: { 
+        currentExercises: exercisesToPass,
+        isActiveWorkout: returnTo.includes("/workout/active/")
+      }
     });
   };
 

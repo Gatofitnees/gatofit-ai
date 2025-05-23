@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { WorkoutExercise } from "../types/workout";
 
-export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exercises: WorkoutExercise[]) {
+export function useSaveWorkout(routine: any | null, workoutStartTime: Date, defaultExercises: WorkoutExercise[]) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -17,13 +17,16 @@ export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exer
     return Math.round(durationMinutes * baseCaloriesPerMinute);
   };
 
-  const handleSaveWorkout = async () => {
+  const handleSaveWorkout = async (exercisesToSave?: WorkoutExercise[]) => {
     try {
       setIsSaving(true);
       
       if (!routine) {
         throw new Error("Rutina no encontrada");
       }
+
+      // Usar los ejercicios proporcionados o los por defecto
+      const exercises = exercisesToSave || defaultExercises;
       
       const workoutDuration = Math.round(
         (new Date().getTime() - workoutStartTime.getTime()) / (1000 * 60)

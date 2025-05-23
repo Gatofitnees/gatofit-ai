@@ -13,6 +13,12 @@ export const useExerciseNavigation = () => {
     return returnTo || '/workout/create';
   };
   
+  // Comprobar si la ruta de retorno es para un entrenamiento activo
+  const isActiveWorkout = () => {
+    const returnPath = getReturnPath();
+    return returnPath.includes('/workout/active/');
+  };
+  
   const handleExerciseDetails = (id: number) => {
     // Navigate to the exercise details page
     navigate(`/workout/exercise-details/${id}?returnTo=${encodeURIComponent('/workout/select-exercises' + location.search)}`);
@@ -54,16 +60,18 @@ export const useExerciseNavigation = () => {
     
     // Get the return path
     const returnPath = getReturnPath();
+    const goingToActiveWorkout = isActiveWorkout();
     
     console.log("Añadiendo ejercicios y volviendo a:", returnPath);
+    console.log("¿Es entrenamiento activo?:", goingToActiveWorkout);
     console.log("Ejercicios seleccionados:", exercisesWithSets.length);
     
     // Navigate back with the selected exercises
-    // IMPORTANTE: Siempre establecemos shouldAddToExisting en true para asegurar que se añadan a los existentes
     navigate(returnPath, { 
       state: { 
         selectedExercises: exercisesWithSets,
-        shouldAddToExisting: true // Siempre true para añadir a los ejercicios existentes
+        shouldAddToExisting: true, // Siempre true para añadir a los ejercicios existentes
+        isActiveWorkout: goingToActiveWorkout
       } 
     });
   };
@@ -72,6 +80,7 @@ export const useExerciseNavigation = () => {
     handleExerciseDetails,
     handleNavigateBack,
     handleCreateExercise,
-    handleAddExercises
+    handleAddExercises,
+    isActiveWorkout
   };
 };
