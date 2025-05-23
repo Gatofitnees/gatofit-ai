@@ -59,9 +59,13 @@ export const useNavigationHandlers = ({
     // Pass the return URL based on whether we're in edit mode or create mode
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
     
-    // Pass the current exercises to the selection page to prevent duplicates
+    // Siempre pasamos los ejercicios actuales para evitar duplicados
+    // y asegurarnos de que la página de selección conozca qué ejercicios ya están seleccionados
     navigate(`/workout/select-exercises?returnTo=${returnPath}`, {
-      state: { currentExercises: routineExercises }
+      state: { 
+        currentExercises: routineExercises,
+        // No limpiamos los ejercicios existentes aquí, solo pasamos la referencia
+      }
     });
   }, [navigate, editRoutineId, routineExercises]);
 

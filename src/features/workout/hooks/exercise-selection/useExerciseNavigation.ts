@@ -59,10 +59,11 @@ export const useExerciseNavigation = () => {
     console.log("Ejercicios seleccionados:", exercisesWithSets.length);
     
     // Navigate back with the selected exercises
+    // IMPORTANTE: Siempre establecemos shouldAddToExisting en true para asegurar que se añadan a los existentes
     navigate(returnPath, { 
       state: { 
         selectedExercises: exercisesWithSets,
-        shouldAddToExisting: true // Flag to indicate we want to add to existing exercises
+        shouldAddToExisting: true // Siempre true para añadir a los ejercicios existentes
       } 
     });
   };
