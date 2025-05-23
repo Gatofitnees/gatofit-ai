@@ -66,7 +66,7 @@ export const chestMachineExercises: Exercise[] = [
     video_url: "https://storage.googleapis.com/almacenamiento-app-gatofit/Ejercicios%20APP/Pecho/press-sentado-en-maquina.mp4",
   },
   {
-    id: 3029,
+    id: 3035,
     name: "Press sentado hammer",
     muscle_group_main: "Pecho",
     equipment_required: "Maquina",
