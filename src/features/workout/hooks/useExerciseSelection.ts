@@ -3,10 +3,8 @@ import { useExercises } from "@/hooks/useExercises";
 import { useSelectionStorage } from "./exercise-selection/useSelectionStorage";
 import { useExerciseFilters } from "./exercise-selection/useExerciseFilters";
 import { useExerciseNavigation } from "./exercise-selection/useExerciseNavigation";
-import { useLocation } from "react-router-dom";
 
 export const useExerciseSelection = () => {
-  const location = useLocation();
   const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
   
   const {
@@ -30,8 +28,7 @@ export const useExerciseSelection = () => {
     handleExerciseDetails, 
     handleNavigateBack: baseHandleNavigateBack, 
     handleCreateExercise,
-    handleAddExercises: baseHandleAddExercises,
-    isActiveWorkout
+    handleAddExercises: baseHandleAddExercises 
   } = useExerciseNavigation();
 
   const handleExerciseSelect = (id: number) => {
@@ -55,7 +52,6 @@ export const useExerciseSelection = () => {
   };
 
   const handleAddExercises = () => {
-    // Detectar si estamos en un entrenamiento activo o no
     baseHandleAddExercises(selectedExercises, exercises, resetSessionStorage);
   };
 
@@ -69,7 +65,6 @@ export const useExerciseSelection = () => {
     searchTerm,
     loading,
     previouslySelectedIds,
-    isActiveWorkout: isActiveWorkout(),
     setSearchTerm,
     setPreviouslySelectedIds,
     handleExerciseSelect,

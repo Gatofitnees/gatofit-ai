@@ -1,6 +1,5 @@
-
-import React, { useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import React from "react";
+import { useParams } from "react-router-dom";
 import { 
   WorkoutHeader,
   ExerciseList,
@@ -12,17 +11,13 @@ import {
 import { useActiveWorkout } from "@/features/workout/hooks/useActiveWorkout";
 import DiscardChangesDialog from "@/features/workout/components/dialogs/DiscardChangesDialog";
 import { Button } from "@/components/ui/button";
-import { useActiveWorkoutExercises } from "@/features/workout/hooks/useActiveWorkoutExercises";
-import { useWorkoutNavigation } from "@/features/workout/hooks/useWorkoutNavigation";
 
 const ActiveWorkoutPage: React.FC = () => {
   const { routineId } = useParams<{ routineId: string }>();
-  const location = useLocation();
   
-  // Obtener datos básicos de la rutina y lógica base
   const {
     routine,
-    exercises: baseExercises,
+    exercises,
     loading,
     isSaving,
     showStatsDialog,
@@ -35,49 +30,12 @@ const ActiveWorkoutPage: React.FC = () => {
     handleSaveWorkout,
     handleReorderDrag,
     handleViewExerciseDetails,
+    handleAddExercise,
     confirmDiscardChanges,
     cancelDiscardChanges,
     setShowStatsDialog,
     handleToggleReorderMode
   } = useActiveWorkout(routineId ? parseInt(routineId) : undefined);
-  
-  // Gestionar ejercicios temporales con el nuevo hook
-  const {
-    exercises,
-    setExercises,
-    addTemporaryExercises,
-    clearTemporaryExercises
-  } = useActiveWorkoutExercises(
-    routineId ? parseInt(routineId) : undefined, 
-    baseExercises
-  );
-  
-  // Usar navigation hook con ejercicios actuales
-  const { handleAddExercise } = useWorkoutNavigation(
-    routineId ? parseInt(routineId) : undefined,
-    exercises
-  );
-  
-  // Detectar si volvemos de seleccionar ejercicios
-  useEffect(() => {
-    if (location.state && location.state.selectedExercises && location.state.isActiveWorkout) {
-      // Añadir ejercicios temporales
-      addTemporaryExercises(location.state.selectedExercises);
-      
-      // Limpiar el estado de navegación
-      window.history.replaceState(
-        {
-          ...window.history.state,
-          usr: {
-            ...window.history.state.usr,
-            selectedExercises: null,
-            isActiveWorkout: null
-          }
-        },
-        ''
-      );
-    }
-  }, [location.state, addTemporaryExercises]);
 
   if (loading) {
     return <LoadingSkeleton onBack={handleBack} />;
@@ -90,14 +48,6 @@ const ActiveWorkoutPage: React.FC = () => {
   // Find the exercise that matches the current statistics dialog
   const currentStatsExercise = exercises.find(ex => ex.id === showStatsDialog);
 
-  // Función para guardar entrenamiento que incluye ejercicios temporales
-  const saveWorkoutWithTemporaryExercises = async () => {
-    // Usar los ejercicios actuales (incluyendo los temporales) al guardar
-    await handleSaveWorkout(exercises);
-    // Limpiar los ejercicios temporales después de guardar
-    clearTemporaryExercises();
-  };
-
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       {/* Header */}
@@ -107,7 +57,7 @@ const ActiveWorkoutPage: React.FC = () => {
         isSaving={isSaving}
         onBack={handleBack}
         onToggleReorder={handleToggleReorderMode}
-        onSave={saveWorkoutWithTemporaryExercises}
+        onSave={handleSaveWorkout}
       />
       
       {/* Workout Info */}
@@ -138,7 +88,7 @@ const ActiveWorkoutPage: React.FC = () => {
           <Button 
             variant="default"
             className="w-full"
-            onClick={saveWorkoutWithTemporaryExercises}
+            onClick={handleSaveWorkout}
             disabled={isSaving}
           >
             {isSaving ? "Guardando entrenamiento..." : "Guardar entrenamiento"}

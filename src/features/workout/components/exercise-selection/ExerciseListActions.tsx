@@ -1,32 +1,30 @@
 
 import React from "react";
+import Button from "@/components/Button";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface ExerciseListActionsProps {
   exerciseCount: number;
   onCreateExercise: () => void;
-  isActiveWorkout?: boolean;
 }
 
 const ExerciseListActions: React.FC<ExerciseListActionsProps> = ({
   exerciseCount,
   onCreateExercise,
-  isActiveWorkout
 }) => {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <div className="text-sm text-muted-foreground">
+    <div className="flex justify-between items-center mb-4">
+      <span className="text-sm text-muted-foreground">
         {exerciseCount} ejercicios encontrados
-      </div>
-      <Button
-        variant="outline"
+      </span>
+      <Button 
+        variant="secondary"
         size="sm"
+        leftIcon={<Plus className="h-4 w-4" />}
         onClick={onCreateExercise}
-        className="text-xs"
+        type="button"
       >
-        <Plus size={14} className="mr-1" />
-        {isActiveWorkout ? "Crear temporal" : "Crear ejercicio"}
+        Crear Ejercicio
       </Button>
     </div>
   );
