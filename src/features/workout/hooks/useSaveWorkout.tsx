@@ -5,7 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { WorkoutExercise } from "../types/workout";
 
-export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exercises: WorkoutExercise[]) {
+export function useSaveWorkout(
+  routine: any | null, 
+  workoutStartTime: Date, 
+  exercises: WorkoutExercise[],
+  clearTemporaryExercises?: () => void
+) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -77,8 +82,17 @@ export function useSaveWorkout(routine: any | null, workoutStartTime: Date, exer
         description: "Tu entrenamiento ha sido registrado correctamente."
       });
       
-      // Navigate to home page to show the workout summary
+      // Navigate to home page first
       navigate("/home", { replace: true });
+      
+      // Clear temporary exercises only after successful navigation
+      // Add a small delay to ensure navigation is complete
+      setTimeout(() => {
+        if (clearTemporaryExercises) {
+          clearTemporaryExercises();
+          console.log("Temporary exercises cleared after successful save and navigation");
+        }
+      }, 100);
       
     } catch (error: any) {
       console.error("Error al guardar entrenamiento:", error);

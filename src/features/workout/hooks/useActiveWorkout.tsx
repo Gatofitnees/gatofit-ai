@@ -28,7 +28,7 @@ export function useActiveWorkout(routineId: number | undefined) {
   const {
     isSaving,
     handleSaveWorkout: originalSaveWorkout
-  } = useSaveWorkout(routine, workoutStartTime, exercises);
+  } = useSaveWorkout(routine, workoutStartTime, exercises, clearTemporaryExercises);
 
   const {
     handleBack: originalHandleBack,
@@ -67,12 +67,11 @@ export function useActiveWorkout(routineId: number | undefined) {
     originalHandleAddExercise(exercises);
   };
 
-  // Enhanced handleSaveWorkout to clear temporary exercises after saving
+  // Enhanced handleSaveWorkout - remove the immediate clearing
   const handleSaveWorkout = async () => {
     try {
       await originalSaveWorkout();
-      // Clear temporary exercises after successful save
-      clearTemporaryExercises();
+      // clearTemporaryExercises is now handled inside useSaveWorkout after navigation
     } catch (error) {
       console.error("Error saving workout:", error);
       // Don't clear temporary exercises if save failed
