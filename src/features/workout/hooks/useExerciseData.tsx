@@ -2,14 +2,24 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkoutExercise, WorkoutSet, PreviousData } from "../types/workout";
+import { useTemporaryExercises } from "./useTemporaryExercises";
 
-export function useExerciseData(exerciseDetails: any[]) {
+export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
   const [previousData, setPreviousData] = useState<Record<number, PreviousData[]>>({});
   const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
   const [showExerciseDetails, setShowExerciseDetails] = useState<number | null>(null);
   const [showStatsDialog, setShowStatsDialog] = useState<number | null>(null);
   const [isReorderMode, setIsReorderMode] = useState<boolean>(false);
+
+  const {
+    temporaryExercises,
+    addTemporaryExercises,
+    clearTemporaryExercises,
+    updateTemporaryExercise,
+    updateTemporaryExerciseNotes,
+    addTemporaryExerciseSet
+  } = useTemporaryExercises(routineId);
 
   // Load exercise history for each exercise
   useEffect(() => {
@@ -71,36 +81,36 @@ export function useExerciseData(exerciseDetails: any[]) {
     fetchPreviousData();
   }, [exerciseDetails]);
 
-  // Initialize workout exercises from routine details
+  // Initialize workout exercises from routine details and combine with temporary exercises
   useEffect(() => {
-    if (exerciseDetails.length > 0) {
-      const formattedExercises: WorkoutExercise[] = exerciseDetails.map(ex => {
-        // Create formatted sets
-        const formattedSets: WorkoutSet[] = Array.from(
-          { length: ex.sets || 0 },
-          (_, i) => ({
-            set_number: i + 1,
-            weight: null,
-            reps: null,
-            notes: "",
-            previous_weight: previousData[ex.id]?.[i]?.weight || null,
-            previous_reps: previousData[ex.id]?.[i]?.reps || null
-          })
-        );
+    // Format base routine exercises
+    const baseExercises: WorkoutExercise[] = exerciseDetails.map(ex => {
+      const formattedSets: WorkoutSet[] = Array.from(
+        { length: ex.sets || 0 },
+        (_, i) => ({
+          set_number: i + 1,
+          weight: null,
+          reps: null,
+          notes: "",
+          previous_weight: previousData[ex.id]?.[i]?.weight || null,
+          previous_reps: previousData[ex.id]?.[i]?.reps || null
+        })
+      );
 
-        return {
-          id: ex.id,
-          name: ex.name,
-          sets: formattedSets,
-          muscle_group_main: ex.muscle_group_main,
-          equipment_required: ex.equipment_required,
-          notes: exerciseNotesMap[ex.id] || ""
-        };
-      });
+      return {
+        id: ex.id,
+        name: ex.name,
+        sets: formattedSets,
+        muscle_group_main: ex.muscle_group_main,
+        equipment_required: ex.equipment_required,
+        notes: exerciseNotesMap[ex.id] || ""
+      };
+    });
 
-      setExercises(formattedExercises);
-    }
-  }, [exerciseDetails, previousData, exerciseNotesMap]);
+    // Combine base exercises with temporary exercises
+    const allExercises = [...baseExercises, ...temporaryExercises];
+    setExercises(allExercises);
+  }, [exerciseDetails, previousData, exerciseNotesMap, temporaryExercises]);
 
   const handleInputChange = (
     exerciseIndex: number, 
@@ -108,26 +118,53 @@ export function useExerciseData(exerciseDetails: any[]) {
     field: 'weight' | 'reps', 
     value: string
   ) => {
-    const updatedExercises = [...exercises];
+    const baseExerciseCount = exerciseDetails.length;
     
+    // Check if this is a temporary exercise
+    if (exerciseIndex >= baseExerciseCount) {
+      const tempIndex = exerciseIndex - baseExerciseCount;
+      updateTemporaryExercise(tempIndex, setIndex, field, value);
+      return;
+    }
+    
+    // Handle base exercises
+    const updatedExercises = [...exercises];
     const numValue = value === '' ? null : Number(value);
     updatedExercises[exerciseIndex].sets[setIndex][field] = numValue;
-    
     setExercises(updatedExercises);
   };
 
   const handleExerciseNotesChange = (exerciseIndex: number, notes: string) => {
+    const baseExerciseCount = exerciseDetails.length;
+    
+    // Check if this is a temporary exercise
+    if (exerciseIndex >= baseExerciseCount) {
+      const tempIndex = exerciseIndex - baseExerciseCount;
+      updateTemporaryExerciseNotes(tempIndex, notes);
+      return;
+    }
+    
+    // Handle base exercises
     const updatedExercises = [...exercises];
     updatedExercises[exerciseIndex].notes = notes;
     setExercises(updatedExercises);
   };
 
   const handleAddSet = (exerciseIndex: number) => {
+    const baseExerciseCount = exerciseDetails.length;
+    
+    // Check if this is a temporary exercise
+    if (exerciseIndex >= baseExerciseCount) {
+      const tempIndex = exerciseIndex - baseExerciseCount;
+      addTemporaryExerciseSet(tempIndex);
+      return;
+    }
+    
+    // Handle base exercises
     const updatedExercises = [...exercises];
     const exercise = updatedExercises[exerciseIndex];
     const lastSet = exercise.sets[exercise.sets.length - 1];
     
-    // Add new set with values copied from the last set
     exercise.sets.push({
       set_number: exercise.sets.length + 1,
       weight: lastSet?.weight || null,
@@ -163,6 +200,8 @@ export function useExerciseData(exerciseDetails: any[]) {
     handleAddSet,
     handleReorderDrag,
     setShowStatsDialog,
-    handleToggleReorderMode
+    handleToggleReorderMode,
+    addTemporaryExercises,
+    clearTemporaryExercises
   };
 }

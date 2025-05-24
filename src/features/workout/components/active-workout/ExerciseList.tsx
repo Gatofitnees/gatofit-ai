@@ -1,7 +1,7 @@
 
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { GripVertical, Plus } from "lucide-react";
+import { GripVertical, Plus, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -48,6 +48,22 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   onShowStats,
   onAddExercise
 }) => {
+  // Get the routine exercise count from sessionStorage to determine which are temporary
+  const getBaseExerciseCount = () => {
+    if (!routineId) return exercises.length;
+    
+    try {
+      const tempKey = `temp_exercises_${routineId}`;
+      const tempExercises = sessionStorage.getItem(tempKey);
+      const tempCount = tempExercises ? JSON.parse(tempExercises).length : 0;
+      return exercises.length - tempCount;
+    } catch {
+      return exercises.length;
+    }
+  };
+
+  const baseExerciseCount = getBaseExerciseCount();
+
   return (
     <div className="space-y-6">
       {isReorderMode ? (
@@ -59,21 +75,33 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                 ref={provided.innerRef}
                 className="space-y-2"
               >
-                {exercises.map((exercise, index) => (
-                  <Draggable key={exercise.id.toString()} draggableId={exercise.id.toString()} index={index}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="p-3 bg-secondary/40 rounded-lg border border-white/10 flex items-center"
-                      >
-                        <GripVertical className="h-5 w-5 mr-3 text-muted-foreground" />
-                        <span className="font-medium">{exercise.name}</span>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
+                {exercises.map((exercise, index) => {
+                  const isTemporary = index >= baseExerciseCount;
+                  
+                  return (
+                    <Draggable key={exercise.id.toString()} draggableId={exercise.id.toString()} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`p-3 rounded-lg border border-white/10 flex items-center ${
+                            isTemporary ? 'bg-orange-500/20' : 'bg-secondary/40'
+                          }`}
+                        >
+                          <GripVertical className="h-5 w-5 mr-3 text-muted-foreground" />
+                          <span className="font-medium flex-1">{exercise.name}</span>
+                          {isTemporary && (
+                            <div className="flex items-center text-xs text-orange-400 ml-2">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Temporal
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                })}
                 {provided.placeholder}
               </div>
             )}
@@ -81,18 +109,29 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
         </DragDropContext>
       ) : (
         <>
-          {exercises.map((exercise, exerciseIndex) => (
-            <ExerciseCard
-              key={`${exercise.id}-${exerciseIndex}`}
-              exercise={exercise}
-              exerciseIndex={exerciseIndex}
-              onInputChange={onInputChange}
-              onAddSet={onAddSet}
-              onNotesChange={onNotesChange}
-              onViewDetails={onViewDetails}
-              onShowStats={onShowStats}
-            />
-          ))}
+          {exercises.map((exercise, exerciseIndex) => {
+            const isTemporary = exerciseIndex >= baseExerciseCount;
+            
+            return (
+              <div key={`${exercise.id}-${exerciseIndex}`} className={isTemporary ? 'relative' : ''}>
+                {isTemporary && (
+                  <div className="absolute -top-2 right-2 z-10 flex items-center text-xs text-orange-400 bg-orange-500/20 px-2 py-1 rounded-full">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Temporal
+                  </div>
+                )}
+                <ExerciseCard
+                  exercise={exercise}
+                  exerciseIndex={exerciseIndex}
+                  onInputChange={onInputChange}
+                  onAddSet={onAddSet}
+                  onNotesChange={onNotesChange}
+                  onViewDetails={onViewDetails}
+                  onShowStats={onShowStats}
+                />
+              </div>
+            );
+          })}
           
           {/* Add Exercise Button */}
           <Button
@@ -101,7 +140,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
             onClick={onAddExercise}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Añadir ejercicio
+            Añadir otro ejercicio
           </Button>
         </>
       )}

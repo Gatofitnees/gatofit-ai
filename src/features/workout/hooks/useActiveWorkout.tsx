@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useRoutineDetail } from "./useRoutineDetail";
 import { useExerciseData } from "./useExerciseData";
 import { useSaveWorkout } from "./useSaveWorkout";
@@ -7,6 +8,7 @@ import { useWorkoutNavigation } from "./useWorkoutNavigation";
 
 export function useActiveWorkout(routineId: number | undefined) {
   const [workoutStartTime] = useState<Date>(new Date());
+  const location = useLocation();
   const { routine, exerciseDetails, loading } = useRoutineDetail(routineId);
   
   const {
@@ -18,22 +20,52 @@ export function useActiveWorkout(routineId: number | undefined) {
     handleAddSet,
     handleReorderDrag,
     setShowStatsDialog,
-    handleToggleReorderMode
-  } = useExerciseData(exerciseDetails);
+    handleToggleReorderMode,
+    addTemporaryExercises,
+    clearTemporaryExercises
+  } = useExerciseData(exerciseDetails, routineId);
 
   const {
     isSaving,
-    handleSaveWorkout
+    handleSaveWorkout: originalSaveWorkout
   } = useSaveWorkout(routine, workoutStartTime, exercises);
 
   const {
     handleBack,
     handleViewExerciseDetails,
-    handleAddExercise,
+    handleAddExercise: originalHandleAddExercise,
     showDiscardDialog,
     confirmDiscardChanges,
     cancelDiscardChanges
   } = useWorkoutNavigation(routineId);
+
+  // Handle incoming temporary exercises from exercise selection
+  useEffect(() => {
+    if (location.state?.selectedExercises && location.state?.isTemporary) {
+      console.log("Adding temporary exercises:", location.state.selectedExercises);
+      addTemporaryExercises(location.state.selectedExercises);
+      
+      // Clear the state to prevent re-adding on re-renders
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.state, addTemporaryExercises]);
+
+  // Enhanced handleAddExercise to pass current exercises
+  const handleAddExercise = () => {
+    originalHandleAddExercise(exercises);
+  };
+
+  // Enhanced handleSaveWorkout to clear temporary exercises after saving
+  const handleSaveWorkout = async () => {
+    try {
+      await originalSaveWorkout();
+      // Clear temporary exercises after successful save
+      clearTemporaryExercises();
+    } catch (error) {
+      console.error("Error saving workout:", error);
+      // Don't clear temporary exercises if save failed
+    }
+  };
 
   return {
     routine,

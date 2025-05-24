@@ -38,15 +38,26 @@ export function useWorkoutNavigation(routineId?: number) {
     navigate(`/workout/exercise-details/${exerciseId}`);
   };
 
-  const handleAddExercise = () => {
-    // Ahora pasamos la ruta de retorno como parámetro para volver a la pantalla correcta
-    // Ya sea /workout/create para nuevas rutinas o /workout/edit/:id para edición
-    const returnTo = routineId ? `/workout/edit/${routineId}` : "/workout/create";
-    
-    // Pasamos los ejercicios actuales para evitar duplicados
-    navigate(`/workout/select-exercises?returnTo=${returnTo}`, {
-      state: { currentExercises: routineExercises }
-    });
+  const handleAddExercise = (currentExercises?: any[]) => {
+    // Check if we're in an active workout by checking if routineId is provided
+    if (routineId) {
+      // We're in an active workout, navigate to select exercises with return path to active workout
+      const returnTo = `/workout/active/${routineId}`;
+      
+      navigate(`/workout/select-exercises?returnTo=${returnTo}`, {
+        state: { 
+          currentExercises: currentExercises || [],
+          isActiveWorkout: true // Flag to indicate this is from an active workout
+        }
+      });
+    } else {
+      // Original logic for routine creation/editing
+      const returnTo = routineId ? `/workout/edit/${routineId}` : "/workout/create";
+      
+      navigate(`/workout/select-exercises?returnTo=${returnTo}`, {
+        state: { currentExercises: routineExercises }
+      });
+    }
   };
 
   return {
