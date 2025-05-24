@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { WorkoutExercise } from "../types/workout";
 
 interface TemporaryExercise {
@@ -56,7 +56,7 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
     }
   }, [temporaryExercises, routineId]);
   
-  const addTemporaryExercises = (exercises: any[]) => {
+  const addTemporaryExercises = useCallback((exercises: any[]) => {
     const formattedExercises: TemporaryExercise[] = exercises.map(exercise => ({
       id: exercise.id,
       name: exercise.name,
@@ -75,20 +75,31 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
       notes: ""
     }));
     
-    setTemporaryExercises(prev => [...prev, ...formattedExercises]);
-    console.log("Added temporary exercises:", formattedExercises.length);
-  };
+    setTemporaryExercises(prev => {
+      // Prevent duplicates by checking if exercise already exists
+      const existingIds = prev.map(ex => ex.id);
+      const newExercises = formattedExercises.filter(ex => !existingIds.includes(ex.id));
+      
+      if (newExercises.length === 0) {
+        console.log("No new exercises to add (duplicates filtered)");
+        return prev;
+      }
+      
+      console.log("Adding temporary exercises:", newExercises.length);
+      return [...prev, ...newExercises];
+    });
+  }, []);
   
-  const clearTemporaryExercises = () => {
+  const clearTemporaryExercises = useCallback(() => {
     if (!routineId) return;
     
     const storageKey = getStorageKey(routineId);
     sessionStorage.removeItem(storageKey);
     setTemporaryExercises([]);
     console.log("Cleared temporary exercises");
-  };
+  }, [routineId]);
   
-  const updateTemporaryExercise = (
+  const updateTemporaryExercise = useCallback((
     exerciseIndex: number,
     setIndex: number,
     field: 'weight' | 'reps',
@@ -103,9 +114,9 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
       }
       return updated;
     });
-  };
+  }, []);
   
-  const updateTemporaryExerciseNotes = (exerciseIndex: number, notes: string) => {
+  const updateTemporaryExerciseNotes = useCallback((exerciseIndex: number, notes: string) => {
     setTemporaryExercises(prev => {
       const updated = [...prev];
       if (updated[exerciseIndex]) {
@@ -113,9 +124,9 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
       }
       return updated;
     });
-  };
+  }, []);
   
-  const addTemporaryExerciseSet = (exerciseIndex: number) => {
+  const addTemporaryExerciseSet = useCallback((exerciseIndex: number) => {
     setTemporaryExercises(prev => {
       const updated = [...prev];
       if (updated[exerciseIndex]) {
@@ -133,7 +144,7 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
       }
       return updated;
     });
-  };
+  }, []);
   
   return {
     temporaryExercises,

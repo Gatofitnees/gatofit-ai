@@ -39,16 +39,16 @@ export function useActiveWorkout(routineId: number | undefined) {
     cancelDiscardChanges
   } = useWorkoutNavigation(routineId);
 
-  // Handle incoming temporary exercises from exercise selection
+  // Handle incoming temporary exercises from exercise selection with improved logic
   useEffect(() => {
     if (location.state?.selectedExercises && location.state?.isTemporary) {
-      console.log("Adding temporary exercises:", location.state.selectedExercises);
+      console.log("Processing selected temporary exercises:", location.state.selectedExercises);
       addTemporaryExercises(location.state.selectedExercises);
       
-      // Clear the state to prevent re-adding on re-renders
+      // Clear the state immediately to prevent re-adding on re-renders
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [location.state, addTemporaryExercises]);
+  }, [location.state?.selectedExercises, location.state?.isTemporary, addTemporaryExercises]);
 
   // Enhanced handleAddExercise to pass current exercises
   const handleAddExercise = () => {
