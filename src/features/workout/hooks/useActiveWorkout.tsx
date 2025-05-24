@@ -31,11 +31,11 @@ export function useActiveWorkout(routineId: number | undefined) {
   } = useSaveWorkout(routine, workoutStartTime, exercises);
 
   const {
-    handleBack,
+    handleBack: originalHandleBack,
     handleViewExerciseDetails,
     handleAddExercise: originalHandleAddExercise,
     showDiscardDialog,
-    confirmDiscardChanges,
+    confirmDiscardChanges: originalConfirmDiscardChanges,
     cancelDiscardChanges
   } = useWorkoutNavigation(routineId);
 
@@ -49,6 +49,18 @@ export function useActiveWorkout(routineId: number | undefined) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [location.state?.selectedExercises, location.state?.isTemporary, addTemporaryExercises]);
+
+  // Enhanced handleBack to clear temporary exercises
+  const handleBack = () => {
+    clearTemporaryExercises();
+    originalHandleBack();
+  };
+
+  // Enhanced confirmDiscardChanges to clear temporary exercises
+  const confirmDiscardChanges = () => {
+    clearTemporaryExercises();
+    originalConfirmDiscardChanges();
+  };
 
   // Enhanced handleAddExercise to pass current exercises
   const handleAddExercise = () => {

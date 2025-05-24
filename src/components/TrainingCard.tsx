@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Check, ChevronRight, Plus, Clock, Flame } from "lucide-react";
+import { Check, ChevronRight, Plus, Clock, Flame, Dumbbell, Target } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import Button from "./Button";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,8 @@ interface WorkoutSummary {
   duration?: string;
   calories?: number;
   exercises?: string[];
+  exerciseCount?: number;
+  totalSets?: number;
   date?: string;
 }
 
@@ -67,24 +69,47 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
               )}
             </div>
             
-            {workout.duration && (
-              <div className="text-sm text-muted-foreground">
-                Duración: {workout.duration}
-              </div>
-            )}
+            {/* Stats row */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              {workout.duration && (
+                <div className="flex items-center">
+                  <Clock className="h-3.5 w-3.5 mr-1" />
+                  <span>{workout.duration}</span>
+                </div>
+              )}
+              
+              {workout.exerciseCount && (
+                <div className="flex items-center">
+                  <Dumbbell className="h-3.5 w-3.5 mr-1" />
+                  <span>{workout.exerciseCount} ejercicios</span>
+                </div>
+              )}
+              
+              {workout.totalSets && (
+                <div className="flex items-center">
+                  <Target className="h-3.5 w-3.5 mr-1" />
+                  <span>{workout.totalSets} series</span>
+                </div>
+              )}
+            </div>
             
             {workout.exercises && workout.exercises.length > 0 && (
-              <div className="bg-background/40 rounded-lg p-2">
-                <span className="text-xs text-muted-foreground block mb-1">Ejercicios clave:</span>
+              <div className="bg-background/40 rounded-lg p-3">
+                <span className="text-xs text-muted-foreground block mb-2">Ejercicios realizados:</span>
                 <div className="flex flex-wrap gap-1">
                   {workout.exercises.map((exercise, index) => (
                     <span 
                       key={index}
-                      className="text-xs px-2 py-0.5 bg-background/80 rounded-full"
+                      className="text-xs px-2 py-1 bg-background/80 rounded-full border border-white/10"
                     >
                       {exercise}
                     </span>
                   ))}
+                  {workout.exerciseCount && workout.exerciseCount > workout.exercises.length && (
+                    <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                      +{workout.exerciseCount - workout.exercises.length} más
+                    </span>
+                  )}
                 </div>
               </div>
             )}

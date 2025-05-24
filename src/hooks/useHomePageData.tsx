@@ -10,6 +10,8 @@ interface WorkoutSummary {
   calories: number;
   date: string;
   exercises: string[];
+  exerciseCount: number;
+  totalSets: number;
 }
 
 export function useHomePageData() {
@@ -81,7 +83,12 @@ export function useHomePageData() {
             duration_completed_minutes,
             calories_burned_estimated,
             workout_date,
-            workout_log_exercise_details(exercise_name_snapshot)
+            workout_log_exercise_details(
+              exercise_name_snapshot,
+              set_number,
+              weight_kg_used,
+              reps_completed
+            )
           `)
           .eq('user_id', user.id)
           .gte('workout_date', startDate.toISOString())
@@ -99,13 +106,19 @@ export function useHomePageData() {
         if (workoutLogs && workoutLogs.length > 0) {
           const workout = workoutLogs[0];
           
-          // Extract unique exercise names
+          // Extract unique exercise names and calculate totals
           const exerciseNames = Array.from(
             new Set(
               workout.workout_log_exercise_details
                 .map((detail: any) => detail.exercise_name_snapshot)
             )
-          ).slice(0, 3); // Limit to 3 exercises
+          );
+          
+          // Calculate total sets performed
+          const totalSets = workout.workout_log_exercise_details.length;
+          
+          // Get top 3 exercises for display
+          const topExercises = exerciseNames.slice(0, 3);
           
           setWorkoutSummary({
             id: workout.id,
@@ -113,7 +126,9 @@ export function useHomePageData() {
             duration: `${workout.duration_completed_minutes || 0} min`,
             calories: workout.calories_burned_estimated || 0,
             date: workout.workout_date,
-            exercises: exerciseNames
+            exercises: topExercises,
+            exerciseCount: exerciseNames.length,
+            totalSets: totalSets
           });
           setHasCompletedWorkout(true);
         } else {
