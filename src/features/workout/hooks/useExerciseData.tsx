@@ -28,12 +28,14 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   const {
     baseExerciseData,
     updateBaseExerciseData,
+    clearStoredData,
     isInitialized
   } = useBaseExerciseData({
     exerciseDetails,
     previousData,
     exerciseNotesMap,
-    previousDataLoaded
+    previousDataLoaded,
+    routineId
   });
 
   const {
@@ -124,6 +126,13 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     setExercises(items);
   };
 
+  // Enhanced clear function that also clears stored base data
+  const clearAllExerciseData = () => {
+    clearTemporaryExercises();
+    clearStoredData();
+    console.log("Cleared all exercise data (temporary and base)");
+  };
+
   return {
     exercises,
     showStatsDialog,
@@ -135,6 +144,6 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     setShowStatsDialog,
     handleToggleReorderMode,
     addTemporaryExercises,
-    clearTemporaryExercises
+    clearTemporaryExercises: clearAllExerciseData
   };
 }

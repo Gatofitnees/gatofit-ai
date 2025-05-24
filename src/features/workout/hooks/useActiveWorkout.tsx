@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useRoutineDetail } from "./useRoutineDetail";
@@ -28,7 +27,7 @@ export function useActiveWorkout(routineId: number | undefined) {
   const {
     isSaving,
     handleSaveWorkout: originalSaveWorkout
-  } = useSaveWorkout(routine, workoutStartTime, exercises, clearTemporaryExercises);
+  } = useSaveWorkout(routine, workoutStartTime, exercises, clearTemporaryExercises, routineId);
 
   const {
     handleBack: originalHandleBack,

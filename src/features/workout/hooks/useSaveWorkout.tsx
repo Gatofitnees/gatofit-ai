@@ -9,7 +9,8 @@ export function useSaveWorkout(
   routine: any | null, 
   workoutStartTime: Date, 
   exercises: WorkoutExercise[],
-  clearTemporaryExercises?: () => void
+  clearTemporaryExercises?: () => void,
+  routineId?: number
 ) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,6 +41,18 @@ export function useSaveWorkout(
     }
     
     return true;
+  };
+
+  // Helper function to clear stored data after successful save
+  const clearStoredData = () => {
+    if (routineId) {
+      const baseStorageKey = `base_exercise_data_${routineId}`;
+      const tempStorageKey = `temp_exercises_${routineId}`;
+      
+      sessionStorage.removeItem(baseStorageKey);
+      sessionStorage.removeItem(tempStorageKey);
+      console.log("Cleared all stored exercise data after successful save");
+    }
   };
 
   const handleSaveWorkout = async () => {
@@ -131,11 +144,12 @@ export function useSaveWorkout(
       // Navigate to home page first
       navigate("/home", { replace: true });
       
-      // Clear temporary exercises only after successful navigation
+      // Clear all stored data after successful save and navigation
       setTimeout(() => {
+        clearStoredData();
         if (clearTemporaryExercises) {
           clearTemporaryExercises();
-          console.log("Temporary exercises cleared after successful save and navigation");
+          console.log("All exercise data cleared after successful save and navigation");
         }
       }, 100);
       

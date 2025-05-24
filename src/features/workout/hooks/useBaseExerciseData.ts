@@ -7,17 +7,53 @@ interface UseBaseExerciseDataProps {
   previousData: Record<number, PreviousData[]>;
   exerciseNotesMap: Record<number, string>;
   previousDataLoaded: boolean;
+  routineId?: number;
 }
 
 export function useBaseExerciseData({
   exerciseDetails,
   previousData,
   exerciseNotesMap,
-  previousDataLoaded
+  previousDataLoaded,
+  routineId
 }: UseBaseExerciseDataProps) {
   const [baseExerciseData, setBaseExerciseData] = useState<Record<number, WorkoutExercise>>({});
   const isInitialized = useRef(false);
   const initializedExerciseIds = useRef<Set<number>>(new Set());
+
+  // Helper function to get storage key
+  const getStorageKey = () => routineId ? `base_exercise_data_${routineId}` : null;
+
+  // Helper function to save data to sessionStorage
+  const saveToStorage = (data: Record<number, WorkoutExercise>) => {
+    const storageKey = getStorageKey();
+    if (storageKey && Object.keys(data).length > 0) {
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(data));
+        console.log("Saved base exercise data to storage:", Object.keys(data).length, "exercises");
+      } catch (error) {
+        console.error("Error saving base exercise data:", error);
+      }
+    }
+  };
+
+  // Helper function to load data from sessionStorage
+  const loadFromStorage = (): Record<number, WorkoutExercise> => {
+    const storageKey = getStorageKey();
+    if (!storageKey) return {};
+
+    try {
+      const stored = sessionStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log("Loaded base exercise data from storage:", Object.keys(parsed).length, "exercises");
+        return parsed;
+      }
+    } catch (error) {
+      console.error("Error loading base exercise data:", error);
+    }
+    return {};
+  };
 
   // Initialize base exercises only once when previous data is loaded
   useEffect(() => {
@@ -25,36 +61,60 @@ export function useBaseExerciseData({
     
     console.log("Initializing base exercises for the first time");
     
+    // Try to load existing data from storage first
+    const storedData = loadFromStorage();
     const initialBaseExercises: Record<number, WorkoutExercise> = {};
     
     exerciseDetails.forEach(ex => {
-      const formattedSets: WorkoutSet[] = Array.from(
-        { length: ex.sets || 0 },
-        (_, i) => ({
-          set_number: i + 1,
-          weight: null,
-          reps: null,
-          notes: "",
+      // Check if we have stored data for this exercise
+      const storedExercise = storedData[ex.id];
+      
+      if (storedExercise && storedExercise.sets.length > 0) {
+        // Use stored data but update previous data
+        const updatedSets = storedExercise.sets.map((set, i) => ({
+          ...set,
           previous_weight: previousData[ex.id]?.[i]?.weight || null,
           previous_reps: previousData[ex.id]?.[i]?.reps || null
-        })
-      );
+        }));
+        
+        initialBaseExercises[ex.id] = {
+          ...storedExercise,
+          sets: updatedSets,
+          notes: exerciseNotesMap[ex.id] || storedExercise.notes
+        };
+        console.log(`Using stored data for exercise ${ex.id} with user inputs preserved`);
+      } else {
+        // Create fresh exercise
+        const formattedSets: WorkoutSet[] = Array.from(
+          { length: ex.sets || 1 },
+          (_, i) => ({
+            set_number: i + 1,
+            weight: null,
+            reps: null,
+            notes: "",
+            previous_weight: previousData[ex.id]?.[i]?.weight || null,
+            previous_reps: previousData[ex.id]?.[i]?.reps || null
+          })
+        );
 
-      initialBaseExercises[ex.id] = {
-        id: ex.id,
-        name: ex.name,
-        sets: formattedSets,
-        muscle_group_main: ex.muscle_group_main,
-        equipment_required: ex.equipment_required,
-        notes: exerciseNotesMap[ex.id] || ""
-      };
+        initialBaseExercises[ex.id] = {
+          id: ex.id,
+          name: ex.name,
+          sets: formattedSets,
+          muscle_group_main: ex.muscle_group_main,
+          equipment_required: ex.equipment_required,
+          notes: exerciseNotesMap[ex.id] || ""
+        };
+        console.log(`Created fresh exercise ${ex.id}`);
+      }
       
       initializedExerciseIds.current.add(ex.id);
     });
     
     setBaseExerciseData(initialBaseExercises);
+    saveToStorage(initialBaseExercises);
     isInitialized.current = true;
-  }, [exerciseDetails, previousDataLoaded, previousData, exerciseNotesMap]);
+  }, [exerciseDetails, previousDataLoaded, previousData, exerciseNotesMap, routineId]);
 
   // Add new exercises if they appear in exerciseDetails but aren't in baseExerciseData
   useEffect(() => {
@@ -68,7 +128,7 @@ export function useBaseExerciseData({
         console.log(`Adding new base exercise ${ex.id} to existing data`);
         
         const formattedSets: WorkoutSet[] = Array.from(
-          { length: ex.sets || 0 },
+          { length: ex.sets || 1 },
           (_, i) => ({
             set_number: i + 1,
             weight: null,
@@ -94,9 +154,13 @@ export function useBaseExerciseData({
     });
     
     if (hasNewExercises) {
-      setBaseExerciseData(prev => ({ ...prev, ...newExercises }));
+      setBaseExerciseData(prev => {
+        const updated = { ...prev, ...newExercises };
+        saveToStorage(updated);
+        return updated;
+      });
     }
-  }, [exerciseDetails, previousData, exerciseNotesMap]);
+  }, [exerciseDetails, previousData, exerciseNotesMap, routineId]);
 
   const updateBaseExerciseData = (exerciseId: number, updater: (prev: WorkoutExercise) => WorkoutExercise) => {
     setBaseExerciseData(prev => {
@@ -104,14 +168,27 @@ export function useBaseExerciseData({
       if (updated[exerciseId]) {
         updated[exerciseId] = updater(updated[exerciseId]);
         console.log(`Updated base exercise ${exerciseId}:`, updated[exerciseId].sets.map(s => ({ weight: s.weight, reps: s.reps })));
+        
+        // Save to storage immediately after update
+        saveToStorage(updated);
       }
       return updated;
     });
   };
 
+  // Clear storage when component unmounts or routine changes
+  const clearStoredData = () => {
+    const storageKey = getStorageKey();
+    if (storageKey) {
+      sessionStorage.removeItem(storageKey);
+      console.log("Cleared base exercise data from storage");
+    }
+  };
+
   return {
     baseExerciseData,
     updateBaseExerciseData,
+    clearStoredData,
     isInitialized: isInitialized.current
   };
 }
