@@ -6,6 +6,8 @@ export interface WorkoutSet {
   notes: string;
   previous_weight: number | null;
   previous_reps: number | null;
+  target_reps_min?: number;
+  target_reps_max?: number;
 }
 
 export interface WorkoutExercise {

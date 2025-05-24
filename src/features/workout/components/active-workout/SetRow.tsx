@@ -9,6 +9,8 @@ interface WorkoutSet {
   notes: string;
   previous_weight: number | null;
   previous_reps: number | null;
+  target_reps_min?: number;
+  target_reps_max?: number;
 }
 
 interface SetRowProps {
@@ -24,6 +26,18 @@ export const SetRow: React.FC<SetRowProps> = ({
   setIndex, 
   onInputChange 
 }) => {
+  // Generate target reps placeholder text
+  const getTargetRepsPlaceholder = () => {
+    if (set.target_reps_min && set.target_reps_max) {
+      if (set.target_reps_min === set.target_reps_max) {
+        return set.target_reps_min.toString();
+      } else {
+        return `${set.target_reps_min}-${set.target_reps_max}`;
+      }
+    }
+    return "reps";
+  };
+
   return (
     <div className="bg-background/50 rounded-lg border border-white/5 p-2">
       <div className="grid grid-cols-4 gap-2">
@@ -51,13 +65,13 @@ export const SetRow: React.FC<SetRowProps> = ({
           />
         </div>
         
-        {/* Reps column */}
+        {/* Reps column with target reps as placeholder */}
         <div>
           <NumericInput
             className="w-full h-8 text-sm"
             value={set.reps !== null ? set.reps : ''}
             onChange={(e) => onInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-            placeholder="reps"
+            placeholder={getTargetRepsPlaceholder()}
           />
         </div>
       </div>

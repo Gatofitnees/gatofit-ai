@@ -70,11 +70,13 @@ export function useBaseExerciseData({
       const storedExercise = storedData[ex.id];
       
       if (storedExercise && storedExercise.sets.length > 0) {
-        // Use stored data but update previous data
+        // Use stored data but update previous data and add target reps
         const updatedSets = storedExercise.sets.map((set, i) => ({
           ...set,
           previous_weight: previousData[ex.id]?.[i]?.weight || null,
-          previous_reps: previousData[ex.id]?.[i]?.reps || null
+          previous_reps: previousData[ex.id]?.[i]?.reps || null,
+          target_reps_min: ex.reps_min || undefined,
+          target_reps_max: ex.reps_max || undefined
         }));
         
         initialBaseExercises[ex.id] = {
@@ -84,7 +86,7 @@ export function useBaseExerciseData({
         };
         console.log(`Using stored data for exercise ${ex.id} with user inputs preserved`);
       } else {
-        // Create fresh exercise
+        // Create fresh exercise with target reps
         const formattedSets: WorkoutSet[] = Array.from(
           { length: ex.sets || 1 },
           (_, i) => ({
@@ -93,7 +95,9 @@ export function useBaseExerciseData({
             reps: null,
             notes: "",
             previous_weight: previousData[ex.id]?.[i]?.weight || null,
-            previous_reps: previousData[ex.id]?.[i]?.reps || null
+            previous_reps: previousData[ex.id]?.[i]?.reps || null,
+            target_reps_min: ex.reps_min || undefined,
+            target_reps_max: ex.reps_max || undefined
           })
         );
 
@@ -105,7 +109,7 @@ export function useBaseExerciseData({
           equipment_required: ex.equipment_required,
           notes: exerciseNotesMap[ex.id] || ""
         };
-        console.log(`Created fresh exercise ${ex.id}`);
+        console.log(`Created fresh exercise ${ex.id} with target reps:`, ex.reps_min, "-", ex.reps_max);
       }
       
       initializedExerciseIds.current.add(ex.id);
@@ -135,7 +139,9 @@ export function useBaseExerciseData({
             reps: null,
             notes: "",
             previous_weight: previousData[ex.id]?.[i]?.weight || null,
-            previous_reps: previousData[ex.id]?.[i]?.reps || null
+            previous_reps: previousData[ex.id]?.[i]?.reps || null,
+            target_reps_min: ex.reps_min || undefined,
+            target_reps_max: ex.reps_max || undefined
           })
         );
 

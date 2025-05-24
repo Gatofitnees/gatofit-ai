@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Edit, MoreVertical, PlayCircle, Trash } from "lucide-react";
 import { 
@@ -53,26 +52,8 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
       setIsDeleting(true);
       toast.loading("Eliminando rutina...");
       
-      // Primero eliminamos los logs de entrenamiento asociados a esta rutina
-      const { error: workoutLogsError } = await supabase
-        .from('workout_logs')
-        .delete()
-        .eq('routine_id', routine.id);
-        
-      if (workoutLogsError) {
-        console.error("Error deleting workout logs:", workoutLogsError);
-        // Continuamos con la eliminación de la rutina incluso si hay un error en los logs
-      }
-      
-      // Luego eliminamos los ejercicios de la rutina
-      const { error: exerciseError } = await supabase
-        .from('routine_exercises')
-        .delete()
-        .eq('routine_id', routine.id);
-        
-      if (exerciseError) throw exerciseError;
-      
-      // Finalmente eliminamos la rutina
+      // With cascade deletion, we only need to delete the routine
+      // The database will automatically delete related workout_logs and exercise_details
       const { error: routineError } = await supabase
         .from('routines')
         .delete()
@@ -83,7 +64,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
       toast.dismiss();
       uiToast({
         title: "Rutina eliminada",
-        description: "La rutina ha sido eliminada correctamente",
+        description: "La rutina y todos sus datos asociados han sido eliminados correctamente",
         variant: "success"
       });
       
