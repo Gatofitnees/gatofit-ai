@@ -48,12 +48,16 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             if (workoutLog && workoutLog !== null && typeof workoutLog === 'object') {
               // If it's an array, take the first item
               if (Array.isArray(workoutLog) && workoutLog.length > 0) {
-                workoutDate = workoutLog[0]?.workout_date || workoutDate;
-                userId = workoutLog[0]?.user_id || userId;
+                const firstLog = workoutLog[0];
+                if (firstLog) {
+                  workoutDate = firstLog.workout_date || workoutDate;
+                  userId = firstLog.user_id || userId;
+                }
               } else if (!Array.isArray(workoutLog)) {
-                // If it's a single object
-                workoutDate = (workoutLog as any)?.workout_date || workoutDate;
-                userId = (workoutLog as any)?.user_id || userId;
+                // If it's a single object, safely access its properties
+                const singleLog = workoutLog as any;
+                workoutDate = singleLog?.workout_date || workoutDate;
+                userId = singleLog?.user_id || userId;
               }
             }
               
