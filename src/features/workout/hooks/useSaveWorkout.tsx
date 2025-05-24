@@ -16,8 +16,6 @@ export function useSaveWorkout(
   const [isSaving, setIsSaving] = useState(false);
 
   const estimateCaloriesBurned = (durationMinutes: number): number => {
-    // Basic estimation: 5-10 calories per minute depending on intensity
-    // Could be improved with more data about the workout
     const baseCaloriesPerMinute = 8;
     return Math.round(durationMinutes * baseCaloriesPerMinute);
   };
@@ -33,6 +31,13 @@ export function useSaveWorkout(
       const workoutDuration = Math.round(
         (new Date().getTime() - workoutStartTime.getTime()) / (1000 * 60)
       );
+      
+      console.log("Saving workout with exercises:", exercises.map(ex => ({
+        id: ex.id,
+        name: ex.name,
+        setsCount: ex.sets.length,
+        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length
+      })));
       
       // Save workout log
       const { data: workoutLog, error: workoutError } = await supabase
@@ -52,10 +57,22 @@ export function useSaveWorkout(
         throw workoutError || new Error("No se pudo guardar el entrenamiento");
       }
       
-      // Save exercise details - including manually added sets
+      // Prepare exercise details - including manually added sets
       const exerciseDetailsToSave = exercises.flatMap((exercise) => 
         exercise.sets
-          .filter(set => set.weight !== null || set.reps !== null) // Only save sets with data
+          .filter(set => {
+            // Validate set_number and ensure it's not null
+            const isValid = set.set_number !== null && 
+                           set.set_number !== undefined && 
+                           set.set_number > 0 &&
+                           (set.weight !== null || set.reps !== null);
+            
+            if (!isValid) {
+              console.warn("Skipping invalid set:", set);
+            }
+            
+            return isValid;
+          })
           .map(set => ({
             workout_log_id: workoutLog.id,
             exercise_id: exercise.id,
@@ -63,9 +80,11 @@ export function useSaveWorkout(
             set_number: set.set_number,
             weight_kg_used: set.weight,
             reps_completed: set.reps,
-            notes: exercise.notes // Use the exercise-level notes
+            notes: exercise.notes
           }))
       );
+      
+      console.log("Exercise details to save:", exerciseDetailsToSave);
       
       if (exerciseDetailsToSave.length > 0) {
         const { error: detailsError } = await supabase
@@ -73,6 +92,7 @@ export function useSaveWorkout(
           .insert(exerciseDetailsToSave);
         
         if (detailsError) {
+          console.error("Error saving exercise details:", detailsError);
           throw detailsError;
         }
       }
@@ -86,7 +106,6 @@ export function useSaveWorkout(
       navigate("/home", { replace: true });
       
       // Clear temporary exercises only after successful navigation
-      // Add a small delay to ensure navigation is complete
       setTimeout(() => {
         if (clearTemporaryExercises) {
           clearTemporaryExercises();
@@ -98,7 +117,7 @@ export function useSaveWorkout(
       console.error("Error al guardar entrenamiento:", error);
       toast({
         title: "Error",
-        description: "No se pudo guardar el entrenamiento. Inténtalo de nuevo.",
+        description: error.message || "No se pudo guardar el entrenamiento. Inténtalo de nuevo.",
         variant: "destructive"
       });
     } finally {

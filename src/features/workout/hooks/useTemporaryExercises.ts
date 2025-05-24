@@ -64,7 +64,7 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
       equipment_required: exercise.equipment_required,
       sets: exercise.sets || [
         {
-          set_number: 1,
+          set_number: 1, // Ensure set_number is always valid
           weight: null,
           reps: null,
           notes: "",
@@ -76,7 +76,6 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
     }));
     
     setTemporaryExercises(prev => {
-      // Prevent duplicates by checking if exercise already exists
       const existingIds = prev.map(ex => ex.id);
       const newExercises = formattedExercises.filter(ex => !existingIds.includes(ex.id));
       
@@ -134,7 +133,7 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
         const lastSet = exercise.sets[exercise.sets.length - 1];
         
         exercise.sets.push({
-          set_number: exercise.sets.length + 1,
+          set_number: exercise.sets.length + 1, // Ensure set_number is valid
           weight: lastSet?.weight || null,
           reps: lastSet?.reps || null,
           notes: "",

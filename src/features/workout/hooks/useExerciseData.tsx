@@ -13,6 +13,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   const [showStatsDialog, setShowStatsDialog] = useState<number | null>(null);
   const [isReorderMode, setIsReorderMode] = useState<boolean>(false);
   const isInitialized = useRef(false);
+  const previousDataLoaded = useRef(false);
 
   const {
     temporaryExercises,
@@ -23,15 +24,14 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     addTemporaryExerciseSet
   } = useTemporaryExercises(routineId);
 
-  // Load exercise history for each exercise
+  // Load exercise history for each exercise - only once
   useEffect(() => {
-    if (!exerciseDetails.length) return;
+    if (!exerciseDetails.length || previousDataLoaded.current) return;
     
     const fetchPreviousData = async () => {
       try {
         const exerciseIds = exerciseDetails.map(ex => ex.id);
         
-        // Fetch the latest workout log for these exercises
         const { data: workoutLogDetails, error } = await supabase
           .from('workout_log_exercise_details')
           .select(`
@@ -49,7 +49,6 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
         if (error) throw error;
         
         if (workoutLogDetails && workoutLogDetails.length > 0) {
-          // Group by exercise_id
           const exerciseHistory: Record<number, PreviousData[]> = {};
           const notesMap: Record<number, string> = {};
           
@@ -58,14 +57,12 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
               exerciseHistory[detail.exercise_id] = [];
             }
             
-            // Add the set data if it matches the current position
-            if (detail.set_number && detail.set_number <= 20) { // Limit to 20 sets
+            if (detail.set_number && detail.set_number <= 20) {
               exerciseHistory[detail.exercise_id][detail.set_number - 1] = {
                 weight: detail.weight_kg_used,
                 reps: detail.reps_completed
               };
 
-              // Store notes for the exercise
               if (detail.notes && !notesMap[detail.exercise_id]) {
                 notesMap[detail.exercise_id] = detail.notes;
               }
@@ -75,17 +72,20 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
           setPreviousData(exerciseHistory);
           setExerciseNotesMap(notesMap);
         }
+        
+        previousDataLoaded.current = true;
       } catch (error) {
         console.error("Error fetching previous workout data:", error);
+        previousDataLoaded.current = true;
       }
     };
     
     fetchPreviousData();
   }, [exerciseDetails]);
 
-  // Initialize base exercises only once
+  // Initialize base exercises only once when previous data is loaded
   useEffect(() => {
-    if (!exerciseDetails.length || isInitialized.current) return;
+    if (!exerciseDetails.length || !previousDataLoaded.current || isInitialized.current) return;
     
     console.log("Initializing base exercises for the first time");
     
@@ -116,20 +116,25 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     
     setBaseExerciseData(initialBaseExercises);
     isInitialized.current = true;
-  }, [exerciseDetails, previousData, exerciseNotesMap]);
+  }, [exerciseDetails, previousDataLoaded.current]);
 
-  // Combine base exercises with temporary exercises
+  // Combine base exercises with temporary exercises - FIXED useEffect
   useEffect(() => {
     if (!isInitialized.current) return;
     
-    // Convert base exercise data to array format
+    console.log("Combining exercises - baseExerciseData keys:", Object.keys(baseExerciseData));
+    console.log("Temporary exercises count:", temporaryExercises.length);
+    
+    // Use the preserved data from baseExerciseData instead of recreating
     const baseExercisesArray = exerciseDetails.map(ex => {
-      const existingData = baseExerciseData[ex.id];
-      if (existingData) {
-        return existingData;
+      const preservedData = baseExerciseData[ex.id];
+      if (preservedData) {
+        console.log(`Using preserved data for exercise ${ex.id}:`, preservedData.sets.map(s => ({ weight: s.weight, reps: s.reps })));
+        return preservedData;
       }
       
-      // Fallback if not in baseExerciseData yet
+      // Fallback if not in baseExerciseData yet (shouldn't happen now)
+      console.warn(`Fallback creation for exercise ${ex.id}`);
       const formattedSets: WorkoutSet[] = Array.from(
         { length: ex.sets || 0 },
         (_, i) => ({
@@ -159,9 +164,14 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     console.log("Combined exercises:", {
       baseCount: baseExercisesArray.length,
       tempCount: temporaryExercises.length,
-      totalCount: allExercises.length
+      totalCount: allExercises.length,
+      baseExercisesData: baseExercisesArray.map(ex => ({ 
+        id: ex.id, 
+        name: ex.name, 
+        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length 
+      }))
     });
-  }, [baseExerciseData, temporaryExercises, exerciseDetails, previousData, exerciseNotesMap]);
+  }, [baseExerciseData, temporaryExercises]); // REMOVED problematic dependencies
 
   const handleInputChange = (
     exerciseIndex: number, 
@@ -170,6 +180,8 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     value: string
   ) => {
     const baseExerciseCount = exerciseDetails.length;
+    
+    console.log(`Input change - Exercise ${exerciseIndex}, Set ${setIndex}, Field: ${field}, Value: ${value}`);
     
     // Check if this is a temporary exercise
     if (exerciseIndex >= baseExerciseCount) {
@@ -184,6 +196,8 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     
     const numValue = value === '' ? null : Number(value);
     
+    console.log(`Updating base exercise ${exercise.id} set ${setIndex} ${field} to:`, numValue);
+    
     setBaseExerciseData(prev => {
       const updated = { ...prev };
       if (updated[exercise.id]) {
@@ -195,6 +209,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
               : set
           )
         };
+        console.log(`Updated base exercise ${exercise.id} data:`, updated[exercise.id].sets.map(s => ({ weight: s.weight, reps: s.reps })));
       }
       return updated;
     });
@@ -266,7 +281,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   };
 
   const handleReorderDrag = (result: any) => {
-    if (!result.destination) return; // Dropped outside the list
+    if (!result.destination) return;
     
     const items = Array.from(exercises);
     const [reorderedItem] = items.splice(result.source.index, 1);
