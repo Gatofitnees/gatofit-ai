@@ -1,116 +1,65 @@
-
+import { useCallback } from "react";
 import { WorkoutExercise } from "../types/workout";
 
-interface UseExerciseInputHandlersProps {
-  exercises: WorkoutExercise[];
-  exerciseDetails: any[];
-  updateBaseExerciseData: (exerciseId: number, updater: (prev: WorkoutExercise) => WorkoutExercise) => void;
-  updateTemporaryExercise: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: string) => void;
-  updateTemporaryExerciseNotes: (exerciseIndex: number, notes: string) => void;
-  addTemporaryExerciseSet: (exerciseIndex: number) => void;
-}
-
-export function useExerciseInputHandlers({
-  exercises,
-  exerciseDetails,
-  updateBaseExerciseData,
-  updateTemporaryExercise,
-  updateTemporaryExerciseNotes,
-  addTemporaryExerciseSet
-}: UseExerciseInputHandlersProps) {
-
-  const handleInputChange = (
-    exerciseIndex: number, 
-    setIndex: number, 
-    field: 'weight' | 'reps', 
-    value: string
-  ) => {
-    const baseExerciseCount = exerciseDetails.length;
-    
-    console.log(`Input change - Exercise ${exerciseIndex}, Set ${setIndex}, Field: ${field}, Value: ${value}`);
-    
-    // Check if this is a temporary exercise
-    if (exerciseIndex >= baseExerciseCount) {
-      const tempIndex = exerciseIndex - baseExerciseCount;
-      updateTemporaryExercise(tempIndex, setIndex, field, value);
-      return;
-    }
-    
-    // Handle base exercises - update the baseExerciseData
-    const exercise = exercises[exerciseIndex];
+export function useExerciseInputHandlers(
+  allExercises: WorkoutExercise[],
+  updateBaseExerciseData: (exerciseId: number, updater: (prev: WorkoutExercise) => WorkoutExercise) => void,
+  temporaryExercises: WorkoutExercise[],
+  addTemporaryExercises: (exercises: WorkoutExercise[]) => void
+) {
+  const handleInputChange = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: string) => {
+    const exercise = allExercises[exerciseIndex];
     if (!exercise) return;
-    
-    const numValue = value === '' ? null : Number(value);
-    
-    console.log(`Updating base exercise ${exercise.id} set ${setIndex} ${field} to:`, numValue);
-    
-    updateBaseExerciseData(exercise.id, (prev) => ({
+
+    const updateExercise = (prev: WorkoutExercise) => ({
       ...prev,
-      sets: prev.sets.map((set, idx) => 
-        idx === setIndex 
-          ? { ...set, [field]: numValue }
+      sets: prev.sets.map((set, i) => 
+        i === setIndex 
+          ? { ...set, [field]: value === '' ? null : parseFloat(value) }
           : set
       )
-    }));
-  };
+    });
 
-  const handleExerciseNotesChange = (exerciseIndex: number, notes: string) => {
-    const baseExerciseCount = exerciseDetails.length;
-    
-    // Check if this is a temporary exercise
-    if (exerciseIndex >= baseExerciseCount) {
-      const tempIndex = exerciseIndex - baseExerciseCount;
-      updateTemporaryExerciseNotes(tempIndex, notes);
-      return;
-    }
-    
-    // Handle base exercises - update the baseExerciseData
-    const exercise = exercises[exerciseIndex];
-    if (!exercise) return;
-    
-    updateBaseExerciseData(exercise.id, (prev) => ({
-      ...prev,
-      notes: notes
-    }));
-  };
+    updateBaseExerciseData(exercise.id, updateExercise);
+  }, [allExercises, updateBaseExerciseData]);
 
-  const handleAddSet = (exerciseIndex: number) => {
-    const baseExerciseCount = exerciseDetails.length;
-    
-    // Check if this is a temporary exercise
-    if (exerciseIndex >= baseExerciseCount) {
-      const tempIndex = exerciseIndex - baseExerciseCount;
-      addTemporaryExerciseSet(tempIndex);
-      return;
-    }
-    
-    // Handle base exercises - update the baseExerciseData
-    const exercise = exercises[exerciseIndex];
+  const handleAddSet = useCallback((exerciseIndex: number) => {
+    const exercise = allExercises[exerciseIndex];
     if (!exercise) return;
-    
-    updateBaseExerciseData(exercise.id, (prev) => {
+
+    const updateExercise = (prev: WorkoutExercise) => {
+      const newSetNumber = prev.sets.length + 1;
       const lastSet = prev.sets[prev.sets.length - 1];
       
+      const newSet = {
+        set_number: newSetNumber,
+        weight: null,
+        reps: null,
+        notes: "",
+        previous_weight: null,
+        previous_reps: null,
+        target_reps_min: lastSet?.target_reps_min,
+        target_reps_max: lastSet?.target_reps_max
+      };
+
       return {
         ...prev,
-        sets: [
-          ...prev.sets,
-          {
-            set_number: prev.sets.length + 1,
-            weight: lastSet?.weight || null,
-            reps: lastSet?.reps || null,
-            notes: "",
-            previous_weight: null,
-            previous_reps: null
-          }
-        ]
+        sets: [...prev.sets, newSet]
       };
-    });
-  };
+    };
+
+    updateBaseExerciseData(exercise.id, updateExercise);
+  }, [allExercises, updateBaseExerciseData]);
+
+  const handleReorderDrag = useCallback((result: any) => {
+    // Placeholder for reorder functionality
+    console.log("Reorder drag:", result);
+    return result;
+  }, []);
 
   return {
     handleInputChange,
-    handleExerciseNotesChange,
-    handleAddSet
+    handleAddSet,
+    handleReorderDrag
   };
 }

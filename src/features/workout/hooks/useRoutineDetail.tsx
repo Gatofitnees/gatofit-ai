@@ -26,7 +26,7 @@ interface Routine {
   name: string;
   description: string | null;
   estimated_duration_minutes: number | null;
-  type?: string; // Adding type property to the Routine interface
+  type?: string;
 }
 
 export const useRoutineDetail = (routineId: number | undefined) => {
@@ -58,7 +58,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
 
         setRoutine(routineData);
 
-        // Fetch exercises for this routine with more detailed info and ensure correct ordering
+        // Fetch exercises for this routine with explicit column specification to avoid ambiguity
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('routine_exercises')
           .select(`
@@ -69,7 +69,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
             rest_between_sets_seconds,
             exercise_id,
             exercise_order,
-            exercises(
+            exercises!routine_exercises_exercise_id_fkey(
               name,
               muscle_group_main,
               equipment_required
@@ -119,17 +119,11 @@ export const useRoutineDetail = (routineId: number | undefined) => {
     setStartingWorkout(true);
     
     try {
-      // Here you would implement code to start a workout session
-      // For example, create a workout_logs entry
-      
       toast({
         title: "¡Entrenamiento iniciado!",
         description: `Has comenzado la rutina ${routine.name}`,
         variant: "default"
       });
-      
-      // Navigate to workout tracking page or show workout interface
-      // This would be implemented in the component using this hook
     } catch (error) {
       console.error("Error starting workout:", error);
       toast({

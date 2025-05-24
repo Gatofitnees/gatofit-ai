@@ -40,10 +40,13 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     addTemporaryExercises
   );
 
-  const handleExerciseNotesChange = useCallback((exerciseId: number, notes: string) => {
+  const handleExerciseNotesChange = useCallback((exerciseIndex: number, notes: string) => {
+    const exercise = allExercises[exerciseIndex];
+    if (!exercise) return;
+
     setExerciseNotesMap(prev => ({
       ...prev,
-      [exerciseId]: notes
+      [exercise.id]: notes
     }));
     
     // Update the exercise data
@@ -52,8 +55,8 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
       notes
     });
     
-    updateBaseExerciseData(exerciseId, updateExercise);
-  }, [updateBaseExerciseData]);
+    updateBaseExerciseData(exercise.id, updateExercise);
+  }, [allExercises, updateBaseExerciseData]);
 
   return {
     exercises: allExercises,

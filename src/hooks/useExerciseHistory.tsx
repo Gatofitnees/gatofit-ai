@@ -39,7 +39,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         if (data && data.length > 0) {
           // Transform data to match our ExerciseHistory interface
           const formattedHistory: ExerciseHistory[] = data.map((entry) => {
-            // Handle the nested workout_log data
+            // Handle the nested workout_log data safely
             const workoutLog = entry.workout_log;
             let workoutDate = new Date().toISOString();
             let userId = '';
@@ -48,12 +48,12 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             if (workoutLog && typeof workoutLog === 'object') {
               // If it's an array, take the first item
               if (Array.isArray(workoutLog) && workoutLog.length > 0) {
-                workoutDate = workoutLog[0].workout_date || workoutDate;
-                userId = workoutLog[0].user_id || userId;
-              } else {
+                workoutDate = workoutLog[0]?.workout_date || workoutDate;
+                userId = workoutLog[0]?.user_id || userId;
+              } else if (workoutLog && !Array.isArray(workoutLog)) {
                 // If it's a single object
-                workoutDate = (workoutLog as any).workout_date || workoutDate;
-                userId = (workoutLog as any).user_id || userId;
+                workoutDate = (workoutLog as any)?.workout_date || workoutDate;
+                userId = (workoutLog as any)?.user_id || userId;
               }
             }
               
