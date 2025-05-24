@@ -20,6 +20,28 @@ export function useSaveWorkout(
     return Math.round(durationMinutes * baseCaloriesPerMinute);
   };
 
+  // Helper function to validate a set before saving
+  const isValidSet = (set: any) => {
+    const hasValidSetNumber = set.set_number !== null && 
+                             set.set_number !== undefined && 
+                             set.set_number > 0 && 
+                             Number.isInteger(set.set_number);
+    
+    const hasData = set.weight !== null || set.reps !== null;
+    
+    if (!hasValidSetNumber) {
+      console.warn("Invalid set_number:", set.set_number);
+      return false;
+    }
+    
+    if (!hasData) {
+      console.warn("Set has no weight or reps data:", set);
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSaveWorkout = async () => {
     try {
       setIsSaving(true);
@@ -36,7 +58,8 @@ export function useSaveWorkout(
         id: ex.id,
         name: ex.name,
         setsCount: ex.sets.length,
-        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length
+        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length,
+        validSets: ex.sets.filter(isValidSet).length
       })));
       
       // Save workout log
@@ -57,34 +80,33 @@ export function useSaveWorkout(
         throw workoutError || new Error("No se pudo guardar el entrenamiento");
       }
       
-      // Prepare exercise details - including manually added sets
-      const exerciseDetailsToSave = exercises.flatMap((exercise) => 
-        exercise.sets
-          .filter(set => {
-            // Validate set_number and ensure it's not null
-            const isValid = set.set_number !== null && 
-                           set.set_number !== undefined && 
-                           set.set_number > 0 &&
-                           (set.weight !== null || set.reps !== null);
-            
-            if (!isValid) {
-              console.warn("Skipping invalid set:", set);
-            }
-            
-            return isValid;
-          })
-          .map(set => ({
+      // Prepare exercise details with improved validation
+      const exerciseDetailsToSave = exercises.flatMap((exercise) => {
+        const validSets = exercise.sets.filter(isValidSet);
+        
+        if (validSets.length === 0) {
+          console.warn(`Exercise ${exercise.name} has no valid sets, skipping`);
+          return [];
+        }
+        
+        return validSets.map(set => {
+          const detail = {
             workout_log_id: workoutLog.id,
             exercise_id: exercise.id,
             exercise_name_snapshot: exercise.name,
             set_number: set.set_number,
             weight_kg_used: set.weight,
             reps_completed: set.reps,
-            notes: exercise.notes
-          }))
-      );
+            notes: exercise.notes || ""
+          };
+          
+          console.log(`Preparing to save: Exercise ${exercise.id}, Set ${set.set_number}`, detail);
+          return detail;
+        });
+      });
       
-      console.log("Exercise details to save:", exerciseDetailsToSave);
+      console.log("Exercise details to save (total valid sets):", exerciseDetailsToSave.length);
+      console.log("Details preview:", exerciseDetailsToSave.slice(0, 3));
       
       if (exerciseDetailsToSave.length > 0) {
         const { error: detailsError } = await supabase
@@ -95,6 +117,10 @@ export function useSaveWorkout(
           console.error("Error saving exercise details:", detailsError);
           throw detailsError;
         }
+        
+        console.log("Successfully saved all exercise details");
+      } else {
+        console.warn("No valid exercise details to save");
       }
       
       toast({

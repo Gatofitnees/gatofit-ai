@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { WorkoutExercise } from "../types/workout";
 import { useTemporaryExercises } from "./useTemporaryExercises";
@@ -42,34 +43,42 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     handleToggleReorderMode
   } = useExerciseUIState();
 
-  // Combine base exercises with temporary exercises
+  // Combine base exercises with temporary exercises (optimized)
   useEffect(() => {
     if (!isInitialized) return;
     
     console.log("Combining exercises - baseExerciseData keys:", Object.keys(baseExerciseData));
     console.log("Temporary exercises count:", temporaryExercises.length);
     
-    // Use the preserved data from baseExerciseData
+    // Create base exercises array preserving user data
     const baseExercisesArray = exerciseDetails.map(ex => {
       const preservedData = baseExerciseData[ex.id];
       if (preservedData) {
-        console.log(`Using preserved data for exercise ${ex.id}:`, preservedData.sets.map(s => ({ weight: s.weight, reps: s.reps })));
+        console.log(`Using preserved data for exercise ${ex.id}:`, 
+          preservedData.sets.map(s => ({ weight: s.weight, reps: s.reps, set_number: s.set_number })));
         return preservedData;
       }
       
-      // This shouldn't happen now, but keeping as fallback
+      // Fallback - should rarely happen after fixes
       console.warn(`Fallback creation for exercise ${ex.id}`);
       return {
         id: ex.id,
         name: ex.name,
-        sets: [],
+        sets: Array.from({ length: ex.sets || 1 }, (_, i) => ({
+          set_number: i + 1,
+          weight: null,
+          reps: null,
+          notes: "",
+          previous_weight: null,
+          previous_reps: null
+        })),
         muscle_group_main: ex.muscle_group_main,
         equipment_required: ex.equipment_required,
         notes: ""
       };
     });
 
-    // Combine base exercises with temporary exercises
+    // Combine with temporary exercises
     const allExercises = [...baseExercisesArray, ...temporaryExercises];
     setExercises(allExercises);
     
@@ -77,10 +86,17 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
       baseCount: baseExercisesArray.length,
       tempCount: temporaryExercises.length,
       totalCount: allExercises.length,
-      baseExercisesData: baseExercisesArray.map(ex => ({ 
+      baseExercisesWithData: baseExercisesArray.map(ex => ({ 
         id: ex.id, 
         name: ex.name, 
-        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length 
+        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length,
+        validSetNumbers: ex.sets.map(s => s.set_number)
+      })),
+      tempExercisesWithData: temporaryExercises.map(ex => ({ 
+        id: ex.id, 
+        name: ex.name, 
+        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length,
+        validSetNumbers: ex.sets.map(s => s.set_number)
       }))
     });
   }, [baseExerciseData, temporaryExercises, exerciseDetails, isInitialized]);
