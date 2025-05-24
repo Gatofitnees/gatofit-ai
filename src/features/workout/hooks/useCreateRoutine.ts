@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from "react";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
@@ -127,8 +126,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
             equipment_required: exerciseData.equipment_required,
             sets: Array(item.sets || 1).fill({}).map((_, idx) => ({
               set_number: idx + 1,
-              reps_min: item.reps_min || 8,
-              reps_max: item.reps_max || 12,
+              // Use actual values if they exist, otherwise use 0 for empty state
+              reps_min: item.reps_min || 0,
+              reps_max: item.reps_max || 0,
               rest_seconds: item.rest_between_sets_seconds || 60
             })),
             notes: ""

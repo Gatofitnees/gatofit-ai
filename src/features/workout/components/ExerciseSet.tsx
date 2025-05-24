@@ -26,10 +26,13 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate })
 
   // Initialize reps value when component mounts or set changes
   React.useEffect(() => {
-    if (set.reps_min === set.reps_max && set.reps_min > 0) {
-      setRepsValue(set.reps_min.toString());
-    } else if (set.reps_min > 0 || set.reps_max > 0) {
-      setRepsValue(`${set.reps_min}-${set.reps_max}`);
+    // Only show values if they are actually set (greater than 0)
+    if (set.reps_min > 0 && set.reps_max > 0) {
+      if (set.reps_min === set.reps_max) {
+        setRepsValue(set.reps_min.toString());
+      } else {
+        setRepsValue(`${set.reps_min}-${set.reps_max}`);
+      }
     } else {
       setRepsValue('');
     }
@@ -58,7 +61,7 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate })
   };
 
   const handleRepsFocus = () => {
-    // Clear placeholder values when user clicks to enter data
+    // Clear the input when user focuses if it's empty or has default values
     if (repsValue === '' || (set.reps_min === 0 && set.reps_max === 0)) {
       setRepsValue('');
     }

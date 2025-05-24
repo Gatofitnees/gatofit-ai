@@ -42,13 +42,13 @@ export const useExerciseNavigation = () => {
       selectedExercises.includes(exercise.id)
     );
     
-    // Add default sets to each exercise
+    // Add default sets to each exercise with 0 values (empty state)
     const exercisesWithSets = selectedExerciseObjects.map(exercise => ({
       ...exercise,
       sets: [
         {
-          reps_min: 8,
-          reps_max: 12,
+          reps_min: 0,
+          reps_max: 0,
           rest_seconds: 60
         }
       ]
