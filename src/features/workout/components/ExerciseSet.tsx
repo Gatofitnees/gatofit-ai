@@ -22,6 +22,48 @@ const REST_TIMES = [
 ];
 
 const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate }) => {
+  const [repsValue, setRepsValue] = React.useState('');
+
+  // Initialize reps value when component mounts or set changes
+  React.useEffect(() => {
+    if (set.reps_min === set.reps_max && set.reps_min > 0) {
+      setRepsValue(set.reps_min.toString());
+    } else if (set.reps_min > 0 || set.reps_max > 0) {
+      setRepsValue(`${set.reps_min}-${set.reps_max}`);
+    } else {
+      setRepsValue('');
+    }
+  }, [set.reps_min, set.reps_max]);
+
+  const handleRepsChange = (value: string) => {
+    setRepsValue(value);
+    
+    if (value === '') {
+      onSetUpdate(setIndex, "reps_min", 0);
+      onSetUpdate(setIndex, "reps_max", 0);
+      return;
+    }
+
+    const match = value.match(/^(\d+)(?:-(\d+))?$/);
+    
+    if (match) {
+      const min = parseInt(match[1]);
+      const max = match[2] ? parseInt(match[2]) : min;
+      
+      if (!isNaN(min) && !isNaN(max) && min <= max) {
+        onSetUpdate(setIndex, "reps_min", min);
+        onSetUpdate(setIndex, "reps_max", max);
+      }
+    }
+  };
+
+  const handleRepsFocus = () => {
+    // Clear placeholder values when user clicks to enter data
+    if (repsValue === '' || (set.reps_min === 0 && set.reps_max === 0)) {
+      setRepsValue('');
+    }
+  };
+
   const formatRestTime = (seconds: number): string => {
     const matchingOption = REST_TIMES.find(option => option.value === seconds);
     if (matchingOption) return matchingOption.label;
@@ -44,26 +86,14 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate })
         </div>
         
         <div className="flex flex-col">
-          <div className="text-sm font-medium mb-1.5 text-center">Repeticiones</div>
+          <div className="text-sm font-medium mb-1.5 text-center">Reps</div>
           <div className="bg-background rounded-lg px-3 py-1.5 min-h-9">
             <input 
               type="text"
-              className="w-full h-full bg-transparent border-none text-sm text-center"
-              value={set.reps_min === set.reps_max ? set.reps_min : `${set.reps_min}-${set.reps_max}`}
-              onChange={(e) => {
-                const value = e.target.value;
-                const match = value.match(/^(\d+)(?:-(\d+))?$/);
-                
-                if (match) {
-                  const min = parseInt(match[1]);
-                  const max = match[2] ? parseInt(match[2]) : min;
-                  
-                  if (!isNaN(min) && !isNaN(max) && min <= max) {
-                    onSetUpdate(setIndex, "reps_min", min);
-                    onSetUpdate(setIndex, "reps_max", max);
-                  }
-                }
-              }}
+              className="w-full h-full bg-transparent border-none text-sm text-center placeholder:text-muted-foreground/60"
+              value={repsValue}
+              onChange={(e) => handleRepsChange(e.target.value)}
+              onFocus={handleRepsFocus}
               placeholder="8-12"
             />
           </div>

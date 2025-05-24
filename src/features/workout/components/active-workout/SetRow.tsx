@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 
 interface WorkoutSet {
   set_number: number;
@@ -43,25 +43,20 @@ export const SetRow: React.FC<SetRowProps> = ({
         
         {/* Peso column */}
         <div>
-          <Input
-            type="number"
+          <NumericInput
             className="w-full h-8 text-sm"
             value={set.weight !== null ? set.weight : ''}
             onChange={(e) => onInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-            min="0"
-            step="0.5"
             placeholder="kg"
           />
         </div>
         
         {/* Reps column */}
         <div>
-          <Input
-            type="number"
+          <NumericInput
             className="w-full h-8 text-sm"
             value={set.reps !== null ? set.reps : ''}
             onChange={(e) => onInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-            min="0"
             placeholder="reps"
           />
         </div>
