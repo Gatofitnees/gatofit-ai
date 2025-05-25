@@ -11,6 +11,37 @@ export const useFoodCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const captureFromCamera = useCallback((): Promise<CapturedFood | null> => {
+    return new Promise((resolve) => {
+      setIsLoading(true);
+      setError(null);
+
+      // For web, we'll use the file input with camera capture
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment'; // Use rear camera by default
+      
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const result = await uploadImage(file);
+          resolve(result);
+        } else {
+          resolve(null);
+        }
+        setIsLoading(false);
+      };
+
+      input.oncancel = () => {
+        setIsLoading(false);
+        resolve(null);
+      };
+
+      input.click();
+    });
+  }, []);
+
   const captureFromGallery = useCallback((): Promise<CapturedFood | null> => {
     return new Promise((resolve) => {
       setIsLoading(true);
@@ -68,6 +99,7 @@ export const useFoodCapture = () => {
   };
 
   return {
+    captureFromCamera,
     captureFromGallery,
     uploadImage,
     isLoading,

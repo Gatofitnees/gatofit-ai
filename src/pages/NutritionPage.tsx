@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -9,6 +8,7 @@ import { CameraCapture } from "../components/nutrition/CameraCapture";
 import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
 import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
+import { useFoodCapture } from "../hooks/useFoodCapture";
 import { useNavigate } from "react-router-dom";
 
 const NutritionPage: React.FC = () => {
@@ -17,6 +17,7 @@ const NutritionPage: React.FC = () => {
 
   const { entries, addEntry, deleteEntry, isLoading } = useFoodLog();
   const { analyzeFood, isAnalyzing } = useFoodAnalysis();
+  const { captureFromCamera } = useFoodCapture();
 
   // Calculate today's totals from actual entries
   const todayTotals = entries.reduce(
@@ -62,6 +63,13 @@ const NutritionPage: React.FC = () => {
           isEditing: false
         }
       });
+    }
+  };
+
+  const handleCameraCapture = async () => {
+    const result = await captureFromCamera();
+    if (result) {
+      await handleImageCaptured(result.imageUrl);
     }
   };
 
@@ -133,7 +141,7 @@ const NutritionPage: React.FC = () => {
             variant="primary"
             size="sm"
             leftIcon={<Plus className="h-4 w-4" />}
-            onClick={() => setShowCamera(true)}
+            onClick={handleCameraCapture}
           >
             Añadir
           </Button>
@@ -184,7 +192,7 @@ const NutritionPage: React.FC = () => {
           className="h-14 w-14 rounded-full shadow-neu-button"
           leftIcon={<Camera className="h-6 w-6" />}
           variant="primary"
-          onClick={() => setShowCamera(true)}
+          onClick={handleCameraCapture}
         />
       </div>
 
