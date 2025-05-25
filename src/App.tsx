@@ -14,6 +14,7 @@ import CreateExercisePage from "./pages/CreateExercisePage";
 import CreateRoutinePage from "./pages/CreateRoutinePage";
 import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
 import WorkoutSummaryPage from "./pages/WorkoutSummaryPage";
+import { FoodEditPage } from "./pages/FoodEditPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
 
 function App() {
@@ -110,6 +111,14 @@ function App() {
                   <ProtectedRoute>
                     <NutritionPage />
                     <NavBar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/food-edit"
+                element={
+                  <ProtectedRoute>
+                    <FoodEditPage />
                   </ProtectedRoute>
                 }
               />
