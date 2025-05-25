@@ -15,13 +15,17 @@ const RoutineDetailPage: React.FC = () => {
   const { 
     routine, 
     exerciseDetails, 
-    loading, 
-    startingWorkout, 
-    handleStartWorkout 
+    loading
   } = useRoutineDetail(routineId ? parseInt(routineId) : undefined);
   
   const handleBack = () => {
     navigate("/workout");
+  };
+
+  const handleStartWorkout = () => {
+    if (routineId) {
+      navigate(`/workout/active/${routineId}`);
+    }
   };
 
   if (loading) {
@@ -42,12 +46,11 @@ const RoutineDetailPage: React.FC = () => {
         estimatedDuration={routine.estimated_duration_minutes} 
         description={routine.description}
         onStartWorkout={handleStartWorkout}
-        isStarting={startingWorkout}
+        isStarting={false}
       />
       
       {/* Exercises List */}
       <h2 className="font-semibold mb-4">Ejercicios</h2>
-      {/* @ts-ignore - Ignoring the type issue until we can refactor the useRoutineDetail hook */}
       <ExercisesList exercises={exerciseDetails} />
     </div>
   );

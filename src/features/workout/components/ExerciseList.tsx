@@ -42,20 +42,30 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
             </Button>
           </div>
           
-          {exercises.map((exercise, index) => (
-            <ExerciseSet
-              key={exercise.id}
-              id={exercise.id}
-              name={exercise.name}
-              muscleGroup={exercise.muscle_group_main}
-              equipment={exercise.equipment_required}
-              sets={exercise.sets}
-              onAddSet={() => onAddSet(index)}
-              onSetUpdate={(setIndex, field, value) => onSetUpdate(index, setIndex, field, value)}
-              onOptionsClick={() => onExerciseOptions(index)}
-              onExerciseNameClick={handleExerciseNameClick}
-            />
-          ))}
+          {exercises.map((exercise, index) => {
+            // Convert ExerciseSet[] to ExerciseSetData[] format
+            const setsData = exercise.sets.map((set, setIndex) => ({
+              set_number: setIndex + 1,
+              reps_min: set.reps_min,
+              reps_max: set.reps_max,
+              rest_seconds: set.rest_seconds
+            }));
+
+            return (
+              <ExerciseSet
+                key={exercise.id}
+                id={exercise.id}
+                name={exercise.name}
+                muscleGroup={exercise.muscle_group_main}
+                equipment={exercise.equipment_required}
+                sets={setsData}
+                onAddSet={() => onAddSet(index)}
+                onSetUpdate={(setIndex, field, value) => onSetUpdate(index, setIndex, field, value)}
+                onOptionsClick={() => onExerciseOptions(index)}
+                onExerciseNameClick={handleExerciseNameClick}
+              />
+            );
+          })}
         </>
       )}
     </div>

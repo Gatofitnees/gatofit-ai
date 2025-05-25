@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Play, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,12 @@ const getExerciseById = (id: string) => {
 const ExerciseDetailsPage: React.FC = () => {
   const { exerciseId } = useParams<{ exerciseId: string }>();
   const navigate = useNavigate();
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  
   const {
-    showHistoryDialog,
-    setShowHistoryDialog,
-    exerciseHistory,
+    history: exerciseHistory,
     loading: historyLoading
-  } = useExerciseHistory(exerciseId ? parseInt(exerciseId) : null);
+  } = useExerciseHistory({ exerciseId: exerciseId ? parseInt(exerciseId) : undefined });
 
   if (!exerciseId) {
     return <div>Exercise not found</div>;
@@ -104,11 +105,8 @@ const ExerciseDetailsPage: React.FC = () => {
 
       {/* Exercise History Dialog */}
       <ExerciseHistoryDialog
-        isOpen={showHistoryDialog}
-        onClose={() => setShowHistoryDialog(false)}
+        exerciseId={parseInt(exerciseId)}
         exerciseName={exercise.name}
-        history={exerciseHistory}
-        loading={historyLoading}
       />
     </div>
   );
