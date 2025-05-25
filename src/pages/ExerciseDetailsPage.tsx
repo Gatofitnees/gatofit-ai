@@ -9,16 +9,13 @@ import ExerciseHistoryDialog from "@/components/exercise/ExerciseHistoryDialog";
 const ExerciseDetailsPage: React.FC = () => {
   const { exerciseId } = useParams<{ exerciseId: string }>();
   const navigate = useNavigate();
-  const [showHistoryDialog, setShowHistoryDialog] = React.useState(false);
   
-  const { history, loading, isEmpty } = useExerciseHistory(exerciseId ? parseInt(exerciseId) : 0);
+  const { history, loading, isEmpty } = useExerciseHistory({ 
+    exerciseId: exerciseId ? parseInt(exerciseId) : undefined 
+  });
 
   const handleBack = () => {
     navigate(-1); // Go back to previous page
-  };
-
-  const handleShowHistory = () => {
-    setShowHistoryDialog(true);
   };
 
   // Mock exercise data - in a real app this would come from a database
@@ -127,24 +124,11 @@ const ExerciseDetailsPage: React.FC = () => {
 
       {/* History Button */}
       <div className="mb-6">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleShowHistory}
-        >
-          <BarChart3 className="h-4 w-4 mr-2" />
-          Ver historial de entrenamientos
-        </Button>
+        <ExerciseHistoryDialog
+          exerciseId={exercise.id}
+          exerciseName={exercise.name}
+        />
       </div>
-
-      {/* Exercise History Dialog */}
-      <ExerciseHistoryDialog
-        open={showHistoryDialog}
-        onOpenChange={setShowHistoryDialog}
-        exerciseName={exercise.name}
-        history={history}
-        loading={loading}
-      />
     </div>
   );
 };
