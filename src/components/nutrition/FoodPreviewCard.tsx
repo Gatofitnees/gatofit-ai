@@ -110,13 +110,13 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
         onMouseLeave={handleMouseUp}
       >
         {/* Time stamp */}
-        <div className="absolute top-3 right-3 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md z-10">
+        <div className="absolute top-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md z-10">
           {formatTime(loggedAt)}
         </div>
 
-        <div className="flex h-24">
+        <div className="flex h-28">
           {/* Food Image - Left Side */}
-          <div className="w-24 h-24 flex-shrink-0">
+          <div className="w-28 h-28 flex-shrink-0">
             <img 
               src={imageUrl} 
               alt={name}
@@ -125,29 +125,30 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
           </div>
 
           {/* Food Details - Right Side */}
-          <div className="flex-1 p-4 pl-3">
-            <h3 className="font-medium text-sm mb-3 truncate pr-12">{name}</h3>
+          <div className="flex-1 p-4 pl-3 flex flex-col justify-between">
+            {/* Food Name */}
+            <h3 className="font-medium text-sm mb-2 pr-16 truncate">{name}</h3>
             
             {/* Calories - Main Line */}
-            <div className="flex items-center gap-2 mb-2">
-              <Flame className="h-4 w-4 text-orange-400" />
+            <div className="flex items-center gap-2 mb-3">
+              <Flame className="h-4 w-4 text-orange-400 flex-shrink-0" />
               <span className="text-lg font-bold">{calories} kcal</span>
             </div>
             
             {/* Macronutrients - Horizontal Row */}
             <div className="flex items-center gap-4 text-xs">
               <div className="flex items-center gap-1">
-                <Zap className="h-3 w-3 text-blue-400" />
+                <Zap className="h-3 w-3 text-blue-400 flex-shrink-0" />
                 <span>{protein}g</span>
               </div>
               
               <div className="flex items-center gap-1">
-                <Wheat className="h-3 w-3 text-green-400" />
+                <Wheat className="h-3 w-3 text-green-400 flex-shrink-0" />
                 <span>{carbs}g</span>
               </div>
               
               <div className="flex items-center gap-1">
-                <Droplet className="h-3 w-3 text-yellow-400" />
+                <Droplet className="h-3 w-3 text-yellow-400 flex-shrink-0" />
                 <span>{fat}g</span>
               </div>
             </div>

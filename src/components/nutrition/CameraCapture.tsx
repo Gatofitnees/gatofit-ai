@@ -24,17 +24,38 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   useEffect(() => {
     if (isOpen) {
       startCamera();
+      // Hide navigation bar when camera is open
+      const navBar = document.querySelector('nav');
+      if (navBar) {
+        (navBar as HTMLElement).style.display = 'none';
+      }
     } else {
       stopCamera();
+      // Show navigation bar when camera is closed
+      const navBar = document.querySelector('nav');
+      if (navBar) {
+        (navBar as HTMLElement).style.display = '';
+      }
     }
 
-    return () => stopCamera();
+    return () => {
+      stopCamera();
+      // Ensure navigation bar is shown when component unmounts
+      const navBar = document.querySelector('nav');
+      if (navBar) {
+        (navBar as HTMLElement).style.display = '';
+      }
+    };
   }, [isOpen, facingMode]);
 
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode }
+        video: { 
+          facingMode,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
       });
       setStream(mediaStream);
       
@@ -43,6 +64,19 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
+      // Fallback to any available camera
+      try {
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({
+          video: true
+        });
+        setStream(fallbackStream);
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = fallbackStream;
+        }
+      } catch (fallbackError) {
+        console.error('Error accessing any camera:', fallbackError);
+      }
     }
   };
 
@@ -89,10 +123,14 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black z-50">
+    <div className="fixed inset-0 bg-black z-[100]">
       <div className="relative w-full h-full">
         {/* Video Stream */}
         <video
@@ -111,7 +149,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
             <Button
               variant="secondary"
               size="sm"
-              onClick={onClose}
+              onClick={handleClose}
               className="h-10 w-10 rounded-full p-0 bg-black/20"
             >
               <X className="h-5 w-5 text-white" />
