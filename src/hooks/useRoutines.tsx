@@ -29,7 +29,7 @@ export const useRoutines = () => {
         .from('routines')
         .select(`
           *,
-          routine_exercises(count)
+          routine_exercises!routine_exercises_routine_id_fkey(count)
         `)
         .eq('is_predefined', false) // Solo traer rutinas no predefinidas
         .order('created_at', { ascending: false });
