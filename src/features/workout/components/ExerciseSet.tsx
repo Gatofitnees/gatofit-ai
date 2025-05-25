@@ -1,125 +1,112 @@
 
 import React from "react";
-import { ExerciseSet as ExerciseSetType } from "../types";
-import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MoreVertical, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { NumericInput } from "@/components/ui/numeric-input";
 
-interface ExerciseSetProps {
-  set: ExerciseSetType;
-  setIndex: number;
-  onSetUpdate: (setIndex: number, field: string, value: number) => void;
+interface ExerciseSetData {
+  set_number: number;
+  reps_min: number;
+  reps_max: number;
+  rest_seconds: number;
 }
 
-const REST_TIMES = [
-  { label: "30 seg", value: 30 },
-  { label: "45 seg", value: 45 },
-  { label: "60 seg", value: 60 },
-  { label: "90 seg", value: 90 },
-  { label: "2 min", value: 120 },
-  { label: "3 min", value: 180 },
-  { label: "4 min", value: 240 },
-  { label: "5 min", value: 300 }
-];
+interface ExerciseSetProps {
+  id: number;
+  name: string;
+  muscleGroup?: string;
+  equipment?: string;
+  sets: ExerciseSetData[];
+  onAddSet: () => void;
+  onSetUpdate: (setIndex: number, field: string, value: number) => void;
+  onOptionsClick: () => void;
+  onExerciseNameClick: (exerciseId: number) => void;
+}
 
-const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate }) => {
-  const [repsValue, setRepsValue] = React.useState('');
-
-  // Initialize reps value when component mounts or set changes
-  React.useEffect(() => {
-    // Only show values if they are actually set (greater than 0)
-    if (set.reps_min > 0 && set.reps_max > 0) {
-      if (set.reps_min === set.reps_max) {
-        setRepsValue(set.reps_min.toString());
-      } else {
-        setRepsValue(`${set.reps_min}-${set.reps_max}`);
-      }
-    } else {
-      setRepsValue('');
-    }
-  }, [set.reps_min, set.reps_max]);
-
-  const handleRepsChange = (value: string) => {
-    setRepsValue(value);
-    
-    if (value === '') {
-      onSetUpdate(setIndex, "reps_min", 0);
-      onSetUpdate(setIndex, "reps_max", 0);
-      return;
-    }
-
-    const match = value.match(/^(\d+)(?:-(\d+))?$/);
-    
-    if (match) {
-      const min = parseInt(match[1]);
-      const max = match[2] ? parseInt(match[2]) : min;
-      
-      if (!isNaN(min) && !isNaN(max) && min <= max) {
-        onSetUpdate(setIndex, "reps_min", min);
-        onSetUpdate(setIndex, "reps_max", max);
-      }
-    }
-  };
-
-  const handleRepsFocus = () => {
-    // Clear the input when user focuses if it's empty or has default values
-    if (repsValue === '' || (set.reps_min === 0 && set.reps_max === 0)) {
-      setRepsValue('');
-    }
-  };
-
-  const formatRestTime = (seconds: number): string => {
-    const matchingOption = REST_TIMES.find(option => option.value === seconds);
-    if (matchingOption) return matchingOption.label;
-    
-    if (seconds >= 60) {
-      const minutes = Math.floor(seconds / 60);
-      return `${minutes} min`;
-    }
-    return `${seconds} seg`;
-  };
-
+const ExerciseSet: React.FC<ExerciseSetProps> = ({
+  id,
+  name,
+  muscleGroup,
+  equipment,
+  sets,
+  onAddSet,
+  onSetUpdate,
+  onOptionsClick,
+  onExerciseNameClick,
+}) => {
   return (
-    <div key={`set-${setIndex}`} className="mb-4 last:mb-0">
-      <div className="grid grid-cols-3 gap-3">
-        <div className="flex flex-col items-center">
-          <div className="text-sm font-medium mb-1.5 text-center w-full">Serie</div>
-          <div className="h-9 w-9 flex items-center justify-center bg-primary/10 text-primary font-semibold rounded-full">
-            {setIndex + 1}
+    <div className="bg-white shadow-neu-button rounded-xl overflow-hidden">
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            <h3 
+              className="font-medium cursor-pointer hover:text-primary transition-colors"
+              onClick={() => onExerciseNameClick(id)}
+            >
+              {name}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {muscleGroup}
+              {equipment && ` • ${equipment}`}
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <span className="bg-secondary/20 text-xs px-2 py-1 rounded-full">
+              {sets.length} {sets.length === 1 ? 'serie' : 'series'}
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={onOptionsClick}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         
-        <div className="flex flex-col">
-          <div className="text-sm font-medium mb-1.5 text-center">Reps</div>
-          <div className="bg-background rounded-lg px-3 py-1.5 min-h-9">
-            <input 
-              type="text"
-              className="w-full h-full bg-transparent border-none text-sm text-center placeholder:text-muted-foreground/60"
-              value={repsValue}
-              onChange={(e) => handleRepsChange(e.target.value)}
-              onFocus={handleRepsFocus}
-              placeholder="8-12"
-            />
-          </div>
+        {/* Sets */}
+        <div className="space-y-2">
+          {sets.map((set, setIndex) => (
+            <div key={setIndex} className="grid grid-cols-4 gap-2 items-center p-2 bg-secondary/10 rounded-lg">
+              <div className="text-sm font-medium">
+                Serie {set.set_number}
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <NumericInput
+                  value={set.reps_min.toString()}
+                  onChange={(e) => onSetUpdate(setIndex, 'reps_min', parseInt(e.target.value) || 0)}
+                  className="h-8 text-center text-xs"
+                  placeholder="Min"
+                />
+                <span className="text-xs">-</span>
+                <NumericInput
+                  value={set.reps_max.toString()}
+                  onChange={(e) => onSetUpdate(setIndex, 'reps_max', parseInt(e.target.value) || 0)}
+                  className="h-8 text-center text-xs"
+                  placeholder="Max"
+                />
+              </div>
+              
+              <div className="text-xs text-muted-foreground text-center">
+                {set.rest_seconds}s descanso
+              </div>
+              
+              <div></div>
+            </div>
+          ))}
         </div>
         
-        <div className="flex flex-col">
-          <div className="text-sm font-medium mb-1.5 text-center">Descanso</div>
-          <Select
-            value={set.rest_seconds.toString()}
-            onValueChange={(value) => onSetUpdate(setIndex, "rest_seconds", parseInt(value))}
-          >
-            <SelectTrigger className="w-full h-9 rounded-lg px-3 py-1 bg-background border-none text-sm">
-              <SelectValue placeholder="60 seg" />
-            </SelectTrigger>
-            <SelectContent className="bg-background/95 backdrop-blur-sm border border-secondary">
-              {REST_TIMES.map((option) => (
-                <SelectItem key={option.value} value={option.value.toString()}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={onAddSet}
+          className="w-full mt-2"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Añadir serie
+        </Button>
       </div>
     </div>
   );
