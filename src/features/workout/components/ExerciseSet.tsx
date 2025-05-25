@@ -1,15 +1,12 @@
 
 import React from "react";
 import { ExerciseSet as ExerciseSetType } from "../types";
-import { NumericInput } from "@/components/ui/numeric-input";
+import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
 
 interface ExerciseSetProps {
   set: ExerciseSetType;
   setIndex: number;
-  exerciseId?: number;
-  exerciseName?: string;
   onSetUpdate: (setIndex: number, field: string, value: number) => void;
 }
 
@@ -24,14 +21,7 @@ const REST_TIMES = [
   { label: "5 min", value: 300 }
 ];
 
-const ExerciseSet: React.FC<ExerciseSetProps> = ({ 
-  set, 
-  setIndex, 
-  exerciseId,
-  exerciseName,
-  onSetUpdate 
-}) => {
-  const navigate = useNavigate();
+const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate }) => {
   const [repsValue, setRepsValue] = React.useState('');
 
   // Initialize reps value when component mounts or set changes
@@ -77,25 +67,19 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({
     }
   };
 
-  const handleExerciseNameClick = () => {
-    if (exerciseId) {
-      navigate(`/exercise-details/${exerciseId}`);
+  const formatRestTime = (seconds: number): string => {
+    const matchingOption = REST_TIMES.find(option => option.value === seconds);
+    if (matchingOption) return matchingOption.label;
+    
+    if (seconds >= 60) {
+      const minutes = Math.floor(seconds / 60);
+      return `${minutes} min`;
     }
+    return `${seconds} seg`;
   };
 
   return (
     <div key={`set-${setIndex}`} className="mb-4 last:mb-0">
-      {exerciseName && (
-        <div className="mb-2">
-          <h4 
-            className="font-medium cursor-pointer hover:text-primary transition-colors"
-            onClick={handleExerciseNameClick}
-          >
-            {exerciseName}
-          </h4>
-        </div>
-      )}
-      
       <div className="grid grid-cols-3 gap-3">
         <div className="flex flex-col items-center">
           <div className="text-sm font-medium mb-1.5 text-center w-full">Serie</div>
@@ -107,7 +91,8 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({
         <div className="flex flex-col">
           <div className="text-sm font-medium mb-1.5 text-center">Reps</div>
           <div className="bg-background rounded-lg px-3 py-1.5 min-h-9">
-            <NumericInput 
+            <input 
+              type="text"
               className="w-full h-full bg-transparent border-none text-sm text-center placeholder:text-muted-foreground/60"
               value={repsValue}
               onChange={(e) => handleRepsChange(e.target.value)}

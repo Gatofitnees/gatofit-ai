@@ -1,6 +1,5 @@
 
-export * from "./DiscardChangesDialog";
-export * from "./NoExercisesDialog";
-export * from "./RoutineDialogs";
-export * from "./SaveConfirmDialog";
-export * from "./ExerciseNotesDialog";
+export { default as NoExercisesDialog } from './NoExercisesDialog';
+export { default as SaveConfirmDialog } from './SaveConfirmDialog';
+export { default as DiscardChangesDialog } from './DiscardChangesDialog';
+export { default as RoutineDialogs } from './RoutineDialogs';

@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 interface ExerciseSet {
   set_number: number;
@@ -32,7 +31,6 @@ interface Routine {
 
 export const useRoutineDetail = (routineId: number | undefined) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [exerciseDetails, setExerciseDetails] = useState<ExerciseDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +59,6 @@ export const useRoutineDetail = (routineId: number | undefined) => {
         setRoutine(routineData);
 
         // Fetch exercises for this routine with explicit column specification to avoid ambiguity
-        // IMPORTANT: Order by exercise_order ASC to maintain correct order
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('routine_exercises')
           .select(`
@@ -79,7 +76,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
             )
           `)
           .eq('routine_id', routineId)
-          .order('exercise_order', { ascending: true }); // Fix: Ensure correct ordering
+          .order('exercise_order', { ascending: true });
 
         if (exercisesError) {
           console.error("Error fetching exercises:", exercisesError);
@@ -122,9 +119,6 @@ export const useRoutineDetail = (routineId: number | undefined) => {
     setStartingWorkout(true);
     
     try {
-      // Navigate to active workout page
-      navigate(`/workout/active/${routineId}`);
-      
       toast({
         title: "¡Entrenamiento iniciado!",
         description: `Has comenzado la rutina ${routine.name}`,

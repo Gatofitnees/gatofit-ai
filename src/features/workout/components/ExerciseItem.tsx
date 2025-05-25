@@ -5,7 +5,6 @@ import { Card, CardBody } from "@/components/Card";
 import Button from "@/components/Button";
 import { RoutineExercise } from "../types";
 import ExerciseSet from "./ExerciseSet";
-import { useNavigate } from "react-router-dom";
 
 interface ExerciseItemProps {
   exercise: RoutineExercise;
@@ -22,12 +21,6 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
   onSetUpdate, 
   onExerciseOptions 
 }) => {
-  const navigate = useNavigate();
-
-  const handleExerciseNameClick = () => {
-    navigate(`/exercise-details/${exercise.id}`);
-  };
-
   return (
     <Card className="bg-secondary/40">
       <CardBody>
@@ -36,12 +29,7 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
             <Grip className="h-4 w-4 text-primary" />
           </div>
           <div className="flex-1">
-            <h4 
-              className="font-medium cursor-pointer hover:text-primary transition-colors"
-              onClick={handleExerciseNameClick}
-            >
-              {exercise.name}
-            </h4>
+            <h4 className="font-medium">{exercise.name}</h4>
             <span className="text-xs text-muted-foreground">{exercise.muscle_group_main}</span>
           </div>
           <Button 
@@ -63,8 +51,6 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
             key={`set-${setIndex}`}
             set={set}
             setIndex={setIndex}
-            exerciseId={exercise.id}
-            exerciseName={exercise.name}
             onSetUpdate={(setIndex, field, value) => onSetUpdate(index, setIndex, field, value)}
           />
         ))}
