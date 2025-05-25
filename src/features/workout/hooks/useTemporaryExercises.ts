@@ -140,7 +140,14 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
     setTemporaryExercises(prev => {
       const updated = [...prev];
       if (updated[exerciseIndex] && updated[exerciseIndex].sets[setIndex]) {
-        updated[exerciseIndex].sets[setIndex][field] = numValue;
+        updated[exerciseIndex] = {
+          ...updated[exerciseIndex],
+          sets: updated[exerciseIndex].sets.map((set, i) => 
+            i === setIndex 
+              ? { ...set, [field]: numValue }
+              : set
+          )
+        };
         console.log(`Updated temporary exercise ${exerciseIndex} set ${setIndex} ${field} to:`, numValue);
       }
       return updated;
@@ -151,7 +158,10 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
     setTemporaryExercises(prev => {
       const updated = [...prev];
       if (updated[exerciseIndex]) {
-        updated[exerciseIndex].notes = notes;
+        updated[exerciseIndex] = {
+          ...updated[exerciseIndex],
+          notes
+        };
       }
       return updated;
     });
@@ -171,7 +181,10 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
           newSet.reps = lastSet.reps;
         }
         
-        exercise.sets.push(newSet);
+        updated[exerciseIndex] = {
+          ...exercise,
+          sets: [...exercise.sets, newSet]
+        };
         console.log(`Added set ${newSet.set_number} to temporary exercise ${exerciseIndex}`);
       }
       return updated;

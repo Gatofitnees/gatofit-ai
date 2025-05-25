@@ -21,7 +21,14 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     routineId
   });
 
-  const { temporaryExercises, addTemporaryExercises, clearTemporaryExercises } = useTemporaryExercises(routineId);
+  const { 
+    temporaryExercises, 
+    addTemporaryExercises, 
+    clearTemporaryExercises,
+    updateTemporaryExercise,
+    updateTemporaryExerciseNotes,
+    addTemporaryExerciseSet
+  } = useTemporaryExercises(routineId);
   
   const { 
     showStatsDialog, 
@@ -31,32 +38,47 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   } = useExerciseUIState();
 
   // Combine base exercises with temporary exercises
-  const allExercises = Object.values(baseExerciseData).concat(temporaryExercises);
+  const baseExercisesList = Object.values(baseExerciseData);
+  const allExercises = baseExercisesList.concat(temporaryExercises);
+  const baseExerciseCount = baseExercisesList.length;
 
   const { handleInputChange, handleAddSet, handleReorderDrag } = useExerciseInputHandlers(
     allExercises,
     updateBaseExerciseData,
     temporaryExercises,
-    addTemporaryExercises
+    addTemporaryExercises,
+    updateTemporaryExercise,
+    addTemporaryExerciseSet,
+    baseExerciseCount
   );
 
   const handleExerciseNotesChange = useCallback((exerciseIndex: number, notes: string) => {
     const exercise = allExercises[exerciseIndex];
     if (!exercise) return;
 
-    setExerciseNotesMap(prev => ({
-      ...prev,
-      [exercise.id]: notes
-    }));
-    
-    // Update the exercise data
-    const updateExercise = (prev: WorkoutExercise) => ({
-      ...prev,
-      notes
-    });
-    
-    updateBaseExerciseData(exercise.id, updateExercise);
-  }, [allExercises, updateBaseExerciseData]);
+    // Check if this is a temporary exercise
+    const isTemporary = exerciseIndex >= baseExerciseCount;
+
+    if (isTemporary) {
+      // Use temporary exercise notes update function
+      const tempIndex = exerciseIndex - baseExerciseCount;
+      updateTemporaryExerciseNotes(tempIndex, notes);
+    } else {
+      // Use base exercise notes update
+      setExerciseNotesMap(prev => ({
+        ...prev,
+        [exercise.id]: notes
+      }));
+      
+      // Update the exercise data
+      const updateExercise = (prev: WorkoutExercise) => ({
+        ...prev,
+        notes
+      });
+      
+      updateBaseExerciseData(exercise.id, updateExercise);
+    }
+  }, [allExercises, updateBaseExerciseData, updateTemporaryExerciseNotes, baseExerciseCount]);
 
   return {
     exercises: allExercises,
