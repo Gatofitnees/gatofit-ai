@@ -70,7 +70,7 @@ const NutritionPage: React.FC = () => {
       // Add new entry
       await addEntry({
         ...foodData,
-        meal_type: 'snack' // Default meal type
+        meal_type: 'snack1' // Default meal type
       } as Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>);
     }
     

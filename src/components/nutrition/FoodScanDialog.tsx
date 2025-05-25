@@ -42,7 +42,7 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
             Agregar Comida
           </DialogTitle>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             onClick={onClose}
             className="h-6 w-6 p-0 hover:bg-secondary/20"

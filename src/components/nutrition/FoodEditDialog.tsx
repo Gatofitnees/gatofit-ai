@@ -103,7 +103,7 @@ export const FoodEditDialog: React.FC<FoodEditDialogProps> = ({
       carbs_g_consumed: formData.carbs_g_consumed,
       fat_g_consumed: formData.fat_g_consumed,
       notes: formData.notes,
-      meal_type: 'snack' // Default meal type
+      meal_type: 'snack1' as const // Default meal type
     };
 
     if (imageUrl) {
@@ -122,7 +122,7 @@ export const FoodEditDialog: React.FC<FoodEditDialogProps> = ({
             Editar Alimento
           </DialogTitle>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             onClick={onClose}
             className="h-6 w-6 p-0 hover:bg-secondary/20"

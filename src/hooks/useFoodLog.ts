@@ -7,7 +7,7 @@ export interface FoodLogEntry {
   food_item_id?: number;
   custom_food_name: string;
   photo_url?: string;
-  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack1' | 'snack2';
   quantity_consumed: number;
   unit_consumed: string;
   calories_consumed: number;
