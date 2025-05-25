@@ -5,7 +5,7 @@ import { ArrowLeft, Flame, Plus, Minus, Zap, Wheat, Droplet, Heart } from 'lucid
 import { Input } from '@/components/ui/input';
 import Button from '@/components/Button';
 import { cn } from '@/lib/utils';
-import { FoodLogEntry } from '@/hooks/useFoodLog';
+import { FoodLogEntry, useFoodLog } from '@/hooks/useFoodLog';
 
 interface FoodEditPageProps {
   onSave?: (entry: Partial<FoodLogEntry>) => void;
@@ -15,6 +15,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { initialData, imageUrl, isEditing } = location.state || {};
+  const { addEntry, updateEntry } = useFoodLog();
 
   const [formData, setFormData] = useState({
     custom_food_name: '',
@@ -29,6 +30,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
   });
 
   const [editingMacro, setEditingMacro] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -66,27 +68,51 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
     return 'bg-red-400';
   };
 
-  const handleSave = () => {
-    const saveData: Partial<FoodLogEntry> = {
-      custom_food_name: formData.custom_food_name,
-      quantity_consumed: formData.quantity_consumed,
-      unit_consumed: formData.unit_consumed,
-      calories_consumed: formData.calories_consumed,
-      protein_g_consumed: formData.protein_g_consumed,
-      carbs_g_consumed: formData.carbs_g_consumed,
-      fat_g_consumed: formData.fat_g_consumed,
-      notes: formData.notes,
-      meal_type: 'snack1' as const
-    };
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      const saveData: Partial<FoodLogEntry> = {
+        custom_food_name: formData.custom_food_name,
+        quantity_consumed: formData.quantity_consumed,
+        unit_consumed: formData.unit_consumed,
+        calories_consumed: formData.calories_consumed,
+        protein_g_consumed: formData.protein_g_consumed,
+        carbs_g_consumed: formData.carbs_g_consumed,
+        fat_g_consumed: formData.fat_g_consumed,
+        notes: formData.notes,
+        meal_type: 'snack1' as const
+      };
 
-    if (imageUrl) {
-      saveData.photo_url = imageUrl;
-    }
+      if (imageUrl) {
+        saveData.photo_url = imageUrl;
+      }
 
-    if (onSave) {
-      onSave(saveData);
+      let success = false;
+      
+      if (isEditing && initialData?.id) {
+        // Update existing entry
+        success = await updateEntry(initialData.id, saveData);
+      } else {
+        // Create new entry
+        const result = await addEntry(saveData as Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>);
+        success = result !== null;
+      }
+
+      if (success) {
+        console.log('Food entry saved successfully');
+        if (onSave) {
+          onSave(saveData);
+        }
+        navigate('/nutrition');
+      } else {
+        console.error('Failed to save food entry');
+      }
+    } catch (error) {
+      console.error('Error saving food entry:', error);
+    } finally {
+      setIsSaving(false);
     }
-    navigate('/nutrition');
   };
 
   const updateMacro = (type: string, value: number) => {
@@ -237,8 +263,9 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
           fullWidth
           onClick={handleSave}
           className="mb-8"
+          disabled={isSaving || !formData.custom_food_name.trim()}
         >
-          Guardar cambios
+          {isSaving ? 'Guardando...' : 'Guardar cambios'}
         </Button>
       </div>
 

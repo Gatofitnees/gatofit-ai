@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image, X, RotateCcw } from 'lucide-react';
+import { Camera, Image, X, RotateCcw, ImageIcon } from 'lucide-react';
 import Button from '@/components/Button';
 import { useFoodCapture } from '@/hooks/useFoodCapture';
 
@@ -130,15 +130,16 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
         {/* Bottom Controls */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="flex items-center justify-center gap-6">
+          <div className="flex items-center justify-between">
             {/* Gallery Button */}
             <Button
               variant="secondary"
               size="sm"
               onClick={handleGallerySelect}
-              className="h-12 w-12 rounded-full p-0 bg-black/20"
+              className="h-14 px-4 rounded-full bg-black/20 flex items-center gap-2"
             >
-              <Image className="h-6 w-6 text-white" />
+              <ImageIcon className="h-5 w-5 text-white" />
+              <span className="text-white text-sm">Galería</span>
             </Button>
 
             {/* Capture Button */}
@@ -151,7 +152,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
             </Button>
 
             {/* Placeholder for balance */}
-            <div className="h-12 w-12" />
+            <div className="h-14 w-20" />
           </div>
         </div>
 

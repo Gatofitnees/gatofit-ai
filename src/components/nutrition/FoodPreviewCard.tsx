@@ -110,14 +110,23 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
         onMouseLeave={handleMouseUp}
       >
         {/* Time stamp */}
-        <div className="absolute top-3 left-3 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md z-10">
+        <div className="absolute top-3 right-3 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md z-10">
           {formatTime(loggedAt)}
         </div>
 
         <div className="flex h-24">
-          {/* Food Details */}
-          <div className="flex-1 p-4 pr-2">
-            <h3 className="font-medium text-sm mb-3 truncate">{name}</h3>
+          {/* Food Image - Left Side */}
+          <div className="w-24 h-24 flex-shrink-0">
+            <img 
+              src={imageUrl} 
+              alt={name}
+              className="w-full h-full object-cover rounded-l-xl"
+            />
+          </div>
+
+          {/* Food Details - Right Side */}
+          <div className="flex-1 p-4 pl-3">
+            <h3 className="font-medium text-sm mb-3 truncate pr-12">{name}</h3>
             
             {/* Calories - Main Line */}
             <div className="flex items-center gap-2 mb-2">
@@ -142,15 +151,6 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
                 <span>{fat}g</span>
               </div>
             </div>
-          </div>
-
-          {/* Food Image - Right Side */}
-          <div className="w-24 h-24 flex-shrink-0">
-            <img 
-              src={imageUrl} 
-              alt={name}
-              className="w-full h-full object-cover rounded-r-xl"
-            />
           </div>
         </div>
       </div>
