@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart2, Copy, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { SetRow } from "./SetRow";
-import { ExerciseNotesModal } from "./ExerciseNotesModal";
 
 interface WorkoutSet {
   set_number: number;
@@ -43,100 +43,85 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onViewDetails,
   onShowStats
 }) => {
-  const [showNotesModal, setShowNotesModal] = useState(false);
-
-  const handleSaveNotes = (notes: string) => {
-    onNotesChange(exerciseIndex, notes);
-  };
-
   return (
-    <>
-      <Card key={`${exercise.id}-${exerciseIndex}`} className="bg-secondary/40 border border-white/5 overflow-hidden p-0">
-        <div className="p-4">
-          {/* Exercise Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div 
-              className="flex-1 cursor-pointer" 
-              onClick={() => onViewDetails(exercise.id)}
-            >
-              <h3 className="font-medium text-base">{exercise.name}</h3>
-              <p className="text-xs text-muted-foreground">
-                {exercise.muscle_group_main}
-                {exercise.equipment_required && ` • ${exercise.equipment_required}`}
-              </p>
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onShowStats(exercise.id)}
-            >
-              <BarChart2 className="h-4 w-4 mr-1" />
-              Estadísticas
-            </Button>
+    <Card key={`${exercise.id}-${exerciseIndex}`} className="bg-secondary/40 border border-white/5 overflow-hidden p-0">
+      <div className="p-4">
+        {/* Exercise Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div 
+            className="flex-1 cursor-pointer" 
+            onClick={() => onViewDetails(exercise.id)}
+          >
+            <h3 className="font-medium text-base">{exercise.name}</h3>
+            <p className="text-xs text-muted-foreground">
+              {exercise.muscle_group_main}
+              {exercise.equipment_required && ` • ${exercise.equipment_required}`}
+            </p>
           </div>
           
-          {/* Sets */}
-          <div className="space-y-3">
-            {/* Header for the table-like layout */}
-            <div className="grid grid-cols-4 gap-2 px-2">
-              <div className="text-xs font-medium text-muted-foreground">Serie</div>
-              <div className="text-xs font-medium text-muted-foreground">Ant</div>
-              <div className="text-xs font-medium text-muted-foreground">Peso</div>
-              <div className="text-xs font-medium text-muted-foreground">Reps</div>
-            </div>
-            
-            {exercise.sets.map((set, setIndex) => (
-              <SetRow 
-                key={`set-${setIndex}`} 
-                set={set} 
-                exerciseIndex={exerciseIndex}
-                setIndex={setIndex}
-                onInputChange={onInputChange}
-              />
-            ))}
-          </div>
-          
-          {/* Exercise Actions */}
-          <div className="mt-3 flex space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex-1"
-              onClick={() => onAddSet(exerciseIndex)}
-            >
-              <Copy className="h-3 w-3 mr-1" />
-              Añadir serie
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex-1"
-              onClick={() => setShowNotesModal(true)}
-            >
-              <Pencil className="h-3 w-3 mr-1" />
-              Notas
-            </Button>
-          </div>
-          
-          {/* Show notes indicator if notes exist */}
-          {exercise.notes && (
-            <div className="mt-2 p-2 bg-secondary/20 rounded text-xs text-muted-foreground">
-              <strong>Nota:</strong> {exercise.notes}
-            </div>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onShowStats(exercise.id)}
+          >
+            <BarChart2 className="h-4 w-4 mr-1" />
+            Estadísticas
+          </Button>
         </div>
-      </Card>
-
-      {/* Notes Modal */}
-      <ExerciseNotesModal
-        isOpen={showNotesModal}
-        onClose={() => setShowNotesModal(false)}
-        exerciseName={exercise.name}
-        initialNotes={exercise.notes}
-        onSave={handleSaveNotes}
-      />
-    </>
+        
+        {/* Sets */}
+        <div className="space-y-3">
+          {/* Header for the table-like layout */}
+          <div className="grid grid-cols-4 gap-2 px-2">
+            <div className="text-xs font-medium text-muted-foreground">Serie</div>
+            <div className="text-xs font-medium text-muted-foreground">Ant</div>
+            <div className="text-xs font-medium text-muted-foreground">Peso</div>
+            <div className="text-xs font-medium text-muted-foreground">Reps</div>
+          </div>
+          
+          {exercise.sets.map((set, setIndex) => (
+            <SetRow 
+              key={`set-${setIndex}`} 
+              set={set} 
+              exerciseIndex={exerciseIndex}
+              setIndex={setIndex}
+              onInputChange={onInputChange}
+            />
+          ))}
+        </div>
+        
+        {/* Exercise Actions */}
+        <div className="mt-3 flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-1"
+            onClick={() => onAddSet(exerciseIndex)}
+          >
+            <Copy className="h-3 w-3 mr-1" />
+            Añadir serie
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-1"
+          >
+            <Pencil className="h-3 w-3 mr-1" />
+            Notas
+          </Button>
+        </div>
+        
+        {/* Notes textarea */}
+        <div className="mt-2">
+          <Textarea
+            placeholder="Notas sobre este ejercicio..."
+            className="w-full text-sm"
+            value={exercise.notes}
+            onChange={(e) => onNotesChange(exerciseIndex, e.target.value)}
+          />
+        </div>
+      </div>
+    </Card>
   );
 };

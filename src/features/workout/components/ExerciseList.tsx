@@ -1,9 +1,8 @@
 
 import React from "react";
-import { ArrowUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { RoutineExercise } from "../types";
-import ExerciseSet from "./ExerciseSet";
+import ExerciseItem from "./ExerciseItem";
+import Button from "@/components/Button";
 
 interface ExerciseListProps {
   exercises: RoutineExercise[];
@@ -18,57 +17,45 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   onAddSet,
   onSetUpdate,
   onExerciseOptions,
-  onReorderClick,
+  onReorderClick
 }) => {
-  const handleExerciseNameClick = (exerciseId: number) => {
-    window.location.href = `/exercises/${exerciseId}`;
-  };
-
   return (
-    <div className="space-y-4">
-      {exercises.length > 0 && (
-        <>
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium">
-              Ejercicios ({exercises.length})
-            </h3>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={onReorderClick}
-            >
-              <ArrowUpDown className="h-4 w-4 mr-1" />
-              Reordenar
-            </Button>
-          </div>
-          
-          {exercises.map((exercise, index) => {
-            // Convert ExerciseSet[] to ExerciseSetData[] format
-            const setsData = exercise.sets.map((set, setIndex) => ({
-              set_number: setIndex + 1,
-              reps_min: set.reps_min,
-              reps_max: set.reps_max,
-              rest_seconds: set.rest_seconds
-            }));
-
-            return (
-              <ExerciseSet
-                key={exercise.id}
-                id={exercise.id}
-                name={exercise.name}
-                muscleGroup={exercise.muscle_group_main}
-                equipment={exercise.equipment_required}
-                sets={setsData}
-                onAddSet={() => onAddSet(index)}
-                onSetUpdate={(setIndex, field, value) => onSetUpdate(index, setIndex, field, value)}
-                onOptionsClick={() => onExerciseOptions(index)}
-                onExerciseNameClick={handleExerciseNameClick}
-              />
-            );
-          })}
-        </>
+    <>
+      <div className="flex justify-between items-center pt-2">
+        <h3 className="text-base font-medium">Ejercicios</h3>
+        {exercises.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault(); // Prevent form submission
+              onReorderClick();
+            }}
+          >
+            Ordenar
+          </Button>
+        )}
+      </div>
+      
+      {exercises.length > 0 ? (
+        <div className="space-y-3">
+          {exercises.map((exercise, index) => (
+            <ExerciseItem
+              key={`${exercise.id}-${index}`}
+              exercise={exercise}
+              index={index}
+              onAddSet={onAddSet}
+              onSetUpdate={onSetUpdate}
+              onExerciseOptions={onExerciseOptions}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-6 text-muted-foreground">
+          No hay ejercicios seleccionados
+        </div>
       )}
-    </div>
+    </>
   );
 };
 
