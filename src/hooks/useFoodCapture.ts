@@ -11,47 +11,6 @@ export const useFoodCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const captureFromCamera = useCallback(async (): Promise<CapturedFood | null> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      
-      return new Promise((resolve) => {
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.play();
-
-        video.onloadedmetadata = () => {
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d')!;
-          
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          context.drawImage(video, 0, 0);
-          
-          canvas.toBlob(async (blob) => {
-            if (blob) {
-              const result = await uploadImage(blob);
-              stream.getTracks().forEach(track => track.stop());
-              resolve(result);
-            } else {
-              resolve(null);
-            }
-          }, 'image/jpeg', 0.8);
-        };
-      });
-    } catch (err) {
-      setError('Error al acceder a la cámara');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   const captureFromGallery = useCallback((): Promise<CapturedFood | null> => {
     return new Promise((resolve) => {
       setIsLoading(true);
@@ -109,8 +68,8 @@ export const useFoodCapture = () => {
   };
 
   return {
-    captureFromCamera,
     captureFromGallery,
+    uploadImage,
     isLoading,
     error
   };

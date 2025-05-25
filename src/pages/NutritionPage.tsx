@@ -1,24 +1,21 @@
 
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
-import { Card, CardHeader, CardBody, CardFooter } from "../components/Card";
+import { Card, CardHeader, CardBody } from "../components/Card";
 import Button from "../components/Button";
 import ProgressRing from "../components/ProgressRing";
 import MacroProgress from "../components/MacroProgress";
-import { FoodScanDialog } from "../components/nutrition/FoodScanDialog";
+import { CameraCapture } from "../components/nutrition/CameraCapture";
 import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
-import { FoodEditDialog } from "../components/nutrition/FoodEditDialog";
 import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
+import { useNavigate } from "react-router-dom";
 
 const NutritionPage: React.FC = () => {
-  const [showScanDialog, setShowScanDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
-  const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
-  const [pendingFoodData, setPendingFoodData] = useState<any>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const navigate = useNavigate();
 
-  const { entries, addEntry, updateEntry, isLoading } = useFoodLog();
+  const { entries, addEntry, deleteEntry, isLoading } = useFoodLog();
   const { analyzeFood, isAnalyzing } = useFoodAnalysis();
 
   // Calculate today's totals from actual entries
@@ -43,12 +40,10 @@ const NutritionPage: React.FC = () => {
   const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
 
   const handleImageCaptured = async (imageUrl: string) => {
-    setCurrentImageUrl(imageUrl);
-    
     // Analyze the food image
     const analysis = await analyzeFood(imageUrl);
     if (analysis) {
-      setPendingFoodData({
+      const pendingFoodData = {
         custom_food_name: analysis.name,
         quantity_consumed: analysis.servingSize,
         unit_consumed: analysis.servingUnit,
@@ -57,33 +52,31 @@ const NutritionPage: React.FC = () => {
         carbs_g_consumed: analysis.carbs,
         fat_g_consumed: analysis.fat,
         photo_url: imageUrl
+      };
+      
+      // Navigate to the full-screen edit page
+      navigate('/food-edit', {
+        state: {
+          initialData: pendingFoodData,
+          imageUrl: imageUrl,
+          isEditing: false
+        }
       });
-      setShowEditDialog(true);
     }
-  };
-
-  const handleSaveFood = async (foodData: Partial<FoodLogEntry>) => {
-    if (editingEntry) {
-      // Update existing entry
-      await updateEntry(editingEntry.id!, foodData);
-    } else {
-      // Add new entry
-      await addEntry({
-        ...foodData,
-        meal_type: 'snack1' // Default meal type
-      } as Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>);
-    }
-    
-    // Reset state
-    setEditingEntry(null);
-    setPendingFoodData(null);
-    setCurrentImageUrl("");
   };
 
   const handleEditEntry = (entry: FoodLogEntry) => {
-    setEditingEntry(entry);
-    setCurrentImageUrl(entry.photo_url || "");
-    setShowEditDialog(true);
+    navigate('/food-edit', {
+      state: {
+        initialData: entry,
+        imageUrl: entry.photo_url || "",
+        isEditing: true
+      }
+    });
+  };
+
+  const handleDeleteEntry = async (entryId: number) => {
+    await deleteEntry(entryId);
   };
 
   return (
@@ -140,13 +133,13 @@ const NutritionPage: React.FC = () => {
             variant="primary"
             size="sm"
             leftIcon={<Plus className="h-4 w-4" />}
-            onClick={() => setShowScanDialog(true)}
+            onClick={() => setShowCamera(true)}
           >
             Añadir
           </Button>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-3">
           {isLoading ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -164,6 +157,7 @@ const NutritionPage: React.FC = () => {
                 fat={entry.fat_g_consumed}
                 loggedAt={entry.logged_at}
                 onClick={() => handleEditEntry(entry)}
+                onDelete={() => handleDeleteEntry(entry.id!)}
               />
             ))
           ) : (
@@ -190,28 +184,15 @@ const NutritionPage: React.FC = () => {
           className="h-14 w-14 rounded-full shadow-neu-button"
           leftIcon={<Camera className="h-6 w-6" />}
           variant="primary"
-          onClick={() => setShowScanDialog(true)}
+          onClick={() => setShowCamera(true)}
         />
       </div>
 
-      {/* Dialogs */}
-      <FoodScanDialog
-        isOpen={showScanDialog}
-        onClose={() => setShowScanDialog(false)}
+      {/* Camera Capture */}
+      <CameraCapture
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
         onImageCaptured={handleImageCaptured}
-      />
-
-      <FoodEditDialog
-        isOpen={showEditDialog}
-        onClose={() => {
-          setShowEditDialog(false);
-          setEditingEntry(null);
-          setPendingFoodData(null);
-          setCurrentImageUrl("");
-        }}
-        onSave={handleSaveFood}
-        initialData={editingEntry || pendingFoodData}
-        imageUrl={currentImageUrl}
       />
 
       {/* Loading overlay for analysis */}
