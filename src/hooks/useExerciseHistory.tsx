@@ -45,7 +45,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             let userId = '';
             
             // Check if workout_log exists and extract date and user_id
-            if (workoutLog && typeof workoutLog === 'object' && workoutLog !== null) {
+            if (workoutLog !== null && workoutLog !== undefined && typeof workoutLog === 'object') {
               // If it's an array, take the first item
               if (Array.isArray(workoutLog)) {
                 if (workoutLog.length > 0) {
