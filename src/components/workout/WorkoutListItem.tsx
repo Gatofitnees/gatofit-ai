@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Edit, MoreVertical, PlayCircle, Trash } from "lucide-react";
 import { 
@@ -52,14 +53,17 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
       setIsDeleting(true);
       toast.loading("Eliminando rutina...");
       
-      // With cascade deletion, we only need to delete the routine
-      // The database will automatically delete related workout_logs and exercise_details
+      // With cascade deletion configured, we only need to delete the routine
+      // The database will automatically delete related workout_logs, routine_exercises, and exercise_details
       const { error: routineError } = await supabase
         .from('routines')
         .delete()
         .eq('id', routine.id);
         
-      if (routineError) throw routineError;
+      if (routineError) {
+        console.error("Error deleting routine:", routineError);
+        throw routineError;
+      }
       
       toast.dismiss();
       uiToast({
@@ -136,7 +140,6 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
             {typeLabel} • {exerciseLabel}
           </div>
           
-          {/* Botones y tiempo */}
           <div className="flex justify-between items-center">
             <div className="text-xs text-muted-foreground">
               Duración: {timeLabel}

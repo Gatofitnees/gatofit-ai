@@ -361,13 +361,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_routine_exercises_exercise_id"
-            columns: ["exercise_id"]
-            isOneToOne: false
-            referencedRelation: "exercises"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "routine_exercises_exercise_id_fkey"
             columns: ["exercise_id"]
             isOneToOne: false
@@ -567,20 +560,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_workout_log_exercise_details_exercise_id"
-            columns: ["exercise_id"]
-            isOneToOne: false
-            referencedRelation: "exercises"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_workout_log_exercise_details_workout_log_id"
-            columns: ["workout_log_id"]
-            isOneToOne: false
-            referencedRelation: "workout_logs"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "workout_log_exercise_details_exercise_id_fkey"
             columns: ["exercise_id"]
             isOneToOne: false
@@ -628,13 +607,6 @@ export type Database = {
           workout_date?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_workout_logs_routine_id"
-            columns: ["routine_id"]
-            isOneToOne: false
-            referencedRelation: "routines"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "workout_logs_routine_id_fkey"
             columns: ["routine_id"]

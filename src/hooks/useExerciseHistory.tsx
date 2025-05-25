@@ -20,7 +20,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
       try {
         setLoading(true);
         
-        // First check if there's a workout_log_exercise_details entry for this exercise
+        // Use explicit foreign key reference to avoid ambiguity
         const { data, error } = await supabase
           .from('workout_log_exercise_details')
           .select(`
@@ -30,9 +30,10 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             reps_completed,
             set_number,
             workout_log_id,
-            workout_log:workout_logs(workout_date, user_id)
+            workout_log:workout_logs!workout_log_exercise_details_workout_log_id_fkey(workout_date, user_id)
           `)
-          .eq('exercise_id', exerciseId);
+          .eq('exercise_id', exerciseId)
+          .order('workout_log_id', { ascending: false });
           
         if (error) throw error;
         

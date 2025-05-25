@@ -21,14 +21,16 @@ export function useSaveWorkout(
     return Math.round(durationMinutes * baseCaloriesPerMinute);
   };
 
-  // Helper function to validate a set before saving
+  // Helper function to validate a set before saving - improved validation
   const isValidSet = (set: any) => {
     const hasValidSetNumber = set.set_number !== null && 
                              set.set_number !== undefined && 
                              set.set_number > 0 && 
                              Number.isInteger(set.set_number);
     
-    const hasData = set.weight !== null || set.reps !== null;
+    // Allow sets with either weight OR reps (or both)
+    const hasData = (set.weight !== null && set.weight !== undefined && set.weight > 0) || 
+                   (set.reps !== null && set.reps !== undefined && set.reps > 0);
     
     if (!hasValidSetNumber) {
       console.warn("Invalid set_number:", set.set_number);
@@ -71,7 +73,7 @@ export function useSaveWorkout(
         id: ex.id,
         name: ex.name,
         setsCount: ex.sets.length,
-        setsWithData: ex.sets.filter(s => s.weight !== null || s.reps !== null).length,
+        setsWithData: ex.sets.filter(s => (s.weight !== null && s.weight > 0) || (s.reps !== null && s.reps > 0)).length,
         validSets: ex.sets.filter(isValidSet).length
       })));
       
@@ -108,8 +110,8 @@ export function useSaveWorkout(
             exercise_id: exercise.id,
             exercise_name_snapshot: exercise.name,
             set_number: set.set_number,
-            weight_kg_used: set.weight,
-            reps_completed: set.reps,
+            weight_kg_used: set.weight || null,
+            reps_completed: set.reps || null,
             notes: exercise.notes || ""
           };
           
