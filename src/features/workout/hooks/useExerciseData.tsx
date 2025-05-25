@@ -37,8 +37,15 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
     handleToggleReorderMode 
   } = useExerciseUIState();
 
-  // Combine base exercises with temporary exercises
-  const baseExercisesList = Object.values(baseExerciseData);
+  // Create ordered base exercises list based on exerciseDetails order
+  const getOrderedBaseExercises = useCallback(() => {
+    return exerciseDetails
+      .map(detail => baseExerciseData[detail.id])
+      .filter(Boolean); // Remove any undefined entries
+  }, [exerciseDetails, baseExerciseData]);
+
+  // Combine base exercises with temporary exercises, preserving order
+  const baseExercisesList = getOrderedBaseExercises();
   const allExercises = baseExercisesList.concat(temporaryExercises);
   const baseExerciseCount = baseExercisesList.length;
 
