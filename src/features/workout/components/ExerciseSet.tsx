@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ExerciseSet as ExerciseSetType } from "../types";
-import { Slider } from "@/components/ui/slider";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ExerciseSetProps {
@@ -67,17 +67,6 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate })
     }
   };
 
-  const formatRestTime = (seconds: number): string => {
-    const matchingOption = REST_TIMES.find(option => option.value === seconds);
-    if (matchingOption) return matchingOption.label;
-    
-    if (seconds >= 60) {
-      const minutes = Math.floor(seconds / 60);
-      return `${minutes} min`;
-    }
-    return `${seconds} seg`;
-  };
-
   return (
     <div key={`set-${setIndex}`} className="mb-4 last:mb-0">
       <div className="grid grid-cols-3 gap-3">
@@ -91,8 +80,7 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate })
         <div className="flex flex-col">
           <div className="text-sm font-medium mb-1.5 text-center">Reps</div>
           <div className="bg-background rounded-lg px-3 py-1.5 min-h-9">
-            <input 
-              type="text"
+            <NumericInput 
               className="w-full h-full bg-transparent border-none text-sm text-center placeholder:text-muted-foreground/60"
               value={repsValue}
               onChange={(e) => handleRepsChange(e.target.value)}

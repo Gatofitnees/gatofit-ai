@@ -58,7 +58,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
 
         setRoutine(routineData);
 
-        // Fetch exercises for this routine with explicit column specification to avoid ambiguity
+        // Fetch exercises for this routine with correct ordering
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('routine_exercises')
           .select(`

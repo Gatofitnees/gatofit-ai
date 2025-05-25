@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Dumbbell } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Button from "@/components/Button";
@@ -23,6 +23,7 @@ interface Exercise {
 const ExerciseDetailsPage: React.FC = () => {
   const { id } = useParams<{id: string}>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { exercises, loading: exercisesLoading } = useExercises();
   const [exercise, setExercise] = useState<Exercise | null>(null);
@@ -69,11 +70,21 @@ const ExerciseDetailsPage: React.FC = () => {
 
   const handleAddToRoutine = () => {
     // Add to routine and navigate back - preserving state
-    navigate(-1);
+    handleBack();
   };
 
   const handleEditExercise = () => {
     navigate(`/workout/edit-exercise/${id}`);
+  };
+
+  const handleBack = () => {
+    // Check if we have a return path from navigation state
+    if (location.state?.returnTo) {
+      navigate(location.state.returnTo);
+    } else {
+      // Fallback to previous page
+      navigate(-1);
+    }
   };
 
   if (exercisesLoading || loading) {
@@ -88,7 +99,7 @@ const ExerciseDetailsPage: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <h2 className="text-lg font-medium mb-2">Ejercicio no encontrado</h2>
-        <Button variant="primary" onClick={() => navigate(-1)}>
+        <Button variant="primary" onClick={handleBack}>
           Volver
         </Button>
       </div>
@@ -101,7 +112,7 @@ const ExerciseDetailsPage: React.FC = () => {
       <div className="sticky top-0 z-10 bg-background p-4">
         <div className="flex items-center">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="mr-3 p-1 rounded-full hover:bg-secondary/50"
           >
             <ArrowLeft className="h-5 w-5" />
