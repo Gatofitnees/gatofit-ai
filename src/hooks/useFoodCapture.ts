@@ -11,6 +11,28 @@ export const useFoodCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const sendToWebhook = async (imageUrl: string, imageBlob: Blob) => {
+    try {
+      const formData = new FormData();
+      formData.append('imageUrl', imageUrl);
+      formData.append('image', imageBlob, 'food-image.jpg');
+      formData.append('timestamp', new Date().toISOString());
+      
+      const response = await fetch('https://gaton8n.gatofit.com/webhook-test/e39f095b-fb33-4ce3-b41a-619a650149f5', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.warn('Webhook request failed:', response.statusText);
+      } else {
+        console.log('Image sent to webhook successfully');
+      }
+    } catch (error) {
+      console.error('Error sending to webhook:', error);
+    }
+  };
+
   const captureFromCamera = useCallback((): Promise<CapturedFood | null> => {
     return new Promise((resolve) => {
       setIsLoading(true);
@@ -26,6 +48,10 @@ export const useFoodCapture = () => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           const result = await uploadImage(file);
+          if (result) {
+            // Send to webhook
+            await sendToWebhook(result.imageUrl, file);
+          }
           resolve(result);
         } else {
           resolve(null);
@@ -55,6 +81,10 @@ export const useFoodCapture = () => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           const result = await uploadImage(file);
+          if (result) {
+            // Send to webhook
+            await sendToWebhook(result.imageUrl, file);
+          }
           resolve(result);
         } else {
           resolve(null);
@@ -102,6 +132,7 @@ export const useFoodCapture = () => {
     captureFromCamera,
     captureFromGallery,
     uploadImage,
+    sendToWebhook,
     isLoading,
     error
   };

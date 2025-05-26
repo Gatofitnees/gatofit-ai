@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Image, X, RotateCcw, ImageIcon } from 'lucide-react';
 import Button from '@/components/Button';
@@ -19,7 +18,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { captureFromGallery, uploadImage } = useFoodCapture();
+  const { captureFromGallery, uploadImage, sendToWebhook } = useFoodCapture();
 
   useEffect(() => {
     if (isOpen) {
@@ -104,6 +103,8 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       if (blob) {
         const result = await uploadImage(blob);
         if (result) {
+          // Send to webhook
+          await sendToWebhook(result.imageUrl, blob);
           onImageCaptured(result.imageUrl);
           onClose();
         }
