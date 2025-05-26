@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Flame, Plus, Minus, Zap, Wheat, Droplet, Heart, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Flame, Plus, Minus, Zap, Wheat, Droplet, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Button from '@/components/Button';
 import { cn } from '@/lib/utils';
 import { FoodLogEntry, useFoodLog } from '@/hooks/useFoodLog';
-import { ShinyButton } from '@/components/nutrition/ShinyButton';
+import { GalacticButton } from '@/components/nutrition/GalacticButton';
+import { EditableIngredient } from '@/components/nutrition/EditableIngredient';
 import { ChangeResultsDialog } from '@/components/nutrition/ChangeResultsDialog';
 
 interface FoodEditPageProps {
@@ -27,17 +28,18 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
     protein_g_consumed: 0,
     carbs_g_consumed: 0,
     fat_g_consumed: 0,
-    healthScore: 7,
-    notes: ''
+    healthScore: 7
   });
 
   const [editingMacro, setEditingMacro] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [showChangeResults, setShowChangeResults] = useState(false);
-
-  // Mock ingredients for demonstration
-  const ingredients = ['Ingrediente principal', 'Ingrediente secundario', 'Condimentos'];
+  const [ingredients, setIngredients] = useState([
+    { name: 'Pechuga de pollo', grams: 150, calories: 248, protein: 46, carbs: 0, fat: 5 },
+    { name: 'Arroz integral', grams: 100, calories: 111, protein: 3, carbs: 23, fat: 1 },
+    { name: 'Verduras mixtas', grams: 80, calories: 20, protein: 2, carbs: 4, fat: 0 }
+  ]);
 
   useEffect(() => {
     if (initialData) {
@@ -49,8 +51,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         protein_g_consumed: initialData.protein_g_consumed || 0,
         carbs_g_consumed: initialData.carbs_g_consumed || 0,
         fat_g_consumed: initialData.fat_g_consumed || 0,
-        healthScore: 7,
-        notes: initialData.notes || ''
+        healthScore: 7
       });
     }
   }, [initialData]);
@@ -87,7 +88,6 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         protein_g_consumed: formData.protein_g_consumed,
         carbs_g_consumed: formData.carbs_g_consumed,
         fat_g_consumed: formData.fat_g_consumed,
-        notes: formData.notes,
         meal_type: 'snack1' as const
       };
 
@@ -130,9 +130,8 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
     // TODO: Implement AI integration
   };
 
-  const truncateText = (text: string, maxLength: number = 50) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+  const handleIngredientUpdate = (index: number, data: any) => {
+    setIngredients(prev => prev.map((ing, i) => i === index ? data : ing));
   };
 
   return (
@@ -164,24 +163,19 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         <div className="neu-card p-4 mb-4">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1 mr-4">
-              <div className="text-base font-medium leading-tight">
-                {formData.custom_food_name.length > 60 ? (
-                  <div>
-                    <div>{formData.custom_food_name.substring(0, 60)}</div>
-                    <div>{formData.custom_food_name.substring(60, 120)}{formData.custom_food_name.length > 120 ? '...' : ''}</div>
-                  </div>
-                ) : (
-                  <Input
-                    value={formData.custom_food_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, custom_food_name: e.target.value }))}
-                    placeholder="Nombre del alimento"
-                    className="text-base font-medium border-none p-0 bg-transparent"
-                  />
-                )}
-              </div>
+              <Input
+                value={formData.custom_food_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, custom_food_name: e.target.value }))}
+                placeholder="Nombre del alimento"
+                className="text-base font-medium border-none p-0 bg-transparent leading-tight h-auto"
+                style={{ 
+                  minHeight: '2.5rem',
+                  lineHeight: '1.25rem'
+                }}
+              />
             </div>
             
-            {/* Portion Controls */}
+            {/* Portion Controls - Simplificados */}
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
@@ -192,9 +186,11 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
                 <Minus className="h-3 w-3" />
               </Button>
               
-              <span className="text-xs font-medium min-w-[55px] text-center">
-                {formData.quantity_consumed} {formData.unit_consumed}
-              </span>
+              <div className="min-w-[50px] text-center">
+                <span className="text-sm font-medium">
+                  {formData.quantity_consumed}
+                </span>
+              </div>
               
               <Button
                 size="sm"
@@ -270,7 +266,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
           </div>
         </div>
 
-        {/* Ingredients Section */}
+        {/* Ingredients Section - Rediseñado */}
         <div className="neu-card p-4 mb-4">
           <button
             onClick={() => setShowIngredients(!showIngredients)}
@@ -285,37 +281,26 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
           </button>
           
           {showIngredients && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 space-y-3">
               {ingredients.map((ingredient, index) => (
-                <div key={index} className="text-sm text-muted-foreground flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary/60 rounded-full" />
-                  {ingredient}
-                </div>
+                <EditableIngredient
+                  key={index}
+                  {...ingredient}
+                  onUpdate={(data) => handleIngredientUpdate(index, data)}
+                />
               ))}
             </div>
           )}
         </div>
 
-        {/* Notes */}
-        <div className="neu-card p-4 mb-6">
-          <label className="text-sm font-medium mb-2 block">Notas</label>
-          <Input
-            value={formData.notes}
-            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Agregar notas..."
-            className="border-none bg-transparent p-0"
-          />
-        </div>
-
         {/* Action Buttons */}
         <div className="flex gap-3 mb-8">
-          <ShinyButton
+          <GalacticButton
             onClick={() => setShowChangeResults(true)}
-            icon={<Star className="h-4 w-4" />}
             className="flex-1"
           >
             Cambiar resultados
-          </ShinyButton>
+          </GalacticButton>
           
           <Button
             variant="primary"

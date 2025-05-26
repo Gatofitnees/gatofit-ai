@@ -91,6 +91,12 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
     setIsSwipeActive(false);
   };
 
+  // Función para truncar el texto al 60% del ancho disponible
+  const truncateTitle = (text: string, maxLength: number = 35) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   return (
     <div className="relative overflow-hidden">
       <div 
@@ -126,8 +132,10 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
 
           {/* Food Details - Right Side */}
           <div className="flex-1 p-4 pl-3 flex flex-col justify-between">
-            {/* Food Name */}
-            <h3 className="font-medium text-sm mb-2 pr-16 truncate">{name}</h3>
+            {/* Food Name - Limitado al 60% del ancho disponible */}
+            <h3 className="font-medium text-sm mb-2 leading-tight" style={{ width: '60%' }}>
+              {truncateTitle(name)}
+            </h3>
             
             {/* Calories - Main Line */}
             <div className="flex items-center gap-2 mb-3">
