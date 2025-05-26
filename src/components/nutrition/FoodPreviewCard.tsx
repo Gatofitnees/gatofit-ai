@@ -41,21 +41,6 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
     });
   };
 
-  // Función para truncado inteligente del texto
-  const intelligentTruncate = (text: string, maxLength: number = 18) => {
-    if (text.length <= maxLength) return text;
-    
-    // Buscar el último espacio antes del límite
-    const truncateIndex = text.lastIndexOf(' ', maxLength);
-    
-    // Si no hay espacios, cortar directamente
-    if (truncateIndex === -1) {
-      return text.substring(0, maxLength) + '...';
-    }
-    
-    return text.substring(0, truncateIndex) + '...';
-  };
-
   const handleTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
     setIsSwipeActive(true);
@@ -106,6 +91,12 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
     setIsSwipeActive(false);
   };
 
+  // Función para truncar el texto al 60% del ancho disponible
+  const truncateTitle = (text: string, maxLength: number = 35) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   return (
     <div className="relative overflow-hidden">
       <div 
@@ -141,30 +132,30 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
 
           {/* Food Details - Right Side */}
           <div className="flex-1 p-4 pl-3 flex flex-col justify-between">
-            {/* Food Name - con truncado inteligente */}
-            <h3 className="font-medium text-sm mb-2 leading-tight line-clamp-1">
-              {intelligentTruncate(name)}
+            {/* Food Name - Limitado al 60% del ancho disponible */}
+            <h3 className="font-medium text-sm mb-2 leading-tight" style={{ width: '60%' }}>
+              {truncateTitle(name)}
             </h3>
             
             {/* Calories - Main Line */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <Flame className="h-4 w-4 text-orange-400 flex-shrink-0" />
               <span className="text-lg font-bold">{calories} kcal</span>
             </div>
             
-            {/* Macronutrients - Rediseñados en horizontal */}
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex flex-col items-center gap-1">
+            {/* Macronutrients - Horizontal Row */}
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1">
                 <Zap className="h-3 w-3 text-blue-400 flex-shrink-0" />
-              <span>{protein}g</span>
+                <span>{protein}g</span>
               </div>
               
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1">
                 <Wheat className="h-3 w-3 text-green-400 flex-shrink-0" />
                 <span>{carbs}g</span>
               </div>
               
-             <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1">
                 <Droplet className="h-3 w-3 text-yellow-400 flex-shrink-0" />
                 <span>{fat}g</span>
               </div>

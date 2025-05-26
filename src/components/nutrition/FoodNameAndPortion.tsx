@@ -19,36 +19,32 @@ export const FoodNameAndPortion: React.FC<FoodNameAndPortionProps> = ({
 }) => {
   return (
     <div className="neu-card p-4 mb-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 mr-4">
           <Input
             value={foodName}
             onChange={(e) => onFoodNameChange(e.target.value)}
             placeholder="Nombre del alimento"
-            className="text-base font-medium border-none p-0 bg-transparent leading-tight h-auto max-h-[3.25rem] overflow-y-hidden"
+            className="text-base font-medium border-none p-0 bg-transparent leading-tight h-auto"
             style={{ 
               minHeight: '2.5rem',
-              lineHeight: '1.25rem',
-              display: '-webkit-box',
-              WebkitLineClamp: '2',
-              WebkitBoxOrient: 'vertical',
-              textOverflow: 'ellipsis'
+              lineHeight: '1.25rem'
             }}
           />
         </div>
         
-        {/* Portion Controls - más compactos y centrados */}
-        <div className="flex items-center gap-1.5">
+        {/* Portion Controls */}
+        <div className="flex items-center gap-2">
           <Button
             size="sm"
             variant="outline"
             onClick={() => onQuantityChange(-0.5)}
-            className="h-6 w-6 p-0 rounded-full"
+            className="h-7 w-7 p-0"
           >
             <Minus className="h-3 w-3" />
           </Button>
           
-          <div className="w-8 text-center">
+          <div className="min-w-[50px] text-center">
             <span className="text-sm font-medium">
               {quantity}
             </span>
@@ -58,7 +54,7 @@ export const FoodNameAndPortion: React.FC<FoodNameAndPortionProps> = ({
             size="sm"
             variant="outline"
             onClick={() => onQuantityChange(0.5)}
-            className="h-6 w-6 p-0 rounded-full"
+            className="h-7 w-7 p-0"
           >
             <Plus className="h-3 w-3" />
           </Button>

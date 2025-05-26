@@ -18,17 +18,16 @@ export const GalacticButton: React.FC<GalacticButtonProps> = ({
     <button
       onClick={onClick}
       className={cn(
-        "relative overflow-hidden px-4 py-3 rounded-lg bg-gray-800/90 border border-gray-700/50",
-        "hover:bg-gray-700/90 transition-all duration-300",
-        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-primary/20 before:to-transparent before:translate-x-[-200%] before:transition-transform before:duration-1000",
+        "relative overflow-hidden px-4 py-3 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/20 to-purple-500/20 hover:from-primary/30 hover:to-purple-500/30 transition-all duration-300",
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-primary/30 before:to-transparent before:translate-x-[-200%] before:transition-transform before:duration-1000",
         "hover:before:translate-x-[200%]",
         "flex items-center justify-center gap-2",
-        "shadow-neu-button",
+        "animate-galaxy-glow",
         className
       )}
     >
-      <Sparkles className="h-4 w-4 text-primary" />
-      <span className="relative z-10 text-sm font-medium text-white">
+      <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+      <span className="relative z-10 text-sm font-medium bg-gradient-to-r from-primary via-purple-400 to-blue-400 bg-clip-text text-transparent animate-galaxy-pulse">
         {children}
       </span>
     </button>
