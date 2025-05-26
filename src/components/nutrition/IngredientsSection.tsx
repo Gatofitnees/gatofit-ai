@@ -31,7 +31,14 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
         onClick={onToggleShow}
         className="flex items-center justify-between w-full text-sm font-medium"
       >
-        <span>Ingredientes</span>
+        <div className="flex items-center gap-2">
+          <span>Ingredientes</span>
+          {ingredients.length > 0 && (
+            <span className="text-xs text-muted-foreground bg-secondary/20 px-2 py-1 rounded-full">
+              {ingredients.length}
+            </span>
+          )}
+        </div>
         {showIngredients ? (
           <ChevronUp className="h-4 w-4" />
         ) : (
@@ -48,6 +55,13 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
               onUpdate={(data) => onIngredientUpdate(index, data)}
             />
           ))}
+          
+          {ingredients.length === 0 && (
+            <div className="text-center py-4 text-muted-foreground">
+              <p className="text-sm">No hay ingredientes detectados</p>
+              <p className="text-xs mt-1">Los ingredientes aparecerán aquí cuando la IA analice la comida</p>
+            </div>
+          )}
         </div>
       )}
     </div>
