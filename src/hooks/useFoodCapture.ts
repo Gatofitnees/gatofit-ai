@@ -13,6 +13,8 @@ export const useFoodCapture = () => {
 
   const sendToWebhook = async (imageUrl: string, imageBlob: Blob) => {
     try {
+      console.log('Sending image to webhook...', { imageUrl, blobSize: imageBlob.size });
+      
       const formData = new FormData();
       formData.append('imageUrl', imageUrl);
       formData.append('image', imageBlob, 'food-image.jpg');
@@ -24,7 +26,7 @@ export const useFoodCapture = () => {
       });
 
       if (!response.ok) {
-        console.warn('Webhook request failed:', response.statusText);
+        console.warn('Webhook request failed:', response.status, response.statusText);
       } else {
         console.log('Image sent to webhook successfully');
       }
@@ -80,9 +82,11 @@ export const useFoodCapture = () => {
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
+          console.log('Gallery file selected in hook:', file.name);
           const result = await uploadImage(file);
           if (result) {
-            // Send to webhook - This was missing before!
+            console.log('Gallery image uploaded in hook, sending to webhook...');
+            // Send to webhook - This ensures gallery images are sent to webhook
             await sendToWebhook(result.imageUrl, file);
           }
           resolve(result);
@@ -103,6 +107,8 @@ export const useFoodCapture = () => {
 
   const uploadImage = async (file: Blob): Promise<CapturedFood | null> => {
     try {
+      console.log('Uploading image to Supabase...', { fileSize: file.size, fileType: file.type });
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
@@ -112,17 +118,23 @@ export const useFoodCapture = () => {
         .from('food-images')
         .upload(fileName, file);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw error;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('food-images')
         .getPublicUrl(fileName);
+
+      console.log('Image uploaded successfully to Supabase:', publicUrl);
 
       return {
         imageUrl: publicUrl,
         fileName: data.path
       };
     } catch (err) {
+      console.error('Error uploading image:', err);
       setError('Error al subir la imagen');
       return null;
     }
