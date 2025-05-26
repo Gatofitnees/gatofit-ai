@@ -28,15 +28,15 @@ export const useFoodLog = () => {
     try {
       console.log('Checking if user profile exists for:', userId);
       
-      // Check if profile exists
+      // Check if profile exists using maybeSingle to avoid errors when no data is found
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        // PGRST116 means no rows found, which is expected if profile doesn't exist
+      if (checkError) {
+        console.error('Error checking profile:', checkError);
         throw checkError;
       }
 
