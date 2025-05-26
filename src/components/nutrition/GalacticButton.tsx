@@ -27,8 +27,8 @@ export const GalacticButton: React.FC<GalacticButtonProps> = ({
         className
       )}
     >
-      <Sparkles className="h-4 w-4 text-gray-400" />
-      <span className="relative z-10 text-sm font-medium text-white galactic-glow-text">
+      <Sparkles className="h-4 w-4 text-primary" />
+      <span className="relative z-10 text-sm font-medium text-white">
         {children}
       </span>
     </button>
