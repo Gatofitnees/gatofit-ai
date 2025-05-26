@@ -19,26 +19,29 @@ export const FoodNameAndPortion: React.FC<FoodNameAndPortionProps> = ({
 }) => {
   return (
     <div className="neu-card p-4 mb-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <Input
             value={foodName}
             onChange={(e) => onFoodNameChange(e.target.value)}
             placeholder="Nombre del alimento"
-            className="text-base font-medium border-none p-0 bg-transparent leading-tight h-auto max-h-[3.25rem] overflow-y-hidden"
+            className="text-base font-medium border-none p-0 bg-transparent resize-none"
             style={{ 
-              minHeight: '2.5rem',
-              lineHeight: '1.25rem',
+              minHeight: '3rem',
+              maxHeight: '3rem',
+              lineHeight: '1.5rem',
+              overflow: 'hidden',
               display: '-webkit-box',
               WebkitLineClamp: '2',
               WebkitBoxOrient: 'vertical',
-              textOverflow: 'ellipsis'
+              textOverflow: 'ellipsis',
+              wordWrap: 'break-word'
             }}
           />
         </div>
         
-        {/* Portion Controls - más compactos y centrados */}
-        <div className="flex items-center gap-1.5">
+        {/* Portion Controls - centrados verticalmente */}
+        <div className="flex items-center gap-1.5 mt-1.5">
           <Button
             size="sm"
             variant="outline"
