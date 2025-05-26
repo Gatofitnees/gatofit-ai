@@ -24,6 +24,45 @@ export const useFoodLog = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const ensureUserProfile = async (userId: string) => {
+    try {
+      console.log('Checking if user profile exists for:', userId);
+      
+      // Check if profile exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        // PGRST116 means no rows found, which is expected if profile doesn't exist
+        throw checkError;
+      }
+
+      if (!existingProfile) {
+        console.log('Creating profile for user:', userId);
+        
+        // Create profile
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: userId });
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          throw insertError;
+        }
+        
+        console.log('Profile created successfully for user:', userId);
+      } else {
+        console.log('Profile already exists for user:', userId);
+      }
+    } catch (err) {
+      console.error('Error ensuring user profile:', err);
+      throw err;
+    }
+  };
+
   const fetchTodayEntries = async () => {
     try {
       setIsLoading(true);
@@ -50,6 +89,9 @@ export const useFoodLog = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
+      // Ensure user profile exists before inserting food entry
+      await ensureUserProfile(user.id);
+
       const now = new Date();
       const newEntry = {
         ...entry,
@@ -57,6 +99,8 @@ export const useFoodLog = () => {
         logged_at: now.toISOString(),
         log_date: now.toISOString().split('T')[0]
       };
+
+      console.log('Inserting food entry:', newEntry);
 
       const { data, error } = await supabase
         .from('daily_food_log_entries')
