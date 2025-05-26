@@ -182,14 +182,15 @@ const NutritionPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Add Food Button */}
+      {/* Add Food Button - centrado perfectamente */}
       <div className="fixed bottom-24 right-4 animate-fade-in">
         <Button 
-          className="h-14 w-14 rounded-full shadow-neu-button"
-          leftIcon={<Camera className="h-6 w-6" />}
+          className="h-14 w-14 rounded-full shadow-neu-button flex items-center justify-center p-0"
           variant="primary"
           onClick={() => setShowCamera(true)}
-        />
+        >
+          <Camera className="h-6 w-6" />
+        </Button>
       </div>
 
       {/* Camera Capture */}
