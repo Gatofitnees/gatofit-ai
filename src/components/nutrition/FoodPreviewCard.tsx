@@ -146,7 +146,7 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
             </h3>
             
             {/* Calories - Main Line */}
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-2">
               <Flame className="h-4 w-4 text-orange-400 flex-shrink-0" />
               <span className="text-lg font-bold">{calories} kcal</span>
             </div>
