@@ -82,7 +82,7 @@ export const useFoodCapture = () => {
         if (file) {
           const result = await uploadImage(file);
           if (result) {
-            // Send to webhook
+            // Send to webhook - This was missing before!
             await sendToWebhook(result.imageUrl, file);
           }
           resolve(result);
