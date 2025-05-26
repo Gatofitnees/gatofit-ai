@@ -139,19 +139,19 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
           </div>
 
           {/* Food Details - Right Side */}
-          <div className="flex-1 p-3 flex flex-col justify-between">
-            {/* Food Name - bajado 1 para centrar verticalmente */}
-            <h3 className="font-medium text-sm mb-0 leading-tight">
+          <div className="flex-1 p-3 flex flex-col justify-center">
+            {/* Food Name */}
+            <h3 className="font-medium text-sm mb-1 leading-tight">
               {intelligentTruncate(name)}
             </h3>
             
-            {/* Calories - Main Line - reducido mb para subir macros */}
-            <div className="flex items-center gap-2 mb-3">
+            {/* Calories - Main Line */}
+            <div className="flex items-center gap-2 mb-1">
               <Flame className="h-4 w-4 text-orange-400 flex-shrink-0" />
               <span className="text-lg font-bold">{calories} kcal</span>
             </div>
             
-            {/* Macronutrients - cambiado a flex para justificar a la izquierda */}
+            {/* Macronutrients */}
             <div className="flex gap-3 text-xs">
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3 w-3 text-blue-400 flex-shrink-0" />
