@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Image, X, RotateCcw, ImageIcon } from 'lucide-react';
 import Button from '@/components/Button';
@@ -19,7 +18,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { uploadImage, sendToWebhook } = useFoodCapture();
+  const { uploadImage, sendToWebhook, captureFromGallery } = useFoodCapture();
 
   useEffect(() => {
     if (isOpen) {
@@ -116,39 +115,17 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   };
 
   const handleGallerySelect = async () => {
-    console.log('Opening gallery selection...');
+    console.log('Opening gallery selection through hook...');
     
-    // Create file input for gallery selection
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        console.log('File selected from gallery:', file.name, 'Size:', file.size);
-        
-        // Upload image to Supabase
-        const result = await uploadImage(file);
-        if (result) {
-          console.log('Gallery image uploaded successfully, sending to webhook...');
-          // Send to webhook - This is the fix for gallery images
-          await sendToWebhook(result.imageUrl, file);
-          onImageCaptured(result.imageUrl);
-          onClose();
-        } else {
-          console.error('Failed to upload gallery image');
-        }
-      } else {
-        console.log('No file selected from gallery');
-      }
-    };
-
-    input.oncancel = () => {
-      console.log('Gallery selection cancelled');
-    };
-
-    input.click();
+    // Use the hook's gallery function which already handles webhook
+    const result = await captureFromGallery();
+    if (result) {
+      console.log('Gallery image processed successfully:', result.imageUrl);
+      onImageCaptured(result.imageUrl);
+      onClose();
+    } else {
+      console.log('No image selected from gallery or upload failed');
+    }
   };
 
   const switchCamera = () => {
