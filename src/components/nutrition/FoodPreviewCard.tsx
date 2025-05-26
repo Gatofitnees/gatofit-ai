@@ -140,33 +140,33 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
           </div>
 
           {/* Food Details - Right Side */}
-          <div className="flex-1 p-3 flex flex-col justify-between">
+          <div className="flex-1 p-4 pl-3 flex flex-col justify-between">
             {/* Food Name - con truncado inteligente */}
-            <h3 className="font-medium text-sm mb-2 leading-tight">
+            <h3 className="font-medium text-sm mb-2 leading-tight line-clamp-1">
               {intelligentTruncate(name)}
             </h3>
             
             {/* Calories - Main Line */}
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <Flame className="h-4 w-4 text-orange-400 flex-shrink-0" />
               <span className="text-lg font-bold">{calories} kcal</span>
             </div>
             
-            {/* Macronutrients - Layout horizontal mejorado */}
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <div className="flex items-center gap-1.5">
+            {/* Macronutrients - Rediseñados en horizontal */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex flex-col items-center gap-1">
                 <Zap className="h-3 w-3 text-blue-400 flex-shrink-0" />
-                <span className="font-medium">{protein}g</span>
+              <span>{protein}g</span>
               </div>
               
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-col items-center gap-1">
                 <Wheat className="h-3 w-3 text-green-400 flex-shrink-0" />
-                <span className="font-medium">{carbs}g</span>
+                <span>{carbs}g</span>
               </div>
               
-              <div className="flex items-center gap-1.5">
+             <div className="flex flex-col items-center gap-1">
                 <Droplet className="h-3 w-3 text-yellow-400 flex-shrink-0" />
-                <span className="font-medium">{fat}g</span>
+                <span>{fat}g</span>
               </div>
             </div>
           </div>
