@@ -3,7 +3,7 @@ import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { EditableIngredient } from './EditableIngredient';
 
-interface Ingredient {
+interface IngredientDetail {
   name: string;
   grams: number;
   calories: number;
@@ -13,10 +13,10 @@ interface Ingredient {
 }
 
 interface IngredientsSectionProps {
-  ingredients: Ingredient[];
+  ingredients: IngredientDetail[];
   showIngredients: boolean;
   onToggleShow: () => void;
-  onIngredientUpdate: (index: number, data: Ingredient) => void;
+  onIngredientUpdate: (index: number, data: IngredientDetail) => void;
 }
 
 export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
@@ -31,7 +31,7 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
         onClick={onToggleShow}
         className="flex items-center justify-between w-full text-sm font-medium"
       >
-        <span>Ingredientes</span>
+        <span>Ingredientes ({ingredients.length})</span>
         {showIngredients ? (
           <ChevronUp className="h-4 w-4" />
         ) : (
@@ -48,6 +48,12 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
               onUpdate={(data) => onIngredientUpdate(index, data)}
             />
           ))}
+          
+          {ingredients.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No se han detectado ingredientes específicos
+            </p>
+          )}
         </div>
       )}
     </div>

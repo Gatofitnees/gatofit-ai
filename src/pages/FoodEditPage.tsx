@@ -12,6 +12,15 @@ import { ActionButtons } from '@/components/nutrition/ActionButtons';
 import { MacroEditModal } from '@/components/nutrition/MacroEditModal';
 import { ChangeResultsDialog } from '@/components/nutrition/ChangeResultsDialog';
 
+interface IngredientDetail {
+  name: string;
+  grams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 interface FoodEditPageProps {
   onSave?: (entry: Partial<FoodLogEntry>) => void;
 }
@@ -37,11 +46,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [showChangeResults, setShowChangeResults] = useState(false);
-  const [ingredients, setIngredients] = useState([
-    { name: 'Pechuga de pollo', grams: 150, calories: 248, protein: 46, carbs: 0, fat: 5 },
-    { name: 'Arroz integral', grams: 100, calories: 111, protein: 3, carbs: 23, fat: 1 },
-    { name: 'Verduras mixtas', grams: 80, calories: 20, protein: 2, carbs: 4, fat: 0 }
-  ]);
+  const [ingredients, setIngredients] = useState<IngredientDetail[]>([]);
 
   useEffect(() => {
     if (initialData) {
@@ -53,8 +58,21 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         protein_g_consumed: initialData.protein_g_consumed || 0,
         carbs_g_consumed: initialData.carbs_g_consumed || 0,
         fat_g_consumed: initialData.fat_g_consumed || 0,
-        healthScore: 7
+        healthScore: initialData.healthScore || 7
       });
+
+      // Cargar ingredientes si vienen del análisis de IA
+      if (initialData.ingredients && Array.isArray(initialData.ingredients)) {
+        setIngredients(initialData.ingredients);
+        setShowIngredients(true); // Mostrar ingredientes automáticamente si hay datos de IA
+      } else {
+        // Ingredientes de fallback
+        setIngredients([
+          { name: 'Pechuga de pollo', grams: 150, calories: 248, protein: 46, carbs: 0, fat: 5 },
+          { name: 'Arroz integral', grams: 100, calories: 111, protein: 3, carbs: 23, fat: 1 },
+          { name: 'Verduras mixtas', grams: 80, calories: 20, protein: 2, carbs: 4, fat: 0 }
+        ]);
+      }
     }
   }, [initialData]);
 
@@ -70,6 +88,16 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
       carbs_g_consumed: Math.round(prev.carbs_g_consumed * ratio),
       fat_g_consumed: Math.round(prev.fat_g_consumed * ratio)
     }));
+
+    // Ajustar también los ingredientes proporcionalmente
+    setIngredients(prev => prev.map(ing => ({
+      ...ing,
+      grams: Math.round(ing.grams * ratio),
+      calories: Math.round(ing.calories * ratio),
+      protein: Math.round(ing.protein * ratio),
+      carbs: Math.round(ing.carbs * ratio),
+      fat: Math.round(ing.fat * ratio)
+    })));
   };
 
   const handleSave = async () => {
@@ -122,10 +150,10 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
 
   const handleChangeResults = (request: string) => {
     console.log('AI change request:', request);
-    // TODO: Implement AI integration
+    // TODO: Implementar integración con IA para modificar resultados
   };
 
-  const handleIngredientUpdate = (index: number, data: any) => {
+  const handleIngredientUpdate = (index: number, data: IngredientDetail) => {
     setIngredients(prev => prev.map((ing, i) => i === index ? data : ing));
   };
 

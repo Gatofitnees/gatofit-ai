@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -16,7 +15,7 @@ const NutritionPage: React.FC = () => {
   const navigate = useNavigate();
 
   const { entries, deleteEntry, isLoading } = useFoodLog();
-  const { analyzeFood, isAnalyzing } = useFoodAnalysis();
+  const { analyzeFood, isAnalyzing, error: analysisError } = useFoodAnalysis();
 
   // Calculate today's totals from actual entries
   const todayTotals = entries.reduce(
@@ -42,11 +41,17 @@ const NutritionPage: React.FC = () => {
   const handleImageCaptured = async (imageUrl: string) => {
     console.log('Image captured:', imageUrl);
     
-    // Analyze the food image
+    // Analizar la imagen de comida
     const analysis = await analyzeFood(imageUrl);
     console.log('Analysis result:', analysis);
     
     if (analysis) {
+      if (!analysis.isFood) {
+        // Mostrar error específico si no es comida
+        console.warn('No food detected in image');
+        return;
+      }
+
       const pendingFoodData = {
         custom_food_name: analysis.name,
         quantity_consumed: analysis.servingSize,
@@ -55,10 +60,13 @@ const NutritionPage: React.FC = () => {
         protein_g_consumed: analysis.protein,
         carbs_g_consumed: analysis.carbs,
         fat_g_consumed: analysis.fat,
+        healthScore: analysis.healthScore,
+        ingredients: analysis.ingredients,
+        confidence: analysis.confidence,
         photo_url: imageUrl
       };
       
-      // Navigate to the full-screen edit page
+      // Navegar a la página de edición con todos los datos de la IA
       navigate('/food-edit', {
         state: {
           initialData: pendingFoodData,
@@ -204,9 +212,16 @@ const NutritionPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="neu-card p-6 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3"></div>
-            <p className="text-sm font-medium">Analizando alimento...</p>
-            <p className="text-xs text-muted-foreground mt-1">Esto puede tomar unos segundos</p>
+            <p className="text-sm font-medium">Analizando alimento con IA...</p>
+            <p className="text-xs text-muted-foreground mt-1">Detectando ingredientes y nutrientes...</p>
           </div>
+        </div>
+      )}
+
+      {/* Error message for analysis */}
+      {analysisError && (
+        <div className="fixed bottom-32 left-4 right-4 bg-red-500/90 text-white p-4 rounded-lg z-40">
+          <p className="text-sm font-medium">{analysisError}</p>
         </div>
       )}
     </div>

@@ -2,16 +2,27 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface IngredientDetail {
+  name: string;
+  grams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export interface FoodAnalysis {
+  isFood: boolean;
   name: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   healthScore: number;
-  ingredients: string[];
+  ingredients: IngredientDetail[];
   servingSize: number;
   servingUnit: string;
+  confidence: number;
 }
 
 export const useFoodAnalysis = () => {
@@ -23,28 +34,52 @@ export const useFoodAnalysis = () => {
       setIsAnalyzing(true);
       setError(null);
 
+      console.log('Starting food analysis for image:', imageUrl);
+
       const { data, error } = await supabase.functions.invoke('analyze-food', {
         body: { imageUrl }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('Analysis result received:', data);
+
+      // Verificar si es comida
+      if (!data.isFood) {
+        setError('No se detectó comida en la imagen. Por favor, toma una foto de un alimento.');
+        return null;
+      }
 
       return data;
     } catch (err) {
-      setError('Error al analizar el alimento');
       console.error('Food analysis error:', err);
+      setError('Error al analizar el alimento');
       
-      // Fallback data for development
+      // Fallback data para desarrollo
       return {
+        isFood: true,
         name: 'Alimento detectado',
         calories: 200,
         protein: 10,
         carbs: 30,
         fat: 5,
         healthScore: 7,
-        ingredients: ['Ingrediente principal'],
+        ingredients: [
+          {
+            name: 'Ingrediente principal',
+            grams: 100,
+            calories: 150,
+            protein: 8,
+            carbs: 20,
+            fat: 3
+          }
+        ],
         servingSize: 1,
-        servingUnit: 'porción'
+        servingUnit: 'porción',
+        confidence: 0.8
       };
     } finally {
       setIsAnalyzing(false);
