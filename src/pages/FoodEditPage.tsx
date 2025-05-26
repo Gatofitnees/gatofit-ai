@@ -11,25 +11,15 @@ import { IngredientsSection } from '@/components/nutrition/IngredientsSection';
 import { ActionButtons } from '@/components/nutrition/ActionButtons';
 import { MacroEditModal } from '@/components/nutrition/MacroEditModal';
 import { ChangeResultsDialog } from '@/components/nutrition/ChangeResultsDialog';
-import { IngredientAnalysis } from '@/hooks/useFoodAnalysis';
 
 interface FoodEditPageProps {
   onSave?: (entry: Partial<FoodLogEntry>) => void;
 }
 
-interface ExtendedIngredient {
-  name: string;
-  grams: number;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
-
 export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { initialData, imageUrl, isEditing, aiAnalysis } = location.state || {};
+  const { initialData, imageUrl, isEditing } = location.state || {};
   const { addEntry, updateEntry } = useFoodLog();
 
   const [formData, setFormData] = useState({
@@ -47,7 +37,11 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [showChangeResults, setShowChangeResults] = useState(false);
-  const [ingredients, setIngredients] = useState<ExtendedIngredient[]>([]);
+  const [ingredients, setIngredients] = useState([
+    { name: 'Pechuga de pollo', grams: 150, calories: 248, protein: 46, carbs: 0, fat: 5 },
+    { name: 'Arroz integral', grams: 100, calories: 111, protein: 3, carbs: 23, fat: 1 },
+    { name: 'Verduras mixtas', grams: 80, calories: 20, protein: 2, carbs: 4, fat: 0 }
+  ]);
 
   useEffect(() => {
     if (initialData) {
@@ -59,22 +53,10 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         protein_g_consumed: initialData.protein_g_consumed || 0,
         carbs_g_consumed: initialData.carbs_g_consumed || 0,
         fat_g_consumed: initialData.fat_g_consumed || 0,
-        healthScore: initialData.healthScore || 7
+        healthScore: 7
       });
     }
-
-    // If we have AI analysis data, populate ingredients
-    if (aiAnalysis?.ingredients) {
-      setIngredients(aiAnalysis.ingredients);
-      setShowIngredients(true); // Show ingredients section when AI data is available
-    } else {
-      // Default ingredients for manual entry
-      setIngredients([
-        { name: 'Ingrediente principal', grams: 150, calories: 248, protein: 46, carbs: 0, fat: 5 },
-        { name: 'Ingrediente secundario', grams: 100, calories: 111, protein: 3, carbs: 23, fat: 1 }
-      ]);
-    }
-  }, [initialData, aiAnalysis]);
+  }, [initialData]);
 
   const adjustPortion = (delta: number) => {
     const newQuantity = Math.max(0.5, formData.quantity_consumed + delta);
@@ -88,16 +70,6 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
       carbs_g_consumed: Math.round(prev.carbs_g_consumed * ratio),
       fat_g_consumed: Math.round(prev.fat_g_consumed * ratio)
     }));
-
-    // Also adjust ingredients proportionally
-    setIngredients(prev => prev.map(ingredient => ({
-      ...ingredient,
-      grams: Math.round(ingredient.grams * ratio),
-      calories: Math.round(ingredient.calories * ratio),
-      protein: Math.round(ingredient.protein * ratio),
-      carbs: Math.round(ingredient.carbs * ratio),
-      fat: Math.round(ingredient.fat * ratio)
-    })));
   };
 
   const handleSave = async () => {
@@ -150,10 +122,10 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
 
   const handleChangeResults = (request: string) => {
     console.log('AI change request:', request);
-    // TODO: Implement AI integration for result changes
+    // TODO: Implement AI integration
   };
 
-  const handleIngredientUpdate = (index: number, data: ExtendedIngredient) => {
+  const handleIngredientUpdate = (index: number, data: any) => {
     setIngredients(prev => prev.map((ing, i) => i === index ? data : ing));
   };
 
