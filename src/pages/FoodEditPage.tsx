@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Flame, Plus, Minus, Zap, Wheat, Droplet, Heart, ChevronDown, ChevronUp } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import Button from '@/components/Button';
-import { cn } from '@/lib/utils';
 import { FoodLogEntry, useFoodLog } from '@/hooks/useFoodLog';
-import { GalacticButton } from '@/components/nutrition/GalacticButton';
-import { EditableIngredient } from '@/components/nutrition/EditableIngredient';
+import { FoodHeader } from '@/components/nutrition/FoodHeader';
+import { FoodNameAndPortion } from '@/components/nutrition/FoodNameAndPortion';
+import { CaloriesDisplay } from '@/components/nutrition/CaloriesDisplay';
+import { MacronutrientsGrid } from '@/components/nutrition/MacronutrientsGrid';
+import { HealthScoreCard } from '@/components/nutrition/HealthScoreCard';
+import { IngredientsSection } from '@/components/nutrition/IngredientsSection';
+import { ActionButtons } from '@/components/nutrition/ActionButtons';
+import { MacroEditModal } from '@/components/nutrition/MacroEditModal';
 import { ChangeResultsDialog } from '@/components/nutrition/ChangeResultsDialog';
 
 interface FoodEditPageProps {
@@ -70,12 +72,6 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
     }));
   };
 
-  const getHealthScoreColor = (score: number) => {
-    if (score >= 7) return 'bg-green-400';
-    if (score >= 4) return 'bg-orange-400';
-    return 'bg-red-400';
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     
@@ -122,7 +118,6 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
 
   const updateMacro = (type: string, value: number) => {
     setFormData(prev => ({ ...prev, [`${type}_consumed`]: value }));
-    setEditingMacro(null);
   };
 
   const handleChangeResults = (request: string) => {
@@ -136,210 +131,49 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with Image */}
-      <div className="relative h-64 bg-gradient-to-b from-primary/20 to-background">
-        {imageUrl && (
-          <img 
-            src={imageUrl} 
-            alt="Food"
-            className="w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-black/30" />
-        
-        {/* Back Button */}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => navigate('/nutrition')}
-          className="absolute top-6 left-4 h-10 w-10 rounded-full p-0"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-      </div>
+      <FoodHeader imageUrl={imageUrl} />
 
       <div className="px-4 -mt-8 relative z-10">
-        {/* Food Name and Portion Controls */}
-        <div className="neu-card p-4 mb-4">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1 mr-4">
-              <Input
-                value={formData.custom_food_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, custom_food_name: e.target.value }))}
-                placeholder="Nombre del alimento"
-                className="text-base font-medium border-none p-0 bg-transparent leading-tight h-auto"
-                style={{ 
-                  minHeight: '2.5rem',
-                  lineHeight: '1.25rem'
-                }}
-              />
-            </div>
-            
-            {/* Portion Controls - Simplificados */}
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => adjustPortion(-0.5)}
-                className="h-7 w-7 p-0"
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              
-              <div className="min-w-[50px] text-center">
-                <span className="text-sm font-medium">
-                  {formData.quantity_consumed}
-                </span>
-              </div>
-              
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => adjustPortion(0.5)}
-                className="h-7 w-7 p-0"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <FoodNameAndPortion
+          foodName={formData.custom_food_name}
+          quantity={formData.quantity_consumed}
+          onFoodNameChange={(name) => setFormData(prev => ({ ...prev, custom_food_name: name }))}
+          onQuantityChange={adjustPortion}
+        />
 
-        {/* Main Calories Card */}
-        <div className="neu-card p-6 mb-4 text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Flame className="h-8 w-8 text-orange-400" />
-            <span className="text-3xl font-bold">{formData.calories_consumed}</span>
-            <span className="text-lg text-muted-foreground">kcal</span>
-          </div>
-          <p className="text-sm text-muted-foreground">Calorías totales</p>
-        </div>
+        <CaloriesDisplay calories={formData.calories_consumed} />
 
-        {/* Macronutrients Row */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div 
-            className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
-            onClick={() => setEditingMacro('protein_g')}
-          >
-            <Zap className="h-5 w-5 text-blue-400 mx-auto mb-2" />
-            <div className="text-lg font-bold">{formData.protein_g_consumed}g</div>
-            <div className="text-xs text-muted-foreground">Proteína</div>
-          </div>
-          
-          <div 
-            className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
-            onClick={() => setEditingMacro('carbs_g')}
-          >
-            <Wheat className="h-5 w-5 text-green-400 mx-auto mb-2" />
-            <div className="text-lg font-bold">{formData.carbs_g_consumed}g</div>
-            <div className="text-xs text-muted-foreground">Carbos</div>
-          </div>
-          
-          <div 
-            className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
-            onClick={() => setEditingMacro('fat_g')}
-          >
-            <Droplet className="h-5 w-5 text-yellow-400 mx-auto mb-2" />
-            <div className="text-lg font-bold">{formData.fat_g_consumed}g</div>
-            <div className="text-xs text-muted-foreground">Grasas</div>
-          </div>
-        </div>
+        <MacronutrientsGrid
+          protein={formData.protein_g_consumed}
+          carbs={formData.carbs_g_consumed}
+          fat={formData.fat_g_consumed}
+          onMacroEdit={setEditingMacro}
+        />
 
-        {/* Health Score */}
-        <div className="neu-card p-4 mb-4">
-          <div className="flex items-center gap-3">
-            <Heart className="h-5 w-5 text-red-400" />
-            <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Puntaje de salud</span>
-                <span className="text-sm font-bold">{formData.healthScore}/10</span>
-              </div>
-              <div className="h-2 bg-secondary/50 rounded-full overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full transition-all duration-300 rounded-full",
-                    getHealthScoreColor(formData.healthScore)
-                  )}
-                  style={{ width: `${(formData.healthScore / 10) * 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <HealthScoreCard healthScore={formData.healthScore} />
 
-        {/* Ingredients Section - Rediseñado */}
-        <div className="neu-card p-4 mb-4">
-          <button
-            onClick={() => setShowIngredients(!showIngredients)}
-            className="flex items-center justify-between w-full text-sm font-medium"
-          >
-            <span>Ingredientes</span>
-            {showIngredients ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </button>
-          
-          {showIngredients && (
-            <div className="mt-3 space-y-3">
-              {ingredients.map((ingredient, index) => (
-                <EditableIngredient
-                  key={index}
-                  {...ingredient}
-                  onUpdate={(data) => handleIngredientUpdate(index, data)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <IngredientsSection
+          ingredients={ingredients}
+          showIngredients={showIngredients}
+          onToggleShow={() => setShowIngredients(!showIngredients)}
+          onIngredientUpdate={handleIngredientUpdate}
+        />
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 mb-8">
-          <GalacticButton
-            onClick={() => setShowChangeResults(true)}
-            className="flex-1"
-          >
-            Cambiar resultados
-          </GalacticButton>
-          
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            className="flex-1"
-            disabled={isSaving || !formData.custom_food_name.trim()}
-          >
-            {isSaving ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
-        </div>
+        <ActionButtons
+          isSaving={isSaving}
+          isFormValid={!!formData.custom_food_name.trim()}
+          onChangeResults={() => setShowChangeResults(true)}
+          onSave={handleSave}
+        />
       </div>
 
-      {/* Macro Editing Modal */}
-      {editingMacro && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="neu-card p-6 w-full max-w-sm">
-            <h3 className="text-lg font-medium mb-4">
-              Editar {editingMacro === 'protein_g' ? 'Proteína' : editingMacro === 'carbs_g' ? 'Carbohidratos' : 'Grasas'}
-            </h3>
-            <Input
-              type="number"
-              defaultValue={formData[editingMacro as keyof typeof formData] as number}
-              onChange={(e) => updateMacro(editingMacro.replace('_consumed', ''), Number(e.target.value))}
-              className="mb-4"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setEditingMacro(null)} className="flex-1">
-                Cancelar
-              </Button>
-              <Button variant="primary" onClick={() => setEditingMacro(null)} className="flex-1">
-                Guardar
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MacroEditModal
+        editingMacro={editingMacro}
+        currentValue={editingMacro ? formData[editingMacro as keyof typeof formData] as number : 0}
+        onClose={() => setEditingMacro(null)}
+        onUpdate={updateMacro}
+      />
 
-      {/* Change Results Dialog */}
       <ChangeResultsDialog
         isOpen={showChangeResults}
         onClose={() => setShowChangeResults(false)}
