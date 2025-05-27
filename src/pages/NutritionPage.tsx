@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -10,9 +9,12 @@ import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
 import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
 import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const { entries, deleteEntry, isLoading } = useFoodLog();
@@ -39,22 +41,22 @@ const NutritionPage: React.FC = () => {
   
   const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
 
-  const handleImageCaptured = async (imageUrl: string) => {
-    console.log('Image captured:', imageUrl);
+  const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
+    console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
     
-    // Analyze the food image
-    const analysis = await analyzeFood(imageUrl);
-    console.log('Analysis result:', analysis);
+    // Clear any previous error
+    setAnalysisError(null);
     
-    if (analysis) {
+    if (analysisResult) {
+      // Use webhook analysis result
       const pendingFoodData = {
-        custom_food_name: analysis.name,
-        quantity_consumed: analysis.servingSize,
-        unit_consumed: analysis.servingUnit,
-        calories_consumed: analysis.calories,
-        protein_g_consumed: analysis.protein,
-        carbs_g_consumed: analysis.carbs,
-        fat_g_consumed: analysis.fat,
+        custom_food_name: analysisResult.name,
+        quantity_consumed: analysisResult.servingSize,
+        unit_consumed: analysisResult.servingUnit,
+        calories_consumed: analysisResult.calories,
+        protein_g_consumed: analysisResult.protein,
+        carbs_g_consumed: analysisResult.carbs,
+        fat_g_consumed: analysisResult.fat,
         photo_url: imageUrl
       };
       
@@ -66,6 +68,54 @@ const NutritionPage: React.FC = () => {
           isEditing: false
         }
       });
+    } else {
+      // Check if there was an analysis error
+      if (analysisError) {
+        // Show error and still allow manual entry
+        navigate('/food-edit', {
+          state: {
+            initialData: {
+              custom_food_name: '',
+              quantity_consumed: 1,
+              unit_consumed: 'porción',
+              calories_consumed: 0,
+              protein_g_consumed: 0,
+              carbs_g_consumed: 0,
+              fat_g_consumed: 0,
+              photo_url: imageUrl
+            },
+            imageUrl: imageUrl,
+            isEditing: false,
+            hasAnalysisError: true
+          }
+        });
+        return;
+      }
+      
+      // Fallback to old analysis method
+      const analysis = await analyzeFood(imageUrl);
+      console.log('Fallback analysis result:', analysis);
+      
+      if (analysis) {
+        const pendingFoodData = {
+          custom_food_name: analysis.name,
+          quantity_consumed: analysis.servingSize,
+          unit_consumed: analysis.servingUnit,
+          calories_consumed: analysis.calories,
+          protein_g_consumed: analysis.protein,
+          carbs_g_consumed: analysis.carbs,
+          fat_g_consumed: analysis.fat,
+          photo_url: imageUrl
+        };
+        
+        navigate('/food-edit', {
+          state: {
+            initialData: pendingFoodData,
+            imageUrl: imageUrl,
+            isEditing: false
+          }
+        });
+      }
     }
   };
 
@@ -86,6 +136,16 @@ const NutritionPage: React.FC = () => {
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-6">Nutrición</h1>
+      
+      {/* Error Alert */}
+      {analysisError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {analysisError}
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Calories Summary */}
       <div className="flex items-center justify-center mb-8 animate-fade-in">

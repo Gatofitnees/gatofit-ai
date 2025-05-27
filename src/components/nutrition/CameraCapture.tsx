@@ -6,7 +6,7 @@ import { useFoodCapture } from '@/hooks/useFoodCapture';
 interface CameraCaptureProps {
   isOpen: boolean;
   onClose: () => void;
-  onImageCaptured: (imageUrl: string) => void;
+  onImageCaptured: (imageUrl: string, analysisResult?: any) => void;
 }
 
 export const CameraCapture: React.FC<CameraCaptureProps> = ({
@@ -18,7 +18,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { uploadImage, sendToWebhook, captureFromGallery } = useFoodCapture();
+  const { uploadImageWithAnalysis, sendToWebhook, captureFromGallery } = useFoodCapture();
 
   useEffect(() => {
     if (isOpen) {
@@ -102,12 +102,10 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     canvas.toBlob(async (blob) => {
       if (blob) {
         console.log('Capturing photo from camera, uploading to Supabase...');
-        const result = await uploadImage(blob);
+        const result = await uploadImageWithAnalysis(blob);
         if (result) {
-          console.log('Image uploaded successfully, sending to webhook...');
-          // Send to webhook
-          await sendToWebhook(result.imageUrl, blob);
-          onImageCaptured(result.imageUrl);
+          console.log('Image uploaded and analyzed successfully:', result);
+          onImageCaptured(result.imageUrl, result.analysisResult);
           onClose();
         }
       }
@@ -117,11 +115,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const handleGallerySelect = async () => {
     console.log('Opening gallery selection through hook...');
     
-    // Use the hook's gallery function which already handles webhook
+    // Use the hook's gallery function which now includes analysis
     const result = await captureFromGallery();
     if (result) {
-      console.log('Gallery image processed successfully:', result.imageUrl);
-      onImageCaptured(result.imageUrl);
+      console.log('Gallery image processed and analyzed successfully:', result);
+      onImageCaptured(result.imageUrl, result.analysisResult);
       onClose();
     } else {
       console.log('No image selected from gallery or upload failed');

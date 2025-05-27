@@ -1,15 +1,18 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useWebhookResponse, FoodAnalysisResult } from './useWebhookResponse';
 
 export interface CapturedFood {
   imageUrl: string;
   fileName: string;
+  analysisResult?: FoodAnalysisResult | null;
 }
 
 export const useFoodCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { sendToWebhookWithResponse, isAnalyzing, analysisError } = useWebhookResponse();
 
   const sendToWebhook = async (imageUrl: string, imageBlob: Blob) => {
     try {
@@ -49,11 +52,7 @@ export const useFoodCapture = () => {
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
-          const result = await uploadImage(file);
-          if (result) {
-            // Send to webhook
-            await sendToWebhook(result.imageUrl, file);
-          }
+          const result = await uploadImageWithAnalysis(file);
           resolve(result);
         } else {
           resolve(null);
@@ -83,12 +82,7 @@ export const useFoodCapture = () => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           console.log('Gallery file selected in hook:', file.name, 'Size:', file.size, 'Type:', file.type);
-          const result = await uploadImage(file);
-          if (result) {
-            console.log('Gallery image uploaded in hook, sending to webhook...');
-            // Send to webhook with improved error handling
-            await sendToWebhook(result.imageUrl, file);
-          }
+          const result = await uploadImageWithAnalysis(file);
           resolve(result);
         } else {
           console.log('No file selected from gallery');
@@ -106,6 +100,45 @@ export const useFoodCapture = () => {
       input.click();
     });
   }, []);
+
+  const uploadImageWithAnalysis = async (file: Blob): Promise<CapturedFood | null> => {
+    try {
+      console.log('Uploading image to Supabase...', { fileSize: file.size, fileType: file.type });
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const fileName = `${user.id}/${Date.now()}.jpg`;
+      
+      const { data, error } = await supabase.storage
+        .from('food-images')
+        .upload(fileName, file);
+
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('food-images')
+        .getPublicUrl(fileName);
+
+      console.log('Image uploaded successfully to Supabase:', publicUrl);
+
+      // Send to webhook and get analysis result
+      const analysisResult = await sendToWebhookWithResponse(publicUrl, file);
+
+      return {
+        imageUrl: publicUrl,
+        fileName: data.path,
+        analysisResult
+      };
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      setError('Error al subir la imagen');
+      return null;
+    }
+  };
 
   const uploadImage = async (file: Blob): Promise<CapturedFood | null> => {
     try {
@@ -146,8 +179,9 @@ export const useFoodCapture = () => {
     captureFromCamera,
     captureFromGallery,
     uploadImage,
+    uploadImageWithAnalysis,
     sendToWebhook,
-    isLoading,
-    error
+    isLoading: isLoading || isAnalyzing,
+    error: error || analysisError
   };
 };

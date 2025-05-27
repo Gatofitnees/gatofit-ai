@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FoodLogEntry, useFoodLog } from '@/hooks/useFoodLog';
@@ -11,6 +10,8 @@ import { IngredientsSection } from '@/components/nutrition/IngredientsSection';
 import { ActionButtons } from '@/components/nutrition/ActionButtons';
 import { MacroEditModal } from '@/components/nutrition/MacroEditModal';
 import { ChangeResultsDialog } from '@/components/nutrition/ChangeResultsDialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface FoodEditPageProps {
   onSave?: (entry: Partial<FoodLogEntry>) => void;
@@ -19,7 +20,7 @@ interface FoodEditPageProps {
 export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { initialData, imageUrl, isEditing } = location.state || {};
+  const { initialData, imageUrl, isEditing, hasAnalysisError } = location.state || {};
   const { addEntry, updateEntry } = useFoodLog();
 
   const [formData, setFormData] = useState({
@@ -134,6 +135,16 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
       <FoodHeader imageUrl={imageUrl} />
 
       <div className="px-4 -mt-8 relative z-10">
+        {/* Analysis Error Alert */}
+        {hasAnalysisError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              ¡Hey eso no se come! Parece que no se a detectado ninguna comida
+            </AlertDescription>
+          </Alert>
+        )}
+
         <FoodNameAndPortion
           foodName={formData.custom_food_name}
           quantity={formData.quantity_consumed}
