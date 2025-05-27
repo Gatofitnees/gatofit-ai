@@ -88,8 +88,19 @@ export const useWebhookResponse = () => {
       });
 
       if (response.ok) {
-        const result: WebhookResponse = await response.json();
-        console.log('Webhook response received:', result);
+        const responseText = await response.text();
+        console.log('Raw webhook response:', responseText);
+        
+        let result: WebhookResponse;
+        try {
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse webhook response as JSON:', parseError);
+          setAnalysisError('Error al procesar respuesta del servidor');
+          return null;
+        }
+        
+        console.log('Parsed webhook response:', result);
 
         // Check for error in the new format
         if (result.error) {
@@ -140,7 +151,7 @@ export const useWebhookResponse = () => {
     
     // Parse ingredients with proper type conversion
     const ingredients = comidaData.ingredients?.map(ingredient => ({
-      name: ingredient.name,
+      name: ingredient.name || '',
       grams: parseFloat(ingredient.grams) || 0,
       calories: parseFloat(ingredient.calories) || 0,
       protein: parseFloat(ingredient.protein) || 0,
@@ -148,8 +159,8 @@ export const useWebhookResponse = () => {
       fat: parseFloat(ingredient.fat) || 0
     })) || [];
 
-    return {
-      name: comidaData.custom_food_name,
+    const parsedResult = {
+      name: comidaData.custom_food_name || 'Alimento detectado',
       calories: parseFloat(comidaData.calories_consumed) || 0,
       protein: parseFloat(comidaData.protein_g_consumed) || 0,
       carbs: parseFloat(comidaData.carbs_g_consumed) || 0,
@@ -159,6 +170,9 @@ export const useWebhookResponse = () => {
       healthScore: parseFloat(comidaData.healthScore) || 7,
       ingredients
     };
+
+    console.log('Parsed analysis result:', parsedResult);
+    return parsedResult;
   };
 
   return {
