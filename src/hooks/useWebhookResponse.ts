@@ -21,16 +21,16 @@ export const useWebhookResponse = () => {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const sendToWebhookWithResponse = async (imageUrl: string, imageBlob: Blob): Promise<FoodAnalysisResult | null> => {
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    console.log('Sending image to webhook with response handling...', { imageUrl, blobSize: imageBlob.size });
+    
+    const formData = new FormData();
+    formData.append('imageUrl', imageUrl);
+    formData.append('image', imageBlob, 'food-image.jpg');
+    formData.append('timestamp', new Date().toISOString());
+    
     try {
-      setIsAnalyzing(true);
-      setAnalysisError(null);
-      console.log('Sending image to webhook with response handling...', { imageUrl, blobSize: imageBlob.size });
-      
-      const formData = new FormData();
-      formData.append('imageUrl', imageUrl);
-      formData.append('image', imageBlob, 'food-image.jpg');
-      formData.append('timestamp', new Date().toISOString());
-      
       // Try with CORS first to get the response
       const response = await fetch('https://gaton8n.gatofit.com/webhook-test/e39f095b-fb33-4ce3-b41a-619a650149f5', {
         method: 'POST',
