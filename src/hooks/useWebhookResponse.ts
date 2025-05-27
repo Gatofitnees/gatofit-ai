@@ -2,7 +2,24 @@
 import { useState } from 'react';
 
 export interface WebhookResponse {
-  Comida?: string;
+  output?: {
+    custom_food_name: string;
+    quantity_consumed: number;
+    unit_consumed: string;
+    calories_consumed: string;
+    protein_g_consumed: string;
+    carbs_g_consumed: string;
+    fat_g_consumed: string;
+    healthScore: string;
+    ingredients: Array<{
+      name: string;
+      grams: string;
+      calories: string;
+      protein: string;
+      carbs: string;
+      fat: string;
+    }>;
+  };
   error?: string;
 }
 
@@ -14,6 +31,15 @@ export interface FoodAnalysisResult {
   fat: number;
   servingSize: number;
   servingUnit: string;
+  healthScore: number;
+  ingredients: Array<{
+    name: string;
+    grams: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
 }
 
 export const useWebhookResponse = () => {
@@ -38,19 +64,23 @@ export const useWebhookResponse = () => {
       });
 
       if (response.ok) {
-        const result: WebhookResponse = await response.json();
+        const result: WebhookResponse[] = await response.json();
         console.log('Webhook response received:', result);
 
-        if (result.error) {
-          console.log('Webhook returned error:', result.error);
-          setAnalysisError('¡Hey eso no se come! Parece que no se a detectado ninguna comida');
-          return null;
-        }
+        // Handle array response format
+        if (result && result.length > 0) {
+          const firstResult = result[0];
+          
+          if (firstResult.error) {
+            console.log('Webhook returned error:', firstResult.error);
+            setAnalysisError(firstResult.error);
+            return null;
+          }
 
-        if (result.Comida) {
-          console.log('Food detected by webhook:', result.Comida);
-          // Parse the food information and return structured data
-          return parseWebhookFoodResponse(result.Comida);
+          if (firstResult.output) {
+            console.log('Food detected by webhook:', firstResult.output);
+            return parseWebhookFoodResponse(firstResult.output);
+          }
         }
       } else {
         console.warn('Webhook request failed:', response.status, response.statusText);
@@ -80,20 +110,33 @@ export const useWebhookResponse = () => {
     }
   };
 
-  const parseWebhookFoodResponse = (foodData: string): FoodAnalysisResult => {
-    // Parse the webhook response and extract food information
-    // This is a simple parser - you can enhance it based on the actual webhook response format
-    console.log('Parsing webhook food data:', foodData);
+  const parseWebhookFoodResponse = (output: WebhookResponse['output']): FoodAnalysisResult => {
+    if (!output) {
+      throw new Error('No output data received');
+    }
+
+    console.log('Parsing webhook food data:', output);
     
-    // Default values if parsing fails
+    // Parse ingredients with proper type conversion
+    const ingredients = output.ingredients?.map(ingredient => ({
+      name: ingredient.name,
+      grams: parseFloat(ingredient.grams) || 0,
+      calories: parseFloat(ingredient.calories) || 0,
+      protein: parseFloat(ingredient.protein) || 0,
+      carbs: parseFloat(ingredient.carbs) || 0,
+      fat: parseFloat(ingredient.fat) || 0
+    })) || [];
+
     return {
-      name: foodData || 'Alimento detectado',
-      calories: 200,
-      protein: 15,
-      carbs: 25,
-      fat: 8,
-      servingSize: 1,
-      servingUnit: 'porción'
+      name: output.custom_food_name,
+      calories: parseFloat(output.calories_consumed) || 0,
+      protein: parseFloat(output.protein_g_consumed) || 0,
+      carbs: parseFloat(output.carbs_g_consumed) || 0,
+      fat: parseFloat(output.fat_g_consumed) || 0,
+      servingSize: output.quantity_consumed || 1,
+      servingUnit: output.unit_consumed || 'porción',
+      healthScore: parseFloat(output.healthScore) || 7,
+      ingredients
     };
   };
 

@@ -54,8 +54,14 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         protein_g_consumed: initialData.protein_g_consumed || 0,
         carbs_g_consumed: initialData.carbs_g_consumed || 0,
         fat_g_consumed: initialData.fat_g_consumed || 0,
-        healthScore: 7
+        healthScore: initialData.healthScore || 7
       });
+
+      // Update ingredients if they come from webhook analysis
+      if (initialData.ingredients && initialData.ingredients.length > 0) {
+        setIngredients(initialData.ingredients);
+        setShowIngredients(true); // Show ingredients section when we have real data
+      }
     }
   }, [initialData]);
 

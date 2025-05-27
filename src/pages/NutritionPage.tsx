@@ -48,7 +48,7 @@ const NutritionPage: React.FC = () => {
     setAnalysisError(null);
     
     if (analysisResult) {
-      // Use webhook analysis result
+      // Use webhook analysis result with all data including ingredients
       const pendingFoodData = {
         custom_food_name: analysisResult.name,
         quantity_consumed: analysisResult.servingSize,
@@ -57,6 +57,8 @@ const NutritionPage: React.FC = () => {
         protein_g_consumed: analysisResult.protein,
         carbs_g_consumed: analysisResult.carbs,
         fat_g_consumed: analysisResult.fat,
+        healthScore: analysisResult.healthScore,
+        ingredients: analysisResult.ingredients, // Pass ingredients data
         photo_url: imageUrl
       };
       
