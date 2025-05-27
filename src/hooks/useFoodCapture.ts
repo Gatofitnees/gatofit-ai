@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useWebhookResponse, FoodAnalysisResult } from './useWebhookResponse';
@@ -24,6 +23,37 @@ const getImageExtension = (file: Blob): string => {
     case 'image/bmp': return 'bmp';
     default: return 'jpg';
   }
+};
+
+const convertImageToJpg = async (file: Blob): Promise<Blob> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // Fill with white background (for transparency)
+      if (ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      }
+      
+      canvas.toBlob((blob) => {
+        resolve(blob || file);
+      }, 'image/jpeg', 0.9);
+    };
+    
+    img.onerror = () => {
+      // If conversion fails, return original file
+      resolve(file);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
 };
 
 export const useFoodCapture = () => {
@@ -106,7 +136,12 @@ export const useFoodCapture = () => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           console.log('Gallery file selected in hook:', file.name, 'Size:', file.size, 'Type:', file.type);
-          const result = await uploadImageWithAnalysis(file);
+          
+          // Convert to JPG if it's from gallery
+          const convertedFile = await convertImageToJpg(file);
+          console.log('Image converted to JPG for gallery upload');
+          
+          const result = await uploadImageWithAnalysis(convertedFile);
           resolve(result);
         } else {
           console.log('No file selected from gallery');
