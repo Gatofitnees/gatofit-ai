@@ -2,7 +2,7 @@
 import { useState } from 'react';
 
 export interface WebhookResponse {
-  output?: {
+  Comida?: {
     custom_food_name: string;
     quantity_consumed: number;
     unit_consumed: string;
@@ -42,6 +42,23 @@ export interface FoodAnalysisResult {
   }>;
 }
 
+const getImageMimeType = (file: Blob): string => {
+  if (file.type) return file.type;
+  return 'image/jpeg'; // fallback
+};
+
+const getImageExtension = (file: Blob): string => {
+  const mimeType = getImageMimeType(file);
+  switch (mimeType) {
+    case 'image/png': return 'png';
+    case 'image/jpeg': return 'jpg';
+    case 'image/webp': return 'webp';
+    case 'image/gif': return 'gif';
+    case 'image/bmp': return 'bmp';
+    default: return 'jpg';
+  }
+};
+
 export const useWebhookResponse = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -49,11 +66,18 @@ export const useWebhookResponse = () => {
   const sendToWebhookWithResponse = async (imageUrl: string, imageBlob: Blob): Promise<FoodAnalysisResult | null> => {
     setIsAnalyzing(true);
     setAnalysisError(null);
-    console.log('Sending image to webhook with response handling...', { imageUrl, blobSize: imageBlob.size });
+    console.log('Sending image to webhook with response handling...', { 
+      imageUrl, 
+      blobSize: imageBlob.size,
+      mimeType: getImageMimeType(imageBlob)
+    });
     
     const formData = new FormData();
     formData.append('imageUrl', imageUrl);
-    formData.append('image', imageBlob, 'food-image.jpg');
+    
+    // Use original image format instead of forcing JPG
+    const extension = getImageExtension(imageBlob);
+    formData.append('image', imageBlob, `food-image.${extension}`);
     formData.append('timestamp', new Date().toISOString());
     
     try {
@@ -64,23 +88,20 @@ export const useWebhookResponse = () => {
       });
 
       if (response.ok) {
-        const result: WebhookResponse[] = await response.json();
+        const result: WebhookResponse = await response.json();
         console.log('Webhook response received:', result);
 
-        // Handle array response format
-        if (result && result.length > 0) {
-          const firstResult = result[0];
-          
-          if (firstResult.error) {
-            console.log('Webhook returned error:', firstResult.error);
-            setAnalysisError(firstResult.error);
-            return null;
-          }
+        // Check for error in the new format
+        if (result.error) {
+          console.log('Webhook returned error:', result.error);
+          setAnalysisError(result.error);
+          return null;
+        }
 
-          if (firstResult.output) {
-            console.log('Food detected by webhook:', firstResult.output);
-            return parseWebhookFoodResponse(firstResult.output);
-          }
+        // Extract data from "Comida" field
+        if (result.Comida) {
+          console.log('Food detected by webhook:', result.Comida);
+          return parseWebhookFoodResponse(result.Comida);
         }
       } else {
         console.warn('Webhook request failed:', response.status, response.statusText);
@@ -110,15 +131,15 @@ export const useWebhookResponse = () => {
     }
   };
 
-  const parseWebhookFoodResponse = (output: WebhookResponse['output']): FoodAnalysisResult => {
-    if (!output) {
-      throw new Error('No output data received');
+  const parseWebhookFoodResponse = (comidaData: WebhookResponse['Comida']): FoodAnalysisResult => {
+    if (!comidaData) {
+      throw new Error('No food data received');
     }
 
-    console.log('Parsing webhook food data:', output);
+    console.log('Parsing webhook food data:', comidaData);
     
     // Parse ingredients with proper type conversion
-    const ingredients = output.ingredients?.map(ingredient => ({
+    const ingredients = comidaData.ingredients?.map(ingredient => ({
       name: ingredient.name,
       grams: parseFloat(ingredient.grams) || 0,
       calories: parseFloat(ingredient.calories) || 0,
@@ -128,14 +149,14 @@ export const useWebhookResponse = () => {
     })) || [];
 
     return {
-      name: output.custom_food_name,
-      calories: parseFloat(output.calories_consumed) || 0,
-      protein: parseFloat(output.protein_g_consumed) || 0,
-      carbs: parseFloat(output.carbs_g_consumed) || 0,
-      fat: parseFloat(output.fat_g_consumed) || 0,
-      servingSize: output.quantity_consumed || 1,
-      servingUnit: output.unit_consumed || 'porción',
-      healthScore: parseFloat(output.healthScore) || 7,
+      name: comidaData.custom_food_name,
+      calories: parseFloat(comidaData.calories_consumed) || 0,
+      protein: parseFloat(comidaData.protein_g_consumed) || 0,
+      carbs: parseFloat(comidaData.carbs_g_consumed) || 0,
+      fat: parseFloat(comidaData.fat_g_consumed) || 0,
+      servingSize: comidaData.quantity_consumed || 1,
+      servingUnit: comidaData.unit_consumed || 'porción',
+      healthScore: parseFloat(comidaData.healthScore) || 7,
       ingredients
     };
   };

@@ -11,6 +11,7 @@ import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { useFoodCapture } from "../hooks/useFoodCapture";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
@@ -71,7 +72,8 @@ const NutritionPage: React.FC = () => {
         }
       });
     } else {
-      // Check if there was an analysis error
+      // Check if there was an analysis error from the webhook
+      const { error: analysisError } = useFoodCapture();
       if (analysisError) {
         // Show error and still allow manual entry
         navigate('/food-edit', {

@@ -9,6 +9,23 @@ export interface CapturedFood {
   analysisResult?: FoodAnalysisResult | null;
 }
 
+const getImageMimeType = (file: Blob): string => {
+  if (file.type) return file.type;
+  return 'image/jpeg'; // fallback
+};
+
+const getImageExtension = (file: Blob): string => {
+  const mimeType = getImageMimeType(file);
+  switch (mimeType) {
+    case 'image/png': return 'png';
+    case 'image/jpeg': return 'jpg';
+    case 'image/webp': return 'webp';
+    case 'image/gif': return 'gif';
+    case 'image/bmp': return 'bmp';
+    default: return 'jpg';
+  }
+};
+
 export const useFoodCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,11 +33,18 @@ export const useFoodCapture = () => {
 
   const sendToWebhook = async (imageUrl: string, imageBlob: Blob) => {
     try {
-      console.log('Sending image to webhook...', { imageUrl, blobSize: imageBlob.size });
+      console.log('Sending image to webhook...', { 
+        imageUrl, 
+        blobSize: imageBlob.size,
+        mimeType: getImageMimeType(imageBlob)
+      });
       
       const formData = new FormData();
       formData.append('imageUrl', imageUrl);
-      formData.append('image', imageBlob, 'food-image.jpg');
+      
+      // Use original image format
+      const extension = getImageExtension(imageBlob);
+      formData.append('image', imageBlob, `food-image.${extension}`);
       formData.append('timestamp', new Date().toISOString());
       
       const response = await fetch('https://gaton8n.gatofit.com/webhook-test/e39f095b-fb33-4ce3-b41a-619a650149f5', {
@@ -46,7 +70,7 @@ export const useFoodCapture = () => {
       // For web, we'll use the file input with camera capture
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/*';
+      input.accept = 'image/*'; // Accept any image format
       input.capture = 'environment'; // Use rear camera by default
       
       input.onchange = async (e) => {
@@ -76,7 +100,7 @@ export const useFoodCapture = () => {
 
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/*';
+      input.accept = 'image/*'; // Accept any image format
       
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
@@ -103,12 +127,17 @@ export const useFoodCapture = () => {
 
   const uploadImageWithAnalysis = async (file: Blob): Promise<CapturedFood | null> => {
     try {
-      console.log('Uploading image to Supabase...', { fileSize: file.size, fileType: file.type });
+      console.log('Uploading image to Supabase...', { 
+        fileSize: file.size, 
+        fileType: file.type || 'unknown'
+      });
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      const fileName = `${user.id}/${Date.now()}.jpg`;
+      // Use original file extension instead of forcing .jpg
+      const extension = getImageExtension(file);
+      const fileName = `${user.id}/${Date.now()}.${extension}`;
       
       const { data, error } = await supabase.storage
         .from('food-images')
@@ -142,12 +171,17 @@ export const useFoodCapture = () => {
 
   const uploadImage = async (file: Blob): Promise<CapturedFood | null> => {
     try {
-      console.log('Uploading image to Supabase...', { fileSize: file.size, fileType: file.type });
+      console.log('Uploading image to Supabase...', { 
+        fileSize: file.size, 
+        fileType: file.type || 'unknown'
+      });
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      const fileName = `${user.id}/${Date.now()}.jpg`;
+      // Use original file extension
+      const extension = getImageExtension(file);
+      const fileName = `${user.id}/${Date.now()}.${extension}`;
       
       const { data, error } = await supabase.storage
         .from('food-images')
