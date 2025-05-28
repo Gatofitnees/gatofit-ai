@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -45,8 +44,8 @@ export const FoodEditDialog: React.FC<FoodEditDialogProps> = ({
         protein_g_consumed: initialData.protein_g_consumed || 0,
         carbs_g_consumed: initialData.carbs_g_consumed || 0,
         fat_g_consumed: initialData.fat_g_consumed || 0,
-        healthScore: 7,
-        ingredients: [''],
+        healthScore: initialData.health_score || 7,
+        ingredients: initialData.ingredients?.map(ing => ing.name) || [''],
         notes: initialData.notes || ''
       });
     }
@@ -102,8 +101,17 @@ export const FoodEditDialog: React.FC<FoodEditDialogProps> = ({
       protein_g_consumed: formData.protein_g_consumed,
       carbs_g_consumed: formData.carbs_g_consumed,
       fat_g_consumed: formData.fat_g_consumed,
+      health_score: formData.healthScore,
+      ingredients: formData.ingredients.filter(name => name.trim()).map(name => ({
+        name: name.trim(),
+        grams: 0,
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0
+      })),
       notes: formData.notes,
-      meal_type: 'snack1' as const // Default meal type
+      meal_type: 'snack1' as const
     };
 
     if (imageUrl) {

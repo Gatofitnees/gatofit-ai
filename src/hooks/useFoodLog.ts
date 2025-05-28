@@ -14,6 +14,15 @@ export interface FoodLogEntry {
   protein_g_consumed: number;
   carbs_g_consumed: number;
   fat_g_consumed: number;
+  health_score?: number;
+  ingredients?: Array<{
+    name: string;
+    grams: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
   notes?: string;
   logged_at: string;
   log_date: string;
@@ -140,8 +149,8 @@ export const useFoodLog = () => {
   const deleteEntry = async (id: number): Promise<boolean> => {
     try {
       const { error } = await supabase
-        .from('daily_food_log_entries')
         .delete()
+        .from('daily_food_log_entries')
         .eq('id', id);
 
       if (error) throw error;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FoodLogEntry, useFoodLog } from '@/hooks/useFoodLog';
@@ -46,6 +47,8 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
 
   useEffect(() => {
     if (initialData) {
+      console.log('Loading initial data:', initialData);
+      
       setFormData({
         custom_food_name: initialData.custom_food_name || '',
         quantity_consumed: initialData.quantity_consumed || 1,
@@ -54,13 +57,14 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         protein_g_consumed: initialData.protein_g_consumed || 0,
         carbs_g_consumed: initialData.carbs_g_consumed || 0,
         fat_g_consumed: initialData.fat_g_consumed || 0,
-        healthScore: initialData.healthScore || 7
+        healthScore: initialData.healthScore || initialData.health_score || 7
       });
 
-      // Update ingredients if they come from webhook analysis
+      // Update ingredients from database or webhook analysis
       if (initialData.ingredients && initialData.ingredients.length > 0) {
+        console.log('Loading ingredients from data:', initialData.ingredients);
         setIngredients(initialData.ingredients);
-        setShowIngredients(true); // Show ingredients section when we have real data
+        setShowIngredients(true);
       }
     }
   }, [initialData]);
@@ -91,12 +95,16 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         protein_g_consumed: formData.protein_g_consumed,
         carbs_g_consumed: formData.carbs_g_consumed,
         fat_g_consumed: formData.fat_g_consumed,
+        health_score: formData.healthScore,
+        ingredients: ingredients,
         meal_type: 'snack1' as const
       };
 
       if (imageUrl) {
         saveData.photo_url = imageUrl;
       }
+
+      console.log('Saving food data:', saveData);
 
       let success = false;
       

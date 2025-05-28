@@ -31,7 +31,9 @@ export type Database = {
           custom_food_name: string | null
           fat_g_consumed: number
           food_item_id: number | null
+          health_score: number | null
           id: number
+          ingredients: Json | null
           log_date: string
           logged_at: string
           meal_type: Database["public"]["Enums"]["meal_type"]
@@ -48,7 +50,9 @@ export type Database = {
           custom_food_name?: string | null
           fat_g_consumed: number
           food_item_id?: number | null
+          health_score?: number | null
           id?: number
+          ingredients?: Json | null
           log_date?: string
           logged_at?: string
           meal_type: Database["public"]["Enums"]["meal_type"]
@@ -65,7 +69,9 @@ export type Database = {
           custom_food_name?: string | null
           fat_g_consumed?: number
           food_item_id?: number | null
+          health_score?: number | null
           id?: number
+          ingredients?: Json | null
           log_date?: string
           logged_at?: string
           meal_type?: Database["public"]["Enums"]["meal_type"]
