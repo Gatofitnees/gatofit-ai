@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -157,8 +156,8 @@ const NutritionPage: React.FC = () => {
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-6">Nutrición</h1>
       
-      {/* Error Alert */}
-      {captureError && (
+      {/* Error Alert - Only show if camera is not open */}
+      {captureError && !showCamera && (
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -277,6 +276,7 @@ const NutritionPage: React.FC = () => {
         isOpen={showCamera}
         onClose={() => setShowCamera(false)}
         onImageCaptured={handleImageCaptured}
+        analysisError={captureError}
       />
 
       {/* Loading overlay for analysis */}

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Image, X, RotateCcw, ImageIcon, Loader, AlertTriangle } from 'lucide-react';
 import Button from '@/components/Button';
@@ -8,20 +7,30 @@ interface CameraCaptureProps {
   isOpen: boolean;
   onClose: () => void;
   onImageCaptured: (imageUrl: string, analysisResult?: any) => void;
+  analysisError?: string | null;
 }
 
 export const CameraCapture: React.FC<CameraCaptureProps> = ({
   isOpen,
   onClose,
-  onImageCaptured
+  onImageCaptured,
+  analysisError
 }) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [showNoFoodDialog, setShowNoFoodDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { uploadImageWithAnalysis, captureFromGallery, isLoading } = useFoodCapture();
+  const { uploadImageWithAnalysis, captureFromGallery, isLoading, clearError } = useFoodCapture();
+
+  // Show no food dialog when analysis error is received
+  useEffect(() => {
+    if (analysisError && isOpen) {
+      setShowNoFoodDialog(true);
+    }
+  }, [analysisError, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -157,13 +166,56 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     onClose();
   };
 
+  const handleRetryCapture = () => {
+    setShowNoFoodDialog(false);
+    clearError();
+    // Camera will remain active for user to take another photo
+  };
+
+  const handleCancelAndClose = () => {
+    setShowNoFoodDialog(false);
+    clearError();
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black z-[100]">
       <div className="relative w-full h-full">
+        {/* No Food Detected Dialog */}
+        {showNoFoodDialog && (
+          <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-30">
+            <div className="neu-card p-6 text-center max-w-xs mx-4">
+              <AlertTriangle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">¡Ups!</h3>
+              <p className="text-white/90 text-sm mb-6">
+                {analysisError || "¡Hey eso no se come! Parece que no se a detectado ninguna comida"}
+              </p>
+              <div className="space-y-3">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleRetryCapture}
+                  className="w-full"
+                >
+                  Volver a intentar
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCancelAndClose}
+                  className="w-full"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Camera Error Display */}
-        {cameraError && (
+        {cameraError && !showNoFoodDialog && (
           <div className="absolute inset-0 bg-black flex items-center justify-center z-20">
             <div className="neu-card p-6 text-center max-w-xs mx-4">
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -223,7 +275,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               size="sm"
               onClick={switchCamera}
               className="h-10 w-10 rounded-full p-0 bg-black/20"
-              disabled={isProcessing || isLoading || !!cameraError}
+              disabled={isProcessing || isLoading || !!cameraError || showNoFoodDialog}
             >
               <RotateCcw className="h-5 w-5 text-white" />
             </Button>
@@ -239,7 +291,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               size="sm"
               onClick={handleGallerySelect}
               className="h-14 px-4 rounded-full bg-black/20 flex items-center gap-2"
-              disabled={isProcessing || isLoading}
+              disabled={isProcessing || isLoading || showNoFoodDialog}
             >
               <ImageIcon className="h-5 w-5 text-white" />
               <span className="text-white text-sm">Galería</span>
@@ -250,7 +302,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               variant="primary"
               onClick={capturePhoto}
               className="h-16 w-16 rounded-full p-0 bg-white"
-              disabled={isProcessing || isLoading || !!cameraError}
+              disabled={isProcessing || isLoading || !!cameraError || showNoFoodDialog}
             >
               {isProcessing || isLoading ? (
                 <Loader className="h-8 w-8 text-black animate-spin" />
@@ -265,7 +317,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         </div>
 
         {/* Loading Overlay */}
-        {(isProcessing || isLoading) && !cameraError && (
+        {(isProcessing || isLoading) && !cameraError && !showNoFoodDialog && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10">
             <div className="neu-card p-6 text-center max-w-xs mx-4">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-3"></div>
@@ -278,7 +330,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         )}
 
         {/* Camera Viewfinder Grid */}
-        {!isProcessing && !isLoading && !cameraError && (
+        {!isProcessing && !isLoading && !cameraError && !showNoFoodDialog && (
           <div className="absolute inset-0 pointer-events-none">
             <div className="w-full h-full relative">
               {/* Grid lines */}
