@@ -1,7 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image, X, RotateCcw, ImageIcon, Loader, AlertTriangle } from 'lucide-react';
-import Button from '@/components/Button';
 import { useFoodCapture } from '@/hooks/useFoodCapture';
+import { CameraControls } from './camera/CameraControls';
+import { NoFoodDialog } from './camera/NoFoodDialog';
+import { CameraErrorDialog } from './camera/CameraErrorDialog';
+import { CameraLoadingOverlay } from './camera/CameraLoadingOverlay';
+import { CameraViewfinder } from './camera/CameraViewfinder';
 
 interface CameraCaptureProps {
   isOpen: boolean;
@@ -146,7 +150,6 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     console.log('Opening gallery selection through hook...');
     setIsProcessing(true);
     
-    // Use the hook's gallery function which now includes analysis
     const result = await captureFromGallery();
     if (result) {
       console.log('Gallery image processed and analyzed successfully:', result);
@@ -162,14 +165,9 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
 
-  const handleClose = () => {
-    onClose();
-  };
-
   const handleRetryCapture = () => {
     setShowNoFoodDialog(false);
     clearError();
-    // Camera will remain active for user to take another photo
   };
 
   const handleCancelAndClose = () => {
@@ -183,68 +181,21 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   return (
     <div className="fixed inset-0 bg-black z-[100]">
       <div className="relative w-full h-full">
-        {/* No Food Detected Dialog */}
-        {showNoFoodDialog && (
-          <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-30">
-            <div className="neu-card p-6 text-center max-w-xs mx-4">
-              <AlertTriangle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">¡Ups!</h3>
-              <p className="text-white/90 text-sm mb-6">
-                {analysisError || "¡Hey eso no se come! Parece que no se a detectado ninguna comida"}
-              </p>
-              <div className="space-y-3">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleRetryCapture}
-                  className="w-full"
-                >
-                  Volver a intentar
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleCancelAndClose}
-                  className="w-full"
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <NoFoodDialog
+          isVisible={showNoFoodDialog}
+          errorMessage={analysisError}
+          onRetry={handleRetryCapture}
+          onCancel={handleCancelAndClose}
+        />
 
-        {/* Camera Error Display */}
-        {cameraError && !showNoFoodDialog && (
-          <div className="absolute inset-0 bg-black flex items-center justify-center z-20">
-            <div className="neu-card p-6 text-center max-w-xs mx-4">
-              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">Error de Cámara</h3>
-              <p className="text-white/70 text-sm mb-4">{cameraError}</p>
-              <div className="space-y-2">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleGallerySelect}
-                  disabled={isProcessing || isLoading}
-                  className="w-full"
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Usar Galería
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={startCamera}
-                  disabled={isProcessing || isLoading}
-                  className="w-full"
-                >
-                  Reintentar Cámara
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <CameraErrorDialog
+          isVisible={!!cameraError && !showNoFoodDialog}
+          errorMessage={cameraError || ''}
+          onUseGallery={handleGallerySelect}
+          onRetryCamera={startCamera}
+          isProcessing={isProcessing}
+          isLoading={isLoading}
+        />
 
         {/* Video Stream */}
         <video
@@ -257,91 +208,24 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* Header Controls */}
-        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/50 to-transparent">
-          <div className="flex justify-between items-center">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleClose}
-              className="h-10 w-10 rounded-full p-0 bg-black/20"
-              disabled={isProcessing || isLoading}
-            >
-              <X className="h-5 w-5 text-white" />
-            </Button>
+        <CameraControls
+          onClose={onClose}
+          onSwitchCamera={switchCamera}
+          onCapturePhoto={capturePhoto}
+          onGallerySelect={handleGallerySelect}
+          isProcessing={isProcessing}
+          isLoading={isLoading}
+          cameraError={cameraError}
+          showNoFoodDialog={showNoFoodDialog}
+        />
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={switchCamera}
-              className="h-10 w-10 rounded-full p-0 bg-black/20"
-              disabled={isProcessing || isLoading || !!cameraError || showNoFoodDialog}
-            >
-              <RotateCcw className="h-5 w-5 text-white" />
-            </Button>
-          </div>
-        </div>
+        <CameraLoadingOverlay
+          isVisible={(isProcessing || isLoading) && !cameraError && !showNoFoodDialog}
+        />
 
-        {/* Bottom Controls */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="flex items-center justify-between">
-            {/* Gallery Button */}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleGallerySelect}
-              className="h-14 px-4 rounded-full bg-black/20 flex items-center gap-2"
-              disabled={isProcessing || isLoading || showNoFoodDialog}
-            >
-              <ImageIcon className="h-5 w-5 text-white" />
-              <span className="text-white text-sm">Galería</span>
-            </Button>
-
-            {/* Capture Button */}
-            <Button
-              variant="primary"
-              onClick={capturePhoto}
-              className="h-16 w-16 rounded-full p-0 bg-white"
-              disabled={isProcessing || isLoading || !!cameraError || showNoFoodDialog}
-            >
-              {isProcessing || isLoading ? (
-                <Loader className="h-8 w-8 text-black animate-spin" />
-              ) : (
-                <Camera className="h-8 w-8 text-black" />
-              )}
-            </Button>
-
-            {/* Placeholder for balance */}
-            <div className="h-14 w-20" />
-          </div>
-        </div>
-
-        {/* Loading Overlay */}
-        {(isProcessing || isLoading) && !cameraError && !showNoFoodDialog && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10">
-            <div className="neu-card p-6 text-center max-w-xs mx-4">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-3"></div>
-              <p className="text-white font-medium mb-1">Analizando imagen</p>
-              <p className="text-white/70 text-sm">
-                Detectando alimentos y calculando nutrientes...
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Camera Viewfinder Grid */}
-        {!isProcessing && !isLoading && !cameraError && !showNoFoodDialog && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="w-full h-full relative">
-              {/* Grid lines */}
-              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30">
-                {Array.from({ length: 9 }).map((_, i) => (
-                  <div key={i} className="border border-white/20" />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <CameraViewfinder
+          isVisible={!isProcessing && !isLoading && !cameraError && !showNoFoodDialog}
+        />
       </div>
     </div>
   );
