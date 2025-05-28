@@ -45,6 +45,12 @@ const NutritionPage: React.FC = () => {
   const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
     console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
     
+    // If there's a capture error, don't navigate - stay in camera to show error dialog
+    if (captureError) {
+      console.log('Capture error detected, staying in camera view');
+      return;
+    }
+    
     if (analysisResult) {
       // Use webhook analysis result with all data including ingredients
       const pendingFoodData = {
@@ -69,30 +75,7 @@ const NutritionPage: React.FC = () => {
         }
       });
     } else {
-      // Check if there was an analysis error from the webhook
-      if (captureError) {
-        // Show error and still allow manual entry
-        navigate('/food-edit', {
-          state: {
-            initialData: {
-              custom_food_name: '',
-              quantity_consumed: 1,
-              unit_consumed: 'porción',
-              calories_consumed: 0,
-              protein_g_consumed: 0,
-              carbs_g_consumed: 0,
-              fat_g_consumed: 0,
-              photo_url: imageUrl
-            },
-            imageUrl: imageUrl,
-            isEditing: false,
-            hasAnalysisError: true
-          }
-        });
-        return;
-      }
-      
-      // Fallback to old analysis method
+      // Fallback to old analysis method only if no capture error
       const analysis = await analyzeFood(imageUrl);
       console.log('Fallback analysis result:', analysis);
       

@@ -43,6 +43,12 @@ export const uploadImageWithAnalysis = async (
     // Send to webhook and get analysis result
     const analysisResult = await sendToWebhookWithResponse(publicUrl, file);
 
+    // If webhook returns null (due to error), return null instead of success object
+    if (!analysisResult) {
+      console.log('Webhook analysis failed, returning null');
+      return null;
+    }
+
     return {
       imageUrl: publicUrl,
       fileName: data.path,

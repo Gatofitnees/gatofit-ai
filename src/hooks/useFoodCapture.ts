@@ -27,6 +27,11 @@ export const useFoodCapture = () => {
     setError(null);
     try {
       const result = await captureFromCamera();
+      // If result is null (due to webhook error), don't return it as success
+      if (!result) {
+        setError('Error al analizar la imagen');
+        return null;
+      }
       return result;
     } catch (err) {
       console.error('Error capturing from camera:', err);
@@ -42,6 +47,11 @@ export const useFoodCapture = () => {
     setError(null);
     try {
       const result = await captureFromGallery();
+      // If result is null (due to webhook error), don't return it as success
+      if (!result) {
+        setError('Error al analizar la imagen');
+        return null;
+      }
       return result;
     } catch (err) {
       console.error('Error capturing from gallery:', err);
@@ -57,6 +67,11 @@ export const useFoodCapture = () => {
     setError(null);
     try {
       const result = await uploadImageWithAnalysis(file, sendToWebhookWithResponse);
+      // If result is null (due to webhook error), don't return it as success
+      if (!result) {
+        setError('Error al analizar la imagen');
+        return null;
+      }
       return result;
     } catch (err) {
       console.error('Error uploading image with analysis:', err);

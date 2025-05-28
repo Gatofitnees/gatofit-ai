@@ -136,10 +136,15 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       if (blob) {
         console.log('Capturing photo from camera, uploading to Supabase...');
         const result = await uploadImageWithAnalysis(blob);
+        
+        // Only call onImageCaptured and close if we have a successful result
         if (result) {
           console.log('Image uploaded and analyzed successfully:', result);
           onImageCaptured(result.imageUrl, result.analysisResult);
           onClose();
+        } else {
+          console.log('Image upload/analysis failed, staying in camera');
+          // Error handling is done by the hook, dialog will be shown automatically
         }
         setIsProcessing(false);
       }
@@ -151,12 +156,15 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     setIsProcessing(true);
     
     const result = await captureFromGallery();
+    
+    // Only call onImageCaptured and close if we have a successful result
     if (result) {
       console.log('Gallery image processed and analyzed successfully:', result);
       onImageCaptured(result.imageUrl, result.analysisResult);
       onClose();
     } else {
-      console.log('No image selected from gallery or upload failed');
+      console.log('Gallery image processing failed, staying in camera');
+      // Error handling is done by the hook, dialog will be shown automatically
     }
     setIsProcessing(false);
   };
