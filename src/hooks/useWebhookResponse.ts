@@ -1,25 +1,29 @@
 
 import { useState } from 'react';
 
+export interface WebhookIngredient {
+  name: string;
+  grams: string;
+  calories: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+}
+
+export interface WebhookComidaData {
+  custom_food_name: string;
+  quantity_consumed: number;
+  unit_consumed: string;
+  calories_consumed: string;
+  protein_g_consumed: string;
+  carbs_g_consumed: string;
+  fat_g_consumed: string;
+  healthScore: string;
+  ingredients: WebhookIngredient[];
+}
+
 export interface WebhookResponse {
-  Comida?: {
-    custom_food_name: string;
-    quantity_consumed: number;
-    unit_consumed: string;
-    calories_consumed: string;
-    protein_g_consumed: string;
-    carbs_g_consumed: string;
-    fat_g_consumed: string;
-    healthScore: string;
-    ingredients: Array<{
-      name: string;
-      grams: string;
-      calories: string;
-      protein: string;
-      carbs: string;
-      fat: string;
-    }>;
-  };
+  Comida?: WebhookComidaData | string; // Puede ser objeto o string "[object Object]"
   error?: string;
 }
 
@@ -111,8 +115,19 @@ export const useWebhookResponse = () => {
 
         // Extract data from "Comida" field
         if (result.Comida) {
+          // Check if Comida is the problematic "[object Object]" string
+          if (typeof result.Comida === 'string') {
+            console.error('Webhook returned invalid Comida data:', result.Comida);
+            setAnalysisError('Error: Datos de comida inválidos del servidor');
+            return null;
+          }
+
           console.log('Food detected by webhook:', result.Comida);
           return parseWebhookFoodResponse(result.Comida);
+        } else {
+          console.warn('No Comida data found in webhook response');
+          setAnalysisError('No se detectó información de comida');
+          return null;
         }
       } else {
         console.warn('Webhook request failed:', response.status, response.statusText);
@@ -142,7 +157,7 @@ export const useWebhookResponse = () => {
     }
   };
 
-  const parseWebhookFoodResponse = (comidaData: WebhookResponse['Comida']): FoodAnalysisResult => {
+  const parseWebhookFoodResponse = (comidaData: WebhookComidaData): FoodAnalysisResult => {
     if (!comidaData) {
       throw new Error('No food data received');
     }

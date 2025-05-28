@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image, X, RotateCcw, ImageIcon } from 'lucide-react';
+import { Camera, Image, X, RotateCcw, ImageIcon, Loader } from 'lucide-react';
 import Button from '@/components/Button';
 import { useFoodCapture } from '@/hooks/useFoodCapture';
 
@@ -16,9 +17,10 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 }) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [isProcessing, setIsProcessing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { uploadImageWithAnalysis, sendToWebhook, captureFromGallery } = useFoodCapture();
+  const { uploadImageWithAnalysis, sendToWebhook, captureFromGallery, isLoading } = useFoodCapture();
 
   useEffect(() => {
     if (isOpen) {
@@ -95,6 +97,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     if (!ctx) return;
 
+    setIsProcessing(true);
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
@@ -108,12 +111,14 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
           onImageCaptured(result.imageUrl, result.analysisResult);
           onClose();
         }
+        setIsProcessing(false);
       }
     }, 'image/jpeg', 0.8);
   };
 
   const handleGallerySelect = async () => {
     console.log('Opening gallery selection through hook...');
+    setIsProcessing(true);
     
     // Use the hook's gallery function which now includes analysis
     const result = await captureFromGallery();
@@ -124,6 +129,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     } else {
       console.log('No image selected from gallery or upload failed');
     }
+    setIsProcessing(false);
   };
 
   const switchCamera = () => {
@@ -158,6 +164,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               size="sm"
               onClick={handleClose}
               className="h-10 w-10 rounded-full p-0 bg-black/20"
+              disabled={isProcessing || isLoading}
             >
               <X className="h-5 w-5 text-white" />
             </Button>
@@ -167,6 +174,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               size="sm"
               onClick={switchCamera}
               className="h-10 w-10 rounded-full p-0 bg-black/20"
+              disabled={isProcessing || isLoading}
             >
               <RotateCcw className="h-5 w-5 text-white" />
             </Button>
@@ -182,6 +190,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               size="sm"
               onClick={handleGallerySelect}
               className="h-14 px-4 rounded-full bg-black/20 flex items-center gap-2"
+              disabled={isProcessing || isLoading}
             >
               <ImageIcon className="h-5 w-5 text-white" />
               <span className="text-white text-sm">Galería</span>
@@ -192,8 +201,13 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               variant="primary"
               onClick={capturePhoto}
               className="h-16 w-16 rounded-full p-0 bg-white"
+              disabled={isProcessing || isLoading}
             >
-              <Camera className="h-8 w-8 text-black" />
+              {isProcessing || isLoading ? (
+                <Loader className="h-8 w-8 text-black animate-spin" />
+              ) : (
+                <Camera className="h-8 w-8 text-black" />
+              )}
             </Button>
 
             {/* Placeholder for balance */}
@@ -201,17 +215,32 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
           </div>
         </div>
 
-        {/* Camera Viewfinder Grid */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="w-full h-full relative">
-            {/* Grid lines */}
-            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="border border-white/20" />
-              ))}
+        {/* Loading Overlay */}
+        {(isProcessing || isLoading) && (
+          <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10">
+            <div className="neu-card p-6 text-center max-w-xs mx-4">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-3"></div>
+              <p className="text-white font-medium mb-1">Analizando imagen</p>
+              <p className="text-white/70 text-sm">
+                Detectando alimentos y calculando nutrientes...
+              </p>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Camera Viewfinder Grid */}
+        {!isProcessing && !isLoading && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="w-full h-full relative">
+              {/* Grid lines */}
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <div key={i} className="border border-white/20" />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

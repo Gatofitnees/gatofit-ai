@@ -48,6 +48,8 @@ export const useFoodCapture = () => {
   };
 
   const wrappedUploadImageWithAnalysis = async (file: Blob): Promise<CapturedFood | null> => {
+    setIsLoading(true);
+    setError(null);
     try {
       const result = await uploadImageWithAnalysis(file, sendToWebhookWithResponse);
       return result;
@@ -55,6 +57,8 @@ export const useFoodCapture = () => {
       console.error('Error uploading image with analysis:', err);
       setError('Error al subir la imagen');
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
