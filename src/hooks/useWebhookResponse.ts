@@ -22,10 +22,18 @@ export interface WebhookComidaData {
   ingredients: WebhookIngredient[];
 }
 
+// New interface for the array format
+export interface WebhookOutputItem {
+  output: WebhookComidaData;
+}
+
 export interface WebhookResponse {
-  Comida?: WebhookComidaData | string; // Puede ser objeto o string "[object Object]"
+  Comida?: WebhookComidaData | string; // Legacy format
   error?: string;
 }
+
+// New response format (array of items)
+export type WebhookArrayResponse = WebhookOutputItem[];
 
 export interface FoodAnalysisResult {
   name: string;
@@ -94,40 +102,67 @@ export const useWebhookResponse = () => {
       if (response.ok) {
         const responseText = await response.text();
         console.log('Raw webhook response:', responseText);
-        
-        // More comprehensive logging for debugging
         console.log('Response text type:', typeof responseText);
         console.log('Response text length:', responseText.length);
-        console.log('Response text sample:', responseText.substring(0, 200));
+        console.log('Response text sample:', responseText.substring(0, 500));
         
-        let result: WebhookResponse;
+        let parsedResponse: any;
         try {
-          result = JSON.parse(responseText);
+          parsedResponse = JSON.parse(responseText);
         } catch (parseError) {
           console.error('Failed to parse webhook response as JSON:', parseError);
           setAnalysisError('Error al procesar respuesta del servidor');
           return null;
         }
         
-        console.log('Parsed webhook response:', result);
-        console.log('Comida field type:', typeof result.Comida);
-        console.log('Comida field value:', result.Comida);
+        console.log('Parsed webhook response:', parsedResponse);
+        console.log('Response type check - is array:', Array.isArray(parsedResponse));
 
-        // Check for error in the new format
-        if (result.error) {
-          console.log('Webhook returned error:', result.error);
-          setAnalysisError(result.error);
+        // Check for new array format first
+        if (Array.isArray(parsedResponse)) {
+          console.log('Detected new array format webhook response');
+          console.log('Array length:', parsedResponse.length);
+          
+          if (parsedResponse.length === 0) {
+            console.warn('Webhook returned empty array');
+            setAnalysisError('No se detectó información de comida');
+            return null;
+          }
+
+          const firstItem = parsedResponse[0];
+          console.log('First item:', firstItem);
+          console.log('First item output:', firstItem?.output);
+
+          if (firstItem && firstItem.output) {
+            console.log('Processing food data from new array format');
+            return parseWebhookFoodResponse(firstItem.output);
+          } else {
+            console.error('Invalid structure in array item:', firstItem);
+            setAnalysisError('Formato de respuesta inválido del servidor');
+            return null;
+          }
+        }
+
+        // Fallback to legacy format
+        console.log('Checking for legacy format');
+        const legacyResult = parsedResponse as WebhookResponse;
+
+        // Check for error in the legacy format
+        if (legacyResult.error) {
+          console.log('Webhook returned error:', legacyResult.error);
+          setAnalysisError(legacyResult.error);
           return null;
         }
 
-        // Extract data from "Comida" field
-        if (result.Comida) {
+        // Extract data from "Comida" field (legacy)
+        if (legacyResult.Comida) {
+          console.log('Processing legacy Comida format');
+          
           // Check if Comida is the problematic "[object Object]" string
-          if (typeof result.Comida === 'string') {
-            console.error('Webhook returned invalid Comida data as string:', result.Comida);
+          if (typeof legacyResult.Comida === 'string') {
+            console.error('Webhook returned invalid Comida data as string:', legacyResult.Comida);
             
-            // Try to detect if it's a serialization issue
-            if (result.Comida === '[object Object]') {
+            if (legacyResult.Comida === '[object Object]') {
               console.error('Detected [object Object] serialization issue');
               setAnalysisError('Error: Datos de comida inválidos del servidor (serialización)');
               return null;
@@ -135,7 +170,7 @@ export const useWebhookResponse = () => {
             
             // Try to parse the string as JSON in case it's double-encoded
             try {
-              const parsedComida = JSON.parse(result.Comida);
+              const parsedComida = JSON.parse(legacyResult.Comida);
               console.log('Successfully parsed Comida string as JSON:', parsedComida);
               return parseWebhookFoodResponse(parsedComida);
             } catch (stringParseError) {
@@ -146,10 +181,10 @@ export const useWebhookResponse = () => {
           }
 
           // If Comida is an object, process it directly
-          console.log('Food detected by webhook:', result.Comida);
-          return parseWebhookFoodResponse(result.Comida);
+          console.log('Food detected by webhook (legacy):', legacyResult.Comida);
+          return parseWebhookFoodResponse(legacyResult.Comida);
         } else {
-          console.warn('No Comida data found in webhook response');
+          console.warn('No food data found in webhook response');
           setAnalysisError('No se detectó información de comida');
           return null;
         }
@@ -160,8 +195,6 @@ export const useWebhookResponse = () => {
         setAnalysisError('Error al analizar la imagen');
         return null;
       }
-
-      return null;
     } catch (error) {
       console.error('Error sending to webhook:', error);
       console.error('Error details:', {
