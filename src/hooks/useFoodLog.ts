@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface FoodLogEntry {
   id?: number;
@@ -27,6 +28,28 @@ export interface FoodLogEntry {
   logged_at: string;
   log_date: string;
 }
+
+// Helper function to convert Json to ingredients array
+const parseIngredients = (ingredientsJson: Json | null): FoodLogEntry['ingredients'] => {
+  if (!ingredientsJson) return undefined;
+  
+  try {
+    // If it's already an array, return it
+    if (Array.isArray(ingredientsJson)) {
+      return ingredientsJson as FoodLogEntry['ingredients'];
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof ingredientsJson === 'string') {
+      const parsed = JSON.parse(ingredientsJson);
+      return Array.isArray(parsed) ? parsed : undefined;
+    }
+    
+    return undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 export const useFoodLog = () => {
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
@@ -84,7 +107,28 @@ export const useFoodLog = () => {
         .order('logged_at', { ascending: false });
 
       if (error) throw error;
-      setEntries(data || []);
+      
+      // Convert the database entries to our FoodLogEntry type
+      const convertedEntries: FoodLogEntry[] = (data || []).map(entry => ({
+        id: entry.id,
+        food_item_id: entry.food_item_id || undefined,
+        custom_food_name: entry.custom_food_name || '',
+        photo_url: entry.photo_url || undefined,
+        meal_type: entry.meal_type,
+        quantity_consumed: entry.quantity_consumed,
+        unit_consumed: entry.unit_consumed || '',
+        calories_consumed: entry.calories_consumed,
+        protein_g_consumed: entry.protein_g_consumed,
+        carbs_g_consumed: entry.carbs_g_consumed,
+        fat_g_consumed: entry.fat_g_consumed,
+        health_score: entry.health_score || undefined,
+        ingredients: parseIngredients(entry.ingredients),
+        notes: entry.notes || undefined,
+        logged_at: entry.logged_at,
+        log_date: entry.log_date
+      }));
+      
+      setEntries(convertedEntries);
     } catch (err) {
       setError('Error al cargar las comidas');
       console.error('Error fetching food entries:', err);
@@ -106,7 +150,9 @@ export const useFoodLog = () => {
         ...entry,
         user_id: user.id,
         logged_at: now.toISOString(),
-        log_date: now.toISOString().split('T')[0]
+        log_date: now.toISOString().split('T')[0],
+        // Convert ingredients array to Json for database storage
+        ingredients: entry.ingredients ? entry.ingredients as Json : null
       };
 
       console.log('Inserting food entry:', newEntry);
@@ -120,7 +166,28 @@ export const useFoodLog = () => {
       if (error) throw error;
 
       await fetchTodayEntries();
-      return data;
+      
+      // Convert back to FoodLogEntry format
+      const returnEntry: FoodLogEntry = {
+        id: data.id,
+        food_item_id: data.food_item_id || undefined,
+        custom_food_name: data.custom_food_name || '',
+        photo_url: data.photo_url || undefined,
+        meal_type: data.meal_type,
+        quantity_consumed: data.quantity_consumed,
+        unit_consumed: data.unit_consumed || '',
+        calories_consumed: data.calories_consumed,
+        protein_g_consumed: data.protein_g_consumed,
+        carbs_g_consumed: data.carbs_g_consumed,
+        fat_g_consumed: data.fat_g_consumed,
+        health_score: data.health_score || undefined,
+        ingredients: parseIngredients(data.ingredients),
+        notes: data.notes || undefined,
+        logged_at: data.logged_at,
+        log_date: data.log_date
+      };
+      
+      return returnEntry;
     } catch (err) {
       setError('Error al guardar la comida');
       console.error('Error adding food entry:', err);
@@ -130,9 +197,15 @@ export const useFoodLog = () => {
 
   const updateEntry = async (id: number, updates: Partial<FoodLogEntry>): Promise<boolean> => {
     try {
+      // Convert ingredients to Json format for database
+      const dbUpdates = {
+        ...updates,
+        ingredients: updates.ingredients ? updates.ingredients as Json : undefined
+      };
+
       const { error } = await supabase
         .from('daily_food_log_entries')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id);
 
       if (error) throw error;
@@ -149,8 +222,8 @@ export const useFoodLog = () => {
   const deleteEntry = async (id: number): Promise<boolean> => {
     try {
       const { error } = await supabase
-        .delete()
         .from('daily_food_log_entries')
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
