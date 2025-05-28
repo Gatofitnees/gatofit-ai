@@ -95,6 +95,11 @@ export const useWebhookResponse = () => {
         const responseText = await response.text();
         console.log('Raw webhook response:', responseText);
         
+        // More comprehensive logging for debugging
+        console.log('Response text type:', typeof responseText);
+        console.log('Response text length:', responseText.length);
+        console.log('Response text sample:', responseText.substring(0, 200));
+        
         let result: WebhookResponse;
         try {
           result = JSON.parse(responseText);
@@ -105,6 +110,8 @@ export const useWebhookResponse = () => {
         }
         
         console.log('Parsed webhook response:', result);
+        console.log('Comida field type:', typeof result.Comida);
+        console.log('Comida field value:', result.Comida);
 
         // Check for error in the new format
         if (result.error) {
@@ -117,11 +124,28 @@ export const useWebhookResponse = () => {
         if (result.Comida) {
           // Check if Comida is the problematic "[object Object]" string
           if (typeof result.Comida === 'string') {
-            console.error('Webhook returned invalid Comida data:', result.Comida);
-            setAnalysisError('Error: Datos de comida inválidos del servidor');
-            return null;
+            console.error('Webhook returned invalid Comida data as string:', result.Comida);
+            
+            // Try to detect if it's a serialization issue
+            if (result.Comida === '[object Object]') {
+              console.error('Detected [object Object] serialization issue');
+              setAnalysisError('Error: Datos de comida inválidos del servidor (serialización)');
+              return null;
+            }
+            
+            // Try to parse the string as JSON in case it's double-encoded
+            try {
+              const parsedComida = JSON.parse(result.Comida);
+              console.log('Successfully parsed Comida string as JSON:', parsedComida);
+              return parseWebhookFoodResponse(parsedComida);
+            } catch (stringParseError) {
+              console.error('Failed to parse Comida string as JSON:', stringParseError);
+              setAnalysisError('Error: Datos de comida inválidos del servidor');
+              return null;
+            }
           }
 
+          // If Comida is an object, process it directly
           console.log('Food detected by webhook:', result.Comida);
           return parseWebhookFoodResponse(result.Comida);
         } else {
@@ -131,6 +155,8 @@ export const useWebhookResponse = () => {
         }
       } else {
         console.warn('Webhook request failed:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.log('Error response body:', errorText);
         setAnalysisError('Error al analizar la imagen');
         return null;
       }
@@ -138,6 +164,12 @@ export const useWebhookResponse = () => {
       return null;
     } catch (error) {
       console.error('Error sending to webhook:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
       // Fallback: try with no-cors mode for fire-and-forget
       try {
         await fetch('https://gaton8n.gatofit.com/webhook-test/e39f095b-fb33-4ce3-b41a-619a650149f5', {
@@ -163,16 +195,23 @@ export const useWebhookResponse = () => {
     }
 
     console.log('Parsing webhook food data:', comidaData);
+    console.log('Comida data type:', typeof comidaData);
+    console.log('Comida data keys:', Object.keys(comidaData));
     
-    // Parse ingredients with proper type conversion
-    const ingredients = comidaData.ingredients?.map(ingredient => ({
-      name: ingredient.name || '',
-      grams: parseFloat(ingredient.grams) || 0,
-      calories: parseFloat(ingredient.calories) || 0,
-      protein: parseFloat(ingredient.protein) || 0,
-      carbs: parseFloat(ingredient.carbs) || 0,
-      fat: parseFloat(ingredient.fat) || 0
-    })) || [];
+    // Parse ingredients with proper type conversion and validation
+    const ingredients = comidaData.ingredients?.map(ingredient => {
+      console.log('Processing ingredient:', ingredient);
+      return {
+        name: ingredient.name || '',
+        grams: parseFloat(ingredient.grams) || 0,
+        calories: parseFloat(ingredient.calories) || 0,
+        protein: parseFloat(ingredient.protein) || 0,
+        carbs: parseFloat(ingredient.carbs) || 0,
+        fat: parseFloat(ingredient.fat) || 0
+      };
+    }) || [];
+
+    console.log('Processed ingredients:', ingredients);
 
     const parsedResult = {
       name: comidaData.custom_food_name || 'Alimento detectado',

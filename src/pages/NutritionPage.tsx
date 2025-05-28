@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -15,11 +16,11 @@ import { useFoodCapture } from "../hooks/useFoodCapture";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const { entries, deleteEntry, isLoading } = useFoodLog();
   const { analyzeFood, isAnalyzing } = useFoodAnalysis();
+  const { error: captureError } = useFoodCapture();
 
   // Calculate today's totals from actual entries
   const todayTotals = entries.reduce(
@@ -44,9 +45,6 @@ const NutritionPage: React.FC = () => {
 
   const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
     console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
-    
-    // Clear any previous error
-    setAnalysisError(null);
     
     if (analysisResult) {
       // Use webhook analysis result with all data including ingredients
@@ -73,8 +71,7 @@ const NutritionPage: React.FC = () => {
       });
     } else {
       // Check if there was an analysis error from the webhook
-      const { error: analysisError } = useFoodCapture();
-      if (analysisError) {
+      if (captureError) {
         // Show error and still allow manual entry
         navigate('/food-edit', {
           state: {
@@ -119,6 +116,25 @@ const NutritionPage: React.FC = () => {
             isEditing: false
           }
         });
+      } else {
+        // Navigate to manual entry when all analysis fails
+        navigate('/food-edit', {
+          state: {
+            initialData: {
+              custom_food_name: '',
+              quantity_consumed: 1,
+              unit_consumed: 'porción',
+              calories_consumed: 0,
+              protein_g_consumed: 0,
+              carbs_g_consumed: 0,
+              fat_g_consumed: 0,
+              photo_url: imageUrl
+            },
+            imageUrl: imageUrl,
+            isEditing: false,
+            hasAnalysisError: true
+          }
+        });
       }
     }
   };
@@ -142,11 +158,11 @@ const NutritionPage: React.FC = () => {
       <h1 className="text-xl font-bold mb-6">Nutrición</h1>
       
       {/* Error Alert */}
-      {analysisError && (
+      {captureError && (
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {analysisError}
+            {captureError}
           </AlertDescription>
         </Alert>
       )}

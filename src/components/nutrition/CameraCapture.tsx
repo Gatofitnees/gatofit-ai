@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image, X, RotateCcw, ImageIcon, Loader } from 'lucide-react';
+import { Camera, Image, X, RotateCcw, ImageIcon, Loader, AlertTriangle } from 'lucide-react';
 import Button from '@/components/Button';
 import { useFoodCapture } from '@/hooks/useFoodCapture';
 
@@ -18,9 +18,10 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { uploadImageWithAnalysis, sendToWebhook, captureFromGallery, isLoading } = useFoodCapture();
+  const { uploadImageWithAnalysis, captureFromGallery, isLoading } = useFoodCapture();
 
   useEffect(() => {
     if (isOpen) {
@@ -50,6 +51,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   }, [isOpen, facingMode]);
 
   const startCamera = async () => {
+    setCameraError(null);
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
@@ -65,12 +67,27 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
+      
+      let errorMessage = 'Error al acceder a la cámara';
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'Permisos de cámara denegados. Permite el acceso para tomar fotos.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'No se encontró ninguna cámara en este dispositivo.';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage = 'La cámara está siendo usada por otra aplicación.';
+        }
+      }
+      
+      setCameraError(errorMessage);
+      
       // Fallback to any available camera
       try {
         const fallbackStream = await navigator.mediaDevices.getUserMedia({
           video: true
         });
         setStream(fallbackStream);
+        setCameraError(null);
         
         if (videoRef.current) {
           videoRef.current.srcObject = fallbackStream;
@@ -145,6 +162,38 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   return (
     <div className="fixed inset-0 bg-black z-[100]">
       <div className="relative w-full h-full">
+        {/* Camera Error Display */}
+        {cameraError && (
+          <div className="absolute inset-0 bg-black flex items-center justify-center z-20">
+            <div className="neu-card p-6 text-center max-w-xs mx-4">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">Error de Cámara</h3>
+              <p className="text-white/70 text-sm mb-4">{cameraError}</p>
+              <div className="space-y-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleGallerySelect}
+                  disabled={isProcessing || isLoading}
+                  className="w-full"
+                >
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Usar Galería
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={startCamera}
+                  disabled={isProcessing || isLoading}
+                  className="w-full"
+                >
+                  Reintentar Cámara
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Video Stream */}
         <video
           ref={videoRef}
@@ -174,7 +223,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               size="sm"
               onClick={switchCamera}
               className="h-10 w-10 rounded-full p-0 bg-black/20"
-              disabled={isProcessing || isLoading}
+              disabled={isProcessing || isLoading || !!cameraError}
             >
               <RotateCcw className="h-5 w-5 text-white" />
             </Button>
@@ -201,7 +250,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               variant="primary"
               onClick={capturePhoto}
               className="h-16 w-16 rounded-full p-0 bg-white"
-              disabled={isProcessing || isLoading}
+              disabled={isProcessing || isLoading || !!cameraError}
             >
               {isProcessing || isLoading ? (
                 <Loader className="h-8 w-8 text-black animate-spin" />
@@ -216,7 +265,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         </div>
 
         {/* Loading Overlay */}
-        {(isProcessing || isLoading) && (
+        {(isProcessing || isLoading) && !cameraError && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10">
             <div className="neu-card p-6 text-center max-w-xs mx-4">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-3"></div>
@@ -229,7 +278,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         )}
 
         {/* Camera Viewfinder Grid */}
-        {!isProcessing && !isLoading && (
+        {!isProcessing && !isLoading && !cameraError && (
           <div className="absolute inset-0 pointer-events-none">
             <div className="w-full h-full relative">
               {/* Grid lines */}
