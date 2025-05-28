@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export interface WebhookIngredient {
@@ -94,7 +93,7 @@ export const useWebhookResponse = () => {
     
     try {
       // Try with CORS first to get the response
-      const response = await fetch('https://gaton8n.gatofit.com/webhook-test/e39f095b-fb33-4ce3-b41a-619a650149f5', {
+      const response = await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
         method: 'POST',
         body: formData,
       });
@@ -205,7 +204,7 @@ export const useWebhookResponse = () => {
       
       // Fallback: try with no-cors mode for fire-and-forget
       try {
-        await fetch('https://gaton8n.gatofit.com/webhook-test/e39f095b-fb33-4ce3-b41a-619a650149f5', {
+        await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
           method: 'POST',
           mode: 'no-cors',
           body: formData,
