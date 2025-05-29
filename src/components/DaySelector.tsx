@@ -54,15 +54,24 @@ const DateCard: React.FC<DateCardProps> = ({
 interface DaySelectorProps {
   onSelectDate: (date: Date) => void;
   datesWithRecords?: Date[];
+  selectedDate?: Date;
 }
 
 const DaySelector: React.FC<DaySelectorProps> = ({ 
   onSelectDate,
-  datesWithRecords = [] 
+  datesWithRecords = [],
+  selectedDate: propSelectedDate
 }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(propSelectedDate || new Date());
   const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Update local state when prop changes
+  useEffect(() => {
+    if (propSelectedDate) {
+      setSelectedDate(propSelectedDate);
+    }
+  }, [propSelectedDate]);
   
   // Generate range of dates (past and future dates)
   useEffect(() => {
