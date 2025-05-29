@@ -1,3 +1,4 @@
+import { validateTextInput, validateNumericInput } from './validation';
 
 // Security helper functions
 export const generateSecureId = (): string => {
