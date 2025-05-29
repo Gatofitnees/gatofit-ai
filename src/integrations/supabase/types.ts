@@ -533,30 +533,48 @@ export type Database = {
       user_streaks: {
         Row: {
           created_at: string
+          current_level: number
           current_streak: number
+          experience_today: number
+          foods_today: number
           id: number
           last_activity_date: string | null
+          last_xp_date: string | null
+          total_experience: number
           total_points: number
           updated_at: string
           user_id: string
+          workouts_today: number
         }
         Insert: {
           created_at?: string
+          current_level?: number
           current_streak?: number
+          experience_today?: number
+          foods_today?: number
           id?: number
           last_activity_date?: string | null
+          last_xp_date?: string | null
+          total_experience?: number
           total_points?: number
           updated_at?: string
           user_id: string
+          workouts_today?: number
         }
         Update: {
           created_at?: string
+          current_level?: number
           current_streak?: number
+          experience_today?: number
+          foods_today?: number
           id?: number
           last_activity_date?: string | null
+          last_xp_date?: string | null
+          total_experience?: number
           total_points?: number
           updated_at?: string
           user_id?: string
+          workouts_today?: number
         }
         Relationships: []
       }
@@ -661,7 +679,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_rankings: {
+        Row: {
+          avatar_url: string | null
+          current_level: number | null
+          current_streak: number | null
+          rank_name: string | null
+          total_experience: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       clean_old_food_entries: {

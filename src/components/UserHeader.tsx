@@ -1,27 +1,28 @@
 
 import React, { useState } from "react";
 import Avatar from "./Avatar";
+import RankBadge from "./RankBadge";
+import ExperienceBar from "./ExperienceBar";
 import { Settings, LogOut, Globe, CreditCard, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStreaks } from "@/hooks/useStreaks";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { getExperienceProgress } from "@/utils/rankSystem";
 
 interface UserHeaderProps {
   username: string;
   progress?: number;
-  level?: number;
-  rank?: string;
 }
 
 const UserHeader: React.FC<UserHeaderProps> = ({
   username,
-  progress = 75,
-  level = 12, 
-  rank = "Ranger Pro"
+  progress = 75
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { user, signOut } = useAuth();
+  const { streakData } = useStreaks();
   const { toast } = useToast();
 
   const handleChatClick = () => {
@@ -36,6 +37,10 @@ const UserHeader: React.FC<UserHeaderProps> = ({
     setShowMenu(false);
   };
 
+  // Get experience progress
+  const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
+  const currentLevel = streakData?.current_level || 1;
+
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-4">
@@ -45,7 +50,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
         >
           <Avatar 
             name={username} 
-            progress={progress} 
+            progress={experienceProgress?.progress || progress} 
             size="md"
             src={user?.user_metadata?.avatar_url}
           />
@@ -53,15 +58,17 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             <h1 className="text-xl font-bold">
               ¡Hola, <span className="text-gradient">{username}</span>!
             </h1>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <div className="h-1.5 w-16 bg-secondary/50 rounded-full mr-2">
-                <div 
-                  className="h-full bg-primary rounded-full animate-progress-fill" 
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              <span>Nivel {level} • {rank}</span>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Nivel {currentLevel}</span>
+              <span className="text-muted-foreground">•</span>
+              <RankBadge level={currentLevel} size="sm" showIcon={false} />
             </div>
+            {experienceProgress && (
+              <ExperienceBar 
+                totalExperience={streakData?.total_experience || 0} 
+                className="mt-2 w-32"
+              />
+            )}
           </div>
         </div>
 
@@ -83,13 +90,17 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             <div className="flex items-center">
               <Avatar 
                 name={username} 
-                progress={progress} 
+                progress={experienceProgress?.progress || progress} 
                 size="sm" 
                 src={user?.user_metadata?.avatar_url}
               />
               <div className="ml-2">
                 <p className="font-medium text-sm">{username}</p>
-                <p className="text-xs text-muted-foreground">Nivel {level} • {rank}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground">Nivel {currentLevel}</p>
+                  <span className="text-xs text-muted-foreground">•</span>
+                  <RankBadge level={currentLevel} size="sm" showIcon={false} />
+                </div>
               </div>
             </div>
             

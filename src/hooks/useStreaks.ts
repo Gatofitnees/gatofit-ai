@@ -8,6 +8,12 @@ export interface UserStreak {
   current_streak: number;
   last_activity_date: string | null;
   total_points: number;
+  total_experience: number;
+  current_level: number;
+  experience_today: number;
+  workouts_today: number;
+  foods_today: number;
+  last_xp_date: string | null;
   created_at: string;
   updated_at: string;
 }
