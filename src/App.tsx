@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
 import NutritionPage from "./pages/NutritionPage";
+import RankingPage from "./pages/RankingPage";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
@@ -110,6 +111,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <NutritionPage />
+                    <NavBar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ranking"
+                element={
+                  <ProtectedRoute>
+                    <RankingPage />
                     <NavBar />
                   </ProtectedRoute>
                 }

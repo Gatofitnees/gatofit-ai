@@ -1,9 +1,11 @@
+
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
 import Button from "../components/Button";
 import ProgressRing from "../components/ProgressRing";
 import MacroProgress from "../components/MacroProgress";
+import DaySelector from "../components/DaySelector";
 import { CameraCapture } from "../components/nutrition/CameraCapture";
 import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
 import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
@@ -15,9 +17,11 @@ import { useFoodCapture } from "../hooks/useFoodCapture";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const navigate = useNavigate();
 
-  const { entries, deleteEntry, isLoading } = useFoodLog();
+  const selectedDateString = selectedDate.toISOString().split('T')[0];
+  const { entries, deleteEntry, isLoading } = useFoodLog(selectedDateString);
   const { analyzeFood, isAnalyzing } = useFoodAnalysis();
   const { error: captureError } = useFoodCapture();
 
@@ -41,6 +45,33 @@ const NutritionPage: React.FC = () => {
   };
   
   const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
+
+  // Get dates with food entries for the day selector
+  const getDatesWithEntries = (): Date[] => {
+    // For now, we'll just return the selected date if it has entries
+    // In a real implementation, you might want to fetch this from the database
+    return entries.length > 0 ? [selectedDate] : [];
+  };
+
+  const isToday = selectedDateString === new Date().toISOString().split('T')[0];
+  const isSelectedDay = !isToday;
+
+  const formatSelectedDate = () => {
+    if (isToday) return "Hoy";
+    
+    const today = new Date();
+    const selected = new Date(selectedDate);
+    const diffTime = today.getTime() - selected.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return "Ayer";
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    
+    return selected.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long'
+    });
+  };
 
   const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
     console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
@@ -139,6 +170,13 @@ const NutritionPage: React.FC = () => {
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-6">Nutrición</h1>
       
+      {/* Day selector */}
+      <DaySelector 
+        onSelectDate={setSelectedDate}
+        datesWithRecords={getDatesWithEntries()}
+        selectedDate={selectedDate}
+      />
+      
       {/* Error Alert - Only show if camera is not open */}
       {captureError && !showCamera && (
         <Alert variant="destructive" className="mb-4">
@@ -194,15 +232,19 @@ const NutritionPage: React.FC = () => {
       {/* Meals */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">Comidas de Hoy</h2>
-          <Button 
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={() => setShowCamera(true)}
-          >
-            Añadir
-          </Button>
+          <h2 className="text-lg font-semibold">
+            Comidas - {formatSelectedDate()}
+          </h2>
+          {isToday && (
+            <Button 
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="h-4 w-4" />}
+              onClick={() => setShowCamera(true)}
+            >
+              Añadir
+            </Button>
+          )}
         </div>
         
         <div className="space-y-3">
@@ -223,7 +265,7 @@ const NutritionPage: React.FC = () => {
                 fat={entry.fat_g_consumed}
                 loggedAt={entry.logged_at}
                 onClick={() => handleEditEntry(entry)}
-                onDelete={() => handleDeleteEntry(entry.id!)}
+                onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
               />
             ))
           ) : (
@@ -232,11 +274,13 @@ const NutritionPage: React.FC = () => {
                 <div className="text-center py-8">
                   <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground">
-                    No has registrado comidas hoy
+                    {isSelectedDay ? 'No hay comidas registradas en este día' : 'No has registrado comidas hoy'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Usa el botón de cámara para empezar
-                  </p>
+                  {isToday && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Usa el botón de cámara para empezar
+                    </p>
+                  )}
                 </div>
               </CardBody>
             </Card>
@@ -244,23 +288,27 @@ const NutritionPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Add Food Button */}
-      <div className="fixed bottom-24 right-4 animate-fade-in">
-        <Button 
-          className="h-14 w-14 rounded-full shadow-neu-button"
-          leftIcon={<Camera className="h-6 w-6" />}
-          variant="primary"
-          onClick={() => setShowCamera(true)}
-        />
-      </div>
+      {/* Add Food Button - Only show for today */}
+      {isToday && (
+        <div className="fixed bottom-24 right-4 animate-fade-in">
+          <Button 
+            className="h-14 w-14 rounded-full shadow-neu-button"
+            leftIcon={<Camera className="h-6 w-6" />}
+            variant="primary"
+            onClick={() => setShowCamera(true)}
+          />
+        </div>
+      )}
 
-      {/* Camera Capture */}
-      <CameraCapture
-        isOpen={showCamera}
-        onClose={() => setShowCamera(false)}
-        onImageCaptured={handleImageCaptured}
-        analysisError={captureError}
-      />
+      {/* Camera Capture - Only show for today */}
+      {isToday && (
+        <CameraCapture
+          isOpen={showCamera}
+          onClose={() => setShowCamera(false)}
+          onImageCaptured={handleImageCaptured}
+          analysisError={captureError}
+        />
+      )}
 
       {/* Loading overlay for analysis */}
       {isAnalyzing && (

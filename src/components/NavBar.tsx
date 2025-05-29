@@ -14,7 +14,7 @@ const navItems: NavItem[] = [
   {
     id: "home",
     icon: Home,
-    path: "/",
+    path: "/home",
   },
   {
     id: "workout",

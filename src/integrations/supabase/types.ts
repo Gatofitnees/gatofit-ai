@@ -530,6 +530,36 @@ export type Database = {
           },
         ]
       }
+      user_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: number
+          last_activity_date: string | null
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: number
+          last_activity_date?: string | null
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: number
+          last_activity_date?: string | null
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       workout_log_exercise_details: {
         Row: {
           duration_seconds_completed: number | null
@@ -634,9 +664,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clean_old_food_entries: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_user_profile: {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: Json
+      }
+      update_user_streak: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

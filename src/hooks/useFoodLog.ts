@@ -51,7 +51,7 @@ const parseIngredients = (ingredientsJson: Json | null): FoodLogEntry['ingredien
   }
 };
 
-export const useFoodLog = () => {
+export const useFoodLog = (selectedDate?: string) => {
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,15 +95,15 @@ export const useFoodLog = () => {
     }
   };
 
-  const fetchTodayEntries = async () => {
+  const fetchEntriesForDate = async (date?: string) => {
     try {
       setIsLoading(true);
-      const today = new Date().toISOString().split('T')[0];
+      const queryDate = date || new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
         .from('daily_food_log_entries')
         .select('*')
-        .eq('log_date', today)
+        .eq('log_date', queryDate)
         .order('logged_at', { ascending: false });
 
       if (error) throw error;
@@ -137,6 +137,19 @@ export const useFoodLog = () => {
     }
   };
 
+  const updateUserStreak = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.rpc('update_user_streak', {
+        p_user_id: user.id
+      });
+    } catch (err) {
+      console.error('Error updating user streak:', err);
+    }
+  };
+
   const addEntry = async (entry: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>): Promise<FoodLogEntry | null> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -165,7 +178,10 @@ export const useFoodLog = () => {
 
       if (error) throw error;
 
-      await fetchTodayEntries();
+      // Update user streak after adding food entry
+      await updateUserStreak();
+      
+      await fetchEntriesForDate(selectedDate);
       
       // Convert back to FoodLogEntry format
       const returnEntry: FoodLogEntry = {
@@ -210,7 +226,7 @@ export const useFoodLog = () => {
 
       if (error) throw error;
 
-      await fetchTodayEntries();
+      await fetchEntriesForDate(selectedDate);
       return true;
     } catch (err) {
       setError('Error al actualizar la comida');
@@ -228,7 +244,7 @@ export const useFoodLog = () => {
 
       if (error) throw error;
 
-      await fetchTodayEntries();
+      await fetchEntriesForDate(selectedDate);
       return true;
     } catch (err) {
       setError('Error al eliminar la comida');
@@ -238,8 +254,8 @@ export const useFoodLog = () => {
   };
 
   useEffect(() => {
-    fetchTodayEntries();
-  }, []);
+    fetchEntriesForDate(selectedDate);
+  }, [selectedDate]);
 
   return {
     entries,
@@ -248,6 +264,6 @@ export const useFoodLog = () => {
     addEntry,
     updateEntry,
     deleteEntry,
-    refetch: fetchTodayEntries
+    refetch: () => fetchEntriesForDate(selectedDate)
   };
 };
