@@ -1,7 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
+import { sanitizeFoodName, validateCalories, validateMacronutrient } from '@/utils/validation';
+import { createSecureErrorMessage, logSecurityEvent } from '@/utils/errorHandling';
 
 export interface FoodLogEntry {
   id?: number;
@@ -34,12 +35,10 @@ const parseIngredients = (ingredientsJson: Json | null): FoodLogEntry['ingredien
   if (!ingredientsJson) return undefined;
   
   try {
-    // If it's already an array, return it
     if (Array.isArray(ingredientsJson)) {
       return ingredientsJson as FoodLogEntry['ingredients'];
     }
     
-    // If it's a string, try to parse it
     if (typeof ingredientsJson === 'string') {
       const parsed = JSON.parse(ingredientsJson);
       return Array.isArray(parsed) ? parsed : undefined;
@@ -108,30 +107,31 @@ export const useFoodLog = (selectedDate?: string) => {
 
       if (error) throw error;
       
-      // Convert the database entries to our FoodLogEntry type
+      // Convert and validate entries
       const convertedEntries: FoodLogEntry[] = (data || []).map(entry => ({
         id: entry.id,
         food_item_id: entry.food_item_id || undefined,
-        custom_food_name: entry.custom_food_name || '',
+        custom_food_name: sanitizeFoodName(entry.custom_food_name || ''),
         photo_url: entry.photo_url || undefined,
         meal_type: entry.meal_type,
-        quantity_consumed: entry.quantity_consumed,
-        unit_consumed: entry.unit_consumed || '',
-        calories_consumed: entry.calories_consumed,
-        protein_g_consumed: entry.protein_g_consumed,
-        carbs_g_consumed: entry.carbs_g_consumed,
-        fat_g_consumed: entry.fat_g_consumed,
+        quantity_consumed: validateMacronutrient(entry.quantity_consumed),
+        unit_consumed: sanitizeFoodName(entry.unit_consumed || ''),
+        calories_consumed: validateCalories(entry.calories_consumed),
+        protein_g_consumed: validateMacronutrient(entry.protein_g_consumed),
+        carbs_g_consumed: validateMacronutrient(entry.carbs_g_consumed),
+        fat_g_consumed: validateMacronutrient(entry.fat_g_consumed),
         health_score: entry.health_score || undefined,
         ingredients: parseIngredients(entry.ingredients),
-        notes: entry.notes || undefined,
+        notes: sanitizeFoodName(entry.notes || ''),
         logged_at: entry.logged_at,
         log_date: entry.log_date
       }));
       
       setEntries(convertedEntries);
     } catch (err) {
-      setError('Error al cargar las comidas');
-      console.error('Error fetching food entries:', err);
+      const secureError = createSecureErrorMessage(err, 'database');
+      setError(secureError);
+      logSecurityEvent('food_fetch_error', 'Failed to fetch food entries');
     } finally {
       setIsLoading(false);
     }
@@ -153,22 +153,45 @@ export const useFoodLog = (selectedDate?: string) => {
   const addEntry = async (entry: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>): Promise<FoodLogEntry | null> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
+      if (!user) {
+        logSecurityEvent('unauthorized_food_entry', 'User not authenticated');
+        throw new Error('Usuario no autenticado');
+      }
 
-      // Ensure user profile exists before inserting food entry
+      // Validate and sanitize entry data
+      const sanitizedEntry = {
+        ...entry,
+        custom_food_name: sanitizeFoodName(entry.custom_food_name),
+        unit_consumed: sanitizeFoodName(entry.unit_consumed),
+        quantity_consumed: validateMacronutrient(entry.quantity_consumed),
+        calories_consumed: validateCalories(entry.calories_consumed),
+        protein_g_consumed: validateMacronutrient(entry.protein_g_consumed),
+        carbs_g_consumed: validateMacronutrient(entry.carbs_g_consumed),
+        fat_g_consumed: validateMacronutrient(entry.fat_g_consumed),
+        health_score: entry.health_score ? Math.min(Math.max(entry.health_score, 1), 10) : undefined,
+        notes: entry.notes ? sanitizeFoodName(entry.notes) : undefined,
+        ingredients: entry.ingredients?.map(ingredient => ({
+          name: sanitizeFoodName(ingredient.name),
+          grams: validateMacronutrient(ingredient.grams),
+          calories: validateCalories(ingredient.calories),
+          protein: validateMacronutrient(ingredient.protein),
+          carbs: validateMacronutrient(ingredient.carbs),
+          fat: validateMacronutrient(ingredient.fat)
+        }))
+      };
+
       await ensureUserProfile(user.id);
 
       const now = new Date();
       const newEntry = {
-        ...entry,
+        ...sanitizedEntry,
         user_id: user.id,
         logged_at: now.toISOString(),
         log_date: now.toISOString().split('T')[0],
-        // Convert ingredients array to Json for database storage
-        ingredients: entry.ingredients ? entry.ingredients as Json : null
+        ingredients: sanitizedEntry.ingredients ? sanitizedEntry.ingredients as Json : null
       };
 
-      console.log('Inserting food entry:', newEntry);
+      console.log('Inserting validated food entry');
 
       const { data, error } = await supabase
         .from('daily_food_log_entries')
@@ -178,50 +201,72 @@ export const useFoodLog = (selectedDate?: string) => {
 
       if (error) throw error;
 
-      // Update user streak after adding food entry
       await updateUserStreak();
-      
       await fetchEntriesForDate(selectedDate);
       
       // Convert back to FoodLogEntry format
       const returnEntry: FoodLogEntry = {
         id: data.id,
         food_item_id: data.food_item_id || undefined,
-        custom_food_name: data.custom_food_name || '',
+        custom_food_name: sanitizeFoodName(data.custom_food_name || ''),
         photo_url: data.photo_url || undefined,
         meal_type: data.meal_type,
-        quantity_consumed: data.quantity_consumed,
-        unit_consumed: data.unit_consumed || '',
-        calories_consumed: data.calories_consumed,
-        protein_g_consumed: data.protein_g_consumed,
-        carbs_g_consumed: data.carbs_g_consumed,
-        fat_g_consumed: data.fat_g_consumed,
+        quantity_consumed: validateMacronutrient(data.quantity_consumed),
+        unit_consumed: sanitizeFoodName(data.unit_consumed || ''),
+        calories_consumed: validateCalories(data.calories_consumed),
+        protein_g_consumed: validateMacronutrient(data.protein_g_consumed),
+        carbs_g_consumed: validateMacronutrient(data.carbs_g_consumed),
+        fat_g_consumed: validateMacronutrient(data.fat_g_consumed),
         health_score: data.health_score || undefined,
         ingredients: parseIngredients(data.ingredients),
-        notes: data.notes || undefined,
+        notes: sanitizeFoodName(data.notes || ''),
         logged_at: data.logged_at,
         log_date: data.log_date
       };
       
       return returnEntry;
     } catch (err) {
-      setError('Error al guardar la comida');
-      console.error('Error adding food entry:', err);
+      const secureError = createSecureErrorMessage(err, 'database');
+      setError(secureError);
+      logSecurityEvent('food_entry_error', 'Failed to add food entry');
       return null;
     }
   };
 
   const updateEntry = async (id: number, updates: Partial<FoodLogEntry>): Promise<boolean> => {
     try {
-      // Convert ingredients to Json format for database
-      const dbUpdates = {
-        ...updates,
-        ingredients: updates.ingredients ? updates.ingredients as Json : undefined
-      };
+      // Validate and sanitize updates
+      const sanitizedUpdates: any = {};
+      
+      if (updates.custom_food_name !== undefined) {
+        sanitizedUpdates.custom_food_name = sanitizeFoodName(updates.custom_food_name);
+      }
+      if (updates.calories_consumed !== undefined) {
+        sanitizedUpdates.calories_consumed = validateCalories(updates.calories_consumed);
+      }
+      if (updates.protein_g_consumed !== undefined) {
+        sanitizedUpdates.protein_g_consumed = validateMacronutrient(updates.protein_g_consumed);
+      }
+      if (updates.carbs_g_consumed !== undefined) {
+        sanitizedUpdates.carbs_g_consumed = validateMacronutrient(updates.carbs_g_consumed);
+      }
+      if (updates.fat_g_consumed !== undefined) {
+        sanitizedUpdates.fat_g_consumed = validateMacronutrient(updates.fat_g_consumed);
+      }
+      if (updates.ingredients !== undefined) {
+        sanitizedUpdates.ingredients = updates.ingredients?.map(ingredient => ({
+          name: sanitizeFoodName(ingredient.name),
+          grams: validateMacronutrient(ingredient.grams),
+          calories: validateCalories(ingredient.calories),
+          protein: validateMacronutrient(ingredient.protein),
+          carbs: validateMacronutrient(ingredient.carbs),
+          fat: validateMacronutrient(ingredient.fat)
+        })) as Json;
+      }
 
       const { error } = await supabase
         .from('daily_food_log_entries')
-        .update(dbUpdates)
+        .update(sanitizedUpdates)
         .eq('id', id);
 
       if (error) throw error;
@@ -229,8 +274,9 @@ export const useFoodLog = (selectedDate?: string) => {
       await fetchEntriesForDate(selectedDate);
       return true;
     } catch (err) {
-      setError('Error al actualizar la comida');
-      console.error('Error updating food entry:', err);
+      const secureError = createSecureErrorMessage(err, 'database');
+      setError(secureError);
+      logSecurityEvent('food_update_error', 'Failed to update food entry');
       return false;
     }
   };
@@ -247,8 +293,9 @@ export const useFoodLog = (selectedDate?: string) => {
       await fetchEntriesForDate(selectedDate);
       return true;
     } catch (err) {
-      setError('Error al eliminar la comida');
-      console.error('Error deleting food entry:', err);
+      const secureError = createSecureErrorMessage(err, 'database');
+      setError(secureError);
+      logSecurityEvent('food_delete_error', 'Failed to delete food entry');
       return false;
     }
   };

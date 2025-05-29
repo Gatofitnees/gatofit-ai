@@ -1,4 +1,8 @@
+
 import { useState } from 'react';
+import { validateImageFile, sanitizeFoodName } from '@/utils/validation';
+import { sanitizeWebhookData, createSecureFormData } from '@/utils/securityHelpers';
+import { createSecureErrorMessage, logSecurityEvent } from '@/utils/errorHandling';
 
 export interface WebhookIngredient {
   name: string;
@@ -21,17 +25,15 @@ export interface WebhookComidaData {
   ingredients: WebhookIngredient[];
 }
 
-// New interface for the array format
 export interface WebhookOutputItem {
   output: WebhookComidaData;
 }
 
 export interface WebhookResponse {
-  Comida?: WebhookComidaData | string; // Legacy format
+  Comida?: WebhookComidaData | string;
   error?: string;
 }
 
-// New response format (array of items)
 export type WebhookArrayResponse = WebhookOutputItem[];
 
 export interface FoodAnalysisResult {
@@ -53,23 +55,6 @@ export interface FoodAnalysisResult {
   }>;
 }
 
-const getImageMimeType = (file: Blob): string => {
-  if (file.type) return file.type;
-  return 'image/jpeg'; // fallback
-};
-
-const getImageExtension = (file: Blob): string => {
-  const mimeType = getImageMimeType(file);
-  switch (mimeType) {
-    case 'image/png': return 'png';
-    case 'image/jpeg': return 'jpg';
-    case 'image/webp': return 'webp';
-    case 'image/gif': return 'gif';
-    case 'image/bmp': return 'bmp';
-    default: return 'jpg';
-  }
-};
-
 export const useWebhookResponse = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -77,22 +62,24 @@ export const useWebhookResponse = () => {
   const sendToWebhookWithResponse = async (imageUrl: string, imageBlob: Blob): Promise<FoodAnalysisResult | null> => {
     setIsAnalyzing(true);
     setAnalysisError(null);
-    console.log('Sending image to webhook with response handling...', { 
-      imageUrl, 
+    
+    // Validate image file
+    const validation = validateImageFile(new File([imageBlob], 'image', { type: imageBlob.type }));
+    if (!validation.isValid) {
+      setAnalysisError(validation.error || 'Archivo de imagen inválido');
+      setIsAnalyzing(false);
+      logSecurityEvent('invalid_file_upload', validation.error);
+      return null;
+    }
+
+    console.log('Sending image to webhook with security validation...', { 
       blobSize: imageBlob.size,
-      mimeType: getImageMimeType(imageBlob)
+      mimeType: imageBlob.type
     });
     
-    const formData = new FormData();
-    formData.append('imageUrl', imageUrl);
-    
-    // Use original image format instead of forcing JPG
-    const extension = getImageExtension(imageBlob);
-    formData.append('image', imageBlob, `food-image.${extension}`);
-    formData.append('timestamp', new Date().toISOString());
-    
     try {
-      // Try with CORS first to get the response
+      const formData = createSecureFormData(imageBlob, imageUrl);
+      
       const response = await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
         method: 'POST',
         body: formData,
@@ -100,121 +87,92 @@ export const useWebhookResponse = () => {
 
       if (response.ok) {
         const responseText = await response.text();
-        console.log('Raw webhook response:', responseText);
-        console.log('Response text type:', typeof responseText);
-        console.log('Response text length:', responseText.length);
-        console.log('Response text sample:', responseText.substring(0, 500));
+        console.log('Webhook response received');
         
         let parsedResponse: any;
         try {
           parsedResponse = JSON.parse(responseText);
         } catch (parseError) {
-          console.error('Failed to parse webhook response as JSON:', parseError);
-          setAnalysisError('Error al procesar respuesta del servidor');
+          console.error('Failed to parse webhook response');
+          setAnalysisError(createSecureErrorMessage(parseError, 'webhook'));
+          logSecurityEvent('webhook_parse_error', 'Invalid JSON response');
           return null;
         }
         
-        console.log('Parsed webhook response:', parsedResponse);
-        console.log('Response type check - is array:', Array.isArray(parsedResponse));
-
+        // Sanitize the response data
+        const sanitizedResponse = sanitizeWebhookData(parsedResponse);
+        
         // Check for new array format first
         if (Array.isArray(parsedResponse)) {
-          console.log('Detected new array format webhook response');
-          console.log('Array length:', parsedResponse.length);
-          
           if (parsedResponse.length === 0) {
-            console.warn('Webhook returned empty array');
             setAnalysisError('No se detectó información de comida');
             return null;
           }
 
           const firstItem = parsedResponse[0];
-          console.log('First item:', firstItem);
-          console.log('First item output:', firstItem?.output);
-
           if (firstItem && firstItem.output) {
-            console.log('Processing food data from new array format');
-            return parseWebhookFoodResponse(firstItem.output);
+            return parseWebhookFoodResponse(sanitizeWebhookData(firstItem.output));
           } else {
-            console.error('Invalid structure in array item:', firstItem);
-            setAnalysisError('Formato de respuesta inválido del servidor');
+            setAnalysisError(createSecureErrorMessage(new Error('Invalid response structure'), 'webhook'));
+            logSecurityEvent('webhook_invalid_structure', 'Array format missing output');
             return null;
           }
         }
 
         // Fallback to legacy format
-        console.log('Checking for legacy format');
         const legacyResult = parsedResponse as WebhookResponse;
 
-        // Check for error in the legacy format
         if (legacyResult.error) {
-          console.log('Webhook returned error:', legacyResult.error);
-          setAnalysisError(legacyResult.error);
+          setAnalysisError(createSecureErrorMessage(new Error(legacyResult.error), 'webhook'));
           return null;
         }
 
-        // Extract data from "Comida" field (legacy)
         if (legacyResult.Comida) {
-          console.log('Processing legacy Comida format');
-          
-          // Check if Comida is the problematic "[object Object]" string
           if (typeof legacyResult.Comida === 'string') {
-            console.error('Webhook returned invalid Comida data as string:', legacyResult.Comida);
-            
             if (legacyResult.Comida === '[object Object]') {
-              console.error('Detected [object Object] serialization issue');
-              setAnalysisError('Error: Datos de comida inválidos del servidor (serialización)');
+              setAnalysisError(createSecureErrorMessage(new Error('Serialization error'), 'webhook'));
+              logSecurityEvent('webhook_serialization_error', 'Object serialization issue');
               return null;
             }
             
-            // Try to parse the string as JSON in case it's double-encoded
             try {
               const parsedComida = JSON.parse(legacyResult.Comida);
-              console.log('Successfully parsed Comida string as JSON:', parsedComida);
-              return parseWebhookFoodResponse(parsedComida);
+              return parseWebhookFoodResponse(sanitizeWebhookData(parsedComida));
             } catch (stringParseError) {
-              console.error('Failed to parse Comida string as JSON:', stringParseError);
-              setAnalysisError('Error: Datos de comida inválidos del servidor');
+              setAnalysisError(createSecureErrorMessage(stringParseError, 'webhook'));
               return null;
             }
           }
 
-          // If Comida is an object, process it directly
-          console.log('Food detected by webhook (legacy):', legacyResult.Comida);
-          return parseWebhookFoodResponse(legacyResult.Comida);
+          return parseWebhookFoodResponse(sanitizeWebhookData(legacyResult.Comida));
         } else {
-          console.warn('No food data found in webhook response');
           setAnalysisError('No se detectó información de comida');
           return null;
         }
       } else {
-        console.warn('Webhook request failed:', response.status, response.statusText);
-        const errorText = await response.text();
-        console.log('Error response body:', errorText);
-        setAnalysisError('Error al analizar la imagen');
+        console.warn('Webhook request failed:', response.status);
+        setAnalysisError(createSecureErrorMessage(new Error(`HTTP ${response.status}`), 'network'));
+        logSecurityEvent('webhook_http_error', `Status: ${response.status}`);
         return null;
       }
     } catch (error) {
       console.error('Error sending to webhook:', error);
-      console.error('Error details:', {
-        name: error instanceof Error ? error.name : 'Unknown',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      logSecurityEvent('webhook_network_error', error instanceof Error ? error.message : 'Unknown error');
       
-      // Fallback: try with no-cors mode for fire-and-forget
+      // Fallback with no-cors
       try {
+        const fallbackFormData = createSecureFormData(imageBlob, imageUrl);
         await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
           method: 'POST',
           mode: 'no-cors',
-          body: formData,
+          body: fallbackFormData,
         });
-        console.log('Image sent to webhook (no-cors fallback)');
+        console.log('Fallback request sent');
       } catch (fallbackError) {
-        console.error('Fallback webhook request also failed:', fallbackError);
+        console.error('Fallback request failed');
       }
       
-      setAnalysisError('Error al conectar con el servicio de análisis');
+      setAnalysisError(createSecureErrorMessage(error, 'network'));
       return null;
     } finally {
       setIsAnalyzing(false);
@@ -226,38 +184,31 @@ export const useWebhookResponse = () => {
       throw new Error('No food data received');
     }
 
-    console.log('Parsing webhook food data:', comidaData);
-    console.log('Comida data type:', typeof comidaData);
-    console.log('Comida data keys:', Object.keys(comidaData));
+    console.log('Parsing webhook food data with validation');
     
-    // Parse ingredients with proper type conversion and validation
-    const ingredients = comidaData.ingredients?.map(ingredient => {
-      console.log('Processing ingredient:', ingredient);
-      return {
-        name: ingredient.name || '',
-        grams: parseFloat(ingredient.grams) || 0,
-        calories: parseFloat(ingredient.calories) || 0,
-        protein: parseFloat(ingredient.protein) || 0,
-        carbs: parseFloat(ingredient.carbs) || 0,
-        fat: parseFloat(ingredient.fat) || 0
-      };
-    }) || [];
-
-    console.log('Processed ingredients:', ingredients);
+    // Parse and validate ingredients
+    const ingredients = comidaData.ingredients?.map(ingredient => ({
+      name: sanitizeFoodName(ingredient.name || ''),
+      grams: parseFloat(ingredient.grams) || 0,
+      calories: parseFloat(ingredient.calories) || 0,
+      protein: parseFloat(ingredient.protein) || 0,
+      carbs: parseFloat(ingredient.carbs) || 0,
+      fat: parseFloat(ingredient.fat) || 0
+    })) || [];
 
     const parsedResult = {
-      name: comidaData.custom_food_name || 'Alimento detectado',
+      name: sanitizeFoodName(comidaData.custom_food_name || 'Alimento detectado'),
       calories: parseFloat(comidaData.calories_consumed) || 0,
       protein: parseFloat(comidaData.protein_g_consumed) || 0,
       carbs: parseFloat(comidaData.carbs_g_consumed) || 0,
       fat: parseFloat(comidaData.fat_g_consumed) || 0,
       servingSize: comidaData.quantity_consumed || 1,
-      servingUnit: comidaData.unit_consumed || 'porción',
-      healthScore: parseFloat(comidaData.healthScore) || 7,
+      servingUnit: sanitizeFoodName(comidaData.unit_consumed || 'porción'),
+      healthScore: Math.min(Math.max(parseFloat(comidaData.healthScore) || 7, 1), 10),
       ingredients
     };
 
-    console.log('Parsed analysis result:', parsedResult);
+    console.log('Food data parsed and validated');
     return parsedResult;
   };
 

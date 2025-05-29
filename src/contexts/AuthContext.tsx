@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
+import { createSecureErrorMessage, logSecurityEvent } from "@/utils/errorHandling";
 
 interface AuthContextProps {
   session: Session | null;
@@ -40,7 +42,10 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        logSecurityEvent('session_load_error', error.message);
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -53,6 +58,13 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Log authentication events for security monitoring
+      if (_event === 'SIGNED_IN') {
+        logSecurityEvent('user_signed_in', 'User authentication successful', session?.user?.id);
+      } else if (_event === 'SIGNED_OUT') {
+        logSecurityEvent('user_signed_out', 'User signed out', session?.user?.id);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -60,15 +72,38 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signUp = async (email: string, password: string) => {
     try {
+      // Basic input validation
+      if (!email || !password) {
+        const error = { message: 'Email y contraseña son requeridos' };
+        toast({
+          title: "Error de registro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error, data: null };
+      }
+
+      if (password.length < 6) {
+        const error = { message: 'La contraseña debe tener al menos 6 caracteres' };
+        toast({
+          title: "Error de registro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error, data: null };
+      }
+
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase().trim(),
         password,
       });
 
       if (error) {
+        const secureError = createSecureErrorMessage(error, 'auth');
+        logSecurityEvent('signup_failed', error.message);
         toast({
           title: "Error de registro",
-          description: error.message,
+          description: secureError,
           variant: "destructive",
         });
         return { error, data: null };
@@ -83,9 +118,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         ]);
 
         if (profileError) {
+          const secureError = createSecureErrorMessage(profileError, 'database');
+          logSecurityEvent('profile_creation_failed', profileError.message, data.user.id);
           toast({
             title: "Error al crear perfil",
-            description: profileError.message,
+            description: secureError,
             variant: "destructive",
           });
           return { error: profileError, data: null };
@@ -96,11 +133,15 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         title: "Cuenta creada",
         description: "Por favor, verifica tu email",
       });
+      
+      logSecurityEvent('user_registered', 'New user registration', data.user?.id);
       return { error: null, data };
     } catch (err: any) {
+      const secureError = createSecureErrorMessage(err, 'auth');
+      logSecurityEvent('signup_error', err.message);
       toast({
         title: "Error",
-        description: err.message,
+        description: secureError,
         variant: "destructive",
       });
       return { error: err, data: null };
@@ -109,15 +150,28 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Basic input validation
+      if (!email || !password) {
+        const error = { message: 'Email y contraseña son requeridos' };
+        toast({
+          title: "Error de inicio de sesión",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error, data: null };
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.toLowerCase().trim(),
         password,
       });
 
       if (error) {
+        const secureError = createSecureErrorMessage(error, 'auth');
+        logSecurityEvent('signin_failed', error.message);
         toast({
           title: "Error de inicio de sesión",
-          description: error.message,
+          description: secureError,
           variant: "destructive",
         });
         return { error, data: null };
@@ -127,11 +181,15 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         title: "¡Bienvenido de nuevo!",
         description: "Sesión iniciada exitosamente",
       });
+      
+      logSecurityEvent('user_login', 'User login successful', data.user?.id);
       return { error: null, data };
     } catch (err: any) {
+      const secureError = createSecureErrorMessage(err, 'auth');
+      logSecurityEvent('signin_error', err.message);
       toast({
         title: "Error",
-        description: err.message,
+        description: secureError,
         variant: "destructive",
       });
       return { error: err, data: null };
@@ -140,7 +198,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signInWithGoogle = async () => {
     try {
-      // Usar la URL del site configurada en Supabase
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -149,19 +206,24 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       });
 
       if (error) {
+        const secureError = createSecureErrorMessage(error, 'auth');
+        logSecurityEvent('google_signin_failed', error.message);
         toast({
           title: "Error al iniciar sesión con Google",
-          description: error.message,
+          description: secureError,
           variant: "destructive",
         });
         return { error, data: null };
       }
 
+      logSecurityEvent('google_signin_initiated', 'Google OAuth initiated');
       return { error: null, data };
     } catch (err: any) {
+      const secureError = createSecureErrorMessage(err, 'auth');
+      logSecurityEvent('google_signin_error', err.message);
       toast({
         title: "Error",
-        description: err.message,
+        description: secureError,
         variant: "destructive",
       });
       return { error: err, data: null };
@@ -169,11 +231,18 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Sesión cerrada",
-      description: "Has cerrado sesión exitosamente",
-    });
+    try {
+      const userId = user?.id;
+      await supabase.auth.signOut();
+      logSecurityEvent('user_signout', 'User initiated signout', userId);
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión exitosamente",
+      });
+    } catch (err) {
+      logSecurityEvent('signout_error', 'Error during signout');
+      console.error('Error signing out:', err);
+    }
   };
 
   const value = {
