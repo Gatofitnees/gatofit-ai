@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Avatar from "./Avatar";
 import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
@@ -20,6 +21,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   username,
   progress = 75
 }) => {
+  const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const { user, signOut } = useAuth();
   const { streakData } = useStreaks();
@@ -34,6 +36,11 @@ const UserHeader: React.FC<UserHeaderProps> = ({
 
   const handleSignOut = async () => {
     await signOut();
+    setShowMenu(false);
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
     setShowMenu(false);
   };
 
@@ -87,7 +94,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
       {showMenu && (
         <div className="absolute top-full left-0 right-0 z-50 mt-2 p-4 neu-card rounded-xl animate-fade-in">
           <div className="mb-4 pb-2 border-b border-muted/30">
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={handleProfileClick}>
               <Avatar 
                 name={username} 
                 progress={experienceProgress?.progress || progress} 
@@ -121,6 +128,16 @@ const UserHeader: React.FC<UserHeaderProps> = ({
           </div>
           
           <div className="grid grid-cols-1 gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="justify-start"
+              onClick={handleProfileClick}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Ver perfil completo
+            </Button>
+            
             <Button 
               variant="secondary" 
               size="sm" 

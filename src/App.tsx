@@ -1,43 +1,52 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { Toaster } from "./components/ui/toaster";
+
+// Pages
+import Index from "./pages/Index";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
-import NutritionPage from "./pages/NutritionPage";
-import RankingPage from "./pages/RankingPage";
-import NotFound from "./pages/NotFound";
-import NavBar from "./components/NavBar";
-import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
-import AuthProvider from "./contexts/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import SelectExercisesPage from "./pages/SelectExercisesPage";
-import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
-import CreateExercisePage from "./pages/CreateExercisePage";
-import CreateRoutinePage from "./pages/CreateRoutinePage";
 import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
+import CreateRoutinePage from "./pages/CreateRoutinePage";
+import RoutineDetailPage from "./pages/RoutineDetailPage";
+import SelectExercisesPage from "./pages/SelectExercisesPage";
+import CreateExercisePage from "./pages/CreateExercisePage";
+import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
 import WorkoutSummaryPage from "./pages/WorkoutSummaryPage";
-import { FoodEditPage } from "./pages/FoodEditPage";
-import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
+import NutritionPage from "./pages/NutritionPage";
+import FoodEditPage from "./pages/FoodEditPage";
+import RankingPage from "./pages/RankingPage";
+import ProfilePage from "./pages/ProfilePage";
+import BodyMeasurementsPage from "./pages/BodyMeasurementsPage";
+import SettingsPage from "./pages/SettingsPage";
+
+// Onboarding
+import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
+
+import "./App.css";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="bg-background text-foreground min-h-screen">
-          <RoutineProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <div className="App">
             <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
               <Route path="/onboarding/*" element={<OnboardingFlow />} />
-              <Route
-                path="/"
-                element={
-                  <Navigate to="/home" replace />
-                }
-              />
+              
+              {/* Protected routes */}
               <Route
                 path="/home"
                 element={
                   <ProtectedRoute>
                     <HomePage />
-                    <NavBar />
                   </ProtectedRoute>
                 }
               />
@@ -46,23 +55,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <WorkoutPage />
-                    <NavBar />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/workout/create"
-                element={
-                  <ProtectedRoute>
-                    <CreateRoutinePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/workout/edit/:routineId"
-                element={
-                  <ProtectedRoute>
-                    <CreateRoutinePage />
                   </ProtectedRoute>
                 }
               />
@@ -75,10 +67,18 @@ function App() {
                 }
               />
               <Route
-                path="/workout/summary/:workoutId"
+                path="/workout/create-routine"
                 element={
                   <ProtectedRoute>
-                    <WorkoutSummaryPage />
+                    <CreateRoutinePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/routine/:id"
+                element={
+                  <ProtectedRoute>
+                    <RoutineDetailPage />
                   </ProtectedRoute>
                 }
               />
@@ -91,14 +91,6 @@ function App() {
                 }
               />
               <Route
-                path="/workout/exercise-details/:id"
-                element={
-                  <ProtectedRoute>
-                    <ExerciseDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/workout/create-exercise"
                 element={
                   <ProtectedRoute>
@@ -107,11 +99,34 @@ function App() {
                 }
               />
               <Route
+                path="/workout/exercise/:id"
+                element={
+                  <ProtectedRoute>
+                    <ExerciseDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/workout/summary/:workoutId"
+                element={
+                  <ProtectedRoute>
+                    <WorkoutSummaryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/nutrition"
                 element={
                   <ProtectedRoute>
                     <NutritionPage />
-                    <NavBar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/nutrition/food/:foodId/edit"
+                element={
+                  <ProtectedRoute>
+                    <FoodEditPage />
                   </ProtectedRoute>
                 }
               />
@@ -120,24 +135,39 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <RankingPage />
-                    <NavBar />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/food-edit"
+                path="/profile"
                 element={
                   <ProtectedRoute>
-                    <FoodEditPage />
+                    <ProfilePage />
                   </ProtectedRoute>
                 }
               />
-              <Route path="*" element={<NotFound />} />
+              <Route
+                path="/profile/body-measurements"
+                element={
+                  <ProtectedRoute>
+                    <BodyMeasurementsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
-          </RoutineProvider>
-        </div>
-      </Router>
-    </AuthProvider>
+            <Toaster />
+          </div>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
