@@ -34,6 +34,7 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
     return (
       <div className="text-center py-8 text-muted-foreground">
         <p>No hay usuarios en la clasificación aún</p>
+        <p className="text-xs mt-2">Los rankings se actualizan cuando los usuarios completan entrenamientos o registran comidas</p>
       </div>
     );
   }
@@ -60,7 +61,7 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
             
             <div>
               <p className="font-medium text-sm">
-                {user.username || 'Usuario anónimo'}
+                {user.username || `Usuario #${user.user_id.substring(0, 8)}`}
               </p>
               <RankBadge level={user.current_level} size="sm" />
             </div>

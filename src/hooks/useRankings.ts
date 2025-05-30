@@ -10,6 +10,9 @@ export interface RankingUser {
   total_experience: number;
   current_level: number;
   rank_name: string;
+  total_workouts?: number;
+  followers_count?: number;
+  following_count?: number;
 }
 
 export type RankingType = 'streak' | 'experience';
@@ -22,8 +25,11 @@ export const useRankings = () => {
   const fetchRankings = async (type: RankingType = 'streak') => {
     try {
       setIsLoading(true);
+      setError(null);
       
       const orderColumn = type === 'streak' ? 'current_streak' : 'total_experience';
+      
+      console.log('Fetching rankings from user_rankings view...');
       
       const { data, error } = await supabase
         .from('user_rankings')
@@ -31,11 +37,16 @@ export const useRankings = () => {
         .order(orderColumn, { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Rankings data received:', data);
       setRankings(data || []);
-    } catch (err) {
-      setError('Error al cargar clasificaciones');
+    } catch (err: any) {
       console.error('Error fetching rankings:', err);
+      setError('Error al cargar clasificaciones');
     } finally {
       setIsLoading(false);
     }

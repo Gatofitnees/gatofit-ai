@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
 import NutritionPage from "./pages/NutritionPage";
 import RankingPage from "./pages/RankingPage";
+import SocialPage from "./pages/SocialPage";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import NavBar from "./components/NavBar";
@@ -129,6 +130,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <RankingPage />
+                    <NavBar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/social"
+                element={
+                  <ProtectedRoute>
+                    <SocialPage />
                     <NavBar />
                   </ProtectedRoute>
                 }
