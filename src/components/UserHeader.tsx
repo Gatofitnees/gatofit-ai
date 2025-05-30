@@ -3,13 +3,14 @@ import React, { useState } from "react";
 import Avatar from "./Avatar";
 import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
-import { Settings, LogOut, Globe, CreditCard, RefreshCw } from "lucide-react";
+import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStreaks } from "@/hooks/useStreaks";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { getExperienceProgress } from "@/utils/rankSystem";
+import { useNavigate } from "react-router-dom";
 
 interface UserHeaderProps {
   username: string;
@@ -24,6 +25,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const { user, signOut } = useAuth();
   const { streakData } = useStreaks();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleChatClick = () => {
     toast({
@@ -35,6 +37,11 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const handleSignOut = async () => {
     await signOut();
     setShowMenu(false);
+  };
+
+  const handleProfileClick = () => {
+    setShowMenu(false);
+    navigate('/profile');
   };
 
   // Get experience progress
@@ -121,6 +128,16 @@ const UserHeader: React.FC<UserHeaderProps> = ({
           </div>
           
           <div className="grid grid-cols-1 gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="justify-start"
+              onClick={handleProfileClick}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Ver perfil
+            </Button>
+            
             <Button 
               variant="secondary" 
               size="sm" 
