@@ -171,7 +171,8 @@ export const sanitizeQueryParam = (param: string): string => {
   
   // Remove potentially dangerous characters
   return param
-    .replace(/[';--]/g, '')
+    .replace(/[';]/g, '')
+    .replace(/--/g, '')
     .replace(/\/\*.*?\*\//g, '')
     .replace(/\bUNION\b/gi, '')
     .replace(/\bSELECT\b/gi, '')
