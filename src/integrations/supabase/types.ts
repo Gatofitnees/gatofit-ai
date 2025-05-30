@@ -24,59 +24,6 @@ export type Database = {
         }
         Relationships: []
       }
-      body_measurements: {
-        Row: {
-          abdomen_circumference_cm: number | null
-          arm_circumference_cm: number | null
-          body_fat_percentage: number | null
-          chest_circumference_cm: number | null
-          created_at: string | null
-          height_cm: number | null
-          id: number
-          leg_circumference_cm: number | null
-          measurement_date: string | null
-          notes: string | null
-          user_id: string
-          weight_kg: number | null
-        }
-        Insert: {
-          abdomen_circumference_cm?: number | null
-          arm_circumference_cm?: number | null
-          body_fat_percentage?: number | null
-          chest_circumference_cm?: number | null
-          created_at?: string | null
-          height_cm?: number | null
-          id?: number
-          leg_circumference_cm?: number | null
-          measurement_date?: string | null
-          notes?: string | null
-          user_id: string
-          weight_kg?: number | null
-        }
-        Update: {
-          abdomen_circumference_cm?: number | null
-          arm_circumference_cm?: number | null
-          body_fat_percentage?: number | null
-          chest_circumference_cm?: number | null
-          created_at?: string | null
-          height_cm?: number | null
-          id?: number
-          leg_circumference_cm?: number | null
-          measurement_date?: string | null
-          notes?: string | null
-          user_id?: string
-          weight_kg?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "body_measurements_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       daily_food_log_entries: {
         Row: {
           calories_consumed: number
@@ -293,12 +240,8 @@ export type Database = {
       }
       profiles: {
         Row: {
-          abdomen_circumference_cm: number | null
-          arm_circumference_cm: number | null
           avatar_url: string | null
-          bio: string | null
           body_fat_percentage: number | null
-          chest_circumference_cm: number | null
           created_at: string
           current_weight_kg: number | null
           date_of_birth: string | null
@@ -312,14 +255,11 @@ export type Database = {
           initial_recommended_fats_g: number | null
           initial_recommended_protein_g: number | null
           initial_weight_kg: number | null
-          is_profile_public: boolean | null
-          leg_circumference_cm: number | null
           main_goal: Database["public"]["Enums"]["goal_type"] | null
           previous_app_experience: boolean | null
           target_kg_per_week: number | null
           target_pace: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg: number | null
-          total_workouts: number | null
           trainings_per_week: number | null
           unit_system_preference:
             | Database["public"]["Enums"]["unit_system"]
@@ -328,12 +268,8 @@ export type Database = {
           username: string | null
         }
         Insert: {
-          abdomen_circumference_cm?: number | null
-          arm_circumference_cm?: number | null
           avatar_url?: string | null
-          bio?: string | null
           body_fat_percentage?: number | null
-          chest_circumference_cm?: number | null
           created_at?: string
           current_weight_kg?: number | null
           date_of_birth?: string | null
@@ -347,14 +283,11 @@ export type Database = {
           initial_recommended_fats_g?: number | null
           initial_recommended_protein_g?: number | null
           initial_weight_kg?: number | null
-          is_profile_public?: boolean | null
-          leg_circumference_cm?: number | null
           main_goal?: Database["public"]["Enums"]["goal_type"] | null
           previous_app_experience?: boolean | null
           target_kg_per_week?: number | null
           target_pace?: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg?: number | null
-          total_workouts?: number | null
           trainings_per_week?: number | null
           unit_system_preference?:
             | Database["public"]["Enums"]["unit_system"]
@@ -363,12 +296,8 @@ export type Database = {
           username?: string | null
         }
         Update: {
-          abdomen_circumference_cm?: number | null
-          arm_circumference_cm?: number | null
           avatar_url?: string | null
-          bio?: string | null
           body_fat_percentage?: number | null
-          chest_circumference_cm?: number | null
           created_at?: string
           current_weight_kg?: number | null
           date_of_birth?: string | null
@@ -382,14 +311,11 @@ export type Database = {
           initial_recommended_fats_g?: number | null
           initial_recommended_protein_g?: number | null
           initial_weight_kg?: number | null
-          is_profile_public?: boolean | null
-          leg_circumference_cm?: number | null
           main_goal?: Database["public"]["Enums"]["goal_type"] | null
           previous_app_experience?: boolean | null
           target_kg_per_week?: number | null
           target_pace?: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg?: number | null
-          total_workouts?: number | null
           trainings_per_week?: number | null
           unit_system_preference?:
             | Database["public"]["Enums"]["unit_system"]
@@ -500,48 +426,6 @@ export type Database = {
           },
         ]
       }
-      shared_routines: {
-        Row: {
-          downloads_count: number | null
-          id: number
-          is_public: boolean | null
-          routine_id: number
-          shared_at: string | null
-          user_id: string
-        }
-        Insert: {
-          downloads_count?: number | null
-          id?: number
-          is_public?: boolean | null
-          routine_id: number
-          shared_at?: string | null
-          user_id: string
-        }
-        Update: {
-          downloads_count?: number | null
-          id?: number
-          is_public?: boolean | null
-          routine_id?: number
-          shared_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shared_routines_routine_id_fkey"
-            columns: ["routine_id"]
-            isOneToOne: true
-            referencedRelation: "routines"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shared_routines_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_achievements: {
         Row: {
           achievement_type_id: number
@@ -607,42 +491,6 @@ export type Database = {
           {
             foreignKeyName: "user_daily_macro_targets_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_follows: {
-        Row: {
-          created_at: string | null
-          follower_id: string
-          following_id: string
-          id: number
-        }
-        Insert: {
-          created_at?: string | null
-          follower_id: string
-          following_id: string
-          id?: number
-        }
-        Update: {
-          created_at?: string | null
-          follower_id?: string
-          following_id?: string
-          id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_follows_follower_id_fkey"
-            columns: ["follower_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_follows_following_id_fkey"
-            columns: ["following_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -836,11 +684,8 @@ export type Database = {
           avatar_url: string | null
           current_level: number | null
           current_streak: number | null
-          followers_count: number | null
-          following_count: number | null
           rank_name: string | null
           total_experience: number | null
-          total_workouts: number | null
           user_id: string | null
           username: string | null
         }
@@ -855,15 +700,6 @@ export type Database = {
       create_user_profile: {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: Json
-      }
-      get_user_stats: {
-        Args: { target_user_id: string }
-        Returns: {
-          total_workouts: number
-          followers_count: number
-          following_count: number
-          total_workout_hours: number
-        }[]
       }
       update_user_streak: {
         Args: { p_user_id: string }
