@@ -5,6 +5,7 @@ import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
 import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -13,16 +14,16 @@ import { getExperienceProgress } from "@/utils/rankSystem";
 import { useNavigate } from "react-router-dom";
 
 interface UserHeaderProps {
-  username: string;
+  username?: string;
   progress?: number;
 }
 
 const UserHeader: React.FC<UserHeaderProps> = ({
-  username,
   progress = 75
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { user, signOut } = useAuth();
+  const { profile } = useProfileContext();
   const { streakData } = useStreaks();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -48,6 +49,10 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
   const currentLevel = streakData?.current_level || 1;
 
+  // Use profile data with fallback to Google metadata
+  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.name || user?.email?.split('@')[0] || "Usuario";
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
+
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-4">
@@ -56,14 +61,14 @@ const UserHeader: React.FC<UserHeaderProps> = ({
           onClick={() => setShowMenu(!showMenu)}
         >
           <Avatar 
-            name={username} 
+            name={displayName} 
             progress={experienceProgress?.progress || progress} 
             size="md"
-            src={user?.user_metadata?.avatar_url}
+            src={avatarUrl}
           />
           <div className="ml-4">
             <h1 className="text-xl font-bold">
-              ¡Hola, <span className="text-gradient">{username}</span>!
+              ¡Hola, <span className="text-gradient">{displayName}</span>!
             </h1>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Nivel {currentLevel}</span>
@@ -96,13 +101,13 @@ const UserHeader: React.FC<UserHeaderProps> = ({
           <div className="mb-4 pb-2 border-b border-muted/30">
             <div className="flex items-center">
               <Avatar 
-                name={username} 
+                name={displayName} 
                 progress={experienceProgress?.progress || progress} 
                 size="sm" 
-                src={user?.user_metadata?.avatar_url}
+                src={avatarUrl}
               />
               <div className="ml-2">
-                <p className="font-medium text-sm">{username}</p>
+                <p className="font-medium text-sm">{displayName}</p>
                 <div className="flex items-center gap-1">
                   <p className="text-xs text-muted-foreground">Nivel {currentLevel}</p>
                   <span className="text-xs text-muted-foreground">•</span>
@@ -114,15 +119,15 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             <div className="grid grid-cols-3 gap-2 mt-3">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">Peso</p>
-                <p className="text-sm font-medium">70 kg</p>
+                <p className="text-sm font-medium">{profile?.current_weight_kg || 70} kg</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">Altura</p>
-                <p className="text-sm font-medium">175 cm</p>
+                <p className="text-sm font-medium">{profile?.height_cm || 175} cm</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">% Graso</p>
-                <p className="text-sm font-medium">15%</p>
+                <p className="text-sm font-medium">{profile?.body_fat_percentage || 15}%</p>
               </div>
             </div>
           </div>

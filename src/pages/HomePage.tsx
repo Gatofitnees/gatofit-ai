@@ -24,10 +24,6 @@ const HomePage: React.FC = () => {
     macros,
     handleDateSelect
   } = useHomePageData();
-  
-  // Datos de usuario - En una implementación real vendrían de Supabase
-  const username = user?.user_metadata?.name || user?.email?.split('@')[0] || "Usuario";
-  const userProgress = 75;
 
   const handleStartWorkout = () => {
     navigate("/workout");
@@ -55,10 +51,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       {/* User header and profile */}
-      <UserHeader 
-        username={username} 
-        progress={userProgress}
-      />
+      <UserHeader />
       
       {/* Day selector */}
       <DaySelector 
