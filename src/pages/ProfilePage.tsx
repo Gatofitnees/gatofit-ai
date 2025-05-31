@@ -25,13 +25,17 @@ const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  // Update form state when profile loads
+  // Update form state when profile loads, with Google data as fallback
   useEffect(() => {
-    if (profile) {
-      setFullName(profile.full_name || '');
-      setUsername(profile.username || '');
+    if (profile || user) {
+      // Use profile data first, fall back to Google metadata
+      const googleName = user?.user_metadata?.name || user?.user_metadata?.full_name;
+      const googleEmail = user?.email?.split('@')[0];
+      
+      setFullName(profile?.full_name || googleName || '');
+      setUsername(profile?.username || googleEmail || '');
     }
-  }, [profile]);
+  }, [profile, user]);
 
   const checkUsernameAvailability = async (value: string) => {
     // Esta función debería implementarse en el hook useProfile
@@ -50,7 +54,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!profile) return;
+    if (!profile && !user) return;
 
     if (username && usernameAvailable === false) {
       toast({
@@ -79,7 +83,8 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleShare = async () => {
-    if (!profile?.username) {
+    const profileUsername = profile?.username || username;
+    if (!profileUsername) {
       toast({
         title: "Error",
         description: "Necesitas un nombre de usuario para compartir tu perfil",
@@ -93,7 +98,7 @@ const ProfilePage: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Perfil de ${profile.full_name || profile.username}`,
+          title: `Perfil de ${profile?.full_name || fullName || profileUsername}`,
           url: profileUrl
         });
       } catch (error) {
@@ -115,6 +120,10 @@ const ProfilePage: React.FC = () => {
       </div>
     );
   }
+
+  // Use fallback data for display
+  const displayName = fullName || profile?.full_name || user?.user_metadata?.name || 'Usuario';
+  const displayAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -163,8 +172,8 @@ const ProfilePage: React.FC = () => {
       {/* Avatar Section */}
       <div className="text-center mb-6">
         <AvatarUpload
-          currentAvatar={profile?.avatar_url}
-          userName={profile?.full_name || profile?.username || 'Usuario'}
+          currentAvatar={displayAvatar}
+          userName={displayName}
           onAvatarUpdate={handleAvatarUpdate}
         />
       </div>

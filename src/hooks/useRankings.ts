@@ -43,7 +43,48 @@ export const useRankings = () => {
       }
       
       console.log('Rankings data received:', data);
-      setRankings(data || []);
+      
+      // If no data from view, try to get data from profiles and user_streaks
+      if (!data || data.length === 0) {
+        console.log('No data from user_rankings view, trying alternative query...');
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            username,
+            full_name,
+            avatar_url,
+            user_streaks!inner(
+              current_streak,
+              total_experience,
+              current_level
+            )
+          `)
+          .not('user_streaks.current_streak', 'is', null)
+          .order('user_streaks.current_streak', { ascending: false })
+          .limit(20);
+
+        if (profilesError) throw profilesError;
+
+        // Transform the data to match RankingUser interface
+        const transformedData = profilesData?.map(profile => ({
+          user_id: profile.id,
+          username: profile.username || profile.full_name || `Usuario #${profile.id.substring(0, 8)}`,
+          avatar_url: profile.avatar_url,
+          current_streak: (profile.user_streaks as any)[0]?.current_streak || 0,
+          total_experience: (profile.user_streaks as any)[0]?.total_experience || 0,
+          current_level: (profile.user_streaks as any)[0]?.current_level || 1,
+          rank_name: 'Principiante', // Default rank name
+          total_workouts: 0,
+          followers_count: 0,
+          following_count: 0
+        })) || [];
+
+        setRankings(transformedData);
+      } else {
+        setRankings(data || []);
+      }
     } catch (err: any) {
       console.error('Error fetching rankings:', err);
       setError('Error al cargar clasificaciones');

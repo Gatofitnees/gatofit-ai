@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface WorkoutSummary {
   id: number;
@@ -21,27 +21,68 @@ interface MacroData {
 
 export const useHomePageData = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [todayWorkout, setTodayWorkout] = useState<WorkoutSummary | null>(null);
   const [recentWorkouts, setRecentWorkouts] = useState<WorkoutSummary[]>([]);
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
-  
-  // Mock macros data - In a real implementation this would come from Supabase
-  const macros: MacroData = {
-    calories: { current: 1450, target: 2000, unit: "kcal" },
-    protein: { current: 90, target: 120 },
-    carbs: { current: 130, target: 200 },
-    fats: { current: 35, target: 65 }
+  const [macros, setMacros] = useState<MacroData>({
+    calories: { current: 0, target: 2000, unit: "kcal" },
+    protein: { current: 0, target: 120 },
+    carbs: { current: 0, target: 200 },
+    fats: { current: 0, target: 65 }
+  });
+
+  // Fetch macros data for selected date
+  const fetchMacrosForDate = async (date: Date) => {
+    if (!user) return;
+
+    try {
+      const dateString = date.toISOString().split('T')[0];
+      
+      // Get food entries for the selected date
+      const { data: foodEntries, error } = await supabase
+        .from('daily_food_log_entries')
+        .select('calories_consumed, protein_g_consumed, carbs_g_consumed, fat_g_consumed')
+        .eq('user_id', user.id)
+        .eq('log_date', dateString);
+
+      if (error) throw error;
+
+      // Calculate totals
+      const totals = foodEntries?.reduce((acc, entry) => ({
+        calories: acc.calories + (entry.calories_consumed || 0),
+        protein: acc.protein + (entry.protein_g_consumed || 0),
+        carbs: acc.carbs + (entry.carbs_g_consumed || 0),
+        fats: acc.fats + (entry.fat_g_consumed || 0)
+      }), { calories: 0, protein: 0, carbs: 0, fats: 0 }) || { calories: 0, protein: 0, carbs: 0, fats: 0 };
+
+      // Get user's macro targets (you might want to implement this)
+      // For now using default values
+      setMacros({
+        calories: { current: Math.round(totals.calories), target: 2000, unit: "kcal" },
+        protein: { current: Math.round(totals.protein), target: 120 },
+        carbs: { current: Math.round(totals.carbs), target: 200 },
+        fats: { current: Math.round(totals.fats), target: 65 }
+      });
+
+    } catch (error) {
+      console.error("Error fetching macros:", error);
+      // Keep default values on error
+    }
   };
 
   // Fetch workout dates for the calendar
   useEffect(() => {
     const fetchWorkoutDates = async () => {
+      if (!user) return;
+      
       try {
         const { data, error } = await supabase
           .from('workout_logs')
           .select('workout_date')
+          .eq('user_id', user.id)
           .order('workout_date', { ascending: false })
           .limit(50);
           
@@ -57,11 +98,13 @@ export const useHomePageData = () => {
     };
     
     fetchWorkoutDates();
-  }, []);
+  }, [user]);
   
   // Fetch workout data for selected date
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return;
+      
       try {
         setLoading(true);
         
@@ -82,6 +125,7 @@ export const useHomePageData = () => {
             workout_date,
             workout_log_exercise_details:workout_log_exercise_details!workout_log_exercise_details_workout_log_id_fkey(id)
           `)
+          .eq('user_id', user.id)
           .gte('workout_date', startOfDay.toISOString())
           .lt('workout_date', endOfDay.toISOString())
           .order('workout_date', { ascending: false });
@@ -125,7 +169,8 @@ export const useHomePageData = () => {
     };
     
     fetchData();
-  }, [selectedDate, toast]);
+    fetchMacrosForDate(selectedDate);
+  }, [selectedDate, toast, user]);
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);

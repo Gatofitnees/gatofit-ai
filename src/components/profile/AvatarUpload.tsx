@@ -18,7 +18,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   onAvatarUpdate,
   size = 'lg'
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { uploadAvatar, uploading } = useAvatarUpload();
 
   const sizeClasses = {
@@ -37,8 +38,12 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     }
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
+  const handleGalleryClick = () => {
+    galleryInputRef.current?.click();
+  };
+
+  const handleCameraClick = () => {
+    cameraInputRef.current?.click();
   };
 
   return (
@@ -62,7 +67,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={handleUploadClick}
+          onClick={handleGalleryClick}
           disabled={uploading}
           className="flex items-center gap-2"
         >
@@ -73,7 +78,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={handleUploadClick}
+          onClick={handleCameraClick}
           disabled={uploading}
           className="flex items-center gap-2"
         >
@@ -82,13 +87,22 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         </Button>
       </div>
 
+      {/* Separate inputs for gallery and camera */}
       <input
-        ref={fileInputRef}
+        ref={galleryInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileSelect}
         className="hidden"
-        capture="environment"
+      />
+      
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+        capture="user"
       />
     </div>
   );
