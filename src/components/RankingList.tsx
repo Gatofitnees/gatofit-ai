@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Avatar from './Avatar';
 import RankBadge from './RankBadge';
 import { RankingUser } from '@/hooks/useRankings';
@@ -11,6 +12,12 @@ interface RankingListProps {
 }
 
 const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => {
+  const navigate = useNavigate();
+
+  const handleUserClick = (userId: string) => {
+    navigate(`/public-profile/${userId}`);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -44,7 +51,8 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
       {users.map((user, index) => (
         <div 
           key={user.user_id} 
-          className="flex items-center justify-between p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-colors"
+          className="flex items-center justify-between p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+          onClick={() => handleUserClick(user.user_id)}
         >
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 min-w-[24px]">

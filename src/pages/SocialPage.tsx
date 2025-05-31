@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, Users, TrendingUp } from 'lucide-react';
 import { Card, CardBody } from '@/components/Card';
 import { Button } from '@/components/ui/button';
@@ -15,13 +16,18 @@ const SocialPage: React.FC = () => {
   const { rankings, isLoading } = useRankings();
   const { user } = useAuth();
   const { stats } = useUserStats(user?.id);
+  const navigate = useNavigate();
 
   // Filter users based on search query
-  const filteredUsers = rankings.filter(user => 
-    user.username.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = rankings.filter(rankingUser => 
+    rankingUser.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const topUsers = rankings.slice(0, 5);
+
+  const handleUserClick = (userId: string) => {
+    navigate(`/public-profile/${userId}`);
+  };
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -81,8 +87,12 @@ const SocialPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {topUsers.map((user, index) => (
-                <div key={user.user_id} className="flex items-center gap-3">
+              {topUsers.map((rankingUser, index) => (
+                <div 
+                  key={rankingUser.user_id} 
+                  className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors"
+                  onClick={() => handleUserClick(rankingUser.user_id)}
+                >
                   <div className="flex items-center gap-2 min-w-[32px]">
                     <span className="text-sm font-bold text-muted-foreground">
                       #{index + 1}
@@ -90,19 +100,15 @@ const SocialPage: React.FC = () => {
                   </div>
                   
                   <Avatar
-                    name={user.username}
+                    name={rankingUser.username}
                     size="sm"
-                    src={user.avatar_url}
+                    src={rankingUser.avatar_url}
                   />
                   
                   <div className="flex-1">
-                    <p className="font-medium text-sm">{user.username}</p>
-                    <RankBadge level={user.current_level} size="sm" />
+                    <p className="font-medium text-sm">{rankingUser.username}</p>
+                    <RankBadge level={rankingUser.current_level} size="sm" />
                   </div>
-                  
-                  <Button size="sm" variant="outline">
-                    Seguir
-                  </Button>
                 </div>
               ))}
             </div>
@@ -122,27 +128,27 @@ const SocialPage: React.FC = () => {
               </p>
             ) : (
               <div className="space-y-3">
-                {filteredUsers.map((user) => (
-                  <div key={user.user_id} className="flex items-center gap-3">
+                {filteredUsers.map((rankingUser) => (
+                  <div 
+                    key={rankingUser.user_id} 
+                    className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors"
+                    onClick={() => handleUserClick(rankingUser.user_id)}
+                  >
                     <Avatar
-                      name={user.username}
+                      name={rankingUser.username}
                       size="sm"
-                      src={user.avatar_url}
+                      src={rankingUser.avatar_url}
                     />
                     
                     <div className="flex-1">
-                      <p className="font-medium text-sm">{user.username}</p>
+                      <p className="font-medium text-sm">{rankingUser.username}</p>
                       <div className="flex items-center gap-2">
-                        <RankBadge level={user.current_level} size="sm" />
+                        <RankBadge level={rankingUser.current_level} size="sm" />
                         <span className="text-xs text-muted-foreground">
-                          {user.current_streak} días racha
+                          {rankingUser.current_streak} días racha
                         </span>
                       </div>
                     </div>
-                    
-                    <Button size="sm" variant="outline">
-                      Seguir
-                    </Button>
                   </div>
                 ))}
               </div>

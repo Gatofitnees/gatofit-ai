@@ -7,6 +7,7 @@ import RankingPage from "./pages/RankingPage";
 import SocialPage from "./pages/SocialPage";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
+import PublicProfilePage from "./pages/PublicProfilePage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
@@ -48,6 +49,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/public-profile/:userId"
+                element={
+                  <ProtectedRoute>
+                    <PublicProfilePage />
                   </ProtectedRoute>
                 }
               />
