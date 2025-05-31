@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardBody } from '@/components/Card';
 import { Button } from '@/components/ui/button';
@@ -176,24 +175,26 @@ const PublicRoutinesCarousel: React.FC<PublicRoutinesCarouselProps> = ({ userId 
     <>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {routines.map((routine) => (
-          <Card 
+          <div 
             key={routine.id} 
-            className="flex-shrink-0 w-64 cursor-pointer hover:bg-muted/30 transition-colors"
+            className="flex-shrink-0 w-64 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => setSelectedRoutine(routine)}
           >
-            <CardBody className="p-3">
-              <h4 className="font-medium text-sm mb-1 line-clamp-1">{routine.name}</h4>
-              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                {routine.description || 'Sin descripción'}
-              </p>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{routine.exercises_count} ejercicios</span>
-                {routine.estimated_duration_minutes && (
-                  <span>{routine.estimated_duration_minutes} min</span>
-                )}
-              </div>
-            </CardBody>
-          </Card>
+            <Card className="h-full">
+              <CardBody className="p-3">
+                <h4 className="font-medium text-sm mb-1 line-clamp-1">{routine.name}</h4>
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                  {routine.description || 'Sin descripción'}
+                </p>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{routine.exercises_count} ejercicios</span>
+                  {routine.estimated_duration_minutes && (
+                    <span>{routine.estimated_duration_minutes} min</span>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+          </div>
         ))}
       </div>
 

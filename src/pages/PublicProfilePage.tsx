@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share2, Users, Calendar, TrendingUp } from 'lucide-react';
@@ -117,7 +118,7 @@ const PublicProfilePage: React.FC = () => {
           <p className="text-muted-foreground mb-2">@{profile.username}</p>
         )}
         
-        <RankBadge level={stats?.current_level || 1} size="lg" />
+        <RankBadge level={profile.current_level || 1} size="lg" />
         
         {profile.bio && (
           <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
