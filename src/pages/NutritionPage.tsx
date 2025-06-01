@@ -1,218 +1,325 @@
 
-import React, { useState, useEffect } from "react";
-import { Camera, Upload, Search, Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import UserHeader from "@/components/UserHeader";
-import DaySelector from "@/components/DaySelector";
-import MacrosCard from "@/components/MacrosCard";
-import { FoodScanDialog } from "@/components/nutrition/FoodScanDialog";
-import FloatingActionButton from "@/components/FloatingActionButton";
-import { useFoodLog } from "@/hooks/useFoodLog";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import React, { useState } from "react";
+import { Camera, Plus, Utensils } from "lucide-react";
+import { Card, CardHeader, CardBody } from "../components/Card";
+import Button from "../components/Button";
+import ProgressRing from "../components/ProgressRing";
+import MacroProgress from "../components/MacroProgress";
+import DaySelector from "../components/DaySelector";
+import { CameraCapture } from "../components/nutrition/CameraCapture";
+import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
+import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
+import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
+import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
+import { useFoodCapture } from "../hooks/useFoodCapture";
 
 const NutritionPage: React.FC = () => {
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const [showCamera, setShowCamera] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showFoodScan, setShowFoodScan] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [datesWithFood, setDatesWithFood] = useState<Date[]>([]);
+  const navigate = useNavigate();
+
+  const selectedDateString = selectedDate.toISOString().split('T')[0];
+  const { entries, deleteEntry, isLoading } = useFoodLog(selectedDateString);
+  const { analyzeFood, isAnalyzing } = useFoodAnalysis();
+  const { error: captureError } = useFoodCapture();
+
+  // Calculate today's totals from actual entries
+  const todayTotals = entries.reduce(
+    (totals, entry) => ({
+      calories: totals.calories + entry.calories_consumed,
+      protein: totals.protein + entry.protein_g_consumed,
+      carbs: totals.carbs + entry.carbs_g_consumed,
+      fat: totals.fat + entry.fat_g_consumed
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
+
+  // Mock targets - in a real app these would come from user profile
+  const macros = {
+    calories: { current: todayTotals.calories, target: 2000, unit: "kcal" },
+    protein: { current: todayTotals.protein, target: 120 },
+    carbs: { current: todayTotals.carbs, target: 200 },
+    fats: { current: todayTotals.fat, target: 65 }
+  };
   
-  // Convert selectedDate to string format for the hook
-  const selectedDateString = format(selectedDate, "yyyy-MM-dd");
-  const { entries: foodEntries, isLoading: loading, refetch } = useFoodLog(selectedDateString);
+  const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
 
-  // Calculate macros from food entries
-  const macros = React.useMemo(() => {
-    const totals = foodEntries.reduce((acc, entry) => ({
-      calories: acc.calories + entry.calories_consumed,
-      protein: acc.protein + entry.protein_g_consumed,
-      carbs: acc.carbs + entry.carbs_g_consumed,
-      fat: acc.fat + entry.fat_g_consumed
-    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  // Get dates with food entries for the day selector
+  const getDatesWithEntries = (): Date[] => {
+    // For now, we'll just return the selected date if it has entries
+    // In a real implementation, you might want to fetch this from the database
+    return entries.length > 0 ? [selectedDate] : [];
+  };
 
-    return {
-      calories: { current: totals.calories, target: 2000, unit: "kcal" },
-      protein: { current: totals.protein, target: 150 },
-      carbs: { current: totals.carbs, target: 250 },
-      fats: { current: totals.fat, target: 65 }
-    };
-  }, [foodEntries]);
+  const isToday = selectedDateString === new Date().toISOString().split('T')[0];
+  const isSelectedDay = !isToday;
 
-  // Fetch dates with food entries for the blue dots
-  useEffect(() => {
-    const fetchFoodDates = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('daily_food_log_entries')
-          .select('log_date')
-          .eq('user_id', user.id)
-          .order('log_date', { ascending: false })
-          .limit(50);
-          
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          const dates = data.map(item => new Date(item.log_date + 'T00:00:00'));
-          setDatesWithFood(dates);
-        }
-      } catch (error) {
-        console.error("Error al cargar fechas con alimentos:", error);
-      }
-    };
+  const formatSelectedDate = () => {
+    if (isToday) return "Hoy";
     
-    fetchFoodDates();
-  }, [user, foodEntries]); // Refresh when food entries change
-
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-  };
-
-  const handleFoodScanned = () => {
-    setShowFoodScan(false);
-    refetch();
-    toast({
-      title: "Alimento añadido",
-      description: "Se ha registrado tu alimento correctamente",
+    const today = new Date();
+    const selected = new Date(selectedDate);
+    const diffTime = today.getTime() - selected.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return "Ayer";
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    
+    return selected.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long'
     });
   };
 
-  const handleAddFood = () => {
-    setShowFoodScan(true);
-  };
-
-  const handleManualAdd = () => {
-    toast({
-      title: "Añadir manualmente",
-      description: "Función próximamente disponible",
-    });
-  };
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      toast({
-        title: "Buscar alimento",
-        description: `Buscando: ${searchQuery}`,
-      });
+  const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
+    console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
+    
+    // If there's a capture error, don't navigate - stay in camera to show error dialog
+    if (captureError) {
+      console.log('Capture error detected, staying in camera view');
+      return;
     }
+    
+    if (analysisResult) {
+      // Use webhook analysis result with all data including ingredients
+      const pendingFoodData = {
+        custom_food_name: analysisResult.name,
+        quantity_consumed: analysisResult.servingSize,
+        unit_consumed: analysisResult.servingUnit,
+        calories_consumed: analysisResult.calories,
+        protein_g_consumed: analysisResult.protein,
+        carbs_g_consumed: analysisResult.carbs,
+        fat_g_consumed: analysisResult.fat,
+        healthScore: analysisResult.healthScore,
+        ingredients: analysisResult.ingredients, // Pass ingredients data
+        photo_url: imageUrl
+      };
+      
+      // Navigate to the full-screen edit page
+      navigate('/food-edit', {
+        state: {
+          initialData: pendingFoodData,
+          imageUrl: imageUrl,
+          isEditing: false
+        }
+      });
+    } else {
+      // Fallback to old analysis method only if no capture error
+      const analysis = await analyzeFood(imageUrl);
+      console.log('Fallback analysis result:', analysis);
+      
+      if (analysis) {
+        const pendingFoodData = {
+          custom_food_name: analysis.name,
+          quantity_consumed: analysis.servingSize,
+          unit_consumed: analysis.servingUnit,
+          calories_consumed: analysis.calories,
+          protein_g_consumed: analysis.protein,
+          carbs_g_consumed: analysis.carbs,
+          fat_g_consumed: analysis.fat,
+          photo_url: imageUrl
+        };
+        
+        navigate('/food-edit', {
+          state: {
+            initialData: pendingFoodData,
+            imageUrl: imageUrl,
+            isEditing: false
+          }
+        });
+      } else {
+        // Navigate to manual entry when all analysis fails
+        navigate('/food-edit', {
+          state: {
+            initialData: {
+              custom_food_name: '',
+              quantity_consumed: 1,
+              unit_consumed: 'porción',
+              calories_consumed: 0,
+              protein_g_consumed: 0,
+              carbs_g_consumed: 0,
+              fat_g_consumed: 0,
+              photo_url: imageUrl
+            },
+            imageUrl: imageUrl,
+            isEditing: false,
+            hasAnalysisError: true
+          }
+        });
+      }
+    }
+  };
+
+  const handleEditEntry = (entry: FoodLogEntry) => {
+    navigate('/food-edit', {
+      state: {
+        initialData: entry,
+        imageUrl: entry.photo_url || "",
+        isEditing: true
+      }
+    });
+  };
+
+  const handleDeleteEntry = async (entryId: number) => {
+    await deleteEntry(entryId);
   };
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      {/* User header */}
-      <UserHeader />
+      <h1 className="text-xl font-bold mb-6">Nutrición</h1>
       
-      {/* Day selector with blue dots for days with food */}
+      {/* Day selector */}
       <DaySelector 
-        onSelectDate={handleDateSelect}
-        datesWithRecords={datesWithFood}
+        onSelectDate={setSelectedDate}
+        datesWithRecords={getDatesWithEntries()}
         selectedDate={selectedDate}
       />
-
-      {/* Search bar */}
-      <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Buscar alimentos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-10"
-          />
+      
+      {/* Error Alert - Only show if camera is not open */}
+      {captureError && !showCamera && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {captureError}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Calories Summary */}
+      <div className="flex items-center justify-center mb-8 animate-fade-in">
+        <div className="relative flex items-center justify-center">
+          <ProgressRing progress={calorieProgress} size={130} strokeWidth={8} className="text-primary" />
+          <div className="absolute flex flex-col items-center justify-center">
+            <span className="text-xl font-bold">{macros.calories.current}</span>
+            <span className="text-xs text-muted-foreground">/ {macros.calories.target}</span>
+            <span className="text-xs mt-1">kcal</span>
+          </div>
         </div>
       </div>
-
-      {/* Quick add buttons */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <Button
-          variant="outline"
-          onClick={handleAddFood}
-          className="flex flex-col items-center gap-2 h-20"
-        >
-          <Camera className="h-6 w-6" />
-          <span className="text-xs">Escanear</span>
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={handleManualAdd}
-          className="flex flex-col items-center gap-2 h-20"
-        >
-          <Plus className="h-6 w-6" />
-          <span className="text-xs">Manual</span>
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={handleManualAdd}
-          className="flex flex-col items-center gap-2 h-20"
-        >
-          <Upload className="h-6 w-6" />
-          <span className="text-xs">Receta</span>
-        </Button>
-      </div>
-
-      {/* Macros card */}
-      <MacrosCard 
-        macros={macros}
-        onAddFood={handleAddFood}
-      />
-
-      {/* Food entries for selected date */}
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">
-          Alimentos del {format(selectedDate, "dd/MM/yyyy")}
-        </h3>
-        
-        {loading ? (
-          <div className="text-center py-4">
-            <div className="animate-pulse text-muted-foreground">Cargando...</div>
-          </div>
-        ) : foodEntries.length > 0 ? (
-          <div className="space-y-3">
-            {foodEntries.map((entry, index) => (
-              <div key={index} className="p-3 bg-card rounded-lg border">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{entry.custom_food_name || 'Alimento'}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {entry.meal_type} • {entry.quantity_consumed} {entry.unit_consumed}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{Math.round(entry.calories_consumed)} kcal</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No hay alimentos registrados para este día</p>
-            <Button onClick={handleAddFood} className="mt-4">
-              Añadir primer alimento
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Food scan dialog */}
-      <FoodScanDialog
-        isOpen={showFoodScan}
-        onClose={() => setShowFoodScan(false)}
-        onImageCaptured={handleFoodScanned}
-      />
       
-      {/* Floating action button */}
-      <FloatingActionButton onClick={handleAddFood} />
+      {/* Macros Summary */}
+      <Card className="mb-6">
+        <CardHeader 
+          title="Macronutrientes" 
+          subtitle="Resumen diario" 
+        />
+        <CardBody>
+          <div className="space-y-4">
+            <MacroProgress 
+              label="Proteínas" 
+              current={macros.protein.current} 
+              target={macros.protein.target}
+              color="protein" 
+            />
+            <MacroProgress 
+              label="Carbohidratos" 
+              current={macros.carbs.current} 
+              target={macros.carbs.target}
+              color="carbs" 
+            />
+            <MacroProgress 
+              label="Grasas" 
+              current={macros.fats.current} 
+              target={macros.fats.target}
+              color="fat" 
+            />
+          </div>
+        </CardBody>
+      </Card>
+      
+      {/* Meals */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">
+            Comidas - {formatSelectedDate()}
+          </h2>
+          {isToday && (
+            <Button 
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="h-4 w-4" />}
+              onClick={() => setShowCamera(true)}
+            >
+              Añadir
+            </Button>
+          )}
+        </div>
+        
+        <div className="space-y-3">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <p className="text-sm text-muted-foreground mt-2">Cargando comidas...</p>
+            </div>
+          ) : entries.length > 0 ? (
+            entries.map((entry) => (
+              <FoodPreviewCard
+                key={entry.id}
+                imageUrl={entry.photo_url || "/placeholder.svg"}
+                name={entry.custom_food_name}
+                calories={entry.calories_consumed}
+                protein={entry.protein_g_consumed}
+                carbs={entry.carbs_g_consumed}
+                fat={entry.fat_g_consumed}
+                loggedAt={entry.logged_at}
+                onClick={() => handleEditEntry(entry)}
+                onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
+              />
+            ))
+          ) : (
+            <Card>
+              <CardBody>
+                <div className="text-center py-8">
+                  <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    {isSelectedDay ? 'No hay comidas registradas en este día' : 'No has registrado comidas hoy'}
+                  </p>
+                  {isToday && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Usa el botón de cámara para empezar
+                    </p>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+          )}
+        </div>
+      </div>
+      
+      {/* Add Food Button - Only show for today */}
+      {isToday && (
+        <div className="fixed bottom-24 right-4 animate-fade-in">
+          <Button 
+            className="h-14 w-14 rounded-full shadow-neu-button"
+            leftIcon={<Camera className="h-6 w-6" />}
+            variant="primary"
+            onClick={() => setShowCamera(true)}
+          />
+        </div>
+      )}
+
+      {/* Camera Capture - Only show for today */}
+      {isToday && (
+        <CameraCapture
+          isOpen={showCamera}
+          onClose={() => setShowCamera(false)}
+          onImageCaptured={handleImageCaptured}
+          analysisError={captureError}
+        />
+      )}
+
+      {/* Loading overlay for analysis */}
+      {isAnalyzing && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="neu-card p-6 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3"></div>
+            <p className="text-sm font-medium">Analizando alimento...</p>
+            <p className="text-xs text-muted-foreground mt-1">Esto puede tomar unos segundos</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
