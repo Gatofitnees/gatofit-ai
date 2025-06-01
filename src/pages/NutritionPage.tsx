@@ -36,10 +36,10 @@ const NutritionPage: React.FC = () => {
     }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
     return {
-      calories: { consumed: totals.calories, target: 2000 },
-      protein: { consumed: totals.protein, target: 150 },
-      carbs: { consumed: totals.carbs, target: 250 },
-      fat: { consumed: totals.fat, target: 65 }
+      calories: { current: totals.calories, target: 2000, unit: "kcal" },
+      protein: { current: totals.protein, target: 150 },
+      carbs: { current: totals.carbs, target: 250 },
+      fats: { current: totals.fat, target: 65 }
     };
   }, [foodEntries]);
 
