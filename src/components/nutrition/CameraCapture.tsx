@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useFoodCapture } from '@/hooks/useFoodCapture';
 import { CameraControls } from './camera/CameraControls';
@@ -10,7 +9,7 @@ import { CameraViewfinder } from './camera/CameraViewfinder';
 interface CameraCaptureProps {
   isOpen: boolean;
   onClose: () => void;
-  onImageCaptured: (imageUrl: string, analysisResult?: any) => void;
+  onImageCaptured: (imageUrl: string, analysisResult?: any, imageBlob?: Blob) => void;
   analysisError?: string | null;
 }
 
@@ -27,7 +26,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [showNoFoodDialog, setShowNoFoodDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { uploadImageWithAnalysis, captureFromGallery, isLoading, clearError } = useFoodCapture();
+  const { uploadImageOnly, isLoading, clearError } = useFoodCapture();
 
   // Show no food dialog when analysis error is received
   useEffect(() => {
@@ -135,16 +134,14 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     canvas.toBlob(async (blob) => {
       if (blob) {
         console.log('Capturing photo from camera, uploading to Supabase...');
-        const result = await uploadImageWithAnalysis(blob);
+        const result = await uploadImageOnly(blob);
         
-        // Only call onImageCaptured and close if we have a successful result
         if (result) {
-          console.log('Image uploaded and analyzed successfully:', result);
-          onImageCaptured(result.imageUrl, result.analysisResult);
-          onClose();
+          console.log('Image uploaded successfully, passing to parent:', result);
+          onImageCaptured(result.imageUrl, undefined, blob);
         } else {
-          console.log('Image upload/analysis failed, staying in camera');
-          // Error handling is done by the hook, dialog will be shown automatically
+          console.log('Image upload failed');
+          setCameraError('Error al subir la imagen');
         }
         setIsProcessing(false);
       }
@@ -152,21 +149,36 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   };
 
   const handleGallerySelect = async () => {
-    console.log('Opening gallery selection through hook...');
+    console.log('Opening gallery selection...');
     setIsProcessing(true);
     
-    const result = await captureFromGallery();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
     
-    // Only call onImageCaptured and close if we have a successful result
-    if (result) {
-      console.log('Gallery image processed and analyzed successfully:', result);
-      onImageCaptured(result.imageUrl, result.analysisResult);
-      onClose();
-    } else {
-      console.log('Gallery image processing failed, staying in camera');
-      // Error handling is done by the hook, dialog will be shown automatically
-    }
-    setIsProcessing(false);
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        console.log('Gallery file selected:', file.name);
+        
+        const result = await uploadImageOnly(file);
+        
+        if (result) {
+          console.log('Gallery image uploaded successfully:', result);
+          onImageCaptured(result.imageUrl, undefined, file);
+        } else {
+          console.log('Gallery image upload failed');
+          setCameraError('Error al subir la imagen');
+        }
+      }
+      setIsProcessing(false);
+    };
+
+    input.oncancel = () => {
+      setIsProcessing(false);
+    };
+
+    input.click();
   };
 
   const switchCamera = () => {
