@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import UserHeader from "@/components/UserHeader";
 import DaySelector from "@/components/DaySelector";
 import MacrosCard from "@/components/MacrosCard";
-import FoodScanDialog from "@/components/nutrition/FoodScanDialog";
+import { FoodScanDialog } from "@/components/nutrition/FoodScanDialog";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import { useFoodLog } from "@/hooks/useFoodLog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +22,26 @@ const NutritionPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [datesWithFood, setDatesWithFood] = useState<Date[]>([]);
   
-  const { foodEntries, macros, loading, refetch } = useFoodLog(selectedDate);
+  // Convert selectedDate to string format for the hook
+  const selectedDateString = format(selectedDate, "yyyy-MM-dd");
+  const { entries: foodEntries, isLoading: loading, refetch } = useFoodLog(selectedDateString);
+
+  // Calculate macros from food entries
+  const macros = React.useMemo(() => {
+    const totals = foodEntries.reduce((acc, entry) => ({
+      calories: acc.calories + entry.calories_consumed,
+      protein: acc.protein + entry.protein_g_consumed,
+      carbs: acc.carbs + entry.carbs_g_consumed,
+      fat: acc.fat + entry.fat_g_consumed
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+    return {
+      calories: { consumed: totals.calories, target: 2000 },
+      protein: { consumed: totals.protein, target: 150 },
+      carbs: { consumed: totals.carbs, target: 250 },
+      fat: { consumed: totals.fat, target: 65 }
+    };
+  }, [foodEntries]);
 
   // Fetch dates with food entries for the blue dots
   useEffect(() => {
@@ -187,9 +206,9 @@ const NutritionPage: React.FC = () => {
 
       {/* Food scan dialog */}
       <FoodScanDialog
-        open={showFoodScan}
-        onOpenChange={setShowFoodScan}
-        onFoodScanned={handleFoodScanned}
+        isOpen={showFoodScan}
+        onClose={() => setShowFoodScan(false)}
+        onImageCaptured={handleFoodScanned}
       />
       
       {/* Floating action button */}
