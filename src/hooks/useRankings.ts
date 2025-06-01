@@ -62,7 +62,11 @@ export const useRankings = () => {
 
       // Transform the data to match RankingUser interface
       const transformedData = data.map(profile => {
-        const streakData = profile.user_streaks?.[0];
+        // Handle user_streaks properly - it could be an array or null
+        let streakData = null;
+        if (profile.user_streaks && Array.isArray(profile.user_streaks) && profile.user_streaks.length > 0) {
+          streakData = profile.user_streaks[0];
+        }
         
         return {
           user_id: profile.id,
