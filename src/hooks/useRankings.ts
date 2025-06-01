@@ -17,6 +17,19 @@ export interface RankingUser {
 
 export type RankingType = 'streak' | 'experience';
 
+interface ProfileWithStreaks {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  is_profile_public: boolean;
+  user_streaks: Array<{
+    current_streak: number;
+    total_experience: number;
+    current_level: number;
+  }> | null;
+}
+
 export const useRankings = () => {
   const [rankings, setRankings] = useState<RankingUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +58,8 @@ export const useRankings = () => {
           )
         `)
         .eq('is_profile_public', true)
-        .not('username', 'is', null);
+        .not('username', 'is', null)
+        .returns<ProfileWithStreaks[]>();
 
       if (error) {
         console.error('Supabase error:', error);
