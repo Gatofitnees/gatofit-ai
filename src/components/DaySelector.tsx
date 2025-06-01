@@ -45,7 +45,7 @@ const DateCard: React.FC<DateCardProps> = ({
         {label || dayName}
       </span>
       {hasRecords && !isSelected && (
-        <div className="w-1.5 h-1.5 mt-1 rounded-full bg-primary" />
+        <div className="w-1.5 h-1.5 mt-1 rounded-full bg-blue-500" />
       )}
     </div>
   );

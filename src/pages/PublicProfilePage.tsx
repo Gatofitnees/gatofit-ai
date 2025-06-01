@@ -11,7 +11,6 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import PublicRoutinesCarousel from '@/components/PublicRoutinesCarousel';
 
 const PublicProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -19,7 +18,6 @@ const PublicProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Usar hook personalizado para perfil público
   const { profile, loading: profileLoading } = usePublicProfile(userId);
   const { stats, loading: statsLoading } = useUserStats(userId);
   const { isFollowing, loading: followLoading, toggleFollow, canFollow } = useFollows(userId);
@@ -118,7 +116,11 @@ const PublicProfilePage: React.FC = () => {
           <p className="text-muted-foreground mb-2">@{profile.username}</p>
         )}
         
-        <RankBadge level={profile.current_level || 1} size="lg" />
+        {/* Show level instead of cat emoji */}
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="text-sm font-medium">Nivel {profile.current_level || 1}</span>
+          <RankBadge level={profile.current_level || 1} size="md" />
+        </div>
         
         {profile.bio && (
           <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
@@ -178,11 +180,13 @@ const PublicProfilePage: React.FC = () => {
         </CardBody>
       </Card>
 
-      {/* Public Routines Section */}
+      {/* Public Routines Section - Show all routines, not just carousel */}
       <Card>
         <CardBody>
           <h3 className="font-semibold mb-4">Rutinas Públicas</h3>
-          <PublicRoutinesCarousel userId={userId!} />
+          <div className="text-center text-muted-foreground py-4">
+            <p>Próximamente: Vista completa de rutinas públicas</p>
+          </div>
         </CardBody>
       </Card>
     </div>

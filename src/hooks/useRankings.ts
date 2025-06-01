@@ -27,67 +27,89 @@ export const useRankings = () => {
       setIsLoading(true);
       setError(null);
       
-      const orderColumn = type === 'streak' ? 'current_streak' : 'total_experience';
+      console.log('Fetching all users with profiles and streaks...');
       
-      console.log('Fetching rankings from user_rankings view...');
-      
-      const { data, error } = await supabase
-        .from('user_rankings')
-        .select('*')
-        .order(orderColumn, { ascending: false })
-        .limit(20);
+      // Get all users with their profiles and streak data
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          username,
+          full_name,
+          avatar_url,
+          user_streaks (
+            current_streak,
+            total_experience,
+            current_level
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        throw usersError;
       }
-      
-      console.log('Rankings data received:', data);
-      
-      // If no data from view, try to get data from profiles and user_streaks
-      if (!data || data.length === 0) {
-        console.log('No data from user_rankings view, trying alternative query...');
-        
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            username,
-            full_name,
-            avatar_url,
-            user_streaks!inner(
-              current_streak,
-              total_experience,
-              current_level
-            )
-          `)
-          .not('user_streaks.current_streak', 'is', null)
-          .order('user_streaks.current_streak', { ascending: false })
-          .limit(20);
 
-        if (profilesError) throw profilesError;
+      console.log('Users data received:', usersData?.length || 0);
 
-        // Transform the data to match RankingUser interface
-        const transformedData = profilesData?.map(profile => ({
-          user_id: profile.id,
-          username: profile.username || profile.full_name || `Usuario #${profile.id.substring(0, 8)}`,
-          avatar_url: profile.avatar_url,
-          current_streak: (profile.user_streaks as any)[0]?.current_streak || 0,
-          total_experience: (profile.user_streaks as any)[0]?.total_experience || 0,
-          current_level: (profile.user_streaks as any)[0]?.current_level || 1,
-          rank_name: 'Principiante', // Default rank name
-          total_workouts: 0,
-          followers_count: 0,
-          following_count: 0
-        })) || [];
+      if (usersData && usersData.length > 0) {
+        // Transform and sort the data
+        const transformedData = usersData.map(user => {
+          const streakData = Array.isArray(user.user_streaks) && user.user_streaks.length > 0 
+            ? user.user_streaks[0] 
+            : null;
 
-        setRankings(transformedData);
+          return {
+            user_id: user.id,
+            username: user.username || user.full_name || `Usuario #${user.id.substring(0, 8)}`,
+            avatar_url: user.avatar_url,
+            current_streak: streakData?.current_streak || 0,
+            total_experience: streakData?.total_experience || 0,
+            current_level: streakData?.current_level || 1,
+            rank_name: 'Principiante',
+            total_workouts: 0,
+            followers_count: 0,
+            following_count: 0
+          };
+        });
+
+        // Sort by the selected type
+        const sortedData = transformedData.sort((a, b) => {
+          const valueA = type === 'streak' ? a.current_streak : a.total_experience;
+          const valueB = type === 'streak' ? b.current_streak : b.total_experience;
+          return valueB - valueA;
+        });
+
+        setRankings(sortedData);
       } else {
-        setRankings(data || []);
+        console.log('No users found, trying to get basic auth users...');
+        
+        // Fallback: try to get users from auth metadata (for newly registered users)
+        const { data: { users }, error: authError } = await supabase.auth.admin.listUsers();
+        
+        if (!authError && users) {
+          const fallbackData = users.map(user => ({
+            user_id: user.id,
+            username: user.user_metadata?.name || user.email?.split('@')[0] || `Usuario #${user.id.substring(0, 8)}`,
+            avatar_url: user.user_metadata?.avatar_url || null,
+            current_streak: 0,
+            total_experience: 0,
+            current_level: 1,
+            rank_name: 'Principiante',
+            total_workouts: 0,
+            followers_count: 0,
+            following_count: 0
+          }));
+          
+          setRankings(fallbackData);
+        } else {
+          setRankings([]);
+        }
       }
     } catch (err: any) {
       console.error('Error fetching rankings:', err);
       setError('Error al cargar clasificaciones');
+      setRankings([]);
     } finally {
       setIsLoading(false);
     }
