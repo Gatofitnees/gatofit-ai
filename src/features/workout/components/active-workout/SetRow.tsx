@@ -1,9 +1,6 @@
 
-import React from 'react';
-import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { DecimalInput } from '@/components/ui/decimal-input';
-import { NumericInput } from '@/components/ui/numeric-input';
+import React from "react";
+import { NumericInput } from "@/components/ui/numeric-input";
 
 interface WorkoutSet {
   set_number: number;
@@ -12,6 +9,8 @@ interface WorkoutSet {
   notes: string;
   previous_weight: number | null;
   previous_reps: number | null;
+  target_reps_min?: number;
+  target_reps_max?: number;
 }
 
 interface SetRowProps {
@@ -21,48 +20,61 @@ interface SetRowProps {
   onInputChange: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: string) => void;
 }
 
-const SetRow: React.FC<SetRowProps> = ({
-  set,
-  exerciseIndex,
-  setIndex,
-  onInputChange
+export const SetRow: React.FC<SetRowProps> = ({ 
+  set, 
+  exerciseIndex, 
+  setIndex, 
+  onInputChange 
 }) => {
+  // Generate target reps placeholder text
+  const getTargetRepsPlaceholder = () => {
+    if (set.target_reps_min && set.target_reps_max) {
+      if (set.target_reps_min === set.target_reps_max) {
+        return set.target_reps_min.toString();
+      } else {
+        return `${set.target_reps_min}-${set.target_reps_max}`;
+      }
+    }
+    return "reps";
+  };
+
   return (
-    <div className="grid grid-cols-4 gap-2 p-2 rounded-lg bg-secondary/10">
-      {/* Set number */}
-      <div className="flex items-center justify-center">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-sm">
-          {set.set_number}
+    <div className="bg-background/50 rounded-lg border border-white/5 p-2">
+      <div className="grid grid-cols-4 gap-2">
+        {/* Serie column */}
+        <div className="flex items-center">
+          <div className="h-6 w-6 rounded-full bg-primary/30 flex items-center justify-center text-sm">
+            {set.set_number}
+          </div>
         </div>
-      </div>
-      
-      {/* Previous data display */}
-      <div className="text-xs text-muted-foreground">
-        {set.previous_weight && <div>{set.previous_weight} kg</div>}
-        {set.previous_reps && <div>{set.previous_reps} reps</div>}
-      </div>
-      
-      {/* Weight input - usando DecimalInput para permitir decimales */}
-      <div>
-        <DecimalInput
-          value={set.weight?.toString() || ''}
-          onChange={(e) => onInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-          placeholder="Peso (kg)"
-          className="text-center"
-        />
-      </div>
-      
-      {/* Reps input - usando NumericInput para enteros */}
-      <div>
-        <NumericInput
-          value={set.reps?.toString() || ''}
-          onChange={(e) => onInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-          placeholder="Reps"
-          className="text-center"
-        />
+        
+        {/* Anterior column */}
+        <div className="text-xs text-muted-foreground flex items-center">
+          {set.previous_weight !== null && set.previous_reps !== null 
+            ? `${set.previous_weight}kg × ${set.previous_reps}` 
+            : '-'}
+        </div>
+        
+        {/* Peso column */}
+        <div>
+          <NumericInput
+            className="w-full h-8 text-sm"
+            value={set.weight !== null ? set.weight : ''}
+            onChange={(e) => onInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
+            placeholder="kg"
+          />
+        </div>
+        
+        {/* Reps column with target reps as placeholder */}
+        <div>
+          <NumericInput
+            className="w-full h-8 text-sm"
+            value={set.reps !== null ? set.reps : ''}
+            onChange={(e) => onInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
+            placeholder={getTargetRepsPlaceholder()}
+          />
+        </div>
       </div>
     </div>
   );
 };
-
-export default SetRow;

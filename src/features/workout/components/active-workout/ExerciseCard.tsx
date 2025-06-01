@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart2, Copy, Pencil } from "lucide-react";
-import SetRow from "./SetRow";
+import { SetRow } from "./SetRow";
 import { ExerciseNotesDialog } from "./ExerciseNotesDialog";
 
 interface WorkoutSet {

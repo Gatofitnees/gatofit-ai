@@ -49,9 +49,9 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
   const currentLevel = streakData?.current_level || 1;
 
-  // Usar datos del perfil híbrido que ya incluye fallbacks inteligentes
-  const displayName = profile?.full_name || profile?.username || "Usuario";
-  const avatarUrl = profile?.avatar_url;
+  // Use profile data with fallback to Google metadata
+  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.name || user?.email?.split('@')[0] || "Usuario";
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
     <div className="relative">

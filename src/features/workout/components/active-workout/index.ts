@@ -6,5 +6,5 @@ export { ExerciseStatistics } from './ExerciseStatistics';
 export { LoadingSkeleton } from './LoadingSkeleton';
 export { RoutineNotFound } from './RoutineNotFound';
 export { SaveButton } from './SaveButton';
-export { default as SetRow } from './SetRow';
+export { SetRow } from './SetRow';
 export { ExerciseNotesDialog } from './ExerciseNotesDialog';
