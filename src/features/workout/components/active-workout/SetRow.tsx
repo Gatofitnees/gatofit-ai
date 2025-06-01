@@ -5,75 +5,62 @@ import { Button } from '@/components/ui/button';
 import { DecimalInput } from '@/components/ui/decimal-input';
 import { NumericInput } from '@/components/ui/numeric-input';
 
+interface WorkoutSet {
+  set_number: number;
+  weight: number | null;
+  reps: number | null;
+  notes: string;
+  previous_weight: number | null;
+  previous_reps: number | null;
+}
+
 interface SetRowProps {
-  setNumber: number;
-  weight: string;
-  reps: string;
-  previousWeight?: number | null;
-  previousReps?: number | null;
-  onWeightChange: (value: string) => void;
-  onRepsChange: (value: string) => void;
-  onRemove: () => void;
-  showRemove?: boolean;
+  set: WorkoutSet;
+  exerciseIndex: number;
+  setIndex: number;
+  onInputChange: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: string) => void;
 }
 
 const SetRow: React.FC<SetRowProps> = ({
-  setNumber,
-  weight,
-  reps,
-  previousWeight,
-  previousReps,
-  onWeightChange,
-  onRepsChange,
-  onRemove,
-  showRemove = true
+  set,
+  exerciseIndex,
+  setIndex,
+  onInputChange
 }) => {
   return (
-    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
+    <div className="grid grid-cols-4 gap-2 p-2 rounded-lg bg-secondary/10">
       {/* Set number */}
-      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-sm">
-        {setNumber}
+      <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-sm">
+          {set.set_number}
+        </div>
       </div>
       
       {/* Previous data display */}
-      {(previousWeight || previousReps) && (
-        <div className="text-xs text-muted-foreground min-w-[80px]">
-          {previousWeight && <div>{previousWeight} kg</div>}
-          {previousReps && <div>{previousReps} reps</div>}
-        </div>
-      )}
+      <div className="text-xs text-muted-foreground">
+        {set.previous_weight && <div>{set.previous_weight} kg</div>}
+        {set.previous_reps && <div>{set.previous_reps} reps</div>}
+      </div>
       
       {/* Weight input - usando DecimalInput para permitir decimales */}
-      <div className="flex-1">
+      <div>
         <DecimalInput
-          value={weight}
-          onChange={(e) => onWeightChange(e.target.value)}
+          value={set.weight?.toString() || ''}
+          onChange={(e) => onInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
           placeholder="Peso (kg)"
           className="text-center"
         />
       </div>
       
       {/* Reps input - usando NumericInput para enteros */}
-      <div className="flex-1">
+      <div>
         <NumericInput
-          value={reps}
-          onChange={(e) => onRepsChange(e.target.value)}
+          value={set.reps?.toString() || ''}
+          onChange={(e) => onInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
           placeholder="Reps"
           className="text-center"
         />
       </div>
-      
-      {/* Remove button */}
-      {showRemove && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRemove}
-          className="h-8 w-8 p-0 hover:bg-destructive/20 hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 interface DecimalInputProps extends Omit<React.ComponentProps<"input">, 'onChange'> {
-  onChange?: (value: string) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onValueChange?: (numericValue: number | null) => void;
 }
 
