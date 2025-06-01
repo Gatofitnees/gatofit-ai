@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FoodLogEntry, useFoodLog } from '@/hooks/useFoodLog';
@@ -203,6 +202,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         isOpen={showChangeResults}
         onClose={() => setShowChangeResults(false)}
         onSubmit={handleChangeResults}
+        foodData={formData}
       />
     </div>
   );
