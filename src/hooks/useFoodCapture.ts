@@ -11,11 +11,6 @@ export interface CapturedFood {
   analysisResult?: FoodAnalysisResult | null;
 }
 
-export interface AnalysisCallback {
-  onSuccess: (result: FoodAnalysisResult) => void;
-  onError: (error: string) => void;
-}
-
 export const useFoodCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +27,7 @@ export const useFoodCapture = () => {
     setError(null);
     try {
       const result = await captureFromCamera();
+      // If result is null (due to webhook error), don't return it as success
       if (!result) {
         setError('Error al analizar la imagen');
         return null;
@@ -51,6 +47,7 @@ export const useFoodCapture = () => {
     setError(null);
     try {
       const result = await captureFromGallery();
+      // If result is null (due to webhook error), don't return it as success
       if (!result) {
         setError('Error al analizar la imagen');
         return null;
@@ -70,6 +67,7 @@ export const useFoodCapture = () => {
     setError(null);
     try {
       const result = await uploadImageWithAnalysis(file, sendToWebhookWithResponse);
+      // If result is null (due to webhook error), don't return it as success
       if (!result) {
         setError('Error al analizar la imagen');
         return null;
@@ -84,46 +82,11 @@ export const useFoodCapture = () => {
     }
   };
 
-  const uploadImageOnly = async (file: Blob): Promise<{ imageUrl: string; fileName: string } | null> => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await uploadImage(file);
-      if (!result) {
-        setError('Error al subir la imagen');
-        return null;
-      }
-      return { imageUrl: result.imageUrl, fileName: result.fileName };
-    } catch (err) {
-      console.error('Error uploading image:', err);
-      setError('Error al subir la imagen');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const analyzeImageAsync = async (imageUrl: string, imageBlob: Blob, callback: AnalysisCallback) => {
-    try {
-      const result = await sendToWebhookWithResponse(imageUrl, imageBlob);
-      if (result) {
-        callback.onSuccess(result);
-      } else {
-        callback.onError('Hey parece que eso no se come, inténtalo nuevamente');
-      }
-    } catch (err) {
-      console.error('Error analyzing image:', err);
-      callback.onError('Hey parece que eso no se come, inténtalo nuevamente');
-    }
-  };
-
   return {
     captureFromCamera: wrappedCaptureFromCamera,
     captureFromGallery: wrappedCaptureFromGallery,
     uploadImage,
     uploadImageWithAnalysis: wrappedUploadImageWithAnalysis,
-    uploadImageOnly,
-    analyzeImageAsync,
     sendToWebhook,
     isLoading: isLoading || isAnalyzing,
     error: error || analysisError,

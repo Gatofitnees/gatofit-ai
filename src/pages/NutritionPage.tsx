@@ -14,7 +14,6 @@ import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { useFoodCapture } from "../hooks/useFoodCapture";
-import { usePendingFoodEntries } from "../hooks/usePendingFoodEntries";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
@@ -24,13 +23,7 @@ const NutritionPage: React.FC = () => {
   const selectedDateString = selectedDate.toISOString().split('T')[0];
   const { entries, deleteEntry, isLoading } = useFoodLog(selectedDateString);
   const { analyzeFood, isAnalyzing } = useFoodAnalysis();
-  const { uploadImageOnly, analyzeImageAsync, error: captureError } = useFoodCapture();
-  const { 
-    pendingEntries, 
-    addPendingEntry, 
-    updatePendingEntry, 
-    removePendingEntry 
-  } = usePendingFoodEntries();
+  const { error: captureError } = useFoodCapture();
 
   // Calculate today's totals from actual entries
   const todayTotals = entries.reduce(
@@ -55,6 +48,8 @@ const NutritionPage: React.FC = () => {
 
   // Get dates with food entries for the day selector
   const getDatesWithEntries = (): Date[] => {
+    // For now, we'll just return the selected date if it has entries
+    // In a real implementation, you might want to fetch this from the database
     return entries.length > 0 ? [selectedDate] : [];
   };
 
@@ -78,17 +73,17 @@ const NutritionPage: React.FC = () => {
     });
   };
 
-  const handleImageCaptured = async (imageUrl: string, analysisResult?: any, imageBlob?: Blob) => {
-    console.log('Image captured, navigating to nutrition immediately');
+  const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
+    console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
     
-    // Close camera immediately
-    setShowCamera(false);
+    // If there's a capture error, don't navigate - stay in camera to show error dialog
+    if (captureError) {
+      console.log('Capture error detected, staying in camera view');
+      return;
+    }
     
-    // Create pending entry
-    const pendingId = addPendingEntry(imageUrl, `food-${Date.now()}.jpg`);
-    
-    // If we have analysis result already (shouldn't happen in new flow)
     if (analysisResult) {
+      // Use webhook analysis result with all data including ingredients
       const pendingFoodData = {
         custom_food_name: analysisResult.name,
         quantity_consumed: analysisResult.servingSize,
@@ -98,12 +93,11 @@ const NutritionPage: React.FC = () => {
         carbs_g_consumed: analysisResult.carbs,
         fat_g_consumed: analysisResult.fat,
         healthScore: analysisResult.healthScore,
-        ingredients: analysisResult.ingredients,
+        ingredients: analysisResult.ingredients, // Pass ingredients data
         photo_url: imageUrl
       };
       
-      updatePendingEntry(pendingId, true);
-      
+      // Navigate to the full-screen edit page
       navigate('/food-edit', {
         state: {
           initialData: pendingFoodData,
@@ -111,66 +105,51 @@ const NutritionPage: React.FC = () => {
           isEditing: false
         }
       });
-      return;
-    }
-    
-    // Start analysis in background if we have the blob
-    if (imageBlob) {
-      analyzeImageAsync(imageUrl, imageBlob, {
-        onSuccess: (result) => {
-          updatePendingEntry(pendingId, true);
-          removePendingEntry(pendingId);
-          
-          // Navigate to edit when analysis completes
-          const pendingFoodData = {
-            custom_food_name: result.name,
-            quantity_consumed: result.servingSize,
-            unit_consumed: result.servingUnit,
-            calories_consumed: result.calories,
-            protein_g_consumed: result.protein,
-            carbs_g_consumed: result.carbs,
-            fat_g_consumed: result.fat,
-            healthScore: result.healthScore,
-            ingredients: result.ingredients,
-            photo_url: imageUrl
-          };
-          
-          navigate('/food-edit', {
-            state: {
-              initialData: pendingFoodData,
-              imageUrl: imageUrl,
-              isEditing: false
-            }
-          });
-        },
-        onError: (error) => {
-          updatePendingEntry(pendingId, false, error);
-        }
-      });
-    }
-  };
-
-  const handleRetryPendingEntry = async (pendingEntry: any) => {
-    // Remove current pending entry and try manual entry
-    removePendingEntry(pendingEntry.id);
-    
-    navigate('/food-edit', {
-      state: {
-        initialData: {
-          custom_food_name: '',
-          quantity_consumed: 1,
-          unit_consumed: 'porción',
-          calories_consumed: 0,
-          protein_g_consumed: 0,
-          carbs_g_consumed: 0,
-          fat_g_consumed: 0,
-          photo_url: pendingEntry.imageUrl
-        },
-        imageUrl: pendingEntry.imageUrl,
-        isEditing: false,
-        hasAnalysisError: true
+    } else {
+      // Fallback to old analysis method only if no capture error
+      const analysis = await analyzeFood(imageUrl);
+      console.log('Fallback analysis result:', analysis);
+      
+      if (analysis) {
+        const pendingFoodData = {
+          custom_food_name: analysis.name,
+          quantity_consumed: analysis.servingSize,
+          unit_consumed: analysis.servingUnit,
+          calories_consumed: analysis.calories,
+          protein_g_consumed: analysis.protein,
+          carbs_g_consumed: analysis.carbs,
+          fat_g_consumed: analysis.fat,
+          photo_url: imageUrl
+        };
+        
+        navigate('/food-edit', {
+          state: {
+            initialData: pendingFoodData,
+            imageUrl: imageUrl,
+            isEditing: false
+          }
+        });
+      } else {
+        // Navigate to manual entry when all analysis fails
+        navigate('/food-edit', {
+          state: {
+            initialData: {
+              custom_food_name: '',
+              quantity_consumed: 1,
+              unit_consumed: 'porción',
+              calories_consumed: 0,
+              protein_g_consumed: 0,
+              carbs_g_consumed: 0,
+              fat_g_consumed: 0,
+              photo_url: imageUrl
+            },
+            imageUrl: imageUrl,
+            isEditing: false,
+            hasAnalysisError: true
+          }
+        });
       }
-    });
+    }
   };
 
   const handleEditEntry = (entry: FoodLogEntry) => {
@@ -186,22 +165,6 @@ const NutritionPage: React.FC = () => {
   const handleDeleteEntry = async (entryId: number) => {
     await deleteEntry(entryId);
   };
-
-  const handleDeletePendingEntry = (entryId: string) => {
-    removePendingEntry(entryId);
-  };
-
-  // Combine pending entries with real entries for display
-  const allEntries = [
-    ...pendingEntries.map(pending => ({
-      type: 'pending' as const,
-      data: pending
-    })),
-    ...entries.map(entry => ({
-      type: 'real' as const,
-      data: entry
-    }))
-  ];
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -290,42 +253,21 @@ const NutritionPage: React.FC = () => {
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               <p className="text-sm text-muted-foreground mt-2">Cargando comidas...</p>
             </div>
-          ) : allEntries.length > 0 ? (
-            allEntries.map((entry) => {
-              if (entry.type === 'pending') {
-                return (
-                  <FoodPreviewCard
-                    key={entry.data.id}
-                    imageUrl={entry.data.imageUrl}
-                    name=""
-                    calories={0}
-                    protein={0}
-                    carbs={0}
-                    fat={0}
-                    loggedAt={entry.data.timestamp}
-                    isLoading={entry.data.isLoading}
-                    error={entry.data.error}
-                    onRetry={() => handleRetryPendingEntry(entry.data)}
-                    onDelete={isToday ? () => handleDeletePendingEntry(entry.data.id) : undefined}
-                  />
-                );
-              } else {
-                return (
-                  <FoodPreviewCard
-                    key={entry.data.id}
-                    imageUrl={entry.data.photo_url || "/placeholder.svg"}
-                    name={entry.data.custom_food_name}
-                    calories={entry.data.calories_consumed}
-                    protein={entry.data.protein_g_consumed}
-                    carbs={entry.data.carbs_g_consumed}
-                    fat={entry.data.fat_g_consumed}
-                    loggedAt={entry.data.logged_at}
-                    onClick={() => handleEditEntry(entry.data)}
-                    onDelete={isToday ? () => handleDeleteEntry(entry.data.id!) : undefined}
-                  />
-                );
-              }
-            })
+          ) : entries.length > 0 ? (
+            entries.map((entry) => (
+              <FoodPreviewCard
+                key={entry.id}
+                imageUrl={entry.photo_url || "/placeholder.svg"}
+                name={entry.custom_food_name}
+                calories={entry.calories_consumed}
+                protein={entry.protein_g_consumed}
+                carbs={entry.carbs_g_consumed}
+                fat={entry.fat_g_consumed}
+                loggedAt={entry.logged_at}
+                onClick={() => handleEditEntry(entry)}
+                onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
+              />
+            ))
           ) : (
             <Card>
               <CardBody>
