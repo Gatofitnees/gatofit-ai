@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -14,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { useFoodCapture } from "../hooks/useFoodCapture";
+import { useProfile } from "../hooks/useProfile";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
@@ -24,6 +24,7 @@ const NutritionPage: React.FC = () => {
   const { entries, deleteEntry, isLoading } = useFoodLog(selectedDateString);
   const { analyzeFood, isAnalyzing } = useFoodAnalysis();
   const { error: captureError } = useFoodCapture();
+  const { profile } = useProfile();
 
   // Calculate today's totals from actual entries
   const todayTotals = entries.reduce(
@@ -36,12 +37,25 @@ const NutritionPage: React.FC = () => {
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
-  // Mock targets - in a real app these would come from user profile
+  // Use initial recommendations from profile as targets, with fallbacks
   const macros = {
-    calories: { current: todayTotals.calories, target: 2000, unit: "kcal" },
-    protein: { current: todayTotals.protein, target: 120 },
-    carbs: { current: todayTotals.carbs, target: 200 },
-    fats: { current: todayTotals.fat, target: 65 }
+    calories: { 
+      current: todayTotals.calories, 
+      target: profile?.initial_recommended_calories || 2000, 
+      unit: "kcal" 
+    },
+    protein: { 
+      current: todayTotals.protein, 
+      target: profile?.initial_recommended_protein_g || 120 
+    },
+    carbs: { 
+      current: todayTotals.carbs, 
+      target: profile?.initial_recommended_carbs_g || 200 
+    },
+    fats: { 
+      current: todayTotals.fat, 
+      target: profile?.initial_recommended_fats_g || 65 
+    }
   };
   
   const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
