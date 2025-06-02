@@ -52,17 +52,18 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
     <Card className={cn("animate-fade-in", className)}>
       <CardHeader 
         title="Mis Macros Hoy"
-        subtitle={
-          <div className="flex items-center gap-2">
-            <span>Resumen de objetivos nutricionales</span>
-            {recalculatingMacros && (
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            )}
-          </div>
-        }
+        subtitle="Resumen de objetivos nutricionales"
       />
       <CardBody>
         <div className="flex flex-col space-y-6">
+          {/* Loading indicator for macro recalculation */}
+          {recalculatingMacros && (
+            <div className="flex items-center justify-center gap-2 p-3 bg-primary/10 rounded-xl">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm font-medium text-primary">Recalculando macros...</span>
+            </div>
+          )}
+          
           {/* Main calorie counter */}
           <div className="bg-background/40 p-4 rounded-xl shadow-inner-dark">
             <div className="flex items-center justify-between">
