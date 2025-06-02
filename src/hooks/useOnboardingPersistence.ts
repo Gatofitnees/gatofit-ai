@@ -57,7 +57,7 @@ export const useOnboardingPersistence = () => {
         height_cm: data.height,
         current_weight_kg: data.weight,
         body_fat_percentage: data.bodyFatPercentage,
-        date_of_birth: data.dateOfBirth,
+        date_of_birth: data.dateOfBirth, // This is already a string from the onboarding
         trainings_per_week: data.trainingsPerWeek,
         previous_app_experience: data.previousAppExperience,
         main_goal: data.mainGoal,

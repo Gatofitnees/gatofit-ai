@@ -36,7 +36,13 @@ const UserInformation: React.FC<UserInformationProps> = ({ profile }) => {
 
   const getGenderText = (gender: string | null) => {
     if (!gender) return '--';
-    return gender === 'male' ? 'Masculino' : 'Femenino';
+    const genderMap: { [key: string]: string } = {
+      'male': 'Masculino',
+      'female': 'Femenino',
+      'other': 'Otro',
+      'prefer_not_to_say': 'Prefiero no decir'
+    };
+    return genderMap[gender] || gender;
   };
 
   const getTargetPaceText = (pace: string | null) => {
