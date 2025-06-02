@@ -1,22 +1,40 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { OnboardingContext } from "../OnboardingFlow";
+import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 
 const AppTransition: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const context = useContext(OnboardingContext);
+  const { saveOnboardingToProfile, loadOnboardingData } = useOnboardingPersistence();
   
-  // Automatic redirect after delay
+  // Handle saving onboarding data and redirect
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate("/");
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, [navigate]);
+    const handleTransition = async () => {
+      // If user is authenticated and we have onboarding data, save it
+      if (user && context) {
+        const onboardingData = loadOnboardingData();
+        if (onboardingData) {
+          console.log('Saving onboarding data for authenticated user...');
+          await saveOnboardingToProfile(onboardingData);
+        }
+      }
+      
+      // Redirect after a delay
+      const timer = setTimeout(() => {
+        navigate("/");
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    };
+
+    handleTransition();
+  }, [navigate, user, context, saveOnboardingToProfile, loadOnboardingData]);
   
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">

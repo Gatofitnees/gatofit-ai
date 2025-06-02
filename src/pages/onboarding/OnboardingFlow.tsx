@@ -1,6 +1,6 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 
 // Onboarding Steps
 import Welcome from "./steps/Welcome";
@@ -58,36 +58,44 @@ export const OnboardingContext = React.createContext<OnboardingContextType | und
 
 const OnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
+  const { loadOnboardingData, saveOnboardingData } = useOnboardingPersistence();
   
-  const [onboardingData, setOnboardingData] = useState<OnboardingData>({
-    gender: null,
-    trainingsPerWeek: 3,
-    previousAppExperience: null,
-    height: null,
-    heightUnit: "cm",
-    weight: null,
-    weightUnit: "kg",
-    bodyFatPercentage: null,
-    dateOfBirth: null,
-    mainGoal: null,
-    targetWeight: null,
-    targetPace: null,
-    targetKgPerWeek: null,
-    obstacles: [],
-    diet: null,
-    achievements: [],
-    initial_recommended_calories: null,
-    initial_recommended_protein_g: null,
-    initial_recommended_carbs_g: null,
-    initial_recommended_fats_g: null,
-    unit_system_preference: "metric",
+  const [onboardingData, setOnboardingData] = useState<OnboardingData>(() => {
+    // Load existing data from localStorage on initialization
+    const savedData = loadOnboardingData();
+    return savedData || {
+      gender: null,
+      trainingsPerWeek: 3,
+      previousAppExperience: null,
+      height: null,
+      heightUnit: "cm",
+      weight: null,
+      weightUnit: "kg",
+      bodyFatPercentage: null,
+      dateOfBirth: null,
+      mainGoal: null,
+      targetWeight: null,
+      targetPace: null,
+      targetKgPerWeek: null,
+      obstacles: [],
+      diet: null,
+      achievements: [],
+      initial_recommended_calories: null,
+      initial_recommended_protein_g: null,
+      initial_recommended_carbs_g: null,
+      initial_recommended_fats_g: null,
+      unit_system_preference: "metric",
+    };
   });
 
   const updateData = (newData: Partial<OnboardingData>) => {
-    setOnboardingData((prevData) => ({
-      ...prevData,
+    const updatedData = {
+      ...onboardingData,
       ...newData,
-    }));
+    };
+    setOnboardingData(updatedData);
+    // Persist to localStorage whenever data changes
+    saveOnboardingData(updatedData);
   };
 
   return (

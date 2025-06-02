@@ -1,8 +1,10 @@
 
-import React from "react";
+import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { OnboardingContext } from "../OnboardingFlow";
+import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 import { toast } from "@/components/ui/use-toast";
 import GatofitAILogo from "@/components/GatofitAILogo";
 import useAuthForm from "@/hooks/useAuthForm";
@@ -12,17 +14,21 @@ import BackButton from "@/components/onboarding/auth/BackButton";
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle } = useAuth();
+  const context = useContext(OnboardingContext);
+  const { saveOnboardingToProfile } = useOnboardingPersistence();
 
   const { 
     email, setEmail,
     password, setPassword,
-    confirmPassword: _, setConfirmPassword: __,
     showPassword, setShowPassword,
-    agreedToTerms: ___, setAgreedToTerms: ____,
     loading, setLoading,
     googleLoading, setGoogleLoading,
     error, setError
   } = useAuthForm();
+
+  if (!context) {
+    throw new Error("Login must be used within OnboardingContext");
+  }
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -45,8 +51,10 @@ const Login: React.FC = () => {
           setError(error.message);
         }
       } else {
-        // Successful login
-        toast.success({
+        // Save onboarding data to profile after successful login
+        await saveOnboardingToProfile(context.data);
+        
+        toast({
           title: "¡Bienvenido de nuevo!",
           description: "Has iniciado sesión exitosamente"
         });
@@ -83,7 +91,8 @@ const Login: React.FC = () => {
 
   const handleForgotPassword = () => {
     // TODO: Implement forgot password functionality
-    toast.show("Recuperación de contraseña", {
+    toast({
+      title: "Recuperación de contraseña",
       description: "Próximamente disponible"
     });
   };
@@ -102,32 +111,29 @@ const Login: React.FC = () => {
         Continúa tu viaje fitness
       </p>
 
-      <div className="space-y-4 w-full max-w-md mx-auto">
-        <AccountForm 
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
-          confirmPassword={""}
-          setConfirmPassword={() => {}}
-          showPassword={showPassword}
-          setShowPassword={setShowPassword}
-          agreedToTerms={false}
-          setAgreedToTerms={() => {}}
-          loading={loading}
-          error={error}
-        />
-        <div className="flex justify-end">
-          <button 
-            onClick={handleForgotPassword}
-            className="text-xs text-primary"
-          >
-            ¿Olvidaste tu contraseña?
-          </button>
-        </div>
+      <AccountForm 
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        loading={loading}
+        error={error}
+        showConfirmPassword={false}
+        showTermsAgreement={false}
+      />
+
+      <div className="flex justify-end mt-2 mb-6">
+        <button 
+          onClick={handleForgotPassword}
+          className="text-xs text-primary"
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
       </div>
 
-      <div className="mt-6 w-full max-w-md mx-auto space-y-4">
+      <div className="w-full max-w-md mx-auto space-y-4">
         <button
           className="w-full py-6 h-auto flex items-center justify-center space-x-2 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-neu-button active:shadow-neu-button-active disabled:opacity-50 disabled:pointer-events-none transition-all"
           onClick={handleLogin}

@@ -1,42 +1,29 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 
-interface AccountFormProps {
+interface LoginFormProps {
   email: string;
   setEmail: (email: string) => void;
   password: string;
   setPassword: (password: string) => void;
-  confirmPassword?: string;
-  setConfirmPassword?: (confirmPassword: string) => void;
   showPassword: boolean;
   setShowPassword: (showPassword: boolean) => void;
-  agreedToTerms?: boolean;
-  setAgreedToTerms?: (agreedToTerms: boolean) => void;
   loading: boolean;
   error: string | null;
-  showConfirmPassword?: boolean;
-  showTermsAgreement?: boolean;
 }
 
-const AccountForm: React.FC<AccountFormProps> = ({
+const LoginForm: React.FC<LoginFormProps> = ({
   email,
   setEmail,
   password,
   setPassword,
-  confirmPassword = "",
-  setConfirmPassword = () => {},
   showPassword,
   setShowPassword,
-  agreedToTerms = false,
-  setAgreedToTerms = () => {},
   loading,
-  error,
-  showConfirmPassword = true,
-  showTermsAgreement = true
+  error
 }) => {
   return (
     <div className="space-y-4 w-full max-w-md mx-auto">
@@ -72,7 +59,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={showConfirmPassword ? "Contraseña (mín. 6 caracteres)" : "Tu contraseña"}
+            placeholder="Tu contraseña"
             className="neu-input pl-10"
             disabled={loading}
           />
@@ -91,42 +78,8 @@ const AccountForm: React.FC<AccountFormProps> = ({
           </button>
         </div>
       </div>
-      
-      {showConfirmPassword && (
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Confirmar Contraseña</label>
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repite tu contraseña"
-              className="neu-input pl-10"
-              disabled={loading}
-            />
-            <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          </div>
-        </div>
-      )}
-      
-      {showTermsAgreement && (
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="terms" 
-            checked={agreedToTerms}
-            onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
-            disabled={loading}
-          />
-          <label
-            htmlFor="terms"
-            className="text-sm text-muted-foreground cursor-pointer"
-          >
-            Acepto los <span className="text-primary">Términos y Condiciones</span> y la <span className="text-primary">Política de Privacidad</span>
-          </label>
-        </div>
-      )}
     </div>
   );
 };
 
-export default AccountForm;
+export default LoginForm;

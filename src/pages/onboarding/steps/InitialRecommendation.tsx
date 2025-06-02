@@ -1,4 +1,3 @@
-
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
@@ -16,11 +15,10 @@ const InitialRecommendation: React.FC = () => {
   const { data, updateData } = context;
   const [isCalculating, setIsCalculating] = useState(true);
 
-  // Calculate recommended macros based on user data
+  // Enhanced macro calculation with improved formula
   useEffect(() => {
-    // Simulate API calculation delay
     const timer = setTimeout(() => {
-      const calculatedRecommendation = calculateInitialRecommendation(data);
+      const calculatedRecommendation = calculateOptimizedRecommendation(data);
       
       updateData({
         initial_recommended_calories: calculatedRecommendation.calories,
@@ -106,44 +104,98 @@ const InitialRecommendation: React.FC = () => {
   );
 };
 
-// Simple function to calculate initial recommendation
-const calculateInitialRecommendation = (data: any) => {
-  // Very basic TDEE calculation (this would be more sophisticated in a real app)
-  // This is just for demonstration purposes
-  let bmr = 0;
-  const weight = data.weight || 70; // Default in case weight is not provided
-  const height = data.height || 170; // Default in case height is not provided
+// Optimized function for calculating initial recommendation with enhanced formulas
+const calculateOptimizedRecommendation = (data: any) => {
+  const weight = data.weight || 70;
+  const height = data.height || 170;
   const age = data.dateOfBirth ? 
     Math.floor((new Date().getTime() - new Date(data.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30;
+  const bodyFat = data.bodyFatPercentage;
+  const trainingsPerWeek = data.trainingsPerWeek || 3;
   
-  // Basic BMR calculation using Mifflin-St Jeor Equation
-  if (data.gender === 'male') {
-    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+  let bmr = 0;
+  
+  // Use Katch-McArdle if body fat is available, otherwise Mifflin-St Jeor
+  if (bodyFat && bodyFat > 0) {
+    // Katch-McArdle formula (more accurate with body fat percentage)
+    const leanBodyMass = weight * (1 - bodyFat / 100);
+    bmr = 370 + (21.6 * leanBodyMass);
   } else {
-    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    // Mifflin-St Jeor Equation
+    if (data.gender === 'male') {
+      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    } else {
+      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    }
   }
   
-  // Activity factor based on training frequency
-  const activityFactor = 1.2 + (data.trainingsPerWeek * 0.05);
+  // More precise activity factor based on training frequency
+  let activityFactor = 1.2; // Sedentary baseline
+  
+  if (trainingsPerWeek >= 1 && trainingsPerWeek <= 2) {
+    activityFactor = 1.375; // Light activity
+  } else if (trainingsPerWeek >= 3 && trainingsPerWeek <= 4) {
+    activityFactor = 1.55; // Moderate activity
+  } else if (trainingsPerWeek >= 5 && trainingsPerWeek <= 6) {
+    activityFactor = 1.725; // Very active
+  } else if (trainingsPerWeek >= 7) {
+    activityFactor = 1.9; // Extremely active
+  }
   
   // TDEE: Total Daily Energy Expenditure
   let tdee = bmr * activityFactor;
   
-  // Adjust based on goal
+  // Goal-specific adjustments
   if (data.mainGoal === 'lose_weight') {
-    tdee -= 500; // Caloric deficit
+    // More conservative deficit based on target pace
+    if (data.targetPace === 'sloth') {
+      tdee -= 250; // Small deficit - 0.25kg/week
+    } else if (data.targetPace === 'rabbit') {
+      tdee -= 500; // Moderate deficit - 0.5kg/week
+    } else if (data.targetPace === 'leopard') {
+      tdee -= 750; // Aggressive deficit - 0.75kg/week
+    } else {
+      tdee -= 400; // Default moderate deficit
+    }
   } else if (data.mainGoal === 'gain_muscle') {
-    tdee += 300; // Caloric surplus
+    // Lean bulk approach
+    tdee += 300; // Conservative surplus for lean gains
+  }
+  // For 'maintain_weight', keep TDEE as is
+  
+  // Enhanced macro calculation
+  let proteinPerKg = 2.0; // Default
+  
+  // Adjust protein based on goal and activity
+  if (data.mainGoal === 'gain_muscle') {
+    proteinPerKg = 2.4; // Higher for muscle building
+  } else if (data.mainGoal === 'lose_weight') {
+    proteinPerKg = 2.2; // Higher for muscle preservation during cut
   }
   
-  // Calculate macros (simplified)
-  const proteinPerKg = data.mainGoal === 'gain_muscle' ? 2.2 : 2.0;
+  // Adjust for training frequency
+  if (trainingsPerWeek >= 5) {
+    proteinPerKg += 0.2; // Extra protein for high training volume
+  }
+  
   const protein = Math.round(weight * proteinPerKg);
-  const fats = Math.round((tdee * 0.25) / 9); // 25% of calories from fat
+  
+  // Fat calculation (20-30% of calories, adjusted by goal)
+  let fatPercentage = 0.25; // Default 25%
+  
+  if (data.mainGoal === 'gain_muscle') {
+    fatPercentage = 0.3; // Higher fat for hormone production
+  } else if (data.mainGoal === 'lose_weight') {
+    fatPercentage = 0.2; // Lower fat to allow more carbs/protein
+  }
+  
+  const fats = Math.round((tdee * fatPercentage) / 9);
+  
+  // Carbs fill remaining calories
   const proteinCals = protein * 4;
   const fatsCals = fats * 9;
   const remainingCals = tdee - proteinCals - fatsCals;
-  const carbs = Math.round(remainingCals / 4);
+  const carbs = Math.round(Math.max(remainingCals / 4, 50)); // Minimum 50g carbs
   
   return {
     calories: Math.round(tdee),
@@ -155,20 +207,25 @@ const calculateInitialRecommendation = (data: any) => {
 
 // Simple donut chart component
 const MacrosDonutChart = ({ protein, carbs, fats }: { protein: number, carbs: number, fats: number }) => {
-  const total = protein + carbs + fats;
-  const proteinPercentage = Math.round(protein * 4 / (total * 4) * 100);
-  const carbsPercentage = Math.round(carbs * 4 / (total * 4) * 100);
-  const fatsPercentage = Math.round(fats * 9 / (total * 4) * 100);
+  const proteinCals = protein * 4;
+  const carbsCals = carbs * 4;
+  const fatsCals = fats * 9;
+  const totalCals = proteinCals + carbsCals + fatsCals;
   
-  const proteinDash = 2 * Math.PI * 40 * (proteinPercentage / 100);
-  const carbsDash = 2 * Math.PI * 40 * (carbsPercentage / 100);
-  const fatsDash = 2 * Math.PI * 40 * (fatsPercentage / 100);
+  const proteinPercentage = (proteinCals / totalCals) * 100;
+  const carbsPercentage = (carbsCals / totalCals) * 100;
+  const fatsPercentage = (fatsCals / totalCals) * 100;
+  
+  const circumference = 2 * Math.PI * 40;
+  const proteinDash = circumference * (proteinPercentage / 100);
+  const carbsDash = circumference * (carbsPercentage / 100);
+  const fatsDash = circumference * (fatsPercentage / 100);
   
   return (
     <svg width="100%" height="100%" viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="40" fill="transparent" stroke="#334155" strokeWidth="12" />
       
-      {/* Proteins segment (starting at the top) */}
+      {/* Proteins segment */}
       <circle 
         cx="50" 
         cy="50" 
@@ -176,7 +233,7 @@ const MacrosDonutChart = ({ protein, carbs, fats }: { protein: number, carbs: nu
         fill="transparent" 
         stroke="#60a5fa" 
         strokeWidth="12"
-        strokeDasharray={`${proteinDash} ${2 * Math.PI * 40}`}
+        strokeDasharray={`${proteinDash} ${circumference}`}
         transform="rotate(-90 50 50)"
       />
       
@@ -188,7 +245,7 @@ const MacrosDonutChart = ({ protein, carbs, fats }: { protein: number, carbs: nu
         fill="transparent" 
         stroke="#4ade80" 
         strokeWidth="12"
-        strokeDasharray={`${carbsDash} ${2 * Math.PI * 40}`}
+        strokeDasharray={`${carbsDash} ${circumference}`}
         strokeDashoffset={-proteinDash}
         transform="rotate(-90 50 50)"
       />
@@ -201,7 +258,7 @@ const MacrosDonutChart = ({ protein, carbs, fats }: { protein: number, carbs: nu
         fill="transparent" 
         stroke="#fbbf24" 
         strokeWidth="12"
-        strokeDasharray={`${fatsDash} ${2 * Math.PI * 40}`}
+        strokeDasharray={`${fatsDash} ${circumference}`}
         strokeDashoffset={-(proteinDash + carbsDash)}
         transform="rotate(-90 50 50)"
       />

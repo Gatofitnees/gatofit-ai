@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { OnboardingContext } from "../OnboardingFlow";
+import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
 import { toast } from "@/components/ui/use-toast";
 import GatofitAILogo from "@/components/GatofitAILogo";
 import AccountForm from "@/components/onboarding/auth/AccountForm";
@@ -15,6 +16,7 @@ const CreateAccount: React.FC = () => {
   const navigate = useNavigate();
   const { signUp, signInWithGoogle } = useAuth();
   const context = useContext(OnboardingContext);
+  const { saveOnboardingToProfile } = useOnboardingPersistence();
 
   const { 
     email, setEmail,
@@ -71,8 +73,12 @@ const CreateAccount: React.FC = () => {
           setError(error.message);
         }
       } else {
-        // Successful signup
-        toast.success({
+        // Save onboarding data to profile after successful signup
+        setTimeout(async () => {
+          await saveOnboardingToProfile(context.data);
+        }, 1000);
+        
+        toast({
           title: "¡Cuenta creada!",
           description: "Te hemos enviado un email de verificación"
         });
@@ -134,6 +140,8 @@ const CreateAccount: React.FC = () => {
         setAgreedToTerms={setAgreedToTerms}
         loading={loading}
         error={error}
+        showConfirmPassword={true}
+        showTermsAgreement={true}
       />
 
       <AuthButtons 
