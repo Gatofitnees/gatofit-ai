@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,11 +53,33 @@ export const useProfile = () => {
   // Helper function to convert UserProfile data to database format
   const convertProfileToDatabase = (updates: Partial<UserProfile>) => {
     const dbUpdates = { ...updates };
+    
     // Convert UserProfile enum values to database enum values if needed
     if (dbUpdates.main_goal === 'build_muscle') {
       dbUpdates.main_goal = 'gain_muscle' as any;
     }
-    return dbUpdates;
+    
+    // Remove any fields that don't exist in the database schema
+    // Only keep fields that are actually in the profiles table
+    const allowedFields = [
+      'full_name', 'username', 'avatar_url', 'bio', 'is_profile_public',
+      'height_cm', 'current_weight_kg', 'body_fat_percentage', 'gender',
+      'date_of_birth', 'trainings_per_week', 'previous_app_experience',
+      'main_goal', 'target_weight_kg', 'target_pace', 'target_kg_per_week',
+      'diet_id', 'initial_recommended_calories', 'initial_recommended_protein_g',
+      'initial_recommended_carbs_g', 'initial_recommended_fats_g',
+      'unit_system_preference', 'chest_circumference_cm', 'leg_circumference_cm',
+      'abdomen_circumference_cm', 'arm_circumference_cm'
+    ];
+    
+    const filteredUpdates: any = {};
+    Object.keys(dbUpdates).forEach(key => {
+      if (allowedFields.includes(key) && dbUpdates[key as keyof UserProfile] !== undefined) {
+        filteredUpdates[key] = dbUpdates[key as keyof UserProfile];
+      }
+    });
+    
+    return filteredUpdates;
   };
 
   const fetchProfile = async () => {
