@@ -14,7 +14,7 @@ export interface UserProfile {
   height_cm: number | null;
   current_weight_kg: number | null;
   body_fat_percentage: number | null;
-  // Onboarding data fields - updated types to match database
+  // Onboarding data fields - updated types to match database exactly
   gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null;
   date_of_birth: string | null;
   trainings_per_week: number | null;
