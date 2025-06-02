@@ -68,7 +68,7 @@ const HomePage: React.FC = () => {
         onViewDetails={() => handleViewWorkoutDetails(workoutSummary?.id)}
       />
       
-      {/* Macros card */}
+      {/* Macros card - now uses data from useHomePageData hook which should include profile data */}
       <MacrosCard 
         macros={macros}
         onAddFood={handleAddFood}
