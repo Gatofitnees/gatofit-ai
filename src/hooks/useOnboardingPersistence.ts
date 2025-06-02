@@ -47,9 +47,9 @@ export const useOnboardingPersistence = () => {
       // Convert onboarding main goal to database enum values
       const convertMainGoal = (goal: string | null) => {
         if (!goal) return null;
-        // Map onboarding values to database values
+        // Map onboarding values to database values - updated to match current UserProfile type
         const goalMap: { [key: string]: string } = {
-          'gain_muscle': 'build_muscle', // onboarding uses 'gain_muscle', db uses 'build_muscle'
+          'gain_muscle': 'gain_muscle', // Now both use 'gain_muscle'
         };
         return goalMap[goal] || goal;
       };
@@ -62,9 +62,9 @@ export const useOnboardingPersistence = () => {
         date_of_birth: typeof data.dateOfBirth === 'string' ? data.dateOfBirth : data.dateOfBirth?.toISOString().split('T')[0],
         trainings_per_week: data.trainingsPerWeek,
         previous_app_experience: data.previousAppExperience,
-        main_goal: convertMainGoal(data.mainGoal) as 'lose_weight' | 'gain_weight' | 'maintain_weight' | 'build_muscle' | 'improve_health' | 'increase_strength' | null,
+        main_goal: convertMainGoal(data.mainGoal) as 'lose_weight' | 'gain_weight' | 'maintain_weight' | 'gain_muscle' | 'improve_health' | 'increase_strength' | null,
         target_weight_kg: data.targetWeight,
-        target_pace: data.targetPace as 'slow' | 'moderate' | 'fast' | null,
+        target_pace: data.targetPace as 'sloth' | 'rabbit' | 'leopard' | null,
         target_kg_per_week: data.targetKgPerWeek,
         diet_id: data.diet,
         initial_recommended_calories: data.initial_recommended_calories,
