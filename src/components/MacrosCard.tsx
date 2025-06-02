@@ -51,15 +51,15 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
   return (
     <Card className={cn("animate-fade-in", className)}>
       <CardHeader 
-        title={
+        title="Mis Macros Hoy"
+        subtitle={
           <div className="flex items-center gap-2">
-            <span>Mis Macros Hoy</span>
+            <span>Resumen de objetivos nutricionales</span>
             {recalculatingMacros && (
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
             )}
           </div>
         }
-        subtitle="Resumen de objetivos nutricionales" 
       />
       <CardBody>
         <div className="flex flex-col space-y-6">

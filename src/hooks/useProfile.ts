@@ -50,7 +50,12 @@ export const useProfile = () => {
         'main_goal', 'trainings_per_week', 'target_pace'
       ].some(field => field in dbUpdates);
 
-      let macroUpdates = {};
+      let macroUpdates: {
+        initial_recommended_calories?: number;
+        initial_recommended_protein_g?: number;
+        initial_recommended_carbs_g?: number;
+        initial_recommended_fats_g?: number;
+      } = {};
       
       if (shouldRecalculateMacros && profile) {
         const updatedProfile = { ...profile, ...updates };
