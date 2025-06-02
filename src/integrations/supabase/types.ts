@@ -976,6 +976,18 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_macro_recommendations: {
+        Args: {
+          user_weight_kg: number
+          user_height_cm: number
+          user_age: number
+          user_gender: string
+          user_goal: string
+          user_trainings_per_week: number
+          user_target_pace: string
+        }
+        Returns: Json
+      }
       clean_old_food_entries: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1001,7 +1013,13 @@ export type Database = {
     Enums: {
       difficulty_level: "beginner" | "intermediate" | "advanced"
       gender_type: "male" | "female" | "other" | "prefer_not_to_say"
-      goal_type: "gain_muscle" | "lose_weight" | "maintain_weight"
+      goal_type:
+        | "gain_muscle"
+        | "lose_weight"
+        | "maintain_weight"
+        | "gain_weight"
+        | "improve_health"
+        | "increase_strength"
       meal_type: "breakfast" | "lunch" | "dinner" | "snack1" | "snack2"
       pace_type: "sloth" | "rabbit" | "leopard"
       unit_system: "metric" | "imperial"
@@ -1122,7 +1140,14 @@ export const Constants = {
     Enums: {
       difficulty_level: ["beginner", "intermediate", "advanced"],
       gender_type: ["male", "female", "other", "prefer_not_to_say"],
-      goal_type: ["gain_muscle", "lose_weight", "maintain_weight"],
+      goal_type: [
+        "gain_muscle",
+        "lose_weight",
+        "maintain_weight",
+        "gain_weight",
+        "improve_health",
+        "increase_strength",
+      ],
       meal_type: ["breakfast", "lunch", "dinner", "snack1", "snack2"],
       pace_type: ["sloth", "rabbit", "leopard"],
       unit_system: ["metric", "imperial"],

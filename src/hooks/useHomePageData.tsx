@@ -30,7 +30,7 @@ export const useHomePageData = () => {
     fat: 0
   });
 
-  // Use initial recommendations from profile as targets, with fallbacks
+  // Use latest recommendations from profile as targets, with fallbacks
   const macros = {
     calories: { 
       current: todayTotals.calories, 

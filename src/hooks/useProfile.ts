@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,19 +46,13 @@ export const useProfile = () => {
   const convertDatabaseToProfile = (data: any): UserProfile => {
     return {
       ...data,
-      // Convert database enum values to UserProfile enum values if needed
-      main_goal: data.main_goal === 'gain_muscle' ? 'build_muscle' : data.main_goal,
+      // The enum values now match, so no conversion needed
     } as UserProfile;
   };
 
   // Helper function to convert UserProfile data to database format
   const convertProfileToDatabase = (updates: Partial<UserProfile>) => {
     const dbUpdates = { ...updates };
-    
-    // Convert UserProfile enum values to database enum values if needed
-    if (dbUpdates.main_goal === 'build_muscle') {
-      dbUpdates.main_goal = 'gain_muscle' as any;
-    }
     
     // Remove any fields that don't exist in the database schema
     // Only keep fields that are actually in the profiles table
@@ -80,6 +75,49 @@ export const useProfile = () => {
     });
     
     return filteredUpdates;
+  };
+
+  // Function to calculate age from date of birth
+  const calculateAge = (dateOfBirth: string): number => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Function to recalculate macros when relevant data changes
+  const recalculateMacros = async (profileData: UserProfile): Promise<{ calories: number; protein_g: number; carbs_g: number; fats_g: number; } | null> => {
+    if (!profileData.current_weight_kg || !profileData.height_cm || !profileData.date_of_birth) {
+      return null;
+    }
+
+    const age = calculateAge(profileData.date_of_birth);
+    
+    try {
+      const { data, error } = await supabase.rpc('calculate_macro_recommendations', {
+        user_weight_kg: profileData.current_weight_kg,
+        user_height_cm: profileData.height_cm,
+        user_age: age,
+        user_gender: profileData.gender || 'male',
+        user_goal: profileData.main_goal || 'maintain_weight',
+        user_trainings_per_week: profileData.trainings_per_week || 3,
+        user_target_pace: profileData.target_pace || 'moderate'
+      });
+
+      if (error) {
+        console.error('Error calculating macros:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error calling macro calculation function:', error);
+      return null;
+    }
   };
 
   const fetchProfile = async () => {
@@ -112,18 +150,51 @@ export const useProfile = () => {
     try {
       const dbUpdates = convertProfileToDatabase(updates);
       
+      // Check if we need to recalculate macros
+      const shouldRecalculateMacros = [
+        'current_weight_kg', 'height_cm', 'date_of_birth', 'gender',
+        'main_goal', 'trainings_per_week', 'target_pace'
+      ].some(field => field in dbUpdates);
+
+      let macroUpdates = {};
+      
+      if (shouldRecalculateMacros && profile) {
+        const updatedProfile = { ...profile, ...updates };
+        const newMacros = await recalculateMacros(updatedProfile);
+        
+        if (newMacros) {
+          macroUpdates = {
+            initial_recommended_calories: newMacros.calories,
+            initial_recommended_protein_g: newMacros.protein_g,
+            initial_recommended_carbs_g: newMacros.carbs_g,
+            initial_recommended_fats_g: newMacros.fats_g
+          };
+        }
+      }
+
+      const finalUpdates = { ...dbUpdates, ...macroUpdates };
+      
       const { error } = await supabase
         .from('profiles')
-        .update(dbUpdates)
+        .update(finalUpdates)
         .eq('id', user.id);
 
       if (error) throw error;
 
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
-      toast({
-        title: "Éxito",
-        description: "Perfil actualizado correctamente"
-      });
+      setProfile(prev => prev ? { ...prev, ...updates, ...macroUpdates } : null);
+      
+      if (shouldRecalculateMacros) {
+        toast({
+          title: "Éxito",
+          description: "Perfil y recomendaciones nutricionales actualizados correctamente"
+        });
+      } else {
+        toast({
+          title: "Éxito",
+          description: "Perfil actualizado correctamente"
+        });
+      }
+      
       return true;
     } catch (error: any) {
       console.error('Error updating profile:', error);
