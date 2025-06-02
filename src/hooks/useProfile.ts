@@ -53,7 +53,7 @@ export const useProfile = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data as UserProfile);
+      setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
