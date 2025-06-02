@@ -24,10 +24,30 @@ interface FoodData {
   }>;
 }
 
+interface UpdatedFoodData {
+  custom_food_name: string;
+  quantity_consumed: number;
+  unit_consumed: string;
+  calories_consumed: number;
+  protein_g_consumed: number;
+  carbs_g_consumed: number;
+  fat_g_consumed: number;
+  healthScore: number;
+  ingredients: Array<{
+    name: string;
+    grams: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
+}
+
 interface ChangeResultsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (request: string) => void;
+  onUpdate?: (updatedData: UpdatedFoodData) => void;
   foodData?: FoodData;
 }
 
@@ -35,10 +55,50 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onUpdate,
   foodData
 }) => {
   const [request, setRequest] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const parseWebhookResponse = (responseData: any): UpdatedFoodData | null => {
+    try {
+      // Handle array format response
+      if (Array.isArray(responseData) && responseData.length > 0) {
+        const firstItem = responseData[0];
+        if (firstItem && firstItem.output) {
+          const output = firstItem.output;
+          
+          // Parse ingredients
+          const ingredients = output.ingredients?.map((ing: any) => ({
+            name: ing.name || '',
+            grams: parseFloat(ing.grams) || 0,
+            calories: parseFloat(ing.calories) || 0,
+            protein: parseFloat(ing.protein) || 0,
+            carbs: parseFloat(ing.carbs) || 0,
+            fat: parseFloat(ing.fat) || 0
+          })) || [];
+
+          return {
+            custom_food_name: output.custom_food_name || '',
+            quantity_consumed: parseFloat(output.quantity_consumed) || 1,
+            unit_consumed: output.unit_consumed || 'porción',
+            calories_consumed: parseFloat(output.calories_consumed) || 0,
+            protein_g_consumed: parseFloat(output.protein_g_consumed) || 0,
+            carbs_g_consumed: parseFloat(output.carbs_g_consumed) || 0,
+            fat_g_consumed: parseFloat(output.fat_g_consumed) || 0,
+            healthScore: parseFloat(output.healthScore) || 7,
+            ingredients
+          };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing webhook response:', error);
+      return null;
+    }
+  };
 
   const handleSubmit = async () => {
     if (request.trim() && foodData) {
@@ -64,7 +124,7 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
 
         console.log('Enviando datos al webhook:', payload);
 
-        // Enviar al webhook
+        // Enviar al webhook y esperar respuesta
         const response = await fetch('https://gaton8n.gatofit.com/webhook-test/4a08cf38-9d1c-43a4-a5cc-6e554a0b6f71', {
           method: 'POST',
           headers: {
@@ -75,9 +135,45 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
 
         if (response.ok) {
           console.log('Datos enviados exitosamente al webhook');
-          onSubmit(request.trim());
-          setRequest('');
-          onClose();
+          
+          // Cambiar a estado de actualización
+          setIsLoading(false);
+          setIsUpdating(true);
+          
+          try {
+            const responseText = await response.text();
+            console.log('Respuesta del webhook recibida:', responseText);
+            
+            let responseData;
+            try {
+              responseData = JSON.parse(responseText);
+            } catch (parseError) {
+              console.error('Error parseando respuesta del webhook:', parseError);
+              throw new Error('Respuesta inválida del servidor');
+            }
+            
+            // Parsear y validar la respuesta
+            const updatedData = parseWebhookResponse(responseData);
+            
+            if (updatedData && onUpdate) {
+              console.log('Actualizando datos de comida:', updatedData);
+              onUpdate(updatedData);
+              setRequest('');
+              onClose();
+            } else {
+              console.error('No se pudieron obtener datos válidos de la respuesta');
+              // Aún así llamamos onSubmit para mantener la funcionalidad existente
+              onSubmit(request.trim());
+              setRequest('');
+              onClose();
+            }
+          } catch (updateError) {
+            console.error('Error procesando actualización:', updateError);
+            // Fallback al comportamiento original
+            onSubmit(request.trim());
+            setRequest('');
+            onClose();
+          }
         } else {
           console.error('Error en la respuesta del webhook:', response.status);
           // Aún así llamamos onSubmit para mantener la funcionalidad existente
@@ -93,9 +189,12 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
         onClose();
       } finally {
         setIsLoading(false);
+        setIsUpdating(false);
       }
     }
   };
+
+  const isProcessing = isLoading || isUpdating;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -110,6 +209,7 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
             size="sm"
             onClick={onClose}
             className="h-6 w-6 p-0 hover:bg-secondary/20"
+            disabled={isProcessing}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -126,7 +226,7 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
               placeholder="Ej: Este no es un sandwich, es una ensalada..."
               className="min-h-[100px] resize-none"
               autoFocus
-              disabled={isLoading}
+              disabled={isProcessing}
             />
           </div>
 
@@ -135,7 +235,7 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
               variant="outline"
               className="flex-1"
               onClick={onClose}
-              disabled={isLoading}
+              disabled={isProcessing}
             >
               Cancelar
             </Button>
@@ -144,14 +244,14 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
               variant="primary"
               className="flex-1"
               onClick={handleSubmit}
-              disabled={!request.trim() || isLoading}
-              leftIcon={isLoading ? (
+              disabled={!request.trim() || isProcessing}
+              leftIcon={isProcessing ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <Send className="h-4 w-4" />
               )}
             >
-              {isLoading ? 'Enviando...' : 'Enviar'}
+              {isLoading ? 'Enviando...' : isUpdating ? 'Actualizando...' : 'Enviar'}
             </Button>
           </div>
         </div>

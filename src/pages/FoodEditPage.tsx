@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FoodLogEntry, useFoodLog } from '@/hooks/useFoodLog';
@@ -141,6 +139,31 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
     // TODO: Implement AI integration
   };
 
+  const handleFoodDataUpdate = (updatedData: any) => {
+    console.log('Updating food data from AI response:', updatedData);
+    
+    // Update form data with the new values
+    setFormData(prev => ({
+      ...prev,
+      custom_food_name: updatedData.custom_food_name,
+      quantity_consumed: updatedData.quantity_consumed,
+      unit_consumed: updatedData.unit_consumed,
+      calories_consumed: updatedData.calories_consumed,
+      protein_g_consumed: updatedData.protein_g_consumed,
+      carbs_g_consumed: updatedData.carbs_g_consumed,
+      fat_g_consumed: updatedData.fat_g_consumed,
+      healthScore: updatedData.healthScore
+    }));
+    
+    // Update ingredients
+    if (updatedData.ingredients && updatedData.ingredients.length > 0) {
+      setIngredients(updatedData.ingredients);
+      setShowIngredients(true);
+    }
+    
+    console.log('Food data updated successfully');
+  };
+
   const handleIngredientUpdate = (index: number, data: any) => {
     setIngredients(prev => prev.map((ing, i) => i === index ? data : ing));
   };
@@ -217,6 +240,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
         isOpen={showChangeResults}
         onClose={() => setShowChangeResults(false)}
         onSubmit={handleChangeResults}
+        onUpdate={handleFoodDataUpdate}
         foodData={currentFoodData}
       />
     </div>
@@ -224,4 +248,3 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
 };
 
 export default FoodEditPage;
-
