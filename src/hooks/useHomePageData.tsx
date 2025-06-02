@@ -60,10 +60,10 @@ export const useHomePageData = () => {
         const today = new Date().toISOString().split('T')[0];
         
         const { data: entries, error } = await supabase
-          .from('food_log')
+          .from('daily_food_log_entries')
           .select('*')
           .eq('user_id', user.id)
-          .like('logged_at', `${today}%`);
+          .eq('log_date', today);
           
         if (error) throw error;
         
@@ -138,7 +138,8 @@ export const useHomePageData = () => {
             workout_log_exercise_details(exercise_name_snapshot)
           `)
           .eq('user_id', user.id)
-          .like('workout_date', `${dateString}%`)
+          .gte('workout_date', `${dateString}T00:00:00`)
+          .lt('workout_date', `${dateString}T23:59:59`)
           .order('workout_date', { ascending: false })
           .limit(1);
           
