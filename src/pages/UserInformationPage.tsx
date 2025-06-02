@@ -50,19 +50,21 @@ const UserInformationPage: React.FC = () => {
     setSaving(false);
   };
 
+  // Updated options to match database enum values
   const mainGoalOptions = [
     { value: 'lose_weight', label: 'Perder peso' },
     { value: 'gain_weight', label: 'Ganar peso' },
     { value: 'maintain_weight', label: 'Mantener peso' },
-    { value: 'build_muscle', label: 'Ganar músculo' },
+    { value: 'gain_muscle', label: 'Ganar músculo' }, // Fixed: was 'build_muscle'
     { value: 'improve_health', label: 'Mejorar salud' },
     { value: 'increase_strength', label: 'Aumentar fuerza' }
   ];
 
+  // Updated options to match database enum values
   const targetPaceOptions = [
-    { value: 'slow', label: 'Lento' },
-    { value: 'moderate', label: 'Moderado' },
-    { value: 'fast', label: 'Rápido' }
+    { value: 'sloth', label: 'Lento' }, // Fixed: was 'slow'
+    { value: 'rabbit', label: 'Moderado' }, // Fixed: was 'moderate'
+    { value: 'leopard', label: 'Rápido' } // Fixed: was 'fast'
   ];
 
   return (

@@ -14,9 +14,11 @@ export interface UserProfile {
   date_of_birth: string | null;
   trainings_per_week: number | null;
   previous_app_experience: boolean | null;
-  main_goal: 'lose_weight' | 'gain_weight' | 'maintain_weight' | 'build_muscle' | 'improve_health' | 'increase_strength' | null;
+  // Fixed enum values to match database
+  main_goal: 'lose_weight' | 'gain_weight' | 'maintain_weight' | 'gain_muscle' | 'improve_health' | 'increase_strength' | null;
   target_weight_kg: number | null;
-  target_pace: 'slow' | 'moderate' | 'fast' | null;
+  // Fixed enum values to match database
+  target_pace: 'sloth' | 'rabbit' | 'leopard' | null;
   target_kg_per_week: number | null;
   diet_id: number | null;
   initial_recommended_calories: number | null;

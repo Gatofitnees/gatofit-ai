@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Target, Calendar, Dumbbell, Apple, TrendingUp, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -29,7 +30,7 @@ const UserInformation: React.FC<UserInformationProps> = ({ profile }) => {
       'lose_weight': 'Perder peso',
       'gain_weight': 'Ganar peso',
       'maintain_weight': 'Mantener peso',
-      'build_muscle': 'Ganar músculo',
+      'gain_muscle': 'Ganar músculo', // Fixed: was 'build_muscle'
       'improve_health': 'Mejorar salud',
       'increase_strength': 'Aumentar fuerza'
     };
@@ -50,9 +51,9 @@ const UserInformation: React.FC<UserInformationProps> = ({ profile }) => {
   const getTargetPaceText = (pace: string | null) => {
     if (!pace) return '--';
     const paceMap: { [key: string]: string } = {
-      'slow': 'Lento',
-      'moderate': 'Moderado',
-      'fast': 'Rápido'
+      'sloth': 'Lento', // Fixed: was 'slow'
+      'rabbit': 'Moderado', // Fixed: was 'moderate'
+      'leopard': 'Rápido' // Fixed: was 'fast'
     };
     return paceMap[pace] || pace;
   };
