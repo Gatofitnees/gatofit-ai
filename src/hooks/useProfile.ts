@@ -42,6 +42,25 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to convert database data to UserProfile format
+  const convertDatabaseToProfile = (data: any): UserProfile => {
+    return {
+      ...data,
+      // Convert database enum values to UserProfile enum values if needed
+      main_goal: data.main_goal === 'gain_muscle' ? 'build_muscle' : data.main_goal,
+    } as UserProfile;
+  };
+
+  // Helper function to convert UserProfile data to database format
+  const convertProfileToDatabase = (updates: Partial<UserProfile>) => {
+    const dbUpdates = { ...updates };
+    // Convert UserProfile enum values to database enum values if needed
+    if (dbUpdates.main_goal === 'build_muscle') {
+      dbUpdates.main_goal = 'gain_muscle' as any;
+    }
+    return dbUpdates;
+  };
+
   const fetchProfile = async () => {
     if (!user) return;
     
@@ -53,7 +72,7 @@ export const useProfile = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      setProfile(convertDatabaseToProfile(data));
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -70,9 +89,11 @@ export const useProfile = () => {
     if (!user) return false;
 
     try {
+      const dbUpdates = convertProfileToDatabase(updates);
+      
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', user.id);
 
       if (error) throw error;
