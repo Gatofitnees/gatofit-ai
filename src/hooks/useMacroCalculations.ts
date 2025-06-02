@@ -35,8 +35,8 @@ export const useMacroCalculations = () => {
         return null;
       }
 
-      // Type assertion to ensure the returned data matches our expected structure
-      const macroData = data as MacroRecommendations;
+      // Type assertion with proper conversion to handle Json type
+      const macroData = data as unknown as MacroRecommendations;
       return macroData;
     } catch (error) {
       console.error('Error calling macro calculation function:', error);

@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { validateUsername, RateLimiter } from '@/utils/securityValidation';
-import { UserProfile } from './useProfile';
+import { UserProfile } from '@/types/userProfile';
 
 // Rate limiter for profile updates (max 5 updates per minute)
 const profileUpdateLimiter = new RateLimiter(5, 60000);

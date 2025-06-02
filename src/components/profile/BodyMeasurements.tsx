@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Weight, Ruler, Target } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { UserProfile } from '@/hooks/useProfile';
+import { UserProfile } from '@/types/userProfile';
 
 interface BodyMeasurementsProps {
   profile: UserProfile | null;

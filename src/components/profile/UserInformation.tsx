@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Target, Calendar, Dumbbell, Apple, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { UserProfile } from '@/hooks/useProfile';
+import { UserProfile } from '@/types/userProfile';
 
 interface UserInformationProps {
   profile: UserProfile | null;

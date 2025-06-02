@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { useProfile, UserProfile } from '@/hooks/useProfile';
+import { useProfile } from '@/hooks/useProfile';
+import { UserProfile } from '@/types/userProfile';
 
 interface ProfileContextType {
   profile: UserProfile | null;
