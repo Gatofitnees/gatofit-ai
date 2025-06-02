@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
@@ -7,6 +6,8 @@ import RankingPage from "./pages/RankingPage";
 import SocialPage from "./pages/SocialPage";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
+import BodyMeasurementsPage from "./pages/BodyMeasurementsPage";
+import UserInformationPage from "./pages/UserInformationPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
@@ -51,6 +52,22 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/body-measurements"
+                  element={
+                    <ProtectedRoute>
+                      <BodyMeasurementsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/user-information"
+                  element={
+                    <ProtectedRoute>
+                      <UserInformationPage />
                     </ProtectedRoute>
                   }
                 />

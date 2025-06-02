@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings, Share2, User, Calendar, TrendingUp, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Settings, Share2, User, Calendar, TrendingUp, CheckCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,8 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfileStats from '@/components/profile/ProfileStats';
 import AvatarUpload from '@/components/profile/AvatarUpload';
+import BodyMeasurements from '@/components/profile/BodyMeasurements';
+import UserInformation from '@/components/profile/UserInformation';
 import { useToast } from '@/components/ui/use-toast';
 
 const ProfilePage: React.FC = () => {
@@ -225,12 +227,22 @@ const ProfilePage: React.FC = () => {
         </Button>
       </div>
 
+      {/* Body Measurements Section */}
+      <div className="mb-6">
+        <BodyMeasurements profile={profile} />
+      </div>
+
+      {/* User Information Section */}
+      <div className="mb-6">
+        <UserInformation profile={profile} />
+      </div>
+
       {/* Stats */}
       <ProfileStats stats={stats} loading={statsLoading} />
 
-      {/* Information Section */}
+      {/* Navigation Buttons */}
       <div className="mt-6 space-y-3">
-        <h3 className="text-lg font-semibold">Información Personal</h3>
+        <h3 className="text-lg font-semibold">Gestionar Información</h3>
         
         <Button
           variant="outline"
@@ -238,7 +250,16 @@ const ProfilePage: React.FC = () => {
           onClick={() => navigate('/profile/body-measurements')}
         >
           <User className="h-5 w-5 mr-3" />
-          Medidas Corporales
+          Editar Medidas Corporales
+        </Button>
+        
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={() => navigate('/profile/user-information')}
+        >
+          <Info className="h-5 w-5 mr-3" />
+          Editar Información del Usuario
         </Button>
         
         <Button

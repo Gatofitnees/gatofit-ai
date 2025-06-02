@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Avatar from "./Avatar";
 import RankBadge from "./RankBadge";
@@ -119,15 +118,15 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             <div className="grid grid-cols-3 gap-2 mt-3">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">Peso</p>
-                <p className="text-sm font-medium">{profile?.current_weight_kg || 70} kg</p>
+                <p className="text-sm font-medium">{profile?.current_weight_kg || '--'} kg</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">Altura</p>
-                <p className="text-sm font-medium">{profile?.height_cm || 175} cm</p>
+                <p className="text-sm font-medium">{profile?.height_cm || '--'} cm</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">% Graso</p>
-                <p className="text-sm font-medium">{profile?.body_fat_percentage || 15}%</p>
+                <p className="text-sm font-medium">{profile?.body_fat_percentage || '--'}%</p>
               </div>
             </div>
           </div>

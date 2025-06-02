@@ -14,6 +14,26 @@ export interface UserProfile {
   height_cm: number | null;
   current_weight_kg: number | null;
   body_fat_percentage: number | null;
+  // Onboarding data fields
+  gender: 'male' | 'female' | null;
+  date_of_birth: string | null;
+  trainings_per_week: number | null;
+  previous_app_experience: boolean | null;
+  main_goal: string | null;
+  target_weight_kg: number | null;
+  target_pace: string | null;
+  target_kg_per_week: number | null;
+  diet_id: number | null;
+  initial_recommended_calories: number | null;
+  initial_recommended_protein_g: number | null;
+  initial_recommended_carbs_g: number | null;
+  initial_recommended_fats_g: number | null;
+  unit_system_preference: string | null;
+  // Body measurements
+  chest_circumference_cm: number | null;
+  leg_circumference_cm: number | null;
+  abdomen_circumference_cm: number | null;
+  arm_circumference_cm: number | null;
 }
 
 export const useProfile = () => {
