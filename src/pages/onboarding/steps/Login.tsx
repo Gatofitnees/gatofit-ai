@@ -5,10 +5,10 @@ import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { OnboardingContext } from "../OnboardingFlow";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import GatofitAILogo from "@/components/GatofitAILogo";
 import useAuthForm from "@/hooks/useAuthForm";
-import AccountForm from "@/components/onboarding/auth/AccountForm";
+import LoginForm from "@/components/onboarding/auth/LoginForm";
 import BackButton from "@/components/onboarding/auth/BackButton";
 
 const Login: React.FC = () => {
@@ -54,7 +54,7 @@ const Login: React.FC = () => {
         // Save onboarding data to profile after successful login
         await saveOnboardingToProfile(context.data);
         
-        toast({
+        toast.success({
           title: "¡Bienvenido de nuevo!",
           description: "Has iniciado sesión exitosamente"
         });
@@ -91,7 +91,7 @@ const Login: React.FC = () => {
 
   const handleForgotPassword = () => {
     // TODO: Implement forgot password functionality
-    toast({
+    toast.show({
       title: "Recuperación de contraseña",
       description: "Próximamente disponible"
     });
@@ -111,7 +111,7 @@ const Login: React.FC = () => {
         Continúa tu viaje fitness
       </p>
 
-      <AccountForm 
+      <LoginForm 
         email={email}
         setEmail={setEmail}
         password={password}
@@ -120,8 +120,6 @@ const Login: React.FC = () => {
         setShowPassword={setShowPassword}
         loading={loading}
         error={error}
-        showConfirmPassword={false}
-        showTermsAgreement={false}
       />
 
       <div className="flex justify-end mt-2 mb-6">

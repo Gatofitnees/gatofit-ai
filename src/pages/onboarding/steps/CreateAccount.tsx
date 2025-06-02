@@ -5,7 +5,7 @@ import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { OnboardingContext } from "../OnboardingFlow";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import GatofitAILogo from "@/components/GatofitAILogo";
 import AccountForm from "@/components/onboarding/auth/AccountForm";
 import AuthButtons from "@/components/onboarding/auth/AuthButtons";
@@ -78,7 +78,7 @@ const CreateAccount: React.FC = () => {
           await saveOnboardingToProfile(context.data);
         }, 1000);
         
-        toast({
+        toast.success({
           title: "¡Cuenta creada!",
           description: "Te hemos enviado un email de verificación"
         });
