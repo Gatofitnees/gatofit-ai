@@ -113,7 +113,9 @@ export const useProfile = () => {
         return null;
       }
 
-      return data;
+      // Type assertion to ensure the returned data matches our expected structure
+      const macroData = data as { calories: number; protein_g: number; carbs_g: number; fats_g: number; };
+      return macroData;
     } catch (error) {
       console.error('Error calling macro calculation function:', error);
       return null;
