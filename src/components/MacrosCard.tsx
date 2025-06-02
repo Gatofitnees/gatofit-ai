@@ -2,10 +2,10 @@
 import React from "react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import MacroRing from "./MacroRing";
-import { Flame, Zap, Wheat, Droplet, Plus } from "lucide-react";
+import { Flame, Zap, Wheat, Droplet, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Button from "./Button";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfileContext } from "@/contexts/ProfileContext";
 
 interface MacroData {
   calories: { current: number; target: number; unit: string };
@@ -25,7 +25,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
   className,
   onAddFood
 }) => {
-  const { profile } = useProfile();
+  const { profile, recalculatingMacros } = useProfileContext();
 
   // Use provided macros or create default ones from profile
   const macros = propMacros || {
@@ -51,7 +51,14 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
   return (
     <Card className={cn("animate-fade-in", className)}>
       <CardHeader 
-        title="Mis Macros Hoy"
+        title={
+          <div className="flex items-center gap-2">
+            <span>Mis Macros Hoy</span>
+            {recalculatingMacros && (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            )}
+          </div>
+        }
         subtitle="Resumen de objetivos nutricionales" 
       />
       <CardBody>

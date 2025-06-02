@@ -1,13 +1,16 @@
 import React from 'react';
-import { Target, Calendar, Dumbbell, Apple, TrendingUp } from 'lucide-react';
+import { Target, Calendar, Dumbbell, Apple, TrendingUp, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { UserProfile } from '@/types/userProfile';
+import { useProfileContext } from '@/contexts/ProfileContext';
 
 interface UserInformationProps {
   profile: UserProfile | null;
 }
 
 const UserInformation: React.FC<UserInformationProps> = ({ profile }) => {
+  const { recalculatingMacros } = useProfileContext();
+
   const getAge = () => {
     if (!profile?.date_of_birth) return null;
     const today = new Date();
@@ -130,7 +133,12 @@ const UserInformation: React.FC<UserInformationProps> = ({ profile }) => {
         
         {profile?.initial_recommended_calories && (
           <div className="pt-3 border-t border-muted">
-            <h4 className="font-medium mb-2">Recomendaciones Iniciales</h4>
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="font-medium">Recomendaciones Iniciales</h4>
+              {recalculatingMacros && (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <p className="text-muted-foreground">Calorías</p>

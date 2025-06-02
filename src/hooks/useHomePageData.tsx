@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfileContext } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WorkoutSummary {
@@ -15,7 +14,7 @@ interface WorkoutSummary {
 
 export const useHomePageData = () => {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile } = useProfileContext();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined);

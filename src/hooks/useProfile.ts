@@ -75,19 +75,19 @@ export const useProfile = () => {
 
       if (error) throw error;
 
-      setProfile(prev => prev ? { ...prev, ...updates, ...macroUpdates } : null);
+      // Immediately update local state with all changes including macros
+      const updatedLocalProfile = { 
+        ...profile, 
+        ...updates, 
+        ...(macroUpdates.initial_recommended_calories && {
+          initial_recommended_calories: macroUpdates.initial_recommended_calories,
+          initial_recommended_protein_g: macroUpdates.initial_recommended_protein_g,
+          initial_recommended_carbs_g: macroUpdates.initial_recommended_carbs_g,
+          initial_recommended_fats_g: macroUpdates.initial_recommended_fats_g
+        })
+      };
       
-      if (shouldRecalculateMacros) {
-        toast({
-          title: "Éxito",
-          description: "Perfil y recomendaciones nutricionales actualizados correctamente"
-        });
-      } else {
-        toast({
-          title: "Éxito",
-          description: "Perfil actualizado correctamente"
-        });
-      }
+      setProfile(updatedLocalProfile);
       
       return true;
     } catch (error: any) {
