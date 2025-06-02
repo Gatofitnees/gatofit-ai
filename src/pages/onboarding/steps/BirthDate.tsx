@@ -31,7 +31,17 @@ const BirthDate: React.FC = () => {
   minDate.setFullYear(minDate.getFullYear() - 100);
 
   // Initialize with current date or existing data
-  const initialDate = data.dateOfBirth || new Date(maxDate.getFullYear() - 9, 5, 15);
+  // Ensure we always have a Date object
+  const getInitialDate = () => {
+    if (data.dateOfBirth) {
+      // If dateOfBirth exists, ensure it's a Date object
+      return data.dateOfBirth instanceof Date ? data.dateOfBirth : new Date(data.dateOfBirth);
+    }
+    // Default fallback date
+    return new Date(maxDate.getFullYear() - 9, 5, 15);
+  };
+  
+  const initialDate = getInitialDate();
   
   const [day, setDay] = useState(initialDate.getDate());
   const [month, setMonth] = useState(initialDate.getMonth());
@@ -93,8 +103,8 @@ const BirthDate: React.FC = () => {
 
         {data.dateOfBirth && (
           <DateDisplay 
-            date={data.dateOfBirth} 
-            age={calculateAge(data.dateOfBirth)} 
+            date={data.dateOfBirth instanceof Date ? data.dateOfBirth : new Date(data.dateOfBirth)} 
+            age={calculateAge(data.dateOfBirth instanceof Date ? data.dateOfBirth : new Date(data.dateOfBirth))} 
           />
         )}
       </div>
