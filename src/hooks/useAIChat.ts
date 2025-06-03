@@ -78,13 +78,13 @@ export const useAIChat = () => {
           fats_g: macros.fats.current,
         },
         food_entries_today: todayEntries?.map(entry => ({
-          food_name: entry.food_name,
-          portion_size: entry.portion_size,
+          food_name: entry.custom_food_name,
+          portion_size: entry.quantity_consumed,
           calories: entry.calories_consumed,
           protein_g: entry.protein_g_consumed,
           carbs_g: entry.carbs_g_consumed,
           fat_g: entry.fat_g_consumed,
-          meal_time: entry.meal_time,
+          meal_type: entry.meal_type,
         })) || [],
       },
       routines: routines.map(routine => ({
