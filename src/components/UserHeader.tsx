@@ -1,7 +1,9 @@
+
 import React, { useState } from "react";
 import Avatar from "./Avatar";
 import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
+import AIChat from "./AIChat";
 import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
@@ -26,13 +28,6 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const { streakData } = useStreaks();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  const handleChatClick = () => {
-    toast({
-      title: "Chat IA",
-      description: "Próximamente disponible",
-    });
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -83,15 +78,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
           </div>
         </div>
 
-        <Button
-          onClick={handleChatClick}
-          className="p-2 h-11 px-3 rounded-full bg-primary/10 hover:bg-primary/20 border-none"
-          variant="outline"
-        >
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-600 to-blue-500 animate-galaxy-pulse font-bold">
-            AI
-          </span>
-        </Button>
+        <AIChat />
       </div>
 
       {/* Menú desplegable */}
