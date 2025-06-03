@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileContext } from '@/contexts/ProfileContext';
@@ -21,7 +22,6 @@ export const useAIChat = () => {
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   // Filter today's food entries
   const todayEntries = entries.filter(entry => {
@@ -166,16 +166,10 @@ export const useAIChat = () => {
     setMessages([]);
   };
 
-  const openChat = () => setIsOpen(true);
-  const closeChat = () => setIsOpen(false);
-
   return {
     messages,
     isLoading,
-    isOpen,
     sendMessage,
     clearMessages,
-    openChat,
-    closeChat,
   };
 };

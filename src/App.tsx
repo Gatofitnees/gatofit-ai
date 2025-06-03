@@ -9,6 +9,7 @@ import ProfilePage from "./pages/ProfilePage";
 import BodyMeasurementsPage from "./pages/BodyMeasurementsPage";
 import UserInformationPage from "./pages/UserInformationPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
+import AIChatPage from "./pages/AIChatPage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
@@ -44,6 +45,14 @@ function App() {
                     <ProtectedRoute>
                       <HomePage />
                       <NavBar />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ai-chat"
+                  element={
+                    <ProtectedRoute>
+                      <AIChatPage />
                     </ProtectedRoute>
                   }
                 />
