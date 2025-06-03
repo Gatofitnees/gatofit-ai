@@ -3,6 +3,7 @@ import React from "react";
 import { Home, Dumbbell, Utensils, Users, Flame } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAIChat } from "@/hooks/useAIChat";
 
 interface NavItem {
   id: string;
@@ -40,6 +41,12 @@ const navItems: NavItem[] = [
 
 const NavBar: React.FC = () => {
   const location = useLocation();
+  const { isOpen: isChatOpen } = useAIChat();
+
+  // Hide navigation bar when chat is open
+  if (isChatOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md z-50 p-1 animate-fade-in border-t border-white/5 shadow-neu-float">

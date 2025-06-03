@@ -18,11 +18,18 @@ export const useAIChat = () => {
   const { profile } = useProfileContext();
   const { macros } = useHomePageData();
   const { routines } = useRoutines();
-  const { todayEntries } = useFoodLog();
+  const { entries } = useFoodLog();
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Filter today's food entries
+  const todayEntries = entries.filter(entry => {
+    const today = new Date().toISOString().split('T')[0];
+    const entryDate = new Date(entry.log_date).toISOString().split('T')[0];
+    return entryDate === today;
+  });
 
   const collectUserData = () => {
     // Calculate age from date of birth
