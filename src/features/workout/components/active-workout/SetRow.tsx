@@ -38,6 +38,13 @@ export const SetRow: React.FC<SetRowProps> = ({
     return "reps";
   };
 
+  // Format weight display with proper decimal formatting
+  const formatWeightDisplay = (weight: number | null) => {
+    if (weight === null) return '';
+    // Show decimal only if it's not .0
+    return weight % 1 === 0 ? weight.toString() : weight.toString();
+  };
+
   return (
     <div className="bg-background/50 rounded-lg border border-white/5 p-2">
       <div className="grid grid-cols-4 gap-2">
@@ -51,17 +58,18 @@ export const SetRow: React.FC<SetRowProps> = ({
         {/* Anterior column */}
         <div className="text-xs text-muted-foreground flex items-center">
           {set.previous_weight !== null && set.previous_reps !== null 
-            ? `${set.previous_weight}kg × ${set.previous_reps}` 
+            ? `${formatWeightDisplay(set.previous_weight)}kg × ${set.previous_reps}` 
             : '-'}
         </div>
         
-        {/* Peso column */}
+        {/* Peso column - with decimal support */}
         <div>
           <NumericInput
             className="w-full h-8 text-sm"
-            value={set.weight !== null ? set.weight : ''}
+            value={formatWeightDisplay(set.weight)}
             onChange={(e) => onInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
             placeholder="kg"
+            allowDecimals={true}
           />
         </div>
         
@@ -72,6 +80,7 @@ export const SetRow: React.FC<SetRowProps> = ({
             value={set.reps !== null ? set.reps : ''}
             onChange={(e) => onInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
             placeholder={getTargetRepsPlaceholder()}
+            allowDecimals={false}
           />
         </div>
       </div>
