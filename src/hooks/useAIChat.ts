@@ -11,6 +11,14 @@ interface ChatMessage {
   type: 'user' | 'ai';
   content: string;
   timestamp: Date;
+  buttons?: string[];
+}
+
+interface WebhookResponse {
+  output: {
+    text: string;
+    button?: string;
+  };
 }
 
 export const useAIChat = () => {
@@ -136,16 +144,48 @@ export const useAIChat = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const responseData = await response.text();
+      const responseText = await response.text();
+      let parsedResponse: WebhookResponse[] | any;
       
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: responseData || 'Lo siento, no pude procesar tu mensaje.',
-        timestamp: new Date(),
-      };
+      try {
+        parsedResponse = JSON.parse(responseText);
+      } catch (parseError) {
+        // Fallback to treating as plain text
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: responseText || 'Lo siento, no pude procesar tu mensaje.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
+        return;
+      }
 
-      setMessages(prev => [...prev, aiMessage]);
+      // Handle new JSON format
+      if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
+        const firstResponse = parsedResponse[0];
+        if (firstResponse.output) {
+          const aiMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: firstResponse.output.text || 'No se recibió respuesta.',
+            timestamp: new Date(),
+            buttons: firstResponse.output.button ? [firstResponse.output.button] : undefined,
+          };
+          setMessages(prev => [...prev, aiMessage]);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } else {
+        // Fallback for old format
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: typeof parsedResponse === 'string' ? parsedResponse : 'Lo siento, no pude procesar tu mensaje.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      }
     } catch (error) {
       console.error('Error sending message to AI:', error);
       
