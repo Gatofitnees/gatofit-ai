@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -143,7 +142,7 @@ const AIChatPage: React.FC = () => {
               {/* Interactive buttons for AI messages */}
               {message.type === 'ai' && message.buttons && message.buttons.length > 0 && (
                 <div className="flex justify-start mt-2">
-                  <div className="max-w-[85%] space-y-2">
+                  <div className="max-w-[85%] flex flex-wrap gap-2">
                     {message.buttons.map((buttonText, index) => (
                       <Button
                         key={index}
@@ -151,7 +150,7 @@ const AIChatPage: React.FC = () => {
                         size="sm"
                         onClick={() => handleButtonClick(buttonText)}
                         disabled={isLoading}
-                        className="mr-2 mb-2 text-xs bg-background hover:bg-muted"
+                        className="text-xs bg-background hover:bg-muted flex-shrink-0"
                       >
                         {buttonText}
                       </Button>
