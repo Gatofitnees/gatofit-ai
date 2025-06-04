@@ -132,7 +132,7 @@ export const useAIChat = () => {
 
       console.log('Sending AI chat request:', payload);
 
-      const response = await fetch('https://gaton8n.gatofit.com/webhook-test/5ad29227-88fb-46ab-bff9-c44cb4e1d957', {
+      const response = await fetch('https://gaton8n.gatofit.com/webhook/5ad29227-88fb-46ab-bff9-c44cb4e1d957', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
