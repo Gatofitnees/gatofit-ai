@@ -4,83 +4,107 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 
-export const useFollows = (targetUserId?: string) => {
+export const useFollows = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(false);
 
-  const checkFollowStatus = async () => {
-    if (!user || !targetUserId || user.id === targetUserId) return;
+  const loadFollowingUsers = async () => {
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('user_follows')
-        .select('id')
-        .eq('follower_id', user.id)
-        .eq('following_id', targetUserId)
-        .single();
+        .select('following_id')
+        .eq('follower_id', user.id);
 
-      if (error && error.code !== 'PGRST116') throw error;
-      setIsFollowing(!!data);
+      if (error) throw error;
+      
+      const followingIds = new Set(data.map(follow => follow.following_id));
+      setFollowingUsers(followingIds);
     } catch (error) {
-      console.error('Error checking follow status:', error);
+      console.error('Error loading following users:', error);
     }
   };
 
-  const toggleFollow = async () => {
-    if (!user || !targetUserId || user.id === targetUserId) return;
+  const isFollowing = (userId: string): boolean => {
+    return followingUsers.has(userId);
+  };
 
-    setLoading(true);
+  const followUser = async (userId: string) => {
+    if (!user || user.id === userId) return;
+
+    setIsLoading(true);
     try {
-      if (isFollowing) {
-        const { error } = await supabase
-          .from('user_follows')
-          .delete()
-          .eq('follower_id', user.id)
-          .eq('following_id', targetUserId);
-
-        if (error) throw error;
-        setIsFollowing(false);
-        toast({
-          title: "Éxito",
-          description: "Dejaste de seguir al usuario"
+      const { error } = await supabase
+        .from('user_follows')
+        .insert({
+          follower_id: user.id,
+          following_id: userId
         });
-      } else {
-        const { error } = await supabase
-          .from('user_follows')
-          .insert({
-            follower_id: user.id,
-            following_id: targetUserId
-          });
 
-        if (error) throw error;
-        setIsFollowing(true);
-        toast({
-          title: "Éxito",
-          description: "Ahora sigues a este usuario"
-        });
-      }
+      if (error) throw error;
+      
+      setFollowingUsers(prev => new Set([...prev, userId]));
+      toast({
+        title: "Éxito",
+        description: "Ahora sigues a este usuario"
+      });
     } catch (error: any) {
-      console.error('Error toggling follow:', error);
+      console.error('Error following user:', error);
       toast({
         title: "Error",
-        description: error.message || "No se pudo realizar la acción",
+        description: error.message || "No se pudo seguir al usuario",
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const unfollowUser = async (userId: string) => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_follows')
+        .delete()
+        .eq('follower_id', user.id)
+        .eq('following_id', userId);
+
+      if (error) throw error;
+      
+      setFollowingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+      toast({
+        title: "Éxito",
+        description: "Dejaste de seguir al usuario"
+      });
+    } catch (error: any) {
+      console.error('Error unfollowing user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo dejar de seguir al usuario",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    checkFollowStatus();
-  }, [user, targetUserId]);
+    loadFollowingUsers();
+  }, [user]);
 
   return {
     isFollowing,
-    loading,
-    toggleFollow,
-    canFollow: user && targetUserId && user.id !== targetUserId
+    followUser,
+    unfollowUser,
+    isLoading
   };
 };

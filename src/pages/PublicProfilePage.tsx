@@ -101,7 +101,7 @@ const PublicProfilePage: React.FC = () => {
         <CardBody className="text-center py-8">
           <Avatar
             name={profile.username || profile.full_name || 'Usuario'}
-            size="xl"
+            size="lg"
             src={profile.avatar_url}
             className="mx-auto mb-4"
           />
