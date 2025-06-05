@@ -82,50 +82,6 @@ const RankingPage: React.FC = () => {
           />
         </CardBody>
       </Card>
-
-      {/* How it Works */}
-      <Card className="mt-6">
-        <CardBody>
-          <h3 className="font-semibold mb-4">¿Cómo funciona?</h3>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-green-500 text-sm font-bold">25</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Completa un entrenamiento</p>
-                <p className="text-xs text-muted-foreground">
-                  Obtén 25 XP por entrenamiento (máximo 1 al día)
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-blue-500 text-sm font-bold">10</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Registra una comida</p>
-                <p className="text-xs text-muted-foreground">
-                  Obtén 10 XP por comida (máximo 3 al día = 30 XP)
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-purple-500 text-sm font-bold">⚡</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Sube de nivel</p>
-                <p className="text-xs text-muted-foreground">
-                  Cada 100 XP subes un nivel y desbloqueas nuevos rangos
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
     </div>
   );
 };

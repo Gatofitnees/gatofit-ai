@@ -27,9 +27,9 @@ export const useRankings = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('Fetching all registered users for rankings...');
+      console.log('Fetching all public users for rankings...');
       
-      // Get all users with public profiles and their streak data
+      // Get all users with public profiles and LEFT JOIN with user_streaks
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -44,8 +44,7 @@ export const useRankings = () => {
             current_level
           )
         `)
-        .eq('is_profile_public', true)
-        .not('username', 'is', null);
+        .eq('is_profile_public', true);
 
       if (error) {
         console.error('Supabase error:', error);
@@ -68,9 +67,12 @@ export const useRankings = () => {
           streakData = profile.user_streaks[0];
         }
         
+        // Use username if available, otherwise use full_name, otherwise create a default
+        const displayName = profile.username || profile.full_name || `Usuario #${profile.id.substring(0, 8)}`;
+        
         return {
           user_id: profile.id,
-          username: profile.username || profile.full_name || `Usuario #${profile.id.substring(0, 8)}`,
+          username: displayName,
           avatar_url: profile.avatar_url,
           current_streak: streakData?.current_streak || 0,
           total_experience: streakData?.total_experience || 0,
@@ -91,6 +93,7 @@ export const useRankings = () => {
         }
       });
 
+      console.log('Transformed and sorted data:', sortedData);
       setRankings(sortedData);
     } catch (err: any) {
       console.error('Error fetching rankings:', err);
