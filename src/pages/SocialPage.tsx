@@ -18,10 +18,14 @@ const SocialPage: React.FC = () => {
   const { stats } = useUserStats(user?.id);
   const navigate = useNavigate();
 
-  // Filter users based on search query
-  const filteredUsers = rankings.filter(rankingUser => 
-    rankingUser.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  console.log('SocialPage rankings:', rankings);
+
+  // Filter users based on search query - search in both username and full_name
+  const filteredUsers = rankings.filter(rankingUser => {
+    const query = searchQuery.toLowerCase();
+    const username = rankingUser.username?.toLowerCase() || '';
+    return username.includes(query);
+  });
 
   const topUsers = rankings.slice(0, 5);
 
@@ -85,6 +89,10 @@ const SocialPage: React.FC = () => {
                 </div>
               ))}
             </div>
+          ) : topUsers.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">
+              No hay usuarios disponibles
+            </p>
           ) : (
             <div className="space-y-3">
               {topUsers.map((rankingUser, index) => (
@@ -120,11 +128,13 @@ const SocialPage: React.FC = () => {
       {searchQuery && (
         <Card>
           <CardBody>
-            <h3 className="font-semibold mb-4">Resultados de búsqueda</h3>
+            <h3 className="font-semibold mb-4">
+              Resultados de búsqueda ({filteredUsers.length})
+            </h3>
             
             {filteredUsers.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
-                No se encontraron usuarios
+                No se encontraron usuarios con "{searchQuery}"
               </p>
             ) : (
               <div className="space-y-3">

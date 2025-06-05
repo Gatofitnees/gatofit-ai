@@ -41,6 +41,7 @@ export const useRankings = () => {
       }
       
       console.log('Profiles data received:', profiles);
+      console.log('Number of public profiles found:', profiles?.length || 0);
       
       if (!profiles || profiles.length === 0) {
         console.log('No public users found');
@@ -50,6 +51,7 @@ export const useRankings = () => {
 
       // Get user IDs to fetch streaks
       const userIds = profiles.map(p => p.id);
+      console.log('User IDs to fetch streaks for:', userIds);
       
       // Then get streak data for these users
       const { data: streaks, error: streaksError } = await supabase
@@ -63,16 +65,26 @@ export const useRankings = () => {
       }
       
       console.log('Streaks data received:', streaks);
+      console.log('Number of streak records found:', streaks?.length || 0);
 
-      // Transform and combine the data
-      const transformedData = profiles.map(profile => {
+      // Transform and combine the data - ensure ALL profiles are included
+      const transformedData = profiles.map((profile, index) => {
         // Find streak data for this user
         const streakData = streaks?.find(s => s.user_id === profile.id);
         
         // Use username if available, otherwise use full_name, otherwise create a default
         const displayName = profile.username || profile.full_name || `Usuario #${profile.id.substring(0, 8)}`;
         
-        return {
+        console.log(`Processing user ${index + 1}:`, {
+          id: profile.id,
+          username: profile.username,
+          full_name: profile.full_name,
+          displayName,
+          hasStreakData: !!streakData,
+          streakData
+        });
+        
+        const user: RankingUser = {
           user_id: profile.id,
           username: displayName,
           avatar_url: profile.avatar_url,
@@ -84,7 +96,11 @@ export const useRankings = () => {
           followers_count: 0,
           following_count: 0
         };
+        
+        return user;
       });
+
+      console.log('All transformed users before sorting:', transformedData);
 
       // Sort users based on the selected type
       const sortedData = transformedData.sort((a, b) => {
@@ -95,7 +111,9 @@ export const useRankings = () => {
         }
       });
 
-      console.log('Transformed and sorted data:', sortedData);
+      console.log('Final sorted data:', sortedData);
+      console.log('Number of users in final ranking:', sortedData.length);
+      
       setRankings(sortedData);
     } catch (err: any) {
       console.error('Error fetching rankings:', err);
