@@ -1,6 +1,5 @@
-
-import React, { useState } from "react";
-import { Edit, MoreVertical, PlayCircle, Trash } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Edit, MoreVertical, PlayCircle, Trash, Share2, EyeOff } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuTrigger,
@@ -11,6 +10,7 @@ import {
 import { Card } from "@/components/Card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSharedRoutines } from "@/hooks/useSharedRoutines";
 import { toast } from "sonner";
 
 interface WorkoutListItemProps {
@@ -33,7 +33,18 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
   onRoutineDeleted
 }) => {
   const { toast: uiToast } = useToast();
+  const { publishRoutine, unpublishRoutine, checkIfPublished, isPublishing } = useSharedRoutines();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
+  
+  // Check if routine is published on mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      const published = await checkIfPublished(routine.id);
+      setIsPublished(published);
+    };
+    checkStatus();
+  }, [routine.id, checkIfPublished]);
   
   // Determina los textos a mostrar según el tipo de rutina
   const typeLabel = routine.type 
@@ -90,6 +101,16 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
     window.location.href = `/workout/edit/${routine.id}`;
   };
 
+  const handlePublishToggle = async () => {
+    if (isPublished) {
+      await unpublishRoutine(routine.id);
+      setIsPublished(false);
+    } else {
+      await publishRoutine(routine.id);
+      setIsPublished(true);
+    }
+  };
+
   // Use a wrapper div with the onClick handler instead of putting it directly on the Card
   return (
     <div onClick={() => onStartWorkout(routine.id)} className="cursor-pointer">
@@ -119,6 +140,28 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                   <Edit className="mr-2 h-4 w-4" />
                   Editar
                 </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePublishToggle();
+                  }}
+                  disabled={routine.is_predefined || isPublishing}
+                  className="cursor-pointer"
+                >
+                  {isPublished ? (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      Despublicar
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Publicar rutina
+                    </>
+                  )}
+                </DropdownMenuItem>
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={(e) => {
@@ -136,8 +179,13 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
           </div>
           
           {/* Detalles */}
-          <div className="text-sm text-muted-foreground mb-3">
-            {typeLabel} • {exerciseLabel}
+          <div className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
+            <span>{typeLabel} • {exerciseLabel}</span>
+            {isPublished && (
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                Publicada
+              </span>
+            )}
           </div>
           
           <div className="flex justify-between items-center">
