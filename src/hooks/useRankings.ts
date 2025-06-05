@@ -29,43 +29,45 @@ export const useRankings = () => {
       
       console.log('Fetching all public users for rankings...');
       
-      // Get all users with public profiles and LEFT JOIN with user_streaks
-      const { data, error } = await supabase
+      // First get all public profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          username,
-          full_name,
-          avatar_url,
-          is_profile_public,
-          user_streaks (
-            current_streak,
-            total_experience,
-            current_level
-          )
-        `)
+        .select('id, username, full_name, avatar_url, is_profile_public')
         .eq('is_profile_public', true);
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (profilesError) {
+        console.error('Profiles error:', profilesError);
+        throw profilesError;
       }
       
-      console.log('Users data received:', data);
+      console.log('Profiles data received:', profiles);
       
-      if (!data || data.length === 0) {
+      if (!profiles || profiles.length === 0) {
         console.log('No public users found');
         setRankings([]);
         return;
       }
 
-      // Transform the data to match RankingUser interface
-      const transformedData = data.map(profile => {
-        // Handle user_streaks properly - it could be an array or null
-        let streakData = null;
-        if (profile.user_streaks && Array.isArray(profile.user_streaks) && profile.user_streaks.length > 0) {
-          streakData = profile.user_streaks[0];
-        }
+      // Get user IDs to fetch streaks
+      const userIds = profiles.map(p => p.id);
+      
+      // Then get streak data for these users
+      const { data: streaks, error: streaksError } = await supabase
+        .from('user_streaks')
+        .select('user_id, current_streak, total_experience, current_level')
+        .in('user_id', userIds);
+
+      if (streaksError) {
+        console.error('Streaks error:', streaksError);
+        throw streaksError;
+      }
+      
+      console.log('Streaks data received:', streaks);
+
+      // Transform and combine the data
+      const transformedData = profiles.map(profile => {
+        // Find streak data for this user
+        const streakData = streaks?.find(s => s.user_id === profile.id);
         
         // Use username if available, otherwise use full_name, otherwise create a default
         const displayName = profile.username || profile.full_name || `Usuario #${profile.id.substring(0, 8)}`;
