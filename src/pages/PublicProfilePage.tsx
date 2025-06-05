@@ -15,19 +15,13 @@ const PublicProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const { profile, isLoading, error, refetch } = usePublicProfile(userId || '');
+  const { profile, isLoading, error } = usePublicProfile(userId);
   const { 
     isFollowing, 
     followUser, 
     unfollowUser, 
     isLoading: followLoading 
   } = useFollows();
-
-  useEffect(() => {
-    if (userId) {
-      refetch();
-    }
-  }, [userId, refetch]);
 
   const handleBack = () => {
     navigate(-1);
@@ -45,9 +39,13 @@ const PublicProfilePage: React.FC = () => {
 
   const isOwnProfile = currentUser?.id === userId;
 
+  console.log('PublicProfilePage render:', { userId, isLoading, error, profile });
+
   if (isLoading) {
     return (
       <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
+        <PublicProfileHeader onBack={handleBack} />
+        
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
