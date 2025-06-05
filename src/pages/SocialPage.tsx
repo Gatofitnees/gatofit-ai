@@ -13,12 +13,15 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const SocialPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { rankings, isLoading } = useRankings();
+  const { rankings, isLoading, error } = useRankings();
   const { user } = useAuth();
   const { stats } = useUserStats(user?.id);
   const navigate = useNavigate();
 
-  console.log('SocialPage rankings:', rankings);
+  console.log('🌟 SocialPage rankings:', rankings);
+  console.log('📊 SocialPage rankings count:', rankings?.length || 0);
+  console.log('⚡ SocialPage isLoading:', isLoading);
+  console.log('❌ SocialPage error:', error);
 
   // Filter users based on search query - search in both username and full_name
   const filteredUsers = rankings.filter(rankingUser => {
@@ -32,6 +35,25 @@ const SocialPage: React.FC = () => {
   const handleUserClick = (userId: string) => {
     navigate(`/public-profile/${userId}`);
   };
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
+        <h1 className="text-xl font-bold mb-6">Social</h1>
+        <div className="text-center py-8 text-red-500">
+          <p>Error: {error}</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="mt-4"
+          >
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -74,6 +96,7 @@ const SocialPage: React.FC = () => {
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-primary" />
             <h3 className="font-semibold">Top Usuarios</h3>
+            <span className="text-xs text-muted-foreground">({rankings.length})</span>
           </div>
           
           {isLoading ? (

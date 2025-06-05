@@ -27,45 +27,66 @@ export const useRankings = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('Fetching all public users for rankings...');
+      console.log('🔍 Fetching all public users for rankings...');
       
-      // First get all public profiles
+      // Check current user authentication status
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('❌ Auth error:', authError);
+        throw new Error('Error de autenticación');
+      }
+      
+      console.log('✅ Current user authenticated:', user?.id);
+      
+      // First get all public profiles with enhanced logging
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, full_name, avatar_url, is_profile_public')
         .eq('is_profile_public', true);
 
       if (profilesError) {
-        console.error('Profiles error:', profilesError);
+        console.error('❌ Profiles error:', profilesError);
+        console.error('❌ Error details:', profilesError.message, profilesError.details, profilesError.hint);
         throw profilesError;
       }
       
-      console.log('Profiles data received:', profiles);
-      console.log('Number of public profiles found:', profiles?.length || 0);
+      console.log('✅ Profiles data received:', profiles);
+      console.log('📊 Number of public profiles found:', profiles?.length || 0);
       
       if (!profiles || profiles.length === 0) {
-        console.log('No public users found');
+        console.log('⚠️ No public users found');
         setRankings([]);
         return;
       }
 
+      // Log individual profiles
+      profiles.forEach((profile, index) => {
+        console.log(`👤 Profile ${index + 1}:`, {
+          id: profile.id,
+          username: profile.username,
+          full_name: profile.full_name,
+          is_public: profile.is_profile_public
+        });
+      });
+
       // Get user IDs to fetch streaks
       const userIds = profiles.map(p => p.id);
-      console.log('User IDs to fetch streaks for:', userIds);
+      console.log('🔢 User IDs to fetch streaks for:', userIds);
       
-      // Then get streak data for these users
+      // Then get streak data for these users with enhanced logging
       const { data: streaks, error: streaksError } = await supabase
         .from('user_streaks')
         .select('user_id, current_streak, total_experience, current_level')
         .in('user_id', userIds);
 
       if (streaksError) {
-        console.error('Streaks error:', streaksError);
+        console.error('❌ Streaks error:', streaksError);
+        console.error('❌ Streaks error details:', streaksError.message, streaksError.details, streaksError.hint);
         throw streaksError;
       }
       
-      console.log('Streaks data received:', streaks);
-      console.log('Number of streak records found:', streaks?.length || 0);
+      console.log('✅ Streaks data received:', streaks);
+      console.log('📊 Number of streak records found:', streaks?.length || 0);
 
       // Transform and combine the data - ensure ALL profiles are included
       const transformedData = profiles.map((profile, index) => {
@@ -75,7 +96,7 @@ export const useRankings = () => {
         // Use username if available, otherwise use full_name, otherwise create a default
         const displayName = profile.username || profile.full_name || `Usuario #${profile.id.substring(0, 8)}`;
         
-        console.log(`Processing user ${index + 1}:`, {
+        console.log(`🔄 Processing user ${index + 1}:`, {
           id: profile.id,
           username: profile.username,
           full_name: profile.full_name,
@@ -100,7 +121,7 @@ export const useRankings = () => {
         return user;
       });
 
-      console.log('All transformed users before sorting:', transformedData);
+      console.log('🔄 All transformed users before sorting:', transformedData);
 
       // Sort users based on the selected type
       const sortedData = transformedData.sort((a, b) => {
@@ -111,13 +132,13 @@ export const useRankings = () => {
         }
       });
 
-      console.log('Final sorted data:', sortedData);
-      console.log('Number of users in final ranking:', sortedData.length);
+      console.log('✅ Final sorted data:', sortedData);
+      console.log('📊 Number of users in final ranking:', sortedData.length);
       
       setRankings(sortedData);
     } catch (err: any) {
-      console.error('Error fetching rankings:', err);
-      setError('Error al cargar clasificaciones');
+      console.error('❌ Error fetching rankings:', err);
+      setError(err.message || 'Error al cargar clasificaciones');
     } finally {
       setIsLoading(false);
     }
