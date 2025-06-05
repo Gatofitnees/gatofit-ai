@@ -80,7 +80,7 @@ export const usePublicProfile = (userId?: string) => {
       console.log('Stats response:', statsResponse);
       console.log('Streak response:', streakResponse);
 
-      const statsData = statsResponse.data;
+      const statsData = statsResponse.data?.[0]; // Access first element of array
       const streakData = streakResponse.data;
 
       // Combine all data
