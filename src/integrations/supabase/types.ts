@@ -992,9 +992,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      copy_routine: {
+        Args: { source_routine_id: number; target_user_id: string }
+        Returns: Json
+      }
       create_user_profile: {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: Json
+      }
+      get_public_routines: {
+        Args: { target_user_id: string }
+        Returns: {
+          routine_id: number
+          routine_name: string
+          routine_type: string
+          routine_description: string
+          estimated_duration_minutes: number
+          exercise_count: number
+          created_at: string
+        }[]
       }
       get_user_stats: {
         Args: { target_user_id: string }

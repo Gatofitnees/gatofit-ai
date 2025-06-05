@@ -86,7 +86,7 @@ const PublicProfilePage: React.FC = () => {
 
       <PublicProfileStreak profile={profile} />
 
-      <PublicProfileRoutines />
+      <PublicProfileRoutines userId={userId!} />
     </div>
   );
 };
