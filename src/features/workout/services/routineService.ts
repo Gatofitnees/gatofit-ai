@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { RoutineExercise } from "../types";
 import { toast } from "sonner";
@@ -246,4 +245,53 @@ function calculateEstimatedDuration(exercises: RoutineExercise[]): number {
   const restMinutes = Math.ceil(totalRestSeconds / 60);
   
   return baseTime + restMinutes;
+}
+
+export async function deleteRoutine(routineId: number) {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw userError || new Error("Usuario no autenticado");
+    }
+
+    console.log(`Deleting routine #${routineId} for user:`, user.id);
+
+    // Verify that the routine belongs to the current user
+    const { data: existingRoutine, error: routineCheckError } = await supabase
+      .from('routines')
+      .select('user_id')
+      .eq('id', routineId)
+      .single();
+      
+    if (routineCheckError) {
+      throw new Error("Error al verificar la rutina: " + routineCheckError.message);
+    }
+    
+    if (!existingRoutine) {
+      throw new Error("Rutina no encontrada");
+    }
+    
+    if (existingRoutine.user_id !== user.id) {
+      throw new Error("No tienes permiso para eliminar esta rutina");
+    }
+
+    // Delete the routine (this will cascade delete routine_exercises due to foreign key constraints)
+    const { error: deleteError } = await supabase
+      .from('routines')
+      .delete()
+      .eq('id', routineId);
+      
+    if (deleteError) {
+      throw new Error("Error al eliminar la rutina: " + deleteError.message);
+    }
+
+    console.log("Routine deleted successfully");
+    return true;
+    
+  } catch (error: any) {
+    console.error("Error in deleteRoutine:", error);
+    throw error instanceof Error ? error : new Error("Error desconocido al eliminar la rutina");
+  }
 }

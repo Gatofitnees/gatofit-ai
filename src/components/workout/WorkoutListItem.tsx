@@ -28,7 +28,7 @@ interface Routine {
   name: string;
   description?: string;
   estimated_duration_minutes?: number;
-  exercise_count: number;
+  exercise_count?: number; // Made optional to match WorkoutRoutine type
   type?: string;
 }
 
