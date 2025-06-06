@@ -40,7 +40,7 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
           <RankBadge 
             level={profile.current_level || 1} 
             size="md"
-            showLevelNumber={true}
+            showLevelWithRank={true}
           />
         </div>
         

@@ -7,7 +7,8 @@ interface RankBadgeProps {
   showIcon?: boolean;
   showName?: boolean;
   size?: 'sm' | 'md' | 'lg';
-  showLevelNumber?: boolean; // New prop for public profiles
+  showLevelNumber?: boolean;
+  showLevelWithRank?: boolean; // New prop for "Nivel X • Rango" format
 }
 
 const RankBadge: React.FC<RankBadgeProps> = ({ 
@@ -15,7 +16,8 @@ const RankBadge: React.FC<RankBadgeProps> = ({
   showIcon = true, 
   showName = true,
   size = 'md',
-  showLevelNumber = false
+  showLevelNumber = false,
+  showLevelWithRank = false
 }) => {
   const rank = getRankFromLevel(level);
   
@@ -33,7 +35,11 @@ const RankBadge: React.FC<RankBadgeProps> = ({
 
   return (
     <div className={`flex items-center gap-1 ${sizeClasses[size]}`}>
-      {showLevelNumber ? (
+      {showLevelWithRank ? (
+        <span className={`font-medium ${rank.textColor} ${iconSizes[size]}`}>
+          Nivel {level} • {rank.name}
+        </span>
+      ) : showLevelNumber ? (
         <span className={`font-bold ${rank.textColor} ${iconSizes[size]}`}>
           Nivel {level}
         </span>

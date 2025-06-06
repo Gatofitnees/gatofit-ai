@@ -27,7 +27,7 @@ const PublicProfileStats: React.FC<PublicProfileStatsProps> = ({ profile }) => {
       <Card>
         <CardBody className="text-center py-4">
           <div className="text-2xl font-bold">{profile.total_workouts || 0}</div>
-          <div className="text-xs text-muted-foreground text-center">Entrenamientos</div>
+          <div className="text-xs text-muted-foreground text-center">Entrenos</div>
         </CardBody>
       </Card>
     </div>

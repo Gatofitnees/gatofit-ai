@@ -77,7 +77,7 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
                 <p className="font-medium text-sm">
                   {displayName}
                 </p>
-                <RankBadge level={user.current_level} size="sm" />
+                <RankBadge level={user.current_level} size="sm" showLevelWithRank={true} />
               </div>
             </div>
             
