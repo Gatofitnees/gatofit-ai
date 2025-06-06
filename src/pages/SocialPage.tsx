@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const SocialPage: React.FC = () => {
   const { profile } = useProfile();
-  const { rankings, loading } = useRankings();
+  const { rankings, isLoading } = useRankings();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showFollowersDialog, setShowFollowersDialog] = useState(false);
@@ -29,7 +29,7 @@ const SocialPage: React.FC = () => {
     setShowFollowingDialog(true);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
         <h1 className="text-2xl font-bold mb-6">Social</h1>
@@ -55,7 +55,7 @@ const SocialPage: React.FC = () => {
               onClick={handleShowFollowers}
             >
               <CardBody className="text-center py-4">
-                <div className="text-2xl font-bold">{profile.followers_count || 0}</div>
+                <div className="text-2xl font-bold">{followers.length || 0}</div>
                 <div className="text-xs text-muted-foreground">Seguidores</div>
               </CardBody>
             </div>
@@ -67,7 +67,7 @@ const SocialPage: React.FC = () => {
               onClick={handleShowFollowing}
             >
               <CardBody className="text-center py-4">
-                <div className="text-2xl font-bold">{profile.following_count || 0}</div>
+                <div className="text-2xl font-bold">{following.length || 0}</div>
                 <div className="text-xs text-muted-foreground">Siguiendo</div>
               </CardBody>
             </div>
@@ -80,33 +80,35 @@ const SocialPage: React.FC = () => {
         <h2 className="text-lg font-semibold">Ranking de usuarios</h2>
         
         {rankings.map((user, index) => (
-          <Card 
-            key={user.user_id} 
-            className="cursor-pointer hover:shadow-md transition-shadow"
+          <div 
+            key={user.user_id}
+            className="cursor-pointer"
             onClick={() => handleUserClick(user.user_id)}
           >
-            <CardBody className="flex items-center gap-4 py-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-primary/10 text-primary rounded-full text-sm font-bold">
-                #{index + 1}
-              </div>
-              
-              <div className="flex-1">
-                <h3 className="font-medium">{user.username}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Nivel {user.level || 1} • {user.total_workouts} entrenamientos
-                </p>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-lg font-bold text-primary">
-                  Nv. {user.level || 1}
+            <Card className="hover:shadow-md transition-shadow">
+              <CardBody className="flex items-center gap-4 py-4">
+                <div className="flex items-center justify-center w-8 h-8 bg-primary/10 text-primary rounded-full text-sm font-bold">
+                  #{index + 1}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {user.experience_points} XP
+                
+                <div className="flex-1">
+                  <h3 className="font-medium">{user.username}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Nivel {user.current_level || 1} • {user.total_workouts} entrenamientos
+                  </p>
                 </div>
-              </div>
-            </CardBody>
-          </Card>
+                
+                <div className="text-right">
+                  <div className="text-lg font-bold text-primary">
+                    Nv. {user.current_level || 1}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {user.total_experience} XP
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
         ))}
       </div>
 
