@@ -977,15 +977,17 @@ export type Database = {
     }
     Functions: {
       calculate_macro_recommendations: {
-        Args: {
-          user_weight_kg: number
-          user_height_cm: number
-          user_age: number
-          user_gender: string
-          user_goal: string
-          user_trainings_per_week: number
-          user_target_pace: string
-        }
+        Args:
+          | Record<PropertyKey, never>
+          | {
+              user_weight_kg: number
+              user_height_cm: number
+              user_age: number
+              user_gender: string
+              user_goal: string
+              user_trainings_per_week: number
+              user_target_pace: string
+            }
         Returns: Json
       }
       clean_old_food_entries: {
@@ -993,7 +995,9 @@ export type Database = {
         Returns: undefined
       }
       copy_routine: {
-        Args: { source_routine_id: number; target_user_id: string }
+        Args:
+          | Record<PropertyKey, never>
+          | { source_routine_id: number; target_user_id: string }
         Returns: Json
       }
       create_user_profile: {
@@ -1013,7 +1017,7 @@ export type Database = {
         }[]
       }
       get_user_stats: {
-        Args: { target_user_id: string }
+        Args: Record<PropertyKey, never> | { target_user_id: string }
         Returns: {
           total_workouts: number
           followers_count: number
@@ -1022,7 +1026,7 @@ export type Database = {
         }[]
       }
       update_user_streak: {
-        Args: { p_user_id: string }
+        Args: Record<PropertyKey, never> | { p_user_id: string }
         Returns: undefined
       }
     }

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from './Avatar';
@@ -77,7 +76,7 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
                 <p className="font-medium text-sm">
                   {displayName}
                 </p>
-                <RankBadge level={user.current_level} size="sm" showLevelWithRank={true} />
+                <RankBadge level={user.current_level} size="sm" showLevelNumber={true} />
               </div>
             </div>
             
