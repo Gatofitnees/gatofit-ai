@@ -1,21 +1,25 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, Users, TrendingUp } from 'lucide-react';
+import { Search, TrendingUp } from 'lucide-react';
 import { Card, CardBody } from '@/components/Card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Avatar from '@/components/Avatar';
 import RankBadge from '@/components/RankBadge';
+import FollowersDialog from '@/components/social/FollowersDialog';
 import { useRankings } from '@/hooks/useRankings';
 import { useUserStats } from '@/hooks/useUserStats';
+import { useFollowersList } from '@/hooks/useFollowersList';
 import { useAuth } from '@/contexts/AuthContext';
 
 const SocialPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
+  const [followingDialogOpen, setFollowingDialogOpen] = useState(false);
   const { rankings, isLoading, error } = useRankings();
   const { user } = useAuth();
   const { stats } = useUserStats(user?.id);
+  const { followers, following, isLoading: followersLoading } = useFollowersList(user?.id);
   const navigate = useNavigate();
 
   console.log('🌟 SocialPage rankings:', rankings);
@@ -43,13 +47,6 @@ const SocialPage: React.FC = () => {
         <h1 className="text-xl font-bold mb-6">Social</h1>
         <div className="text-center py-8 text-red-500">
           <p>Error: {error}</p>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.reload()} 
-            className="mt-4"
-          >
-            Reintentar
-          </Button>
         </div>
       </div>
     );
@@ -73,21 +70,29 @@ const SocialPage: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card>
-          <CardBody className="text-center py-4">
-            <Users className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-            <div className="text-2xl font-bold">{stats?.followers_count || 0}</div>
-            <div className="text-sm text-muted-foreground">Seguidores</div>
-          </CardBody>
-        </Card>
+        <div 
+          className="cursor-pointer"
+          onClick={() => setFollowersDialogOpen(true)}
+        >
+          <Card className="hover:shadow-md transition-shadow">
+            <CardBody className="text-center py-4">
+              <div className="text-2xl font-bold">{stats?.followers_count || 0}</div>
+              <div className="text-xs text-muted-foreground">Seguidores</div>
+            </CardBody>
+          </Card>
+        </div>
         
-        <Card>
-          <CardBody className="text-center py-4">
-            <UserPlus className="h-6 w-6 mx-auto mb-2 text-green-500" />
-            <div className="text-2xl font-bold">{stats?.following_count || 0}</div>
-            <div className="text-sm text-muted-foreground">Siguiendo</div>
-          </CardBody>
-        </Card>
+        <div 
+          className="cursor-pointer"
+          onClick={() => setFollowingDialogOpen(true)}
+        >
+          <Card className="hover:shadow-md transition-shadow">
+            <CardBody className="text-center py-4">
+              <div className="text-2xl font-bold">{stats?.following_count || 0}</div>
+              <div className="text-xs text-muted-foreground">Siguiendo</div>
+            </CardBody>
+          </Card>
+        </div>
       </div>
 
       {/* Top Users */}
@@ -138,7 +143,7 @@ const SocialPage: React.FC = () => {
                   
                   <div className="flex-1">
                     <p className="font-medium text-sm">{rankingUser.username}</p>
-                    <RankBadge level={rankingUser.current_level} size="sm" />
+                    <RankBadge level={rankingUser.current_level} size="sm" showLevelNumber={true} />
                   </div>
                 </div>
               ))}
@@ -176,7 +181,7 @@ const SocialPage: React.FC = () => {
                     <div className="flex-1">
                       <p className="font-medium text-sm">{rankingUser.username}</p>
                       <div className="flex items-center gap-2">
-                        <RankBadge level={rankingUser.current_level} size="sm" />
+                        <RankBadge level={rankingUser.current_level} size="sm" showLevelNumber={true} />
                         <span className="text-xs text-muted-foreground">
                           {rankingUser.current_streak} días racha
                         </span>
@@ -189,6 +194,23 @@ const SocialPage: React.FC = () => {
           </CardBody>
         </Card>
       )}
+
+      {/* Dialogs */}
+      <FollowersDialog
+        open={followersDialogOpen}
+        onOpenChange={setFollowersDialogOpen}
+        followers={followers}
+        title="Seguidores"
+        isLoading={followersLoading}
+      />
+
+      <FollowersDialog
+        open={followingDialogOpen}
+        onOpenChange={setFollowingDialogOpen}
+        followers={following}
+        title="Siguiendo"
+        isLoading={followersLoading}
+      />
     </div>
   );
 };
