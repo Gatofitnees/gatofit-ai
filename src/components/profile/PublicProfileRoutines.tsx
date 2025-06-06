@@ -6,14 +6,6 @@ import { Download, Clock, Dumbbell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { translateRoutineType } from '@/utils/routineTypeTranslations';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 
 interface PublicRoutine {
   routine_id: number;
@@ -119,7 +111,7 @@ const PublicProfileRoutines: React.FC<PublicProfileRoutinesProps> = ({ userId })
           <h3 className="font-semibold mb-4">Rutinas Públicas</h3>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-80 h-40 bg-muted rounded-lg animate-pulse" />
+              <div key={i} className="flex-shrink-0 w-64 h-32 bg-muted rounded-lg animate-pulse" />
             ))}
           </div>
         </CardBody>
@@ -144,73 +136,63 @@ const PublicProfileRoutines: React.FC<PublicProfileRoutinesProps> = ({ userId })
     <Card>
       <CardBody>
         <h3 className="font-semibold mb-4">Rutinas Públicas</h3>
-        
-        <Carousel className="w-full">
-          <CarouselContent className="-ml-2">
-            {routines.map((routine) => (
-              <CarouselItem key={routine.routine_id} className="pl-2 basis-[85%]">
-                <Card className="h-full hover:shadow-md transition-shadow">
-                  <CardBody className="p-4 flex flex-col h-full min-h-[160px]">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm mb-2 line-clamp-2">
-                        {routine.routine_name}
-                      </h4>
-                      
-                      {routine.routine_description && (
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                          {routine.routine_description}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                        <div className="flex items-center gap-1">
-                          <Dumbbell className="h-3 w-3" />
-                          <span>{routine.exercise_count} ejercicios</span>
-                        </div>
-                        
-                        {routine.estimated_duration_minutes && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{routine.estimated_duration_minutes} min</span>
-                          </div>
-                        )}
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {routines.map((routine) => (
+            <div key={routine.routine_id} className="flex-shrink-0 w-64">
+              <Card className="h-full hover:shadow-md transition-shadow">
+                <CardBody className="p-4 flex flex-col h-full">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm mb-2 line-clamp-2">
+                      {routine.routine_name}
+                    </h4>
+                    
+                    {routine.routine_description && (
+                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                        {routine.routine_description}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                      <div className="flex items-center gap-1">
+                        <Dumbbell className="h-3 w-3" />
+                        <span>{routine.exercise_count} ejercicios</span>
                       </div>
-
-                      {routine.routine_type && (
-                        <div className="mb-3">
-                          <span className="inline-block bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
-                            {translateRoutineType(routine.routine_type)}
-                          </span>
+                      
+                      {routine.estimated_duration_minutes && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{routine.estimated_duration_minutes} min</span>
                         </div>
                       )}
                     </div>
-                    
-                    <Button
-                      onClick={() => copyRoutine(routine.routine_id, routine.routine_name)}
-                      disabled={copyingRoutineId === routine.routine_id || !user}
-                      size="sm"
-                      className="w-full mt-auto"
-                    >
-                      {copyingRoutineId === routine.routine_id ? (
-                        <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full mr-2" />
-                      ) : (
-                        <Download className="h-3 w-3 mr-2" />
-                      )}
-                      {copyingRoutineId === routine.routine_id ? 'Cargando...' : 'Cargar rutina'}
-                    </Button>
-                  </CardBody>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          
-          {routines.length > 1 && (
-            <>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
-            </>
-          )}
-        </Carousel>
+
+                    {routine.routine_type && (
+                      <div className="mb-3">
+                        <span className="inline-block bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
+                          {routine.routine_type}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Button
+                    onClick={() => copyRoutine(routine.routine_id, routine.routine_name)}
+                    disabled={copyingRoutineId === routine.routine_id || !user}
+                    size="sm"
+                    className="w-full mt-auto"
+                  >
+                    {copyingRoutineId === routine.routine_id ? (
+                      <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full mr-2" />
+                    ) : (
+                      <Download className="h-3 w-3 mr-2" />
+                    )}
+                    {copyingRoutineId === routine.routine_id ? 'Cargando...' : 'Cargar rutina'}
+                  </Button>
+                </CardBody>
+              </Card>
+            </div>
+          ))}
+        </div>
       </CardBody>
     </Card>
   );

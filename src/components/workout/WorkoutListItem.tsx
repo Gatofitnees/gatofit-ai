@@ -1,175 +1,212 @@
-
-import React, { useState } from 'react';
-import { Clock, Dumbbell, MoreVertical, Play, Eye, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
+import React, { useState, useEffect } from "react";
+import { Edit, MoreVertical, PlayCircle, Trash, Share2, EyeOff } from "lucide-react";
+import { 
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useNavigate } from 'react-router-dom';
-import { deleteRoutine } from '@/features/workout/services/routineService';
-import { useToast } from '@/hooks/use-toast';
-import { translateRoutineType } from '@/utils/routineTypeTranslations';
-
-interface Routine {
-  id: number;
-  name: string;
-  description?: string;
-  estimated_duration_minutes?: number;
-  exercise_count?: number; // Made optional to match WorkoutRoutine type
-  type?: string;
-}
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { Card } from "@/components/Card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useSharedRoutines } from "@/hooks/useSharedRoutines";
+import { toast } from "sonner";
 
 interface WorkoutListItemProps {
-  routine: Routine;
+  routine: {
+    id: number;
+    name: string;
+    type?: string;
+    description?: string;
+    exercise_count?: number;
+    estimated_duration_minutes?: number;
+    is_predefined?: boolean;
+  };
   onStartWorkout: (routineId: number) => void;
-  onRoutineDeleted?: () => void;
+  onRoutineDeleted: () => void;
 }
 
-const WorkoutListItem: React.FC<WorkoutListItemProps> = ({ 
-  routine, 
-  onStartWorkout, 
-  onRoutineDeleted 
+const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
+  routine,
+  onStartWorkout,
+  onRoutineDeleted
 }) => {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { toast: uiToast } = useToast();
+  const { publishRoutine, unpublishRoutine, checkIfPublished, isPublishing } = useSharedRoutines();
   const [isDeleting, setIsDeleting] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleViewRoutine = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate(`/workout/routine/${routine.id}`);
-  };
-
-  const handleDeleteRoutine = async () => {
+  const [isPublished, setIsPublished] = useState(false);
+  
+  // Check if routine is published on mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      const published = await checkIfPublished(routine.id);
+      setIsPublished(published);
+    };
+    checkStatus();
+  }, [routine.id, checkIfPublished]);
+  
+  // Determina los textos a mostrar según el tipo de rutina
+  const typeLabel = routine.type 
+    ? routine.type.charAt(0).toUpperCase() + routine.type.slice(1) 
+    : "General";
+  
+  const exerciseLabel = routine.exercise_count === 1 
+    ? "1 ejercicio"
+    : `${routine.exercise_count} ejercicios`;
+  
+  const timeLabel = routine.estimated_duration_minutes
+    ? `${routine.estimated_duration_minutes} min`
+    : "15-30 min";
+    
+  const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await deleteRoutine(routine.id);
+      toast.loading("Eliminando rutina...");
       
-      toast({
+      // With cascade deletion configured, we only need to delete the routine
+      // The database will automatically delete related workout_logs, routine_exercises, and exercise_details
+      const { error: routineError } = await supabase
+        .from('routines')
+        .delete()
+        .eq('id', routine.id);
+        
+      if (routineError) {
+        console.error("Error deleting routine:", routineError);
+        throw routineError;
+      }
+      
+      toast.dismiss();
+      uiToast({
         title: "Rutina eliminada",
-        description: "La rutina ha sido eliminada exitosamente",
+        description: "La rutina y todos sus datos asociados han sido eliminados correctamente",
+        variant: "success"
       });
       
-      onRoutineDeleted?.();
+      onRoutineDeleted();
     } catch (error: any) {
-      console.error('Error deleting routine:', error);
-      toast({
+      console.error("Error deleting routine:", error);
+      toast.dismiss();
+      uiToast({
         title: "Error",
-        description: error.message || "No se pudo eliminar la rutina",
-        variant: "destructive",
+        description: "No se pudo eliminar la rutina. Inténtalo de nuevo.",
+        variant: "destructive"
       });
     } finally {
       setIsDeleting(false);
-      setShowDeleteDialog(false);
+    }
+  };
+  
+  const handleEditRoutine = () => {
+    window.location.href = `/workout/edit/${routine.id}`;
+  };
+
+  const handlePublishToggle = async () => {
+    if (isPublished) {
+      await unpublishRoutine(routine.id);
+      setIsPublished(false);
+    } else {
+      await publishRoutine(routine.id);
+      setIsPublished(true);
     }
   };
 
-  const stopPropagation = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
+  // Use a wrapper div with the onClick handler instead of putting it directly on the Card
   return (
-    <>
-      <div 
-        className="bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => onStartWorkout(routine.id)}
-      >
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg mb-1">{routine.name}</h3>
-            {routine.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {routine.description}
-              </p>
-            )}
+    <div onClick={() => onStartWorkout(routine.id)} className="cursor-pointer">
+      <Card className="hover:shadow-lg transition-shadow border-none">
+        <div className="p-4">
+          {/* Título y Menú */}
+          <div className="flex justify-between mb-1">
+            <h3 className="font-bold text-lg truncate">
+              {routine.name}
+            </h3>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <button className="p-1 rounded-full hover:bg-secondary/30">
+                  <MoreVertical className="h-5 w-5 text-gray-500" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-sm border border-secondary">
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditRoutine();
+                  }}
+                  disabled={routine.is_predefined || isDeleting}
+                  className="cursor-pointer"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePublishToggle();
+                  }}
+                  disabled={routine.is_predefined || isPublishing}
+                  className="cursor-pointer"
+                >
+                  {isPublished ? (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      Despublicar
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Publicar rutina
+                    </>
+                  )}
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  disabled={routine.is_predefined || isDeleting}
+                  className="text-destructive cursor-pointer focus:text-destructive"
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Eliminar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={stopPropagation}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={stopPropagation}>
-              <DropdownMenuItem onClick={handleViewRoutine}>
-                <Eye className="h-4 w-4 mr-2" />
-                Ver detalles
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Eliminar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Dumbbell className="h-4 w-4" />
-              <span>{routine.exercise_count} ejercicios</span>
-            </div>
-            
-            {routine.estimated_duration_minutes && (
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>{routine.estimated_duration_minutes} min</span>
-              </div>
-            )}
-
-            {routine.type && (
-              <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
-                {translateRoutineType(routine.type)}
+          {/* Detalles */}
+          <div className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
+            <span>{typeLabel} • {exerciseLabel}</span>
+            {isPublished && (
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                Publicada
               </span>
             )}
           </div>
-
-          <Button size="sm" className="gap-2" onClick={stopPropagation}>
-            <Play className="h-4 w-4" />
-            Iniciar
-          </Button>
-        </div>
-      </div>
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar rutina?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. La rutina "{routine.name}" será eliminada permanentemente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteRoutine}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          
+          <div className="flex justify-between items-center">
+            <div className="text-xs text-muted-foreground">
+              Duración: {timeLabel}
+            </div>
+            
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartWorkout(routine.id);
+              }}
+              className="flex items-center justify-center gap-1 text-sm font-medium text-primary"
             >
-              {isDeleting ? "Eliminando..." : "Eliminar"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+              <PlayCircle className="h-4 w-4" />
+              <span>Empezar</span>
+            </button>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 };
 

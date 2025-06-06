@@ -1,42 +1,55 @@
 
 import React, { useState } from 'react';
-import { Card, CardBody } from '@/components/Card';
-import { useProfile } from '@/hooks/useProfile';
-import { useRankings } from '@/hooks/useRankings';
 import { useNavigate } from 'react-router-dom';
-import FollowersDialog from '@/components/social/FollowersDialog';
-import { useFollowersList } from '@/hooks/useFollowersList';
+import { Search, UserPlus, Users, TrendingUp } from 'lucide-react';
+import { Card, CardBody } from '@/components/Card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import Avatar from '@/components/Avatar';
+import RankBadge from '@/components/RankBadge';
+import { useRankings } from '@/hooks/useRankings';
+import { useUserStats } from '@/hooks/useUserStats';
 import { useAuth } from '@/contexts/AuthContext';
 
 const SocialPage: React.FC = () => {
-  const { profile } = useProfile();
-  const { rankings, isLoading } = useRankings();
-  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { rankings, isLoading, error } = useRankings();
   const { user } = useAuth();
-  const [showFollowersDialog, setShowFollowersDialog] = useState(false);
-  const [showFollowingDialog, setShowFollowingDialog] = useState(false);
-  const { followers, following, isLoading: followersLoading } = useFollowersList(user?.id);
+  const { stats } = useUserStats(user?.id);
+  const navigate = useNavigate();
+
+  console.log('🌟 SocialPage rankings:', rankings);
+  console.log('📊 SocialPage rankings count:', rankings?.length || 0);
+  console.log('⚡ SocialPage isLoading:', isLoading);
+  console.log('❌ SocialPage error:', error);
+
+  // Filter users based on search query - search in both username and full_name
+  const filteredUsers = rankings.filter(rankingUser => {
+    const query = searchQuery.toLowerCase();
+    const username = rankingUser.username?.toLowerCase() || '';
+    return username.includes(query);
+  });
+
+  const topUsers = rankings.slice(0, 5);
 
   const handleUserClick = (userId: string) => {
     navigate(`/public-profile/${userId}`);
   };
 
-  const handleShowFollowers = () => {
-    setShowFollowersDialog(true);
-  };
-
-  const handleShowFollowing = () => {
-    setShowFollowingDialog(true);
-  };
-
-  if (isLoading) {
+  // Show error state if there's an error
+  if (error) {
     return (
       <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Social</h1>
-        <div className="animate-pulse space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-muted rounded-lg" />
-          ))}
+        <h1 className="text-xl font-bold mb-6">Social</h1>
+        <div className="text-center py-8 text-red-500">
+          <p>Error: {error}</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="mt-4"
+          >
+            Reintentar
+          </Button>
         </div>
       </div>
     );
@@ -44,91 +57,138 @@ const SocialPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Social</h1>
+      <h1 className="text-xl font-bold mb-6">Social</h1>
       
-      {/* User Stats */}
-      {profile && (
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card>
-            <div 
-              className="cursor-pointer"
-              onClick={handleShowFollowers}
-            >
-              <CardBody className="text-center py-4">
-                <div className="text-2xl font-bold">{followers.length || 0}</div>
-                <div className="text-xs text-muted-foreground">Seguidores</div>
-              </CardBody>
-            </div>
-          </Card>
-          
-          <Card>
-            <div 
-              className="cursor-pointer"
-              onClick={handleShowFollowing}
-            >
-              <CardBody className="text-center py-4">
-                <div className="text-2xl font-bold">{following.length || 0}</div>
-                <div className="text-xs text-muted-foreground">Siguiendo</div>
-              </CardBody>
-            </div>
-          </Card>
-        </div>
-      )}
-      
-      {/* Rankings */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Ranking de usuarios</h2>
-        
-        {rankings.map((user, index) => (
-          <div 
-            key={user.user_id}
-            className="cursor-pointer"
-            onClick={() => handleUserClick(user.user_id)}
-          >
-            <Card className="hover:shadow-md transition-shadow">
-              <CardBody className="flex items-center gap-4 py-4">
-                <div className="flex items-center justify-center w-8 h-8 bg-primary/10 text-primary rounded-full text-sm font-bold">
-                  #{index + 1}
-                </div>
-                
-                <div className="flex-1">
-                  <h3 className="font-medium">{user.username}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Nivel {user.current_level || 1} • {user.total_workouts} entrenamientos
-                  </p>
-                </div>
-                
-                <div className="text-right">
-                  <div className="text-lg font-bold text-primary">
-                    Nv. {user.current_level || 1}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {user.total_experience} XP
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        ))}
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Buscar usuarios..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
       </div>
 
-      {/* Followers Dialog */}
-      <FollowersDialog
-        isOpen={showFollowersDialog}
-        onClose={() => setShowFollowersDialog(false)}
-        followers={followers}
-        isLoading={followersLoading}
-        title="Seguidores"
-      />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <Card>
+          <CardBody className="text-center py-4">
+            <Users className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+            <div className="text-2xl font-bold">{stats?.followers_count || 0}</div>
+            <div className="text-sm text-muted-foreground">Seguidores</div>
+          </CardBody>
+        </Card>
+        
+        <Card>
+          <CardBody className="text-center py-4">
+            <UserPlus className="h-6 w-6 mx-auto mb-2 text-green-500" />
+            <div className="text-2xl font-bold">{stats?.following_count || 0}</div>
+            <div className="text-sm text-muted-foreground">Siguiendo</div>
+          </CardBody>
+        </Card>
+      </div>
 
-      {/* Following Dialog */}
-      <FollowersDialog
-        isOpen={showFollowingDialog}
-        onClose={() => setShowFollowingDialog(false)}
-        followers={following}
-        isLoading={followersLoading}
-        title="Siguiendo"
-      />
+      {/* Top Users */}
+      <Card className="mb-6">
+        <CardBody>
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold">Top Usuarios</h3>
+            <span className="text-xs text-muted-foreground">({rankings.length})</span>
+          </div>
+          
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-10 h-10 bg-muted rounded-full" />
+                  <div className="flex-1">
+                    <div className="w-24 h-3 bg-muted rounded mb-1" />
+                    <div className="w-16 h-2 bg-muted rounded" />
+                  </div>
+                  <div className="w-12 h-6 bg-muted rounded" />
+                </div>
+              ))}
+            </div>
+          ) : topUsers.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">
+              No hay usuarios disponibles
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {topUsers.map((rankingUser, index) => (
+                <div 
+                  key={rankingUser.user_id} 
+                  className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors"
+                  onClick={() => handleUserClick(rankingUser.user_id)}
+                >
+                  <div className="flex items-center gap-2 min-w-[32px]">
+                    <span className="text-sm font-bold text-muted-foreground">
+                      #{index + 1}
+                    </span>
+                  </div>
+                  
+                  <Avatar
+                    name={rankingUser.username}
+                    size="sm"
+                    src={rankingUser.avatar_url}
+                  />
+                  
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{rankingUser.username}</p>
+                    <RankBadge level={rankingUser.current_level} size="sm" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Search Results */}
+      {searchQuery && (
+        <Card>
+          <CardBody>
+            <h3 className="font-semibold mb-4">
+              Resultados de búsqueda ({filteredUsers.length})
+            </h3>
+            
+            {filteredUsers.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                No se encontraron usuarios con "{searchQuery}"
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {filteredUsers.map((rankingUser) => (
+                  <div 
+                    key={rankingUser.user_id} 
+                    className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors"
+                    onClick={() => handleUserClick(rankingUser.user_id)}
+                  >
+                    <Avatar
+                      name={rankingUser.username}
+                      size="sm"
+                      src={rankingUser.avatar_url}
+                    />
+                    
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{rankingUser.username}</p>
+                      <div className="flex items-center gap-2">
+                        <RankBadge level={rankingUser.current_level} size="sm" />
+                        <span className="text-xs text-muted-foreground">
+                          {rankingUser.current_streak} días racha
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 };
