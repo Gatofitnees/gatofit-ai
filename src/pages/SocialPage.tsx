@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, Users, TrendingUp } from 'lucide-react';
+import { Search, TrendingUp } from 'lucide-react';
 import { Card, CardBody } from '@/components/Card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,17 @@ import RankBadge from '@/components/RankBadge';
 import { useRankings } from '@/hooks/useRankings';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFollowersList } from '@/hooks/useFollowersList';
+import FollowersDialog from '@/components/social/FollowersDialog';
 
 const SocialPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showFollowersDialog, setShowFollowersDialog] = useState(false);
+  const [showFollowingDialog, setShowFollowingDialog] = useState(false);
   const { rankings, isLoading, error } = useRankings();
   const { user } = useAuth();
   const { stats } = useUserStats(user?.id);
+  const { followers, following, isLoading: followersLoading } = useFollowersList(user?.id);
   const navigate = useNavigate();
 
   console.log('🌟 SocialPage rankings:', rankings);
@@ -71,21 +76,25 @@ const SocialPage: React.FC = () => {
         />
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - No icons, interactive */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Card>
-          <CardBody className="text-center py-4">
-            <Users className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+          <CardBody 
+            className="text-center py-4 cursor-pointer hover:bg-muted/20 transition-colors"
+            onClick={() => setShowFollowersDialog(true)}
+          >
             <div className="text-2xl font-bold">{stats?.followers_count || 0}</div>
-            <div className="text-sm text-muted-foreground">Seguidores</div>
+            <div className="text-xs text-muted-foreground">Seguidores</div>
           </CardBody>
         </Card>
         
         <Card>
-          <CardBody className="text-center py-4">
-            <UserPlus className="h-6 w-6 mx-auto mb-2 text-green-500" />
+          <CardBody 
+            className="text-center py-4 cursor-pointer hover:bg-muted/20 transition-colors"
+            onClick={() => setShowFollowingDialog(true)}
+          >
             <div className="text-2xl font-bold">{stats?.following_count || 0}</div>
-            <div className="text-sm text-muted-foreground">Siguiendo</div>
+            <div className="text-xs text-muted-foreground">Siguiendo</div>
           </CardBody>
         </Card>
       </div>
@@ -138,7 +147,7 @@ const SocialPage: React.FC = () => {
                   
                   <div className="flex-1">
                     <p className="font-medium text-sm">{rankingUser.username}</p>
-                    <RankBadge level={rankingUser.current_level} size="sm" />
+                    <RankBadge level={rankingUser.current_level} size="sm" showLevelNumber={true} showIcon={false} showName={false} />
                   </div>
                 </div>
               ))}
@@ -176,7 +185,7 @@ const SocialPage: React.FC = () => {
                     <div className="flex-1">
                       <p className="font-medium text-sm">{rankingUser.username}</p>
                       <div className="flex items-center gap-2">
-                        <RankBadge level={rankingUser.current_level} size="sm" />
+                        <RankBadge level={rankingUser.current_level} size="sm" showLevelNumber={true} showIcon={false} showName={false} />
                         <span className="text-xs text-muted-foreground">
                           {rankingUser.current_streak} días racha
                         </span>
@@ -189,6 +198,23 @@ const SocialPage: React.FC = () => {
           </CardBody>
         </Card>
       )}
+
+      {/* Dialogs */}
+      <FollowersDialog
+        isOpen={showFollowersDialog}
+        onClose={() => setShowFollowersDialog(false)}
+        followers={followers}
+        isLoading={followersLoading}
+        title="Seguidores"
+      />
+
+      <FollowersDialog
+        isOpen={showFollowingDialog}
+        onClose={() => setShowFollowingDialog(false)}
+        followers={following}
+        isLoading={followersLoading}
+        title="Siguiendo"
+      />
     </div>
   );
 };
