@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useTimezone } from './useTimezone';
 
 interface WorkoutSummary {
   id: number;
@@ -15,6 +17,7 @@ interface WorkoutSummary {
 export const useHomePageData = () => {
   const { user } = useAuth();
   const { profile } = useProfileContext();
+  const { getUserCurrentDateString, convertToUserTimezone } = useTimezone();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined);
@@ -50,13 +53,13 @@ export const useHomePageData = () => {
     }
   };
 
-  // Fetch food log data for today
+  // Fetch food log data for today using user's timezone
   useEffect(() => {
     const fetchTodaysFoodData = async () => {
       if (!user) return;
       
       try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getUserCurrentDateString();
         
         const { data: entries, error } = await supabase
           .from('daily_food_log_entries')
@@ -88,9 +91,9 @@ export const useHomePageData = () => {
     };
     
     fetchTodaysFoodData();
-  }, [user]);
+  }, [user, getUserCurrentDateString]);
 
-  // Load workout dates
+  // Load workout dates (convert UTC dates to user timezone)
   useEffect(() => {
     const fetchWorkoutDates = async () => {
       if (!user) return;
@@ -106,7 +109,8 @@ export const useHomePageData = () => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          const dates = data.map(item => new Date(item.workout_date));
+          // Convert UTC workout dates to user's timezone
+          const dates = data.map(item => convertToUserTimezone(new Date(item.workout_date)));
           setDatesWithWorkouts(dates);
         }
       } catch (error) {
@@ -115,9 +119,9 @@ export const useHomePageData = () => {
     };
     
     fetchWorkoutDates();
-  }, [user]);
+  }, [user, convertToUserTimezone]);
 
-  // Load workout data for selected date
+  // Load workout data for selected date using user's timezone
   useEffect(() => {
     const fetchDailyWorkout = async () => {
       if (!user) return;

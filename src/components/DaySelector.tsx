@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { format, addDays, subDays, isSameDay, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useTimezone } from "@/hooks/useTimezone";
 
 interface DateCardProps {
   date: Date;
@@ -62,7 +63,8 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   datesWithRecords = [],
   selectedDate: propSelectedDate
 }) => {
-  const [selectedDate, setSelectedDate] = useState(propSelectedDate || new Date());
+  const { getUserCurrentDate } = useTimezone();
+  const [selectedDate, setSelectedDate] = useState(propSelectedDate || getUserCurrentDate());
   const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
@@ -73,14 +75,14 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     }
   }, [propSelectedDate]);
   
-  // Generate range of dates (past and future dates)
+  // Generate range of dates (past and future dates) based on user's timezone
   useEffect(() => {
-    const today = new Date();
+    const userToday = getUserCurrentDate();
     const range: Date[] = [];
     
     // Include 30 days before today and one day after
     for (let i = -30; i <= 1; i++) {
-      range.push(addDays(today, i));
+      range.push(addDays(userToday, i));
     }
     
     setDateRange(range);
@@ -100,7 +102,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
         scrollContainerRef.current.scrollLeft = scrollPosition;
       }
     }, 100);
-  }, []);
+  }, [getUserCurrentDate]);
 
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
@@ -109,6 +111,12 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 
   const checkHasRecords = (date: Date) => {
     return datesWithRecords.some(recordDate => isSameDay(recordDate, date));
+  };
+
+  // Check if date is today based on user's timezone
+  const isUserToday = (date: Date) => {
+    const userToday = getUserCurrentDate();
+    return isSameDay(date, userToday);
   };
 
   return (
@@ -128,7 +136,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
               isSelected={isSameDay(date, selectedDate)}
               hasRecords={checkHasRecords(date)}
               onClick={() => handleSelectDate(date)}
-              label={isToday(date) ? "Hoy" : undefined}
+              label={isUserToday(date) ? "Hoy" : undefined}
             />
           </div>
         ))}
