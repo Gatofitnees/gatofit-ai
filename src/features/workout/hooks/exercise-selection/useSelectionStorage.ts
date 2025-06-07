@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SelectExercisesState, SESSION_STORAGE_KEY } from "./types";
 import { useLocation } from "react-router-dom";
@@ -24,21 +25,21 @@ export const useSelectionStorage = () => {
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState) as SelectExercisesState;
-        // Recover filters and search term, but don't load selected exercises
-        // to avoid issues with multiple selection sessions
+        // Recover all state including selected exercises
         setSearchTerm(parsedState.searchTerm || "");
         setMuscleFilters(parsedState.muscleFilters || []);
         setEquipmentFilters(parsedState.equipmentFilters || []);
         
-        // We don't restore the selected exercises to avoid confusion between sessions
-        // setSelectedExercises(parsedState.selectedExercises || []);
+        // FIXED: Now we restore selected exercises to maintain persistence
+        setSelectedExercises(parsedState.selectedExercises || []);
+        console.log("Restored selected exercises from storage:", parsedState.selectedExercises);
       } catch (error) {
         console.error("Error parsing exercise selection state:", error);
       }
     }
   }, [location.state]);
 
-  // Save filtering state to sessionStorage whenever it changes
+  // Save ALL state to sessionStorage whenever it changes
   useEffect(() => {
     const stateToSave: SelectExercisesState = {
       selectedExercises,
@@ -48,6 +49,7 @@ export const useSelectionStorage = () => {
       previouslySelectedIds
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
+    console.log("Saved state to storage:", stateToSave);
   }, [selectedExercises, searchTerm, muscleFilters, equipmentFilters, previouslySelectedIds]);
 
   // Reset only selected exercises in session storage
@@ -59,6 +61,7 @@ export const useSelectionStorage = () => {
       selectedExercises: []
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(resetState));
+    console.log("Reset selected exercises in storage");
   };
 
   return {

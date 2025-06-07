@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { validateImageFile } from "@/utils/validation";
 
 const muscleGroups = [
   "Pecho", "Espalda", "Piernas", "Hombros", "Bíceps", "Tríceps", "Core", "Glúteos"
@@ -34,6 +35,27 @@ const CreateExercisePage: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // FIXED: Validate file size and type using our validation utility
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast.error(validation.error);
+      return;
+    }
+
+    // Additional check for 10MB limit and video files
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4'];
+    
+    if (file.size > maxSize) {
+      toast.error("El archivo excede el límite de 10 MB. Por favor, sube un archivo más pequeño.");
+      return;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formato no permitido. Solo se aceptan archivos JPG, PNG y MP4.");
+      return;
+    }
 
     // Create preview URL
     const previewUrl = URL.createObjectURL(file);
@@ -69,13 +91,39 @@ const CreateExercisePage: React.FC = () => {
     setSaving(true);
 
     try {
-      // In a real app, we would upload the media file to Supabase Storage
-      // and create a record in the exercises table
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Debes iniciar sesión para crear ejercicios.");
+        setSaving(false);
+        return;
+      }
 
-      // Simulating API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // FIXED: Actually save the exercise to the database
+      const exerciseData = {
+        name: name.trim(),
+        description: description.trim() || null,
+        muscle_group_main: muscleGroup,
+        equipment_required: equipment || null,
+        difficulty_level: difficulty === "Principiante" ? "beginner" : 
+                         difficulty === "Intermedio" ? "intermediate" : 
+                         difficulty === "Avanzado" ? "advanced" : null,
+        created_by_user_id: user.id,
+        video_url: null // For now, we'll implement file upload later
+      };
 
-      toast.success("Ejercicio creado correctamente");
+      const { error } = await supabase
+        .from('exercises')
+        .insert([exerciseData]);
+
+      if (error) {
+        console.error("Error saving exercise:", error);
+        toast.error("Error al guardar el ejercicio. Intenta de nuevo.");
+        return;
+      }
+
+      toast.success("Ejercicio guardado exitosamente.");
       navigate(-1);
     } catch (error) {
       console.error("Error saving exercise:", error);
@@ -153,7 +201,7 @@ const CreateExercisePage: React.FC = () => {
                   Subir imagen o video
                 </span>
                 <span className="text-xs text-muted-foreground mt-1">
-                  Formatos: JPG, PNG, MP4
+                  Formatos: JPG, PNG, MP4 (máx. 10MB)
                 </span>
                 <input 
                   type="file"

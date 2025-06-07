@@ -19,8 +19,14 @@ export const useExerciseNavigation = () => {
   };
   
   const handleExerciseDetails = (id: number) => {
-    // Navigate to the exercise details page
-    navigate(`/workout/exercise-details/${id}?returnTo=${encodeURIComponent('/workout/select-exercises' + location.search)}`);
+    // FIXED: Preserve current search and state when navigating to exercise details
+    const currentSearch = location.search;
+    const returnUrl = `/workout/select-exercises${currentSearch}`;
+    
+    console.log("Navigating to exercise details, return URL:", returnUrl);
+    
+    // Navigate to the exercise details page with preserved return path
+    navigate(`/workout/exercise-details/${id}?returnTo=${encodeURIComponent(returnUrl)}`);
   };
 
   const handleNavigateBack = (resetSessionStorage: () => void) => {
@@ -29,7 +35,11 @@ export const useExerciseNavigation = () => {
   };
 
   const handleCreateExercise = () => {
-    navigate("/workout/create-exercise?returnTo=" + encodeURIComponent('/workout/select-exercises' + location.search));
+    // FIXED: Preserve current search and state when navigating to create exercise
+    const currentSearch = location.search;
+    const returnUrl = `/workout/select-exercises${currentSearch}`;
+    
+    navigate(`/workout/create-exercise?returnTo=${encodeURIComponent(returnUrl)}`);
   };
 
   const handleAddExercises = (

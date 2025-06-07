@@ -15,6 +15,10 @@ const WorkoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { routines, loading, refetch } = useRoutines();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<{ types: string[], muscles: string[] }>({
+    types: [],
+    muscles: []
+  });
   const [initializing, setInitializing] = useState(false);
   
   // Inicializar ejercicios pero no rutinas predefinidas
@@ -41,10 +45,21 @@ const WorkoutPage: React.FC = () => {
     initialize();
   }, [toast, refetch]); 
   
-  // Filter routines based on search term
-  const filteredRoutines = routines.filter(routine => 
-    routine.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter routines based on search term and filters
+  const filteredRoutines = routines.filter(routine => {
+    // Search filter
+    const matchesSearch = routine.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Type filter
+    const matchesType = filters.types.length === 0 || 
+      (routine.type && filters.types.includes(routine.type));
+    
+    // For muscle filter, we would need to check routine exercises
+    // For now, we'll implement basic filtering and this can be enhanced later
+    const matchesMuscle = filters.muscles.length === 0; // Simplified for now
+    
+    return matchesSearch && matchesType && matchesMuscle;
+  });
 
   const handleStartWorkout = (routineId: number) => {
     navigate(`/workout/active/${routineId}`);
@@ -58,6 +73,11 @@ const WorkoutPage: React.FC = () => {
     refetch();
   };
 
+  const handleFiltersChange = (newFilters: { types: string[], muscles: string[] }) => {
+    setFilters(newFilters);
+    console.log("Filters applied:", newFilters);
+  };
+
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <WorkoutHeader title="Mis Rutinas" />
@@ -65,7 +85,9 @@ const WorkoutPage: React.FC = () => {
       {/* Search and Filter */}
       <WorkoutSearchFilter 
         searchTerm={searchTerm} 
-        onSearchChange={setSearchTerm} 
+        onSearchChange={setSearchTerm}
+        onFiltersChange={handleFiltersChange}
+        activeFilters={filters}
       />
       
       {initializing && (
