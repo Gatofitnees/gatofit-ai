@@ -10,9 +10,13 @@ export interface TimezoneInfo {
 
 export const useTimezone = () => {
   const { user } = useAuth();
-  const [timezoneInfo, setTimezoneInfo] = useState<TimezoneInfo>({
-    timezoneOffset: 0,
-    timezoneName: 'UTC'
+  const [timezoneInfo, setTimezoneInfo] = useState<TimezoneInfo>(() => {
+    // Initialize with current timezone immediately
+    const now = new Date();
+    return {
+      timezoneOffset: -now.getTimezoneOffset(), // Convert to positive for east of UTC
+      timezoneName: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -107,13 +111,16 @@ export const useTimezone = () => {
       if (error) throw error;
       
       if (data && data.timezone_offset !== null) {
-        setTimezoneInfo({
+        const profileTimezone = {
           timezoneOffset: data.timezone_offset,
           timezoneName: data.timezone_name || 'UTC'
-        });
+        };
+        setTimezoneInfo(profileTimezone);
+        console.log('Timezone loaded from profile:', profileTimezone);
       } else {
         // No timezone saved, use current and save it
         const currentTimezone = getCurrentTimezone();
+        console.log('No timezone in profile, using current:', currentTimezone);
         await saveTimezoneToProfile(currentTimezone);
       }
     } catch (error) {

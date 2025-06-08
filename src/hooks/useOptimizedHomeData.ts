@@ -31,9 +31,10 @@ const VISIBLE_DAYS_RANGE = 32; // Days to fetch (30 past + today + 1 future)
 export const useOptimizedHomeData = () => {
   const { user } = useAuth();
   const { profile } = useProfileContext();
-  const { getUserCurrentDateString, convertToUserTimezone, getUserCurrentDate } = useTimezone();
+  const { getUserCurrentDate, getUserCurrentDateString, timezoneInfo, convertToUserTimezone } = useTimezone();
   
-  const [selectedDate, setSelectedDate] = useState(getUserCurrentDate());
+  // Initialize selectedDate with user's current date
+  const [selectedDate, setSelectedDate] = useState(() => getUserCurrentDate());
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,15 @@ export const useOptimizedHomeData = () => {
     carbs: 0,
     fat: 0
   });
+
+  // Update selectedDate when timezone info changes or user current date changes
+  useEffect(() => {
+    const userCurrentDate = getUserCurrentDate();
+    // Only update if it's actually a different date to avoid infinite loops
+    if (userCurrentDate.toDateString() !== selectedDate.toDateString()) {
+      setSelectedDate(userCurrentDate);
+    }
+  }, [timezoneInfo, getUserCurrentDate]);
 
   // Use latest recommendations from profile as targets, with fallbacks
   const macros = {
@@ -83,7 +93,7 @@ export const useOptimizedHomeData = () => {
       const startDateString = startDate.toISOString().split('T')[0];
       const endDateString = endDate.toISOString().split('T')[0];
 
-      // Fetch workout dates in parallel with food dates
+      // Fetch workout dates and food dates in parallel
       const [workoutResponse, foodResponse] = await Promise.all([
         supabase
           .from('workout_logs')
@@ -103,27 +113,39 @@ export const useOptimizedHomeData = () => {
       if (workoutResponse.error) throw workoutResponse.error;
       if (foodResponse.error) throw foodResponse.error;
 
-      // Convert workout dates to user timezone and combine with food dates
+      // Convert workout dates to user timezone using the user's timezone offset
       const workoutDates = (workoutResponse.data || [])
-        .map(item => convertToUserTimezone(new Date(item.workout_date)));
+        .map(item => {
+          const utcDate = new Date(item.workout_date);
+          return convertToUserTimezone(utcDate, timezoneInfo.timezoneOffset);
+        });
       
+      // Food dates are already in the correct format (YYYY-MM-DD), just convert to Date objects
       const foodDates = (foodResponse.data || [])
         .map(item => new Date(item.log_date + 'T12:00:00')); // Set to noon to avoid timezone issues
 
-      // Combine and deduplicate dates
+      // Combine and deduplicate dates, but only include dates that have actual activity
       const allActivityDates = Array.from(new Set([
         ...workoutDates.map(d => d.toDateString()),
         ...foodDates.map(d => d.toDateString())
       ])).map(dateString => new Date(dateString));
+
+      console.log('Activity dates loaded:', {
+        workoutDatesCount: workoutDates.length,
+        foodDatesCount: foodDates.length,
+        totalActivityDates: allActivityDates.length,
+        userCurrentDate: userCurrentDate.toDateString(),
+        timezoneOffset: timezoneInfo.timezoneOffset
+      });
 
       return allActivityDates;
     } catch (error) {
       console.error("Error fetching activity dates:", error);
       return [];
     }
-  }, [user, getUserCurrentDate, convertToUserTimezone]);
+  }, [user, getUserCurrentDate, convertToUserTimezone, timezoneInfo]);
 
-  // Optimized function to fetch today's food data
+  // Optimized function to fetch today's food data using user's timezone
   const fetchTodaysFoodDataOptimized = useCallback(async () => {
     if (!user) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
     
@@ -139,7 +161,7 @@ export const useOptimizedHomeData = () => {
       if (error) throw error;
       
       if (entries && entries.length > 0) {
-        return entries.reduce(
+        const totals = entries.reduce(
           (acc, entry) => ({
             calories: acc.calories + entry.calories_consumed,
             protein: acc.protein + entry.protein_g_consumed,
@@ -148,6 +170,9 @@ export const useOptimizedHomeData = () => {
           }),
           { calories: 0, protein: 0, carbs: 0, fat: 0 }
         );
+
+        console.log('Today\'s food totals:', totals, 'for date:', today);
+        return totals;
       }
       
       return { calories: 0, protein: 0, carbs: 0, fat: 0 };
@@ -189,9 +214,10 @@ export const useOptimizedHomeData = () => {
     
     console.log('Optimized data loaded:', {
       activityDatesCount: activityDates.length,
-      todaysTotals
+      todaysTotals,
+      userCurrentDate: getUserCurrentDate().toDateString()
     });
-  }, [user, cachedData, fetchActivityDatesOptimized, fetchTodaysFoodDataOptimized]);
+  }, [user, cachedData, fetchActivityDatesOptimized, fetchTodaysFoodDataOptimized, getUserCurrentDate]);
 
   // Load workout data for selected date using user's timezone
   const fetchDailyWorkout = useCallback(async () => {
@@ -199,7 +225,11 @@ export const useOptimizedHomeData = () => {
     
     setLoading(true);
     try {
-      const dateString = selectedDate.toISOString().split('T')[0];
+      const selectedDateString = selectedDate.toISOString().split('T')[0];
+      
+      // For workout logs, we need to check the actual workout_date in user's timezone
+      const startDateTime = `${selectedDateString}T00:00:00`;
+      const endDateTime = `${selectedDateString}T23:59:59`;
       
       const { data: workoutLogs, error } = await supabase
         .from('workout_logs')
@@ -212,8 +242,8 @@ export const useOptimizedHomeData = () => {
           workout_log_exercise_details(exercise_name_snapshot)
         `)
         .eq('user_id', user.id)
-        .gte('workout_date', `${dateString}T00:00:00`)
-        .lt('workout_date', `${dateString}T23:59:59`)
+        .gte('workout_date', startDateTime)
+        .lte('workout_date', endDateTime)
         .order('workout_date', { ascending: false })
         .limit(1);
         
@@ -238,9 +268,12 @@ export const useOptimizedHomeData = () => {
           exercises: exerciseNames
         });
         setHasCompletedWorkout(true);
+        
+        console.log('Workout found for date:', selectedDateString, workout);
       } else {
         setWorkoutSummary(undefined);
         setHasCompletedWorkout(false);
+        console.log('No workout found for date:', selectedDateString);
       }
     } catch (error) {
       console.error("Error loading workout:", error);
@@ -253,17 +286,20 @@ export const useOptimizedHomeData = () => {
 
   // Initial data load
   useEffect(() => {
-    if (user) {
+    if (user && timezoneInfo.timezoneOffset !== undefined) {
       loadOptimizedData();
     }
-  }, [user, loadOptimizedData]);
+  }, [user, timezoneInfo, loadOptimizedData]);
 
   // Load workout for selected date
   useEffect(() => {
-    fetchDailyWorkout();
-  }, [fetchDailyWorkout]);
+    if (user && timezoneInfo.timezoneOffset !== undefined) {
+      fetchDailyWorkout();
+    }
+  }, [fetchDailyWorkout, timezoneInfo]);
 
   const handleDateSelect = useCallback((date: Date) => {
+    console.log('Date selected:', date.toDateString());
     setSelectedDate(date);
   }, []);
 
