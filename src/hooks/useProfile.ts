@@ -12,12 +12,21 @@ export const useProfile = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const { recalculateMacros } = useMacroCalculations();
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (forceRefresh = false) => {
     if (!user) return;
     
+    // Avoid unnecessary refetches (cache for 30 seconds)
+    const now = Date.now();
+    if (!forceRefresh && profile && (now - lastFetchTime) < 30000) {
+      return;
+    }
+    
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -25,7 +34,12 @@ export const useProfile = () => {
         .single();
 
       if (error) throw error;
-      setProfile(convertDatabaseToProfile(data));
+      
+      const convertedProfile = convertDatabaseToProfile(data);
+      setProfile(convertedProfile);
+      setLastFetchTime(now);
+      
+      console.log('Profile fetched successfully:', convertedProfile);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -39,9 +53,12 @@ export const useProfile = () => {
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user) return false;
+    if (!user || updating) return false;
 
     try {
+      setUpdating(true);
+      console.log('Updating profile with:', updates);
+      
       const dbUpdates = convertProfileToDatabase(updates);
       
       // Check if we need to recalculate macros
@@ -58,6 +75,7 @@ export const useProfile = () => {
       } = {};
       
       if (shouldRecalculateMacros && profile) {
+        console.log('Recalculating macros for profile update...');
         const updatedProfile = { ...profile, ...updates };
         const newMacros = await recalculateMacros(updatedProfile);
         
@@ -68,6 +86,7 @@ export const useProfile = () => {
             initial_recommended_carbs_g: newMacros.carbs_g,
             initial_recommended_fats_g: newMacros.fats_g
           };
+          console.log('New macro recommendations:', newMacros);
         }
       }
 
@@ -93,7 +112,9 @@ export const useProfile = () => {
       };
       
       setProfile(updatedLocalProfile);
+      setLastFetchTime(Date.now());
       
+      console.log('Profile updated successfully:', updatedLocalProfile);
       return true;
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -103,6 +124,8 @@ export const useProfile = () => {
         variant: "destructive"
       });
       return false;
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -124,15 +147,27 @@ export const useProfile = () => {
     }
   };
 
+  // Enhanced refresh function with better error handling
+  const refreshProfile = async () => {
+    console.log('Refreshing profile data...');
+    await fetchProfile(true);
+  };
+
   useEffect(() => {
-    fetchProfile();
+    if (user) {
+      fetchProfile();
+    } else {
+      setProfile(null);
+      setLoading(false);
+    }
   }, [user]);
 
   return {
     profile,
     loading,
+    updating,
     updateProfile,
     checkUsernameAvailability,
-    refetch: fetchProfile
+    refetch: refreshProfile
   };
 };

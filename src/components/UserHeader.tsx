@@ -4,6 +4,7 @@ import Avatar from "./Avatar";
 import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
 import AIChat from "./AIChat";
+import UserHeaderSkeleton from "./UserHeaderSkeleton";
 import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
@@ -25,7 +26,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { user, signOut, switchAccount } = useAuth();
-  const { profile } = useProfileContext();
+  const { profile, loading } = useProfileContext();
   const { streakData } = useStreaks();
   const { isVerifying } = useAutoUserVerification();
   const { toast } = useToast();
@@ -45,6 +46,11 @@ const UserHeader: React.FC<UserHeaderProps> = ({
     setShowMenu(false);
     navigate('/profile');
   };
+
+  // Show skeleton while loading
+  if (loading || isVerifying) {
+    return <UserHeaderSkeleton />;
+  }
 
   // Get experience progress
   const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
@@ -75,12 +81,6 @@ const UserHeader: React.FC<UserHeaderProps> = ({
               <span className="text-muted-foreground">Nivel {currentLevel}</span>
               <span className="text-muted-foreground">•</span>
               <RankBadge level={currentLevel} size="sm" showIcon={false} />
-              {isVerifying && (
-                <>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">Verificando...</span>
-                </>
-              )}
             </div>
             {experienceProgress && (
               <ExperienceBar 

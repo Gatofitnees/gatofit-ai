@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 interface ProfileContextType {
   profile: UserProfile | null;
   loading: boolean;
+  updating: boolean;
   recalculatingMacros: boolean;
   updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
   refreshProfile: () => void;
@@ -18,7 +19,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const { profile, loading, updateProfile: hookUpdateProfile, refetch } = useProfile();
+  const { profile, loading, updating, updateProfile: hookUpdateProfile, refetch } = useProfile();
   const { isVerifying, isVerified } = useAutoUserVerification();
   const [recalculatingMacros, setRecalculatingMacros] = useState(false);
   const { toast } = useToast();
@@ -42,25 +43,34 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const success = await hookUpdateProfile(updates);
       
       if (success && shouldRecalculateMacros) {
-        // Wait a bit longer for the macro calculation to complete
+        // Wait a moment for the macro calculation to complete
         console.log('Waiting for macro recalculation to complete...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Refresh the profile multiple times to ensure we get the updated data
+        // Refresh the profile to ensure we get the updated data
         console.log('Refreshing profile data...');
-        await refetch();
-        
-        // Wait a bit more and refresh again to ensure consistency
-        await new Promise(resolve => setTimeout(resolve, 1000));
         await refetch();
         
         toast({
           title: "¡Perfecto!",
           description: "Perfil y recomendaciones nutricionales actualizados correctamente"
         });
+      } else if (success) {
+        toast({
+          title: "¡Perfecto!",
+          description: "Perfil actualizado correctamente"
+        });
       }
       
       return success;
+    } catch (error) {
+      console.error('Error in profile update:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el perfil. Por favor, inténtalo de nuevo.",
+        variant: "destructive"
+      });
+      return false;
     } finally {
       if (shouldRecalculateMacros) {
         setRecalculatingMacros(false);
@@ -69,13 +79,25 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const refreshProfile = () => {
+    console.log('ProfileContext: Refreshing profile...');
     refetch();
   };
+
+  // Auto-refresh when user verification completes
+  useEffect(() => {
+    if (isVerified && user && !loading) {
+      console.log('User verification completed, refreshing profile...');
+      setTimeout(() => {
+        refreshProfile();
+      }, 500);
+    }
+  }, [isVerified, user]);
 
   return (
     <ProfileContext.Provider value={{
       profile,
       loading: loading || isVerifying,
+      updating,
       recalculatingMacros,
       updateProfile,
       refreshProfile
