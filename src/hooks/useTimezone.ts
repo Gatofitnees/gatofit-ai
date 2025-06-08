@@ -28,25 +28,40 @@ export const useTimezone = () => {
     };
   };
 
-  // Get user's current date based on their timezone
+  // Get user's current date based on their timezone (always returns today for the user)
   const getUserCurrentDate = (userTimezoneOffset?: number): Date => {
     const offset = userTimezoneOffset ?? timezoneInfo.timezoneOffset;
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const userTime = new Date(utc + (offset * 60000));
+    
+    // Reset to start of day in user's timezone
+    userTime.setHours(0, 0, 0, 0);
     return userTime;
   };
 
   // Get user's current date as YYYY-MM-DD string
   const getUserCurrentDateString = (userTimezoneOffset?: number): string => {
-    const userDate = getUserCurrentDate(userTimezoneOffset);
-    return userDate.toISOString().split('T')[0];
+    const offset = userTimezoneOffset ?? timezoneInfo.timezoneOffset;
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const userTime = new Date(utc + (offset * 60000));
+    
+    return userTime.toISOString().split('T')[0];
   };
 
   // Convert UTC date to user's timezone
   const convertToUserTimezone = (utcDate: Date, userTimezoneOffset?: number): Date => {
     const offset = userTimezoneOffset ?? timezoneInfo.timezoneOffset;
     const utc = utcDate.getTime();
+    return new Date(utc + (offset * 60000));
+  };
+
+  // Get current time in user's timezone for logging
+  const getUserCurrentDateTime = (userTimezoneOffset?: number): Date => {
+    const offset = userTimezoneOffset ?? timezoneInfo.timezoneOffset;
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     return new Date(utc + (offset * 60000));
   };
 
@@ -128,6 +143,7 @@ export const useTimezone = () => {
     getCurrentTimezone,
     getUserCurrentDate,
     getUserCurrentDateString,
+    getUserCurrentDateTime,
     convertToUserTimezone,
     saveTimezoneToProfile,
     loadTimezoneFromProfile
