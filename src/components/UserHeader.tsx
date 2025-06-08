@@ -8,6 +8,7 @@ import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-rea
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
+import { useAutoUserVerification } from "@/hooks/useAutoUserVerification";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,14 +24,20 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   progress = 75
 }) => {
   const [showMenu, setShowMenu] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, switchAccount } = useAuth();
   const { profile } = useProfileContext();
   const { streakData } = useStreaks();
+  const { isVerifying } = useAutoUserVerification();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
+    setShowMenu(false);
+  };
+
+  const handleSwitchAccount = async () => {
+    await switchAccount();
     setShowMenu(false);
   };
 
@@ -68,6 +75,12 @@ const UserHeader: React.FC<UserHeaderProps> = ({
               <span className="text-muted-foreground">Nivel {currentLevel}</span>
               <span className="text-muted-foreground">•</span>
               <RankBadge level={currentLevel} size="sm" showIcon={false} />
+              {isVerifying && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-xs text-muted-foreground">Verificando...</span>
+                </>
+              )}
             </div>
             {experienceProgress && (
               <ExperienceBar 
@@ -159,10 +172,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
               variant="secondary" 
               size="sm" 
               className="justify-start"
-              onClick={() => toast({
-                title: "Cambiar cuenta",
-                description: "Función próximamente disponible",
-              })}
+              onClick={handleSwitchAccount}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Cambiar cuenta

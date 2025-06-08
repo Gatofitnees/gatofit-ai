@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useAutoUserVerification } from '@/hooks/useAutoUserVerification';
 import { UserProfile } from '@/types/userProfile';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -18,6 +19,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { profile, loading, updateProfile: hookUpdateProfile, refetch } = useProfile();
+  const { isVerifying, isVerified } = useAutoUserVerification();
   const [recalculatingMacros, setRecalculatingMacros] = useState(false);
   const { toast } = useToast();
 
@@ -73,7 +75,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <ProfileContext.Provider value={{
       profile,
-      loading,
+      loading: loading || isVerifying,
       recalculatingMacros,
       updateProfile,
       refreshProfile
