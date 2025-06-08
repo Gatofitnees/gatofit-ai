@@ -1,5 +1,5 @@
 
-import { createSecureErrorMessage } from './errorHandling';
+import { createSecureErrorMessage, logSecurityEvent } from './errorHandling';
 
 // Enhanced rate limiter with security considerations
 export class RateLimiter {
@@ -82,19 +82,6 @@ export const validateSecureFileUpload = async (file: File): Promise<{ isValid: b
   const fileNameRegex = /^[a-zA-Z0-9._-]+$/;
   if (!fileNameRegex.test(file.name)) {
     return { isValid: false, error: 'File name contains invalid characters' };
-  }
-  
-  return { isValid: true };
-};
-
-// Enhanced webhook request validation
-export const validateWebhookRequest = (request: any): { isValid: boolean; error?: string } => {
-  if (!request) {
-    return { isValid: false, error: 'Request is required' };
-  }
-  
-  if (!request.headers) {
-    return { isValid: false, error: 'Request headers are required' };
   }
   
   return { isValid: true };

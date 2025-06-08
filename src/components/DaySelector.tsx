@@ -11,7 +11,6 @@ interface DateCardProps {
   hasRecords?: boolean;
   onClick: () => void;
   label?: string;
-  isUserToday?: boolean;
 }
 
 const DateCard: React.FC<DateCardProps> = ({ 
@@ -19,8 +18,7 @@ const DateCard: React.FC<DateCardProps> = ({
   isSelected, 
   hasRecords = false, 
   onClick,
-  label,
-  isUserToday = false
+  label
 }) => {
   const dayNumber = format(date, "dd");
   const dayName = format(date, "EEE", { locale: es }).toLowerCase();
@@ -47,8 +45,7 @@ const DateCard: React.FC<DateCardProps> = ({
       )}>
         {label || dayName}
       </span>
-      {/* Only show blue dot if there are records AND it's not the current day OR if it's current day but has records */}
-      {hasRecords && (!isUserToday || (isUserToday && hasRecords)) && !isSelected && (
+      {hasRecords && !isSelected && (
         <div className="w-1.5 h-1.5 mt-1 rounded-full bg-primary" />
       )}
     </div>
@@ -67,7 +64,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   selectedDate: propSelectedDate
 }) => {
   const { getUserCurrentDate } = useTimezone();
-  const [selectedDate, setSelectedDate] = useState(() => propSelectedDate || getUserCurrentDate());
+  const [selectedDate, setSelectedDate] = useState(propSelectedDate || getUserCurrentDate());
   const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
@@ -129,26 +126,20 @@ const DaySelector: React.FC<DaySelectorProps> = ({
         ref={scrollContainerRef}
         style={{ scrollBehavior: 'smooth' }}
       >
-        {dateRange.map((date, index) => {
-          const isCurrentUserToday = isUserToday(date);
-          const hasRecords = checkHasRecords(date);
-          
-          return (
-            <div 
-              key={index} 
-              className="flex-shrink-0"
-            >
-              <DateCard 
-                date={date}
-                isSelected={isSameDay(date, selectedDate)}
-                hasRecords={hasRecords}
-                onClick={() => handleSelectDate(date)}
-                label={isCurrentUserToday ? "Hoy" : undefined}
-                isUserToday={isCurrentUserToday}
-              />
-            </div>
-          );
-        })}
+        {dateRange.map((date, index) => (
+          <div 
+            key={index} 
+            className="flex-shrink-0"
+          >
+            <DateCard 
+              date={date}
+              isSelected={isSameDay(date, selectedDate)}
+              hasRecords={checkHasRecords(date)}
+              onClick={() => handleSelectDate(date)}
+              label={isUserToday(date) ? "Hoy" : undefined}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
