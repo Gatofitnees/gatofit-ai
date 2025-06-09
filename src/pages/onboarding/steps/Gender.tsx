@@ -17,7 +17,7 @@ const Gender: React.FC = () => {
 
   const { data, updateData } = context;
 
-  const handleSelect = (gender: string) => {
+  const handleSelect = (gender: "male" | "female" | "other") => {
     updateData({ gender });
   };
 
