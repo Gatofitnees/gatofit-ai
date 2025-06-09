@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import ProgressRing from "./ProgressRing";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,9 @@ const Avatar: React.FC<AvatarProps> = ({
   size = "md",
   className
 }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   const sizeClasses = {
     sm: "w-10 h-10 text-xs",
     md: "w-16 h-16 text-sm",
@@ -34,6 +37,24 @@ const Avatar: React.FC<AvatarProps> = ({
   const ringSize = size === "sm" ? 40 : size === "md" ? 64 : 80;
   const ringStrokeWidth = size === "sm" ? 2 : 3;
 
+  // Log para debug
+  console.log('Avatar Debug:', { src, name, imageError, imageLoaded });
+
+  const handleImageError = () => {
+    console.log('Avatar image error for:', src);
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    console.log('Avatar image loaded successfully for:', src);
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  // Determine if we should show image or initials
+  const shouldShowImage = src && !imageError && imageLoaded;
+  const shouldShowInitials = !src || imageError || !imageLoaded;
+
   return (
     <div className={cn("relative inline-flex", className)}>
       <ProgressRing 
@@ -47,16 +68,20 @@ const Avatar: React.FC<AvatarProps> = ({
           sizeClasses[size]
         )}
       >
-        {src ? (
+        {src && !imageError && (
           <img
             src={src}
             alt={name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
+            className={cn(
+              "w-full h-full object-cover transition-opacity duration-200",
+              imageLoaded ? "opacity-100" : "opacity-0"
+            )}
+            onError={handleImageError}
+            onLoad={handleImageLoad}
+            crossOrigin="anonymous"
           />
-        ) : (
+        )}
+        {shouldShowInitials && (
           <span className="font-medium text-gray-200">{initials}</span>
         )}
       </div>

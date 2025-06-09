@@ -44,6 +44,9 @@ export const useAutoProfileSetup = (user: User | null) => {
       if (!user) return;
 
       try {
+        console.log('AutoProfileSetup: Starting for user:', user.id);
+        console.log('User metadata:', user.user_metadata);
+
         // Check if profile already has data
         const { data: existingProfile } = await supabase
           .from('profiles')
@@ -51,20 +54,31 @@ export const useAutoProfileSetup = (user: User | null) => {
           .eq('id', user.id)
           .single();
 
+        console.log('Existing profile:', existingProfile);
+
         // If profile already has complete data, skip auto-setup
-        if (existingProfile?.full_name && existingProfile?.username) return;
+        if (existingProfile?.full_name && existingProfile?.username && existingProfile?.avatar_url) {
+          console.log('Profile already complete, skipping auto-setup');
+          return;
+        }
 
         const metadata = user.user_metadata as GoogleUserMetadata;
-        const isGoogleUser = metadata.provider_id?.includes('google');
+        const isGoogleUser = metadata.provider_id?.includes('google') || user.app_metadata?.provider === 'google';
+
+        console.log('Is Google user:', isGoogleUser);
 
         let fullName = '';
         let avatarUrl = '';
         let baseUsername = '';
 
         if (isGoogleUser) {
-          // Extract Google data
+          // Extract Google data - try multiple possible fields
           fullName = metadata.full_name || metadata.name || '';
+          
+          // Try different avatar URL fields from Google
           avatarUrl = metadata.avatar_url || metadata.picture || '';
+          
+          console.log('Google data extracted:', { fullName, avatarUrl });
           
           if (fullName) {
             baseUsername = fullName.toLowerCase()
@@ -102,10 +116,13 @@ export const useAutoProfileSetup = (user: User | null) => {
         }
         if (!existingProfile?.avatar_url && avatarUrl) {
           updates.avatar_url = avatarUrl;
+          console.log('Setting avatar URL:', avatarUrl);
         }
         if (!existingProfile?.username) {
           updates.username = uniqueUsername;
         }
+
+        console.log('Updates to apply:', updates);
 
         if (Object.keys(updates).length > 0) {
           const { error } = await supabase
@@ -116,7 +133,7 @@ export const useAutoProfileSetup = (user: User | null) => {
           if (error) {
             console.error('Error updating profile with auto data:', error);
           } else {
-            console.log('Profile auto-configured:', updates);
+            console.log('Profile auto-configured successfully:', updates);
           }
         }
       } catch (error) {

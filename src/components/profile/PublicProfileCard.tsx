@@ -22,18 +22,28 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
   onFollowToggle,
   followLoading
 }) => {
+  const displayName = profile.username || profile.full_name || 'Usuario';
+  
+  console.log('PublicProfileCard Debug:', {
+    profileId: profile.id,
+    username: profile.username,
+    fullName: profile.full_name,
+    avatarUrl: profile.avatar_url,
+    displayName
+  });
+
   return (
     <Card className="mb-6">
       <CardBody className="text-center py-8">
         <Avatar
-          name={profile.username || profile.full_name || 'Usuario'}
+          name={displayName}
           size="lg"
-          src={profile.avatar_url}
+          src={profile.avatar_url || undefined}
           className="mx-auto mb-4"
         />
         
         <h2 className="text-xl font-bold mb-2">
-          {profile.username || profile.full_name || 'Usuario'}
+          {displayName}
         </h2>
         
         <div className="flex justify-center mb-4">
