@@ -44,7 +44,7 @@ const WorkoutCarouselContent: React.FC<WorkoutCarouselProps> = ({ workouts, chil
   return (
     <CarouselContent>
       {workouts.map((workout, index) => (
-        <CarouselItem key={workout.id || index}>
+        <CarouselItem key={workout.id || index} className="basis-full">
           {children(workout, index, workouts.length)}
         </CarouselItem>
       ))}
