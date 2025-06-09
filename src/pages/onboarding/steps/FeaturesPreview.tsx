@@ -8,6 +8,7 @@ import { OnboardingContext } from "../OnboardingFlow";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import SwipeableCarousel from "@/components/onboarding/SwipeableCarousel";
 import GatofitAILogo from "@/components/GatofitAILogo";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const FeatureCard: React.FC<{
   title: string;
@@ -33,6 +34,8 @@ const FeatureCard: React.FC<{
 const FeaturesPreview: React.FC = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [cardsPerView, setCardsPerView] = useState(1);
   const context = useContext(OnboardingContext);
   
   if (!context) {
@@ -72,23 +75,6 @@ const FeaturesPreview: React.FC = () => {
     },
   ];
 
-  // Auto-scroll carousel every 4 seconds (slightly faster)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % features.length);
-    }, 4000);
-    
-    return () => clearInterval(interval);
-  }, [features.length]);
-
-  const handleNext = () => {
-    navigate("/onboarding/create-account");
-  };
-  
-  const handleBack = () => {
-    navigate(-1);
-  };
-
   // Calculate cards per view based on screen size
   const getCardsPerView = () => {
     if (typeof window !== "undefined") {
@@ -97,7 +83,18 @@ const FeaturesPreview: React.FC = () => {
     return 1;
   };
   
-  const [cardsPerView, setCardsPerView] = useState(getCardsPerView());
+  // Initialize component
+  useEffect(() => {
+    const initializeComponent = () => {
+      setCardsPerView(getCardsPerView());
+      // Small delay to ensure proper rendering
+      setTimeout(() => {
+        setIsLoaded(true);
+      }, 100);
+    };
+    
+    initializeComponent();
+  }, []);
   
   // Update cards per view on resize
   useEffect(() => {
@@ -109,12 +106,75 @@ const FeaturesPreview: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Auto-scroll carousel every 4 seconds (only when loaded)
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % features.length);
+    }, 4000);
+    
+    return () => clearInterval(interval);
+  }, [features.length, isLoaded]);
+
+  const handleNext = () => {
+    navigate("/onboarding/create-account");
+  };
+  
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  // Loading skeleton
+  if (!isLoaded) {
+    return (
+      <OnboardingLayout currentStep={17} totalSteps={20}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col h-full"
+        >
+          <h1 className="text-2xl font-bold mb-2">
+            Descubre cómo <GatofitAILogo size="lg" className="inline-block" /> te impulsará
+          </h1>
+          
+          <p className="text-muted-foreground mb-6">
+            Estas son algunas de las características clave que te ayudarán a alcanzar tus objetivos
+          </p>
+
+          <div className="w-full flex-1 flex flex-col justify-between">
+            <div className="flex-grow">
+              <div className="h-[calc(100%-30px)]">
+                <div className="px-1 py-1 h-full">
+                  <AspectRatio ratio={1/1} className="h-full max-w-[60vh] mx-auto">
+                    <div className="flex flex-col items-center p-4 rounded-2xl bg-secondary/20 shadow-neu-card text-center h-full">
+                      <Skeleton className="h-12 w-12 rounded-xl mb-3" />
+                      <Skeleton className="h-6 w-3/4 mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3 mt-1" />
+                    </div>
+                  </AspectRatio>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full mt-8 space-y-4">
+            <Skeleton className="w-full h-12 rounded-xl" />
+            <Skeleton className="w-24 h-6 mx-auto" />
+          </div>
+        </motion.div>
+      </OnboardingLayout>
+    );
+  }
+
   return (
     <OnboardingLayout currentStep={17} totalSteps={20}>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
         className="flex flex-col h-full"
       >
         <h1 className="text-2xl font-bold mb-2">
@@ -133,7 +193,7 @@ const FeaturesPreview: React.FC = () => {
               currentSlide={currentSlide} 
               onSlideChange={setCurrentSlide}
               cardsPerView={cardsPerView}
-              className="h-[calc(100%-30px)]" // Ensure full height minus indicators
+              className="h-[calc(100%-30px)]"
             >
               {features.map((feature, index) => (
                 <div key={index} className="px-1 py-1 h-full">
@@ -152,20 +212,26 @@ const FeaturesPreview: React.FC = () => {
 
         <div className="w-full mt-8 space-y-4">
           <motion.button
-            className="w-full flex items-center justify-center py-3 px-4 bg-primary hover:bg-primary/90 text-white rounded-xl text-center neu-button"
+            className="w-full flex items-center justify-center py-3 px-4 bg-primary hover:bg-primary/90 text-white rounded-xl text-center neu-button shadow-lg"
             onClick={handleNext}
             whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
           >
             <span>Crear Cuenta</span>
           </motion.button>
           
-          <button
+          <motion.button
             onClick={handleBack}
-            className="flex items-center justify-center py-2 w-full text-sm text-muted-foreground"
+            className="flex items-center justify-center py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
           >
             <ArrowLeft size={16} className="mr-2" />
             Atrás
-          </button>
+          </motion.button>
         </div>
       </motion.div>
     </OnboardingLayout>

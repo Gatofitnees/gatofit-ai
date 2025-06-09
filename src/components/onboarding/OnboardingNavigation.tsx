@@ -37,12 +37,12 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background z-10">
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/98 backdrop-blur-md border-t border-white/5 z-50">
       <div className="max-w-md mx-auto space-y-4">
         <button
           onClick={handleNext}
           disabled={nextDisabled || loading}
-          className="w-full py-3 px-4 h-auto font-medium bg-primary hover:bg-primary/90 text-white rounded-xl neu-button disabled:opacity-50 disabled:pointer-events-none transition-all"
+          className="w-full py-3 px-4 h-auto font-medium bg-primary hover:bg-primary/90 text-white rounded-xl neu-button disabled:opacity-50 disabled:pointer-events-none transition-all shadow-lg"
         >
           {loading ? "Cargando..." : nextLabel}
         </button>
@@ -50,7 +50,7 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
         {showBack && (
           <button
             onClick={handleBack}
-            className="flex items-center justify-center py-2 w-full text-sm text-muted-foreground"
+            className="flex items-center justify-center py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft size={16} className="mr-2" />
             Atrás

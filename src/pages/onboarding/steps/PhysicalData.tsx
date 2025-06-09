@@ -100,7 +100,7 @@ const PhysicalData: React.FC = () => {
   };
 
   return (
-    <OnboardingLayout currentStep={6} totalSteps={20}>
+    <OnboardingLayout currentStep={6} totalSteps={20} className="pb-4">
       <PhysicalDataContent
         isMetric={isMetric}
         onUnitChange={handleUnitChange}
