@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
@@ -18,7 +17,7 @@ const VISIBLE_DAYS_RANGE = 32; // Days to fetch
 export const useOptimizedNutritionData = (selectedDate: Date) => {
   const { user } = useAuth();
   const { profile } = useProfileContext();
-  const { timezoneInfo } = useOptimizedTimezone();
+  const { timezoneInfo, getUserCurrentDate } = useOptimizedTimezone();
   
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +64,7 @@ export const useOptimizedNutritionData = (selectedDate: Date) => {
     if (!user || !timezoneInfo) return [];
     
     try {
-      const userCurrentDate = new Date();
+      const userCurrentDate = getUserCurrentDate();
       const startDate = new Date(userCurrentDate);
       startDate.setDate(startDate.getDate() - 30); // 30 days ago
       const endDate = new Date(userCurrentDate);
@@ -93,7 +92,7 @@ export const useOptimizedNutritionData = (selectedDate: Date) => {
       console.error("Error fetching dates with food:", error);
       return [];
     }
-  }, [user, timezoneInfo]);
+  }, [user, timezoneInfo, getUserCurrentDate]);
 
   // Optimized function to fetch entries for a specific date
   const fetchEntriesForDateOptimized = useCallback(async (dateString: string) => {

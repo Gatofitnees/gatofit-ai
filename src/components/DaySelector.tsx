@@ -64,41 +64,45 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   selectedDate: propSelectedDate
 }) => {
   const { getUserCurrentDate, timezoneInfo } = useOptimizedTimezone();
-  const [selectedDate, setSelectedDate] = useState(propSelectedDate || getUserCurrentDate());
-  const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const hasScrolledRef = useRef(false);
+  const animationExecutedRef = useRef(false);
   
-  // Update local state when prop changes
+  // Always start with user's current date
+  const userCurrentDate = getUserCurrentDate();
+  const [selectedDate, setSelectedDate] = useState(propSelectedDate || userCurrentDate);
+  const [dateRange, setDateRange] = useState<Date[]>([]);
+  
+  // Update local state when prop changes, but prefer current date if no prop
   useEffect(() => {
     if (propSelectedDate) {
       setSelectedDate(propSelectedDate);
+    } else {
+      setSelectedDate(userCurrentDate);
     }
-  }, [propSelectedDate]);
+  }, [propSelectedDate, userCurrentDate]);
   
-  // Generate range of dates (past and future dates) based on user's timezone
+  // Generate range of dates based on user's timezone
   useEffect(() => {
     if (!timezoneInfo) return;
     
-    const userToday = getUserCurrentDate();
     const range: Date[] = [];
     
     // Include 30 days before today and one day after
     for (let i = -30; i <= 1; i++) {
-      range.push(addDays(userToday, i));
+      range.push(addDays(userCurrentDate, i));
     }
     
     setDateRange(range);
     
-    // Reset scroll flag when timezone or range changes
-    hasScrolledRef.current = false;
-  }, [getUserCurrentDate, timezoneInfo]);
+    // Reset animation flag when date range changes
+    animationExecutedRef.current = false;
+  }, [userCurrentDate, timezoneInfo]);
 
-  // Auto-scroll animation when component mounts or date range changes
+  // Force scroll animation every time component mounts or dateRange changes
   useEffect(() => {
-    if (!dateRange.length || hasScrolledRef.current || !scrollContainerRef.current) return;
+    if (!dateRange.length || !scrollContainerRef.current || animationExecutedRef.current) return;
     
-    const scrollToToday = () => {
+    const executeScrollAnimation = () => {
       if (!scrollContainerRef.current) return;
       
       // Calculate scroll position to put today as the second-to-last item visible
@@ -116,14 +120,21 @@ const DaySelector: React.FC<DaySelectorProps> = ({
         behavior: 'smooth'
       });
       
-      hasScrolledRef.current = true;
+      animationExecutedRef.current = true;
     };
 
-    // Use a longer timeout to ensure the component is fully rendered
-    const timeoutId = setTimeout(scrollToToday, 200);
+    // Use timeout to ensure the component is fully rendered
+    const timeoutId = setTimeout(executeScrollAnimation, 300);
     
     return () => clearTimeout(timeoutId);
   }, [dateRange]);
+
+  // Reset animation flag when component unmounts or route changes
+  useEffect(() => {
+    return () => {
+      animationExecutedRef.current = false;
+    };
+  }, []);
 
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
@@ -137,8 +148,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   // Check if date is today based on user's timezone
   const isUserToday = (date: Date) => {
     if (!timezoneInfo) return false;
-    const userToday = getUserCurrentDate();
-    return isSameDay(date, userToday);
+    return isSameDay(date, userCurrentDate);
   };
 
   return (
@@ -150,7 +160,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
       >
         {dateRange.map((date, index) => (
           <div 
-            key={index} 
+            key={`${date.toISOString()}-${index}`} 
             className="flex-shrink-0"
           >
             <DateCard 

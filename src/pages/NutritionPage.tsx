@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -20,7 +19,10 @@ import { useOptimizedTimezone } from "../hooks/useOptimizedTimezone";
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const { getUserCurrentDate } = useOptimizedTimezone();
-  const [selectedDate, setSelectedDate] = useState(getUserCurrentDate());
+  
+  // Always start with user's current date
+  const userCurrentDate = getUserCurrentDate();
+  const [selectedDate, setSelectedDate] = useState(userCurrentDate);
   const navigate = useNavigate();
 
   const { 
@@ -36,13 +38,13 @@ const NutritionPage: React.FC = () => {
   
   const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
 
-  const isToday = selectedDate.toDateString() === getUserCurrentDate().toDateString();
+  const isToday = selectedDate.toDateString() === userCurrentDate.toDateString();
   const isSelectedDay = !isToday;
 
   const formatSelectedDate = () => {
     if (isToday) return "Hoy";
     
-    const today = getUserCurrentDate();
+    const today = userCurrentDate;
     const selected = new Date(selectedDate);
     const diffTime = today.getTime() - selected.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -149,7 +151,7 @@ const NutritionPage: React.FC = () => {
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-6">Nutrición</h1>
       
-      {/* Day selector with optimized food dates */}
+      {/* Day selector with optimized food dates - always pass current date to reset */}
       <DaySelector 
         onSelectDate={setSelectedDate}
         datesWithRecords={datesWithFood}

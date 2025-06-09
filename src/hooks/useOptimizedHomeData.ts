@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
@@ -33,7 +32,9 @@ export const useOptimizedHomeData = () => {
   const { profile } = useProfileContext();
   const { getUserCurrentDateString, convertToUserTimezone, getUserCurrentDate, timezoneInfo } = useOptimizedTimezone();
   
-  const [selectedDate, setSelectedDate] = useState(getUserCurrentDate());
+  // Always initialize with user's current date
+  const userCurrentDate = getUserCurrentDate();
+  const [selectedDate, setSelectedDate] = useState(userCurrentDate);
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -70,6 +71,14 @@ export const useOptimizedHomeData = () => {
       target: profile?.initial_recommended_fats_g || 65 
     }
   };
+
+  // Update selected date when user's current date changes
+  useEffect(() => {
+    if (timezoneInfo) {
+      const currentUserDate = getUserCurrentDate();
+      setSelectedDate(currentUserDate);
+    }
+  }, [timezoneInfo, getUserCurrentDate]);
 
   // Optimized function to fetch activity dates with limited range
   const fetchActivityDatesOptimized = useCallback(async () => {
@@ -271,13 +280,6 @@ export const useOptimizedHomeData = () => {
       fetchDailyWorkout();
     }
   }, [fetchDailyWorkout, timezoneInfo]);
-
-  // Update selected date when timezone info changes
-  useEffect(() => {
-    if (timezoneInfo && selectedDate.toDateString() !== getUserCurrentDate().toDateString()) {
-      setSelectedDate(getUserCurrentDate());
-    }
-  }, [timezoneInfo, getUserCurrentDate]);
 
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedDate(date);
