@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Check, ChevronRight, Plus, Clock, Flame, Dumbbell, Target } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import Button from "./Button";
@@ -33,6 +33,8 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   onViewDetails,
   loading = false
 }) => {
+  const [currentWorkoutIndex, setCurrentWorkoutIndex] = useState(0);
+
   if (loading) {
     return (
       <Card className="mb-5">
@@ -111,60 +113,82 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   );
 
   return (
-    <Card className="mb-5">
-      <CardHeader 
-        title={completed ? "Entrenamiento Completado" : "Mi Entrenamiento Hoy"} 
-        icon={completed ? <Check className="h-5 w-5 text-primary" /> : <Clock className="h-5 w-5" />} 
-      />
-      <CardBody>
-        {completed && workouts.length > 0 ? (
-          <WorkoutCarousel workouts={workouts}>
-            {renderWorkoutContent}
-          </WorkoutCarousel>
-        ) : (
-          <div className="text-center py-3">
-            <p className="text-sm text-muted-foreground mb-2">
-              Es un buen día para mejorar 💪
-            </p>
-            <div className="bg-background/40 rounded-lg p-3 mb-3">
-              <h5 className="text-sm font-medium mb-1">Entrenamiento Sugerido</h5>
-              <p className="text-xs text-muted-foreground">
-                Basado en tu objetivo y nivel actual
-              </p>
-            </div>
-          </div>
-        )}
-      </CardBody>
-      <CardFooter className={cn("flex", completed ? "justify-between" : "justify-center")}>
-        {completed ? (
-          <>
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={() => onViewDetails && onViewDetails(workouts[0]?.id)}
-              rightIcon={<ChevronRight className="h-4 w-4" />}
+    <div className="mb-5">
+      <Card>
+        <CardHeader 
+          title={completed ? "Entrenamiento Completado" : "Mi Entrenamiento Hoy"} 
+          icon={completed ? <Check className="h-5 w-5 text-primary" /> : <Clock className="h-5 w-5" />} 
+        />
+        <CardBody>
+          {completed && workouts.length > 0 ? (
+            <WorkoutCarousel 
+              workouts={workouts}
+              onSlideChange={setCurrentWorkoutIndex}
             >
-              Ver Detalles
-            </Button>
+              {renderWorkoutContent}
+            </WorkoutCarousel>
+          ) : (
+            <div className="text-center py-3">
+              <p className="text-sm text-muted-foreground mb-2">
+                Es un buen día para mejorar 💪
+              </p>
+              <div className="bg-background/40 rounded-lg p-3 mb-3">
+                <h5 className="text-sm font-medium mb-1">Entrenamiento Sugerido</h5>
+                <p className="text-xs text-muted-foreground">
+                  Basado en tu objetivo y nivel actual
+                </p>
+              </div>
+            </div>
+          )}
+        </CardBody>
+        <CardFooter className={cn("flex", completed ? "justify-between" : "justify-center")}>
+          {completed ? (
+            <>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => onViewDetails && onViewDetails(workouts[currentWorkoutIndex]?.id)}
+                rightIcon={<ChevronRight className="h-4 w-4" />}
+              >
+                Ver Detalles
+              </Button>
+              <Button 
+                variant="primary"
+                size="sm"
+                onClick={onStartWorkout}
+              >
+                Otro Entrenamiento
+              </Button>
+            </>
+          ) : (
             <Button 
               variant="primary"
-              size="sm"
+              leftIcon={<Plus className="h-4 w-4" />}
               onClick={onStartWorkout}
             >
-              Otro Entrenamiento
+              Iniciar Entrenamiento
             </Button>
-          </>
-        ) : (
-          <Button 
-            variant="primary"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={onStartWorkout}
-          >
-            Iniciar Entrenamiento
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+          )}
+        </CardFooter>
+      </Card>
+      
+      {/* Indicadores fuera de la tarjeta */}
+      {completed && workouts.length > 1 && (
+        <div className="flex items-center justify-center gap-1 mt-3">
+          {workouts.map((_, index) => (
+            <div
+              key={index}
+              className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                index === currentWorkoutIndex 
+                  ? "bg-primary" 
+                  : "bg-muted"
+              )}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

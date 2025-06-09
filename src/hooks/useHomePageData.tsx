@@ -79,7 +79,7 @@ export const useHomePageData = () => {
     fetchWorkoutDates();
   }, [user]);
 
-  // Load daily workouts (changed to get ALL workouts for the day)
+  // Load daily workouts
   useEffect(() => {
     const fetchDailyWorkouts = async () => {
       if (!user) return;
@@ -118,16 +118,18 @@ export const useHomePageData = () => {
               )
             );
             
-            // Calculate estimated duration if not recorded
-            let duration = workout.duration_completed_minutes || 0;
-            if (duration === 0 && exerciseNames.length > 0) {
-              duration = Math.max(15, exerciseNames.length * 3); // Estimate 3 min per exercise, min 15 min
+            // Usar la duración real del entrenamiento, solo estimar si es null o 0
+            let duration = workout.duration_completed_minutes;
+            if (!duration || duration === 0) {
+              // Solo estimar si realmente no hay datos
+              duration = Math.max(15, exerciseNames.length * 3);
             }
             
-            // Calculate estimated calories if not recorded
-            let calories = workout.calories_burned_estimated || 0;
-            if (calories === 0 && duration > 0) {
-              calories = Math.round(duration * 6); // Estimate 6 calories per minute
+            // Usar las calorías reales del entrenamiento, solo estimar si es null o 0
+            let calories = workout.calories_burned_estimated;
+            if (!calories || calories === 0) {
+              // Solo estimar si realmente no hay datos
+              calories = Math.round(duration * 6);
             }
             
             return {
