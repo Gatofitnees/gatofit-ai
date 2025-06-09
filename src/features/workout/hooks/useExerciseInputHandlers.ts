@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { WorkoutExercise } from "../types/workout";
 
@@ -14,17 +15,21 @@ export function useExerciseInputHandlers(
     const exercise = allExercises[exerciseIndex];
     if (!exercise) return;
 
+    console.log(`Input change - Exercise ${exerciseIndex}, Set ${setIndex}, Field ${field}, Value: "${value}"`);
+
     // Check if this is a temporary exercise
     const isTemporary = exerciseIndex >= baseExerciseCount;
 
-    // Parse value with decimal support for weight
+    // Parse value with improved decimal support for weight
     const parseValue = (val: string, isWeight: boolean) => {
       if (val === '') return null;
       
       if (isWeight) {
-        // For weight, allow one decimal place
-        const numValue = parseFloat(val);
-        return isNaN(numValue) ? null : Math.round(numValue * 10) / 10; // Round to 1 decimal
+        // For weight, allow multiple decimal places and handle comma/dot
+        const normalizedVal = val.replace(',', '.');
+        const numValue = parseFloat(normalizedVal);
+        console.log(`Parsing weight "${val}" -> "${normalizedVal}" -> ${numValue}`);
+        return isNaN(numValue) ? null : Math.round(numValue * 100) / 100; // Round to 2 decimals
       } else {
         // For reps, only integers
         const numValue = parseInt(val);
@@ -33,6 +38,7 @@ export function useExerciseInputHandlers(
     };
 
     const parsedValue = parseValue(value, field === 'weight');
+    console.log(`Parsed value:`, parsedValue);
 
     if (isTemporary) {
       // Use temporary exercise update function

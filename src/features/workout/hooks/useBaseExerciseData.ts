@@ -60,24 +60,35 @@ export function useBaseExerciseData({
     if (!exerciseDetails.length || !previousDataLoaded || isInitialized.current) return;
     
     console.log("Initializing base exercises for the first time");
+    console.log("Available previous data:", previousData);
     
     // Try to load existing data from storage first
     const storedData = loadFromStorage();
     const initialBaseExercises: Record<number, WorkoutExercise> = {};
     
     exerciseDetails.forEach(ex => {
+      console.log(`Processing exercise ${ex.id} (${ex.name})`);
+      console.log(`Previous data for exercise ${ex.id}:`, previousData[ex.id]);
+      
       // Check if we have stored data for this exercise
       const storedExercise = storedData[ex.id];
       
       if (storedExercise && storedExercise.sets.length > 0) {
         // Use stored data but update previous data and add target reps
-        const updatedSets = storedExercise.sets.map((set, i) => ({
-          ...set,
-          previous_weight: previousData[ex.id]?.[i]?.weight || null,
-          previous_reps: previousData[ex.id]?.[i]?.reps || null,
-          target_reps_min: ex.reps_min || undefined,
-          target_reps_max: ex.reps_max || undefined
-        }));
+        const updatedSets = storedExercise.sets.map((set, i) => {
+          const prevWeight = previousData[ex.id]?.[i]?.weight || null;
+          const prevReps = previousData[ex.id]?.[i]?.reps || null;
+          
+          console.log(`Set ${i + 1} - Previous: ${prevWeight}kg × ${prevReps}`);
+          
+          return {
+            ...set,
+            previous_weight: prevWeight,
+            previous_reps: prevReps,
+            target_reps_min: ex.reps_min || undefined,
+            target_reps_max: ex.reps_max || undefined
+          };
+        });
         
         initialBaseExercises[ex.id] = {
           ...storedExercise,
@@ -89,16 +100,23 @@ export function useBaseExerciseData({
         // Create fresh exercise with target reps
         const formattedSets: WorkoutSet[] = Array.from(
           { length: ex.sets || 1 },
-          (_, i) => ({
-            set_number: i + 1,
-            weight: null,
-            reps: null,
-            notes: "",
-            previous_weight: previousData[ex.id]?.[i]?.weight || null,
-            previous_reps: previousData[ex.id]?.[i]?.reps || null,
-            target_reps_min: ex.reps_min || undefined,
-            target_reps_max: ex.reps_max || undefined
-          })
+          (_, i) => {
+            const prevWeight = previousData[ex.id]?.[i]?.weight || null;
+            const prevReps = previousData[ex.id]?.[i]?.reps || null;
+            
+            console.log(`Fresh set ${i + 1} - Previous: ${prevWeight}kg × ${prevReps}`);
+            
+            return {
+              set_number: i + 1,
+              weight: null,
+              reps: null,
+              notes: "",
+              previous_weight: prevWeight,
+              previous_reps: prevReps,
+              target_reps_min: ex.reps_min || undefined,
+              target_reps_max: ex.reps_max || undefined
+            };
+          }
         );
 
         initialBaseExercises[ex.id] = {
@@ -115,6 +133,7 @@ export function useBaseExerciseData({
       initializedExerciseIds.current.add(ex.id);
     });
     
+    console.log("Final base exercises data:", initialBaseExercises);
     setBaseExerciseData(initialBaseExercises);
     saveToStorage(initialBaseExercises);
     isInitialized.current = true;

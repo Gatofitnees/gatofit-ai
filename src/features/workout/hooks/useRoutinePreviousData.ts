@@ -9,6 +9,7 @@ export function useRoutinePreviousData(routineId: number | undefined) {
 
   useEffect(() => {
     if (!routineId) {
+      console.log("No routineId provided, marking as loaded");
       setRoutinePreviousLoaded(true);
       return;
     }
@@ -37,6 +38,8 @@ export function useRoutinePreviousData(routineId: number | undefined) {
           setRoutinePreviousLoaded(true);
           return;
         }
+
+        console.log("Found latest workout log:", latestWorkout.id);
 
         // Get exercise details from the latest workout of this routine
         const { data: exerciseDetails, error: detailsError } = await supabase
@@ -67,6 +70,7 @@ export function useRoutinePreviousData(routineId: number | undefined) {
           });
 
           console.log("Routine previous data loaded:", Object.keys(groupedData).length, "exercises");
+          console.log("Previous data details:", groupedData);
           setRoutinePreviousData(groupedData);
         } else {
           console.log("No exercise details found in previous workout");

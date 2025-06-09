@@ -41,8 +41,26 @@ export const SetRow: React.FC<SetRowProps> = ({
   // Format weight display with proper decimal formatting
   const formatWeightDisplay = (weight: number | null) => {
     if (weight === null) return '';
-    // Show decimal only if it's not .0
-    return weight % 1 === 0 ? weight.toString() : weight.toString();
+    // Show decimals only if they're not zero
+    if (weight % 1 === 0) {
+      return weight.toString();
+    } else {
+      return weight.toFixed(2).replace(/\.?0+$/, ''); // Remove trailing zeros
+    }
+  };
+
+  // Format previous data display
+  const formatPreviousData = () => {
+    console.log(`SetRow ${setIndex} - Previous data:`, {
+      weight: set.previous_weight,
+      reps: set.previous_reps
+    });
+    
+    if (set.previous_weight !== null && set.previous_reps !== null) {
+      const formattedWeight = formatWeightDisplay(set.previous_weight);
+      return `${formattedWeight}kg × ${set.previous_reps}`;
+    }
+    return '-';
   };
 
   return (
@@ -57,9 +75,7 @@ export const SetRow: React.FC<SetRowProps> = ({
         
         {/* Anterior column */}
         <div className="text-xs text-muted-foreground flex items-center">
-          {set.previous_weight !== null && set.previous_reps !== null 
-            ? `${formatWeightDisplay(set.previous_weight)}kg × ${set.previous_reps}` 
-            : '-'}
+          {formatPreviousData()}
         </div>
         
         {/* Peso column - with decimal support */}
