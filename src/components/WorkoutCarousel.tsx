@@ -34,13 +34,15 @@ const WorkoutCarouselContent: React.FC<WorkoutCarouselProps> = ({ workouts, chil
     // Set initial index immediately
     setTimeout(() => onSlideChange(0), 0);
 
-    // Listen for slide changes
+    // Listen for slide changes - using both events for better sync
     api.on('select', onSelect);
-    api.on('settle', onSelect); // Additional event for when animation settles
+    api.on('settle', onSelect);
+    api.on('pointerUp', onSelect); // Additional event for better responsiveness
 
     return () => {
       api.off('select', onSelect);
       api.off('settle', onSelect);
+      api.off('pointerUp', onSelect);
     };
   }, [api, onSlideChange]);
 
@@ -69,10 +71,13 @@ const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ workouts, children, o
       className="w-full" 
       opts={{ 
         loop: false,
-        duration: 20, // Faster animation for mobile
-        dragFree: true, // Smooth drag on mobile
-        skipSnaps: false,
-        align: 'start'
+        duration: 25, // Slightly slower for better control
+        dragFree: false, // Disable free dragging to enforce snapping
+        skipSnaps: false, // Always snap to slides
+        align: 'start',
+        containScroll: 'trimSnaps', // Better boundary handling
+        slidesToScroll: 1, // Only scroll one slide at a time
+        inViewThreshold: 0.8 // Require 80% visibility to consider slide "in view"
       }}
     >
       <WorkoutCarouselContent workouts={workouts} onSlideChange={onSlideChange}>
