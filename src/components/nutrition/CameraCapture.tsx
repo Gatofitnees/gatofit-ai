@@ -1,8 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useFoodCapture } from '@/hooks/useFoodCapture';
 import { CameraControls } from './camera/CameraControls';
-import { NoFoodDialog } from './camera/NoFoodDialog';
 import { CameraErrorDialog } from './camera/CameraErrorDialog';
 import { CameraLoadingOverlay } from './camera/CameraLoadingOverlay';
 import { CameraViewfinder } from './camera/CameraViewfinder';
@@ -10,31 +8,20 @@ import { CameraViewfinder } from './camera/CameraViewfinder';
 interface CameraCaptureProps {
   isOpen: boolean;
   onClose: () => void;
-  onImageCaptured: (imageUrl: string, analysisResult?: any) => void;
-  analysisError?: string | null;
+  onImageCaptured: (imageUrl: string, imageBlob?: Blob) => void;
 }
 
 export const CameraCapture: React.FC<CameraCaptureProps> = ({
   isOpen,
   onClose,
-  onImageCaptured,
-  analysisError
+  onImageCaptured
 }) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [showNoFoodDialog, setShowNoFoodDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { uploadImageWithAnalysis, captureFromGallery, isLoading, clearError } = useFoodCapture();
-
-  // Show no food dialog when analysis error is received
-  useEffect(() => {
-    if (analysisError && isOpen) {
-      setShowNoFoodDialog(true);
-    }
-  }, [analysisError, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -134,54 +121,50 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     canvas.toBlob(async (blob) => {
       if (blob) {
-        console.log('Capturing photo from camera, uploading to Supabase...');
-        const result = await uploadImageWithAnalysis(blob);
+        console.log('Photo captured from camera');
         
-        // Only call onImageCaptured and close if we have a successful result
-        if (result) {
-          console.log('Image uploaded and analyzed successfully:', result);
-          onImageCaptured(result.imageUrl, result.analysisResult);
-          onClose();
-        } else {
-          console.log('Image upload/analysis failed, staying in camera');
-          // Error handling is done by the hook, dialog will be shown automatically
-        }
+        // Create a temporary URL for the image
+        const imageUrl = URL.createObjectURL(blob);
+        
+        // Call the callback with both URL and blob
+        onImageCaptured(imageUrl, blob);
         setIsProcessing(false);
       }
     }, 'image/jpeg', 0.8);
   };
 
   const handleGallerySelect = async () => {
-    console.log('Opening gallery selection through hook...');
+    console.log('Opening gallery selection...');
     setIsProcessing(true);
     
-    const result = await captureFromGallery();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
     
-    // Only call onImageCaptured and close if we have a successful result
-    if (result) {
-      console.log('Gallery image processed and analyzed successfully:', result);
-      onImageCaptured(result.imageUrl, result.analysisResult);
-      onClose();
-    } else {
-      console.log('Gallery image processing failed, staying in camera');
-      // Error handling is done by the hook, dialog will be shown automatically
-    }
-    setIsProcessing(false);
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        console.log('Gallery file selected:', file.name);
+        
+        // Create a URL for the selected file
+        const imageUrl = URL.createObjectURL(file);
+        
+        // Call the callback with both URL and file (which is a Blob)
+        onImageCaptured(imageUrl, file);
+      }
+      setIsProcessing(false);
+    };
+
+    input.oncancel = () => {
+      console.log('Gallery selection cancelled');
+      setIsProcessing(false);
+    };
+
+    input.click();
   };
 
   const switchCamera = () => {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
-  };
-
-  const handleRetryCapture = () => {
-    setShowNoFoodDialog(false);
-    clearError();
-  };
-
-  const handleCancelAndClose = () => {
-    setShowNoFoodDialog(false);
-    clearError();
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -189,20 +172,13 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   return (
     <div className="fixed inset-0 bg-black z-[100]">
       <div className="relative w-full h-full">
-        <NoFoodDialog
-          isVisible={showNoFoodDialog}
-          errorMessage={analysisError}
-          onRetry={handleRetryCapture}
-          onCancel={handleCancelAndClose}
-        />
-
         <CameraErrorDialog
-          isVisible={!!cameraError && !showNoFoodDialog}
+          isVisible={!!cameraError}
           errorMessage={cameraError || ''}
           onUseGallery={handleGallerySelect}
           onRetryCamera={startCamera}
           isProcessing={isProcessing}
-          isLoading={isLoading}
+          isLoading={false}
         />
 
         {/* Video Stream */}
@@ -222,17 +198,17 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
           onCapturePhoto={capturePhoto}
           onGallerySelect={handleGallerySelect}
           isProcessing={isProcessing}
-          isLoading={isLoading}
+          isLoading={false}
           cameraError={cameraError}
-          showNoFoodDialog={showNoFoodDialog}
+          showNoFoodDialog={false}
         />
 
         <CameraLoadingOverlay
-          isVisible={(isProcessing || isLoading) && !cameraError && !showNoFoodDialog}
+          isVisible={isProcessing && !cameraError}
         />
 
         <CameraViewfinder
-          isVisible={!isProcessing && !isLoading && !cameraError && !showNoFoodDialog}
+          isVisible={!isProcessing && !cameraError}
         />
       </div>
     </div>

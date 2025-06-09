@@ -58,10 +58,14 @@ export interface FoodAnalysisResult {
 export const useWebhookResponse = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisPhase, setAnalysisPhase] = useState<string>('');
 
   const sendToWebhookWithResponse = async (imageUrl: string, imageBlob: Blob): Promise<FoodAnalysisResult | null> => {
     setIsAnalyzing(true);
     setAnalysisError(null);
+    setAnalysisProgress(0);
+    setAnalysisPhase('Calculando macros');
     
     // Validate image file
     const validation = validateImageFile(new File([imageBlob], 'image', { type: imageBlob.type }));
@@ -76,6 +80,22 @@ export const useWebhookResponse = () => {
       blobSize: imageBlob.size,
       mimeType: imageBlob.type
     });
+
+    // Simulate progress phases
+    const progressSteps = [
+      { progress: 25, phase: 'Contando calorías' },
+      { progress: 50, phase: 'Identificando alimentos' },
+      { progress: 75, phase: 'Analizando ingredientes' }
+    ];
+
+    let stepIndex = 0;
+    const progressInterval = setInterval(() => {
+      if (stepIndex < progressSteps.length) {
+        setAnalysisProgress(progressSteps[stepIndex].progress);
+        setAnalysisPhase(progressSteps[stepIndex].phase);
+        stepIndex++;
+      }
+    }, 1000);
     
     try {
       const formData = createSecureFormData(imageBlob, imageUrl);
@@ -84,6 +104,9 @@ export const useWebhookResponse = () => {
         method: 'POST',
         body: formData,
       });
+
+      clearInterval(progressInterval);
+      setAnalysisProgress(100);
 
       if (response.ok) {
         const responseText = await response.text();
@@ -94,7 +117,7 @@ export const useWebhookResponse = () => {
           parsedResponse = JSON.parse(responseText);
         } catch (parseError) {
           console.error('Failed to parse webhook response');
-          setAnalysisError(createSecureErrorMessage(parseError, 'webhook'));
+          setAnalysisError('Error al procesar la respuesta del análisis');
           logSecurityEvent('webhook_parse_error', 'Invalid JSON response');
           return null;
         }
@@ -105,7 +128,7 @@ export const useWebhookResponse = () => {
         // Check for new array format first
         if (Array.isArray(parsedResponse)) {
           if (parsedResponse.length === 0) {
-            setAnalysisError('No se detectó información de comida');
+            setAnalysisError('No se detectó información de comida en la imagen');
             return null;
           }
 
@@ -113,7 +136,7 @@ export const useWebhookResponse = () => {
           if (firstItem && firstItem.output) {
             return parseWebhookFoodResponse(sanitizeWebhookData(firstItem.output));
           } else {
-            setAnalysisError(createSecureErrorMessage(new Error('Invalid response structure'), 'webhook'));
+            setAnalysisError('No se pudo identificar el alimento en la imagen');
             logSecurityEvent('webhook_invalid_structure', 'Array format missing output');
             return null;
           }
@@ -123,14 +146,14 @@ export const useWebhookResponse = () => {
         const legacyResult = parsedResponse as WebhookResponse;
 
         if (legacyResult.error) {
-          setAnalysisError(createSecureErrorMessage(new Error(legacyResult.error), 'webhook'));
+          setAnalysisError('No se pudo identificar el alimento en la imagen');
           return null;
         }
 
         if (legacyResult.Comida) {
           if (typeof legacyResult.Comida === 'string') {
             if (legacyResult.Comida === '[object Object]') {
-              setAnalysisError(createSecureErrorMessage(new Error('Serialization error'), 'webhook'));
+              setAnalysisError('Error en el procesamiento de la imagen');
               logSecurityEvent('webhook_serialization_error', 'Object serialization issue');
               return null;
             }
@@ -139,23 +162,24 @@ export const useWebhookResponse = () => {
               const parsedComida = JSON.parse(legacyResult.Comida);
               return parseWebhookFoodResponse(sanitizeWebhookData(parsedComida));
             } catch (stringParseError) {
-              setAnalysisError(createSecureErrorMessage(stringParseError, 'webhook'));
+              setAnalysisError('Error al procesar los datos del alimento');
               return null;
             }
           }
 
           return parseWebhookFoodResponse(sanitizeWebhookData(legacyResult.Comida));
         } else {
-          setAnalysisError('No se detectó información de comida');
+          setAnalysisError('No se detectó información de comida en la imagen');
           return null;
         }
       } else {
         console.warn('Webhook request failed:', response.status);
-        setAnalysisError(createSecureErrorMessage(new Error(`HTTP ${response.status}`), 'network'));
+        setAnalysisError('Error en el servicio de análisis. Intenta de nuevo.');
         logSecurityEvent('webhook_http_error', `Status: ${response.status}`);
         return null;
       }
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('Error sending to webhook:', error);
       logSecurityEvent('webhook_network_error', error instanceof Error ? error.message : 'Unknown error');
       
@@ -172,10 +196,11 @@ export const useWebhookResponse = () => {
         console.error('Fallback request failed');
       }
       
-      setAnalysisError(createSecureErrorMessage(error, 'network'));
+      setAnalysisError('Error de conexión. Verifica tu internet e intenta de nuevo.');
       return null;
     } finally {
       setIsAnalyzing(false);
+      clearInterval(progressInterval);
     }
   };
 
@@ -216,6 +241,8 @@ export const useWebhookResponse = () => {
     sendToWebhookWithResponse,
     isAnalyzing,
     analysisError,
+    analysisProgress,
+    analysisPhase,
     clearError: () => setAnalysisError(null)
   };
 };

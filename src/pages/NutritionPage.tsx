@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -6,24 +7,34 @@ import ProgressRing from "../components/ProgressRing";
 import MacroProgress from "../components/MacroProgress";
 import DaySelector from "../components/DaySelector";
 import { CameraCapture } from "../components/nutrition/CameraCapture";
+import { FoodAnalysisPreview } from "../components/nutrition/FoodAnalysisPreview";
 import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
 import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
-import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
+import { useFoodCapture } from "../hooks/useFoodCapture";
+import { useProfile } from "../hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { useFoodCapture } from "../hooks/useFoodCapture";
-import { useProfile } from "../hooks/useProfile";
+import { toast } from "sonner";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   const selectedDateString = selectedDate.toISOString().split('T')[0];
-  const { entries, deleteEntry, isLoading } = useFoodLog(selectedDateString);
-  const { analyzeFood, isAnalyzing } = useFoodAnalysis();
-  const { error: captureError } = useFoodCapture();
+  const { entries, addEntry, deleteEntry, isLoading } = useFoodLog(selectedDateString);
+  const { 
+    capturedImageUrl,
+    analysisResult,
+    isAnalyzing,
+    analysisError,
+    captureImageOnly,
+    analyzeImage,
+    clearAll
+  } = useFoodCapture();
   const { profile } = useProfile();
 
   // Calculate today's totals from actual entries
@@ -62,8 +73,6 @@ const NutritionPage: React.FC = () => {
 
   // Get dates with food entries for the day selector
   const getDatesWithEntries = (): Date[] => {
-    // For now, we'll just return the selected date if it has entries
-    // In a real implementation, you might want to fetch this from the database
     return entries.length > 0 ? [selectedDate] : [];
   };
 
@@ -87,83 +96,65 @@ const NutritionPage: React.FC = () => {
     });
   };
 
-  const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
-    console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
-    
-    // If there's a capture error, don't navigate - stay in camera to show error dialog
-    if (captureError) {
-      console.log('Capture error detected, staying in camera view');
-      return;
+  const handleImageCaptured = async (imageUrl: string, imageBlob?: Blob) => {
+    console.log('Image captured:', imageUrl);
+    setShowCamera(false);
+    setShowPreview(true);
+
+    // If we have the blob, start analysis immediately
+    if (imageBlob) {
+      await analyzeImage(imageUrl, imageBlob);
     }
-    
-    if (analysisResult) {
-      // Use webhook analysis result with all data including ingredients
-      const pendingFoodData = {
+  };
+
+  const handleRetryAnalysis = async () => {
+    if (capturedImageUrl) {
+      // For retry, we need to recapture since we don't store the blob
+      setShowPreview(false);
+      setShowCamera(true);
+      clearAll();
+    }
+  };
+
+  const handleSaveFood = async () => {
+    if (!analysisResult || !capturedImageUrl) return;
+
+    setIsSaving(true);
+    try {
+      const foodEntry = {
         custom_food_name: analysisResult.name,
+        photo_url: capturedImageUrl,
+        meal_type: 'snack1' as const,
         quantity_consumed: analysisResult.servingSize,
         unit_consumed: analysisResult.servingUnit,
         calories_consumed: analysisResult.calories,
         protein_g_consumed: analysisResult.protein,
         carbs_g_consumed: analysisResult.carbs,
         fat_g_consumed: analysisResult.fat,
-        healthScore: analysisResult.healthScore,
-        ingredients: analysisResult.ingredients, // Pass ingredients data
-        photo_url: imageUrl
+        health_score: analysisResult.healthScore,
+        ingredients: analysisResult.ingredients
       };
+
+      const success = await addEntry(foodEntry);
       
-      // Navigate to the full-screen edit page
-      navigate('/food-edit', {
-        state: {
-          initialData: pendingFoodData,
-          imageUrl: imageUrl,
-          isEditing: false
-        }
-      });
-    } else {
-      // Fallback to old analysis method only if no capture error
-      const analysis = await analyzeFood(imageUrl);
-      console.log('Fallback analysis result:', analysis);
-      
-      if (analysis) {
-        const pendingFoodData = {
-          custom_food_name: analysis.name,
-          quantity_consumed: analysis.servingSize,
-          unit_consumed: analysis.servingUnit,
-          calories_consumed: analysis.calories,
-          protein_g_consumed: analysis.protein,
-          carbs_g_consumed: analysis.carbs,
-          fat_g_consumed: analysis.fat,
-          photo_url: imageUrl
-        };
-        
-        navigate('/food-edit', {
-          state: {
-            initialData: pendingFoodData,
-            imageUrl: imageUrl,
-            isEditing: false
-          }
-        });
+      if (success) {
+        toast.success('¡Comida guardada exitosamente!');
+        setShowPreview(false);
+        clearAll();
       } else {
-        // Navigate to manual entry when all analysis fails
-        navigate('/food-edit', {
-          state: {
-            initialData: {
-              custom_food_name: '',
-              quantity_consumed: 1,
-              unit_consumed: 'porción',
-              calories_consumed: 0,
-              protein_g_consumed: 0,
-              carbs_g_consumed: 0,
-              fat_g_consumed: 0,
-              photo_url: imageUrl
-            },
-            imageUrl: imageUrl,
-            isEditing: false,
-            hasAnalysisError: true
-          }
-        });
+        toast.error('Error al guardar la comida');
       }
+    } catch (error) {
+      console.error('Error saving food:', error);
+      toast.error('Error al guardar la comida');
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    clearAll();
   };
 
   const handleEditEntry = (entry: FoodLogEntry) => {
@@ -190,16 +181,6 @@ const NutritionPage: React.FC = () => {
         datesWithRecords={getDatesWithEntries()}
         selectedDate={selectedDate}
       />
-      
-      {/* Error Alert - Only show if camera is not open */}
-      {captureError && !showCamera && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {captureError}
-          </AlertDescription>
-        </Alert>
-      )}
       
       {/* Calories Summary */}
       <div className="flex items-center justify-center mb-8 animate-fade-in">
@@ -320,19 +301,21 @@ const NutritionPage: React.FC = () => {
           isOpen={showCamera}
           onClose={() => setShowCamera(false)}
           onImageCaptured={handleImageCaptured}
-          analysisError={captureError}
         />
       )}
 
-      {/* Loading overlay for analysis */}
-      {isAnalyzing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="neu-card p-6 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3"></div>
-            <p className="text-sm font-medium">Analizando alimento...</p>
-            <p className="text-xs text-muted-foreground mt-1">Esto puede tomar unos segundos</p>
-          </div>
-        </div>
+      {/* Food Analysis Preview */}
+      {showPreview && capturedImageUrl && (
+        <FoodAnalysisPreview
+          imageUrl={capturedImageUrl}
+          isAnalyzing={isAnalyzing}
+          analysisResult={analysisResult}
+          analysisError={analysisError}
+          onClose={handleClosePreview}
+          onRetry={handleRetryAnalysis}
+          onSave={handleSaveFood}
+          isSaving={isSaving}
+        />
       )}
     </div>
   );
