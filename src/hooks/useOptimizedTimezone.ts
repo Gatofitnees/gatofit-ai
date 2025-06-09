@@ -89,15 +89,18 @@ export const useOptimizedTimezone = () => {
         const currentTimezone = getCurrentTimezone();
         setTimezoneInfo(currentTimezone);
         
-        // Save to profile without waiting
-        supabase
-          .from('profiles')
-          .update({
-            timezone_offset: currentTimezone.timezoneOffset,
-            timezone_name: currentTimezone.timezoneName
-          })
-          .eq('id', user.id)
-          .catch(err => console.error('Error saving timezone:', err));
+        // Save to profile without waiting - properly handle the Promise
+        try {
+          await supabase
+            .from('profiles')
+            .update({
+              timezone_offset: currentTimezone.timezoneOffset,
+              timezone_name: currentTimezone.timezoneName
+            })
+            .eq('id', user.id);
+        } catch (saveError) {
+          console.error('Error saving timezone:', saveError);
+        }
       }
     } catch (error) {
       console.error('Error loading timezone:', error);
