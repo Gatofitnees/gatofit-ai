@@ -28,7 +28,7 @@ const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  // FIXED: Only use profile data, never Google metadata as fallback
+  // ONLY use profile data - never fallback to user metadata
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name || '');
@@ -155,7 +155,7 @@ const ProfilePage: React.FC = () => {
     );
   }
 
-  // FIXED: Use profile data only, no Google fallbacks
+  // ONLY use profile data
   const displayName = profile?.full_name || 'Usuario';
   const displayAvatar = profile?.avatar_url;
 

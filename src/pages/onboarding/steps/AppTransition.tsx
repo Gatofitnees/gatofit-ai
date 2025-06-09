@@ -16,16 +16,29 @@ const AppTransition: React.FC = () => {
   // Handle saving onboarding data and redirect
   useEffect(() => {
     const handleTransition = async () => {
-      // If user is authenticated and we have onboarding data, save it
-      if (user && context) {
-        const onboardingData = loadOnboardingData();
-        if (onboardingData) {
-          console.log('Saving onboarding data for authenticated user...');
-          await saveOnboardingToProfile(onboardingData);
+      // If user is authenticated, handle the transition
+      if (user) {
+        // Check if this is a Google user with metadata
+        const isGoogleUser = user.user_metadata?.provider_id?.includes('google');
+        
+        if (isGoogleUser) {
+          console.log('Google user authenticated, profile auto-setup will handle data extraction');
+          // For Google users, the useAutoProfileSetup hook will handle profile creation
+          // We just need to wait a moment for it to process
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+        // Save onboarding data if available (for non-Google users or additional data)
+        if (context) {
+          const onboardingData = loadOnboardingData();
+          if (onboardingData) {
+            console.log('Saving onboarding data for authenticated user...');
+            await saveOnboardingToProfile(onboardingData);
+          }
         }
       }
       
-      // Redirect after a delay
+      // Redirect after processing
       const timer = setTimeout(() => {
         navigate("/");
       }, 3000);
@@ -57,6 +70,15 @@ const AppTransition: React.FC = () => {
       >
         {user ? "¡Bienvenido a GatofitAI!" : "Preparando tu experiencia personalizada..."}
       </motion.h1>
+      
+      <motion.p
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.4 }}
+        className="text-sm text-muted-foreground mb-8 text-center"
+      >
+        {user ? "Configurando tu perfil automáticamente..." : "Finalizando configuración..."}
+      </motion.p>
       
       <motion.div
         initial={{ opacity: 0 }}

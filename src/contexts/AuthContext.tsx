@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
 import { createSecureErrorMessage, logSecurityEvent } from "@/utils/errorHandling";
+import { useAutoProfileSetup } from "@/hooks/useAutoProfileSetup";
 
 interface AuthContextProps {
   session: Session | null;
@@ -39,6 +39,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
+
+  // Auto-setup profile for Google users
+  useAutoProfileSetup(user);
 
   useEffect(() => {
     // Get initial session

@@ -60,7 +60,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
   const currentLevel = streakData?.current_level || 1;
 
-  // Only use profile data, never fallback to Google data
+  // ONLY use profile data - never fallback to user metadata
   const displayName = profileLoading ? "" : (profile?.full_name || profile?.username || "Usuario");
   const avatarUrl = profileLoading ? "" : profile?.avatar_url;
 
