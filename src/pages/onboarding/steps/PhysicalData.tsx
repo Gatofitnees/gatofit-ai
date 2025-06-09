@@ -26,16 +26,17 @@ const PhysicalData: React.FC = () => {
 
   const { data, updateData } = context;
 
-  const [isMetric, setIsMetric] = useState(data.weightUnit === "kg");
-  const [heightValues, setHeightValues] = useState(generateHeightValues(isMetric));
+  // Default to metric system
+  const [isMetric, setIsMetric] = useState(true);
+  const [heightValues, setHeightValues] = useState(generateHeightValues(true));
   const [inchesValues] = useState(generateInchesValues());
-  const [weightValues, setWeightValues] = useState(generateWeightValues(isMetric));
+  const [weightValues, setWeightValues] = useState(generateWeightValues(true));
   const [fatValues] = useState(generateFatValues());
   
   const [heightFt, setHeightFt] = useState<number>(5);
   const [heightIn, setHeightIn] = useState<number>(7);
   const [heightCm, setHeightCm] = useState<number>(data.height || 170);
-  const [weight, setWeight] = useState<number>(data.weight || (isMetric ? 70 : 155));
+  const [weight, setWeight] = useState<number>(data.weight || 70); // Default to 70 kg
   const [bodyFat, setBodyFat] = useState<number>(data.bodyFatPercentage || 20);
 
   // Update context when values change

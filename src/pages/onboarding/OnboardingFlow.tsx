@@ -1,4 +1,3 @@
-
 import React, { createContext, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -69,8 +68,12 @@ export const OnboardingContext = createContext<OnboardingContextType | null>(nul
 const OnboardingFlow: React.FC = () => {
   const location = useLocation();
   const [data, setData] = useState<OnboardingData>({
-    achievements: [], // Initialize as empty array to prevent undefined errors
-    obstacles: [], // Initialize as empty array to prevent undefined errors
+    achievements: [],
+    obstacles: [],
+    trainingsPerWeek: 3, // Default value set to 3 days
+    weightUnit: "kg", // Default to metric system
+    heightUnit: "cm",
+    unit_system_preference: "metric"
   });
 
   const updateData = (newData: Partial<OnboardingData>) => {

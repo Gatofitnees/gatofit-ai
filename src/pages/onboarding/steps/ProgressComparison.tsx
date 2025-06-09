@@ -1,113 +1,73 @@
 
-import React, { useContext, useRef, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import { OnboardingContext } from "../OnboardingFlow";
 
-const DATA_TRADITIONAL = [
-  { month: 1, progress: 0, label: "Mes 1" },
-  { month: 2, progress: 3, label: "Mes 2" },
-  { month: 3, progress: 5, label: "Mes 3" },
-  { month: 4, progress: 8, label: "Mes 4" },
-  { month: 5, progress: 10, label: "Mes 5" },
-  { month: 6, progress: 12, label: "Mes 6" },
-];
-
-const DATA_AI = [
-  { month: 1, progress: 0, label: "Mes 1" },
-  { month: 2, progress: 25, label: "Mes 2" },
-  { month: 3, progress: 45, label: "Mes 3" },
-  { month: 4, progress: 70, label: "Mes 4" },
-  { month: 5, progress: 88, label: "Mes 5" },
-  { month: 6, progress: 100, label: "Mes 6" },
-];
-
 const ProgressComparison: React.FC = () => {
   const navigate = useNavigate();
   const context = useContext(OnboardingContext);
-  
-  // Animation state
-  const [showAI, setShowAI] = React.useState(false);
-  const [traditionalData, setTraditionalData] = React.useState(
-    DATA_TRADITIONAL.map(item => ({ ...item, progress: 0 }))
-  );
-  const [aiData, setAiData] = React.useState(
-    DATA_AI.map(item => ({ ...item, progress: 0 }))
-  );
+  const [showAI, setShowAI] = useState(false);
+  const [traditionalProgress, setTraditionalProgress] = useState(0);
+  const [aiProgress, setAiProgress] = useState(0);
   
   if (!context) {
     throw new Error("ProgressComparison must be used within OnboardingContext");
   }
 
-  // Animate the traditional line when component mounts
+  // Traditional app data points (low progress)
+  const traditionalData = [0, 3, 5, 8, 10, 12];
+  
+  // AI app data points (high progress)
+  const aiData = [0, 25, 45, 70, 88, 100];
+
+  // Animate traditional line first
   useEffect(() => {
-    const animateTraditionalLine = () => {
-      const duration = 1800;
-      const steps = 40;
-      const stepDuration = duration / steps;
-      
-      let currentStep = 0;
-      
-      const interval = setInterval(() => {
-        const progress = currentStep / steps;
-        const updatedData = DATA_TRADITIONAL.map((item, index) => ({
-          ...item,
-          progress: progress * item.progress
-        }));
-        
-        setTraditionalData(updatedData);
-        currentStep++;
-        
-        if (currentStep > steps) {
-          clearInterval(interval);
-          setTimeout(() => setShowAI(true), 800);
-        }
-      }, stepDuration);
-      
-      return () => clearInterval(interval);
-    };
-    
-    const timer = setTimeout(animateTraditionalLine, 300);
+    const timer = setTimeout(() => {
+      setTraditionalProgress(100);
+      setTimeout(() => setShowAI(true), 800);
+    }, 300);
     return () => clearTimeout(timer);
   }, []);
-  
-  // Animate the AI line after traditional line is complete
+
+  // Animate AI line after traditional
   useEffect(() => {
     if (showAI) {
-      const animateAILine = () => {
-        const duration = 2000;
-        const steps = 50;
-        const stepDuration = duration / steps;
-        
-        let currentStep = 0;
-        
-        const interval = setInterval(() => {
-          const progress = currentStep / steps;
-          const updatedData = DATA_AI.map((item, index) => ({
-            ...item,
-            progress: progress * item.progress
-          }));
-          
-          setAiData(updatedData);
-          currentStep++;
-          
-          if (currentStep > steps) {
-            clearInterval(interval);
-          }
-        }, stepDuration);
-        
-        return () => clearInterval(interval);
-      };
-      
-      animateAILine();
+      const timer = setTimeout(() => {
+        setAiProgress(100);
+      }, 200);
+      return () => clearTimeout(timer);
     }
   }, [showAI]);
 
   const handleNext = () => {
     navigate("/onboarding/physical-data");
+  };
+
+  // Generate SVG path for line
+  const createPath = (data: number[], progress: number) => {
+    const width = 300;
+    const height = 180;
+    const padding = 40;
+    
+    const chartWidth = width - (padding * 2);
+    const chartHeight = height - (padding * 2);
+    
+    const points = data.map((value, index) => {
+      const x = padding + (index / (data.length - 1)) * chartWidth;
+      const y = padding + chartHeight - (value / 100) * chartHeight;
+      return `${x},${y}`;
+    });
+    
+    // Calculate how much of the path to show based on progress
+    const visiblePoints = Math.floor((points.length - 1) * (progress / 100)) + 1;
+    const pathPoints = points.slice(0, visiblePoints);
+    
+    if (pathPoints.length < 2) return "";
+    
+    return `M ${pathPoints[0]} L ${pathPoints.slice(1).join(" L ")}`;
   };
 
   return (
@@ -121,53 +81,104 @@ const ProgressComparison: React.FC = () => {
           Nuestra IA personaliza tu plan para resultados óptimos.
         </p>
 
-        <div className="flex-1 min-h-[300px] bg-background/40 rounded-xl p-4 border border-white/5">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis 
-                dataKey="label" 
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                label={{ value: 'Tiempo', position: 'insideBottom', offset: -10, fill: 'hsl(var(--muted-foreground))' }}
-                scale="point"
-              />
-              <YAxis 
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                label={{ value: 'Progreso (%)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
-                domain={[0, 100]}
-              />
+        <div className="flex-1 min-h-[300px] bg-background/40 rounded-xl p-4 border border-white/5 flex items-center justify-center">
+          <svg width="320" height="200" className="w-full max-w-[320px]">
+            {/* Grid lines */}
+            <defs>
+              <pattern id="grid" width="40" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="320" height="200" fill="url(#grid)" />
+            
+            {/* Y-axis labels */}
+            <text x="25" y="45" fill="hsl(var(--muted-foreground))" fontSize="10" textAnchor="middle">100%</text>
+            <text x="25" y="110" fill="hsl(var(--muted-foreground))" fontSize="10" textAnchor="middle">50%</text>
+            <text x="25" y="175" fill="hsl(var(--muted-foreground))" fontSize="10" textAnchor="middle">0%</text>
+            
+            {/* X-axis labels */}
+            {[1, 2, 3, 4, 5, 6].map((month, index) => (
+              <text 
+                key={month}
+                x={40 + (index / 5) * 240}
+                y="195" 
+                fill="hsl(var(--muted-foreground))" 
+                fontSize="10" 
+                textAnchor="middle"
+              >
+                M{month}
+              </text>
+            ))}
+            
+            {/* Traditional app line */}
+            <motion.path
+              d={createPath(traditionalData, traditionalProgress)}
+              fill="none"
+              stroke="#9CA3AF"
+              strokeWidth="3"
+              strokeDasharray="8,4"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: traditionalProgress / 100 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
+            
+            {/* Traditional app dots */}
+            {traditionalData.map((value, index) => {
+              const x = 40 + (index / (traditionalData.length - 1)) * 240;
+              const y = 40 + 120 - (value / 100) * 120;
+              const shouldShow = index <= (traditionalData.length - 1) * (traditionalProgress / 100);
               
-              <Line 
-                data={traditionalData}
-                type="monotone"
-                dataKey="progress"
-                name="Apps Tradicionales"
-                stroke="#9CA3AF"
-                strokeWidth={3}
-                dot={{ fill: "#9CA3AF", strokeWidth: 0, r: 4 }}
-                strokeDasharray="8,4"
-                isAnimationActive={false}
-              />
-              
-              {showAI && (
-                <Line 
-                  data={aiData}
-                  type="monotone"
-                  dataKey="progress"
-                  name="GatofitAI"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={4}
-                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))", r: 5 }}
-                  filter="drop-shadow(0 0 6px hsl(var(--primary)/0.6))"
-                  isAnimationActive={false}
+              return shouldShow ? (
+                <motion.circle
+                  key={`trad-${index}`}
+                  cx={x}
+                  cy={y}
+                  r="4"
+                  fill="#9CA3AF"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: index * 0.3, duration: 0.3 }}
                 />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
+              ) : null;
+            })}
+            
+            {/* AI app line */}
+            {showAI && (
+              <motion.path
+                d={createPath(aiData, aiProgress)}
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="4"
+                filter="drop-shadow(0 0 6px hsl(var(--primary)/0.6))"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: aiProgress / 100 }}
+                transition={{ duration: 2, ease: "easeInOut" }}
+              />
+            )}
+            
+            {/* AI app dots */}
+            {showAI && aiData.map((value, index) => {
+              const x = 40 + (index / (aiData.length - 1)) * 240;
+              const y = 40 + 120 - (value / 100) * 120;
+              const shouldShow = index <= (aiData.length - 1) * (aiProgress / 100);
+              
+              return shouldShow ? (
+                <motion.circle
+                  key={`ai-${index}`}
+                  cx={x}
+                  cy={y}
+                  r="5"
+                  fill="hsl(var(--primary))"
+                  stroke="hsl(var(--background))"
+                  strokeWidth="2"
+                  filter="drop-shadow(0 0 4px hsl(var(--primary)/0.5))"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: index * 0.4, duration: 0.3 }}
+                />
+              ) : null;
+            })}
+          </svg>
         </div>
 
         <div className="flex justify-center gap-8 mb-6 mt-4">

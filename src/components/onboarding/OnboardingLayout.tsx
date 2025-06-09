@@ -29,7 +29,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
         </div>
       )}
       
-      <main className={`flex-1 px-4 pb-32 ${className}`}>
+      <main className={`flex-1 px-4 pb-32 pt-8 ${className}`}>
         <div className="max-w-md mx-auto h-full">
           {children}
         </div>

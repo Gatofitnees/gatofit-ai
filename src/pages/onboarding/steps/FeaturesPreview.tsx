@@ -36,7 +36,6 @@ const FeaturesPreview: React.FC = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [cardsPerView, setCardsPerView] = useState(1);
   const context = useContext(OnboardingContext);
   
   if (!context) {
@@ -76,18 +75,9 @@ const FeaturesPreview: React.FC = () => {
     },
   ];
 
-  // Calculate cards per view based on screen size
-  const getCardsPerView = () => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth > 768 ? 2 : 1;
-    }
-    return 1;
-  };
-  
   // Initialize component
   useEffect(() => {
     const initializeComponent = () => {
-      setCardsPerView(getCardsPerView());
       // Small delay to ensure proper rendering
       setTimeout(() => {
         setIsLoaded(true);
@@ -95,16 +85,6 @@ const FeaturesPreview: React.FC = () => {
     };
     
     initializeComponent();
-  }, []);
-  
-  // Update cards per view on resize
-  useEffect(() => {
-    const handleResize = () => {
-      setCardsPerView(getCardsPerView());
-    };
-    
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Auto-scroll carousel every 4 seconds (only when loaded)
@@ -189,7 +169,7 @@ const FeaturesPreview: React.FC = () => {
               autoScrollInterval={4000}
               currentSlide={currentSlide} 
               onSlideChange={setCurrentSlide}
-              cardsPerView={cardsPerView}
+              cardsPerView={1}
               className="h-[calc(100%-30px)]"
             >
               {features.map((feature, index) => (
@@ -213,7 +193,7 @@ const FeaturesPreview: React.FC = () => {
         nextLabel="Crear Cuenta"
       />
     </OnboardingLayout>
-  );
+    );
 };
 
 export default FeaturesPreview;
