@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { getExperienceProgress } from "@/utils/rankSystem";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "./ui/skeleton";
 
 interface UserHeaderProps {
   username?: string;
@@ -24,7 +25,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { user, signOut } = useAuth();
-  const { profile } = useProfileContext();
+  const { profile, loading: profileLoading } = useProfileContext();
   const { streakData } = useStreaks();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -39,13 +40,48 @@ const UserHeader: React.FC<UserHeaderProps> = ({
     navigate('/profile');
   };
 
+  const handleChangeAccount = async () => {
+    try {
+      const { error } = await signOut();
+      if (!error) {
+        // Redirect to login with account selector
+        window.location.href = '/onboarding/login';
+      }
+    } catch (error) {
+      console.error('Error changing account:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cambiar de cuenta",
+        variant: "destructive"
+      });
+    }
+    setShowMenu(false);
+  };
+
   // Get experience progress
   const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
   const currentLevel = streakData?.current_level || 1;
 
-  // Use profile data with fallback to Google metadata
-  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.name || user?.email?.split('@')[0] || "Usuario";
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
+  // FIXED: Only use profile data, never fallback to Google data
+  const displayName = profileLoading ? "" : (profile?.full_name || profile?.username || "Usuario");
+  const avatarUrl = profileLoading ? "" : profile?.avatar_url;
+
+  // Show loading state while profile is loading
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <Skeleton className="w-16 h-16 rounded-full" />
+          <div className="ml-4">
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-4 w-24 mb-2" />
+            <Skeleton className="h-2 w-32" />
+          </div>
+        </div>
+        <AIChat />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -159,10 +195,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
               variant="secondary" 
               size="sm" 
               className="justify-start"
-              onClick={() => toast({
-                title: "Cambiar cuenta",
-                description: "Función próximamente disponible",
-              })}
+              onClick={handleChangeAccount}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Cambiar cuenta

@@ -100,15 +100,19 @@ const CreateExercisePage: React.FC = () => {
         return;
       }
 
+      // Map difficulty level to enum values
+      let difficultyEnum: "beginner" | "intermediate" | "advanced" | null = null;
+      if (difficulty === "Principiante") difficultyEnum = "beginner";
+      else if (difficulty === "Intermedio") difficultyEnum = "intermediate";
+      else if (difficulty === "Avanzado") difficultyEnum = "advanced";
+
       // FIXED: Actually save the exercise to the database
       const exerciseData = {
         name: name.trim(),
         description: description.trim() || null,
         muscle_group_main: muscleGroup,
         equipment_required: equipment || null,
-        difficulty_level: difficulty === "Principiante" ? "beginner" : 
-                         difficulty === "Intermedio" ? "intermediate" : 
-                         difficulty === "Avanzado" ? "advanced" : null,
+        difficulty_level: difficultyEnum,
         created_by_user_id: user.id,
         video_url: null // For now, we'll implement file upload later
       };

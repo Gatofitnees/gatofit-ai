@@ -202,6 +202,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         provider: 'google',
         options: {
           redirectTo: `https://appsecret.gatofit.com/onboarding/app-transition`,
+          queryParams: {
+            prompt: 'select_account'
+          }
         },
       });
 

@@ -13,6 +13,7 @@ import AvatarUpload from '@/components/profile/AvatarUpload';
 import BodyMeasurements from '@/components/profile/BodyMeasurements';
 import UserInformation from '@/components/profile/UserInformation';
 import { useToast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,17 +28,13 @@ const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  // Update form state when profile loads, with Google data as fallback
+  // FIXED: Only use profile data, never Google metadata as fallback
   useEffect(() => {
-    if (profile || user) {
-      // Use profile data first, fall back to Google metadata
-      const googleName = user?.user_metadata?.name || user?.user_metadata?.full_name;
-      const googleEmail = user?.email?.split('@')[0];
-      
-      setFullName(profile?.full_name || googleName || '');
-      setUsername(profile?.username || googleEmail || '');
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setUsername(profile.username || '');
     }
-  }, [profile, user]);
+  }, [profile]);
 
   const checkUsernameAvailability = async (value: string) => {
     // Esta función debería implementarse en el hook useProfile
@@ -117,15 +114,50 @@ const ProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-primary">Cargando perfil...</div>
+      <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/home')}
+            className="p-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          
+          <h1 className="text-xl font-bold">Mi Perfil</h1>
+          
+          <div className="flex gap-2">
+            <Skeleton className="w-8 h-8" />
+            <Skeleton className="w-8 h-8" />
+          </div>
+        </div>
+
+        {/* Avatar Skeleton */}
+        <div className="text-center mb-6">
+          <Skeleton className="w-24 h-24 rounded-full mx-auto" />
+        </div>
+
+        {/* Form Skeletons */}
+        <div className="space-y-4 mb-6">
+          <div>
+            <Skeleton className="h-4 w-24 mb-2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div>
+            <Skeleton className="h-4 w-32 mb-2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-10 w-full" />
+        </div>
       </div>
     );
   }
 
-  // Use fallback data for display
-  const displayName = fullName || profile?.full_name || user?.user_metadata?.name || 'Usuario';
-  const displayAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url;
+  // FIXED: Use profile data only, no Google fallbacks
+  const displayName = profile?.full_name || 'Usuario';
+  const displayAvatar = profile?.avatar_url;
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
