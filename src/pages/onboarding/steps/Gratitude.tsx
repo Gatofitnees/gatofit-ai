@@ -45,7 +45,7 @@ const Gratitude: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={15} totalSteps={20}>
-      <div className="flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden min-h-[calc(100vh-200px)]">
         {particles}
         
         <motion.div

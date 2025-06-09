@@ -50,7 +50,7 @@ const GoalRealism: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={10} totalSteps={20}>
-      <div className="flex-1 flex flex-col items-center justify-center text-center">
+      <div className="flex-1 flex flex-col items-center justify-center text-center min-h-[calc(100vh-200px)]">
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

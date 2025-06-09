@@ -37,7 +37,7 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/98 backdrop-blur-md border-t border-white/5 z-50">
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background backdrop-blur-md border-t border-white/5 z-[100]">
       <div className="max-w-md mx-auto space-y-4">
         <button
           onClick={handleNext}

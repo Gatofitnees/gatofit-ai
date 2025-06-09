@@ -25,9 +25,6 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
         <div className="w-full px-4 pt-6 pb-2">
           <div className="max-w-md mx-auto">
             <Progress value={progressPercentage} className="h-1" />
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              {currentStep} de {totalSteps}
-            </p>
           </div>
         </div>
       )}

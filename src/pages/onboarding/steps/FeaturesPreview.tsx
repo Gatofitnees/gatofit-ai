@@ -2,8 +2,9 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, Calendar, ArrowUpCircle, List, Calculator, BookOpenCheck, ArrowLeft } from "lucide-react";
+import { BarChart3, Calendar, ArrowUpCircle, List, Calculator, BookOpenCheck } from "lucide-react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
+import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import { OnboardingContext } from "../OnboardingFlow";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import SwipeableCarousel from "@/components/onboarding/SwipeableCarousel";
@@ -120,10 +121,6 @@ const FeaturesPreview: React.FC = () => {
   const handleNext = () => {
     navigate("/onboarding/create-account");
   };
-  
-  const handleBack = () => {
-    navigate(-1);
-  };
 
   // Loading skeleton
   if (!isLoaded) {
@@ -133,7 +130,7 @@ const FeaturesPreview: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="flex flex-col h-full"
+          className="flex flex-col h-full min-h-[calc(100vh-200px)]"
         >
           <h1 className="text-2xl font-bold mb-2">
             Descubre cómo <GatofitAILogo size="lg" className="inline-block" /> te impulsará
@@ -143,7 +140,7 @@ const FeaturesPreview: React.FC = () => {
             Estas son algunas de las características clave que te ayudarán a alcanzar tus objetivos
           </p>
 
-          <div className="w-full flex-1 flex flex-col justify-between">
+          <div className="w-full flex-1 flex flex-col justify-center">
             <div className="flex-grow">
               <div className="h-[calc(100%-30px)]">
                 <div className="px-1 py-1 h-full">
@@ -159,12 +156,12 @@ const FeaturesPreview: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div className="w-full mt-8 space-y-4">
-            <Skeleton className="w-full h-12 rounded-xl" />
-            <Skeleton className="w-24 h-6 mx-auto" />
-          </div>
         </motion.div>
+
+        <OnboardingNavigation 
+          onNext={handleNext}
+          nextLabel="Crear Cuenta"
+        />
       </OnboardingLayout>
     );
   }
@@ -175,7 +172,7 @@ const FeaturesPreview: React.FC = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="flex flex-col h-full"
+        className="flex flex-col h-full min-h-[calc(100vh-200px)]"
       >
         <h1 className="text-2xl font-bold mb-2">
           Descubre cómo <GatofitAILogo size="lg" className="inline-block" /> te impulsará
@@ -185,7 +182,7 @@ const FeaturesPreview: React.FC = () => {
           Estas son algunas de las características clave que te ayudarán a alcanzar tus objetivos
         </p>
 
-        <div className="w-full flex-1 flex flex-col justify-between">
+        <div className="w-full flex-1 flex flex-col justify-center">
           <div className="flex-grow">
             <SwipeableCarousel 
               autoScroll 
@@ -209,31 +206,12 @@ const FeaturesPreview: React.FC = () => {
             </SwipeableCarousel>
           </div>
         </div>
-
-        <div className="w-full mt-8 space-y-4">
-          <motion.button
-            className="w-full flex items-center justify-center py-3 px-4 bg-primary hover:bg-primary/90 text-white rounded-xl text-center neu-button shadow-lg"
-            onClick={handleNext}
-            whileTap={{ scale: 0.98 }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            <span>Crear Cuenta</span>
-          </motion.button>
-          
-          <motion.button
-            onClick={handleBack}
-            className="flex items-center justify-center py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Atrás
-          </motion.button>
-        </div>
       </motion.div>
+
+      <OnboardingNavigation 
+        onNext={handleNext}
+        nextLabel="Crear Cuenta"
+      />
     </OnboardingLayout>
   );
 };

@@ -15,7 +15,7 @@ const Welcome: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={1} totalSteps={20}>
-      <div className="flex flex-col items-center justify-center flex-1 text-center">
+      <div className="flex flex-col items-center justify-center flex-1 text-center min-h-[calc(100vh-200px)]">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
