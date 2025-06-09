@@ -100,29 +100,22 @@ const CreateExercisePage: React.FC = () => {
         return;
       }
 
-      // FIXED: Map difficulty to correct database enum values
-      let difficultyLevel: "beginner" | "intermediate" | "advanced" | null = null;
-      if (difficulty === "Principiante") {
-        difficultyLevel = "beginner";
-      } else if (difficulty === "Intermedio") {
-        difficultyLevel = "intermediate";
-      } else if (difficulty === "Avanzado") {
-        difficultyLevel = "advanced";
-      }
-
+      // FIXED: Actually save the exercise to the database
       const exerciseData = {
         name: name.trim(),
         description: description.trim() || null,
         muscle_group_main: muscleGroup,
         equipment_required: equipment || null,
-        difficulty_level: difficultyLevel,
+        difficulty_level: difficulty === "Principiante" ? "beginner" : 
+                         difficulty === "Intermedio" ? "intermediate" : 
+                         difficulty === "Avanzado" ? "advanced" : null,
         created_by_user_id: user.id,
-        video_url: null
+        video_url: null // For now, we'll implement file upload later
       };
 
       const { error } = await supabase
         .from('exercises')
-        .insert(exerciseData);
+        .insert([exerciseData]);
 
       if (error) {
         console.error("Error saving exercise:", error);
