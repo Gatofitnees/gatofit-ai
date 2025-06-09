@@ -10,11 +10,11 @@ import { useRankings, RankingType } from '@/hooks/useRankings';
 const RankingPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<RankingType>('streak');
   const { streakData, isLoading: streakLoading } = useStreaks();
-  const { rankings, isLoading: rankingsLoading, fetchRankings } = useRankings();
+  const { rankings, isLoading: rankingsLoading, fetchRankings } = useRankings(20); // Límite de 20 usuarios
 
   const handleTypeChange = (type: RankingType) => {
     setSelectedType(type);
-    fetchRankings(type);
+    fetchRankings(type, 20); // Asegurar límite de 20
   };
 
   return (
@@ -69,8 +69,8 @@ const RankingPage: React.FC = () => {
             </h3>
             <p className="text-sm text-muted-foreground">
               {selectedType === 'streak' 
-                ? 'Usuarios con las rachas más largas' 
-                : 'Usuarios con más experiencia acumulada'
+                ? 'Top 20 usuarios con las rachas más largas' 
+                : 'Top 20 usuarios con más experiencia acumulada'
               }
             </p>
           </div>

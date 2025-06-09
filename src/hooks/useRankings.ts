@@ -17,12 +17,12 @@ export interface RankingUser {
 
 export type RankingType = 'streak' | 'experience';
 
-export const useRankings = () => {
+export const useRankings = (limit?: number) => {
   const [rankings, setRankings] = useState<RankingUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRankings = async (type: RankingType = 'streak') => {
+  const fetchRankings = async (type: RankingType = 'streak', customLimit?: number) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -132,10 +132,14 @@ export const useRankings = () => {
         }
       });
 
-      console.log('✅ Final sorted data:', sortedData);
-      console.log('📊 Number of users in final ranking:', sortedData.length);
+      // Apply limit if specified
+      const finalLimit = customLimit || limit;
+      const limitedData = finalLimit ? sortedData.slice(0, finalLimit) : sortedData;
+
+      console.log('✅ Final sorted and limited data:', limitedData);
+      console.log('📊 Number of users in final ranking:', limitedData.length);
       
-      setRankings(sortedData);
+      setRankings(limitedData);
     } catch (err: any) {
       console.error('❌ Error fetching rankings:', err);
       setError(err.message || 'Error al cargar clasificaciones');

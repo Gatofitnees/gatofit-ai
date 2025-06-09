@@ -16,7 +16,7 @@ const SocialPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const { rankings, isLoading, error } = useRankings();
+  const { rankings, isLoading, error } = useRankings(100); // Límite de 100 usuarios
   const { user } = useAuth();
   const { stats } = useUserStats(user?.id);
   const { followers, following, isLoading: followersLoading } = useFollowersList(user?.id);
@@ -34,7 +34,7 @@ const SocialPage: React.FC = () => {
     return username.includes(query);
   });
 
-  const topUsers = rankings.slice(0, 5);
+  const topUsers = rankings.slice(0, 100); // Mostrar hasta 100 usuarios
 
   const handleUserClick = (userId: string) => {
     navigate(`/public-profile/${userId}`);
@@ -149,7 +149,7 @@ const SocialPage: React.FC = () => {
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-primary" />
             <h3 className="font-semibold">Top Usuarios</h3>
-            <span className="text-xs text-muted-foreground">({rankings.length})</span>
+            <span className="text-xs text-muted-foreground">({Math.min(rankings.length, 100)})</span>
           </div>
           
           {isLoading ? (
@@ -170,7 +170,7 @@ const SocialPage: React.FC = () => {
               No hay usuarios disponibles
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {topUsers.map((rankingUser, index) => (
                 <div 
                   key={rankingUser.user_id} 
@@ -213,7 +213,7 @@ const SocialPage: React.FC = () => {
                 No se encontraron usuarios con "{searchQuery}"
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {filteredUsers.map((rankingUser) => (
                   <div 
                     key={rankingUser.user_id} 
