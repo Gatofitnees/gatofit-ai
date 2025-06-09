@@ -2,7 +2,6 @@
 import React, { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { OnboardingContext } from "../OnboardingFlow";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
@@ -13,33 +12,38 @@ const AppTransition: React.FC = () => {
   const context = useContext(OnboardingContext);
   const { saveOnboardingToProfile, loadOnboardingData } = useOnboardingPersistence();
   
-  // Handle saving onboarding data and redirect
   useEffect(() => {
     const handleTransition = async () => {
-      // If user is authenticated, handle the transition
-      if (user) {
-        // Check if this is a Google user with metadata
-        const isGoogleUser = user.user_metadata?.provider_id?.includes('google');
+      console.log('AppTransition: Starting transition process');
+      
+      // Wait a moment for any auto-profile setup to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // If user is authenticated, save onboarding data
+      if (user && context) {
+        const onboardingData = loadOnboardingData();
         
-        if (isGoogleUser) {
-          console.log('Google user authenticated, profile auto-setup will handle data extraction');
-          // For Google users, the useAutoProfileSetup hook will handle profile creation
-          // We just need to wait a moment for it to process
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        // Save onboarding data if available (for non-Google users or additional data)
-        if (context) {
-          const onboardingData = loadOnboardingData();
-          if (onboardingData) {
-            console.log('Saving onboarding data for authenticated user...');
-            await saveOnboardingToProfile(onboardingData);
+        if (onboardingData) {
+          console.log('AppTransition: Found onboarding data, saving to profile...', onboardingData);
+          
+          try {
+            const success = await saveOnboardingToProfile(onboardingData);
+            if (success) {
+              console.log('AppTransition: Onboarding data saved successfully');
+            } else {
+              console.error('AppTransition: Failed to save onboarding data');
+            }
+          } catch (error) {
+            console.error('AppTransition: Error saving onboarding data:', error);
           }
+        } else {
+          console.log('AppTransition: No onboarding data found in localStorage');
         }
       }
       
-      // Redirect after processing
+      // Redirect to home after processing
       const timer = setTimeout(() => {
+        console.log('AppTransition: Redirecting to home...');
         navigate("/");
       }, 3000);
       
@@ -77,7 +81,7 @@ const AppTransition: React.FC = () => {
         transition={{ delay: 0.4, duration: 0.4 }}
         className="text-sm text-muted-foreground mb-8 text-center"
       >
-        {user ? "Configurando tu perfil automáticamente..." : "Finalizando configuración..."}
+        {user ? "Configurando tu perfil y guardando tus datos..." : "Finalizando configuración..."}
       </motion.p>
       
       <motion.div

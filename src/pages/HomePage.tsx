@@ -8,10 +8,8 @@ import DaySelector from "../components/DaySelector";
 import TrainingCard from "../components/TrainingCard";
 import MacrosCard from "../components/MacrosCard";
 import FloatingActionButton from "../components/FloatingActionButton";
-import { useAuth } from "@/contexts/AuthContext";
 
 const HomePage: React.FC = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -50,16 +48,13 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      {/* User header and profile */}
       <UserHeader />
       
-      {/* Day selector */}
       <DaySelector 
         onSelectDate={handleDateSelect}
         datesWithRecords={datesWithWorkouts}
       />
 
-      {/* Training card */}
       <TrainingCard
         loading={loading}
         completed={hasCompletedWorkout}
@@ -68,13 +63,11 @@ const HomePage: React.FC = () => {
         onViewDetails={() => handleViewWorkoutDetails(workoutSummary?.id)}
       />
       
-      {/* Macros card - now uses data from useHomePageData hook which should include profile data */}
       <MacrosCard 
         macros={macros}
         onAddFood={handleAddFood}
       />
       
-      {/* Floating action button */}
       <FloatingActionButton onClick={handleAddFood} />
     </div>
   );

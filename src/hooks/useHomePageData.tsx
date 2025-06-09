@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,13 @@ interface WorkoutSummary {
   exercises: string[];
 }
 
+interface MacroData {
+  calories: { current: number; target: number; unit: string };
+  protein: { current: number; target: number };
+  carbs: { current: number; target: number };
+  fats: { current: number; target: number };
+}
+
 export const useHomePageData = () => {
   const { user } = useAuth();
   const { profile } = useProfileContext();
@@ -20,75 +28,27 @@ export const useHomePageData = () => {
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
-  
-  // Calculate today's totals from actual food entries
-  const [todayTotals, setTodayTotals] = useState({
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0
-  });
 
-  // Use latest recommendations from profile as targets, with fallbacks
-  const macros = {
+  // Generate macros data from profile or defaults
+  const macros: MacroData = {
     calories: { 
-      current: todayTotals.calories, 
+      current: 0, // This would come from daily food log
       target: profile?.initial_recommended_calories || 2000, 
       unit: "kcal" 
     },
     protein: { 
-      current: todayTotals.protein, 
+      current: 0, // This would come from daily food log
       target: profile?.initial_recommended_protein_g || 120 
     },
     carbs: { 
-      current: todayTotals.carbs, 
+      current: 0, // This would come from daily food log
       target: profile?.initial_recommended_carbs_g || 200 
     },
     fats: { 
-      current: todayTotals.fat, 
+      current: 0, // This would come from daily food log
       target: profile?.initial_recommended_fats_g || 65 
     }
   };
-
-  // Fetch food log data for today
-  useEffect(() => {
-    const fetchTodaysFoodData = async () => {
-      if (!user) return;
-      
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        
-        const { data: entries, error } = await supabase
-          .from('daily_food_log_entries')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('log_date', today);
-          
-        if (error) throw error;
-        
-        if (entries && entries.length > 0) {
-          const totals = entries.reduce(
-            (acc, entry) => ({
-              calories: acc.calories + entry.calories_consumed,
-              protein: acc.protein + entry.protein_g_consumed,
-              carbs: acc.carbs + entry.carbs_g_consumed,
-              fat: acc.fat + entry.fat_g_consumed
-            }),
-            { calories: 0, protein: 0, carbs: 0, fat: 0 }
-          );
-          
-          setTodayTotals(totals);
-        } else {
-          setTodayTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-        }
-      } catch (error) {
-        console.error("Error fetching today's food data:", error);
-        setTodayTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-      }
-    };
-    
-    fetchTodaysFoodData();
-  }, [user]);
 
   // Load workout dates
   useEffect(() => {
@@ -110,14 +70,14 @@ export const useHomePageData = () => {
           setDatesWithWorkouts(dates);
         }
       } catch (error) {
-        console.error("Error al cargar fechas de entrenamientos:", error);
+        console.error("Error loading workout dates:", error);
       }
     };
     
     fetchWorkoutDates();
   }, [user]);
 
-  // Load workout data for selected date
+  // Load daily workout
   useEffect(() => {
     const fetchDailyWorkout = async () => {
       if (!user) return;
@@ -137,8 +97,7 @@ export const useHomePageData = () => {
             workout_log_exercise_details(exercise_name_snapshot)
           `)
           .eq('user_id', user.id)
-          .gte('workout_date', `${dateString}T00:00:00`)
-          .lt('workout_date', `${dateString}T23:59:59`)
+          .like('workout_date', `${dateString}%`)
           .order('workout_date', { ascending: false })
           .limit(1);
           
@@ -168,7 +127,7 @@ export const useHomePageData = () => {
           setHasCompletedWorkout(false);
         }
       } catch (error) {
-        console.error("Error al cargar el entrenamiento:", error);
+        console.error("Error loading workout:", error);
         setHasCompletedWorkout(false);
         setWorkoutSummary(undefined);
       } finally {

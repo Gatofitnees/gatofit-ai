@@ -10,7 +10,6 @@ export const useOnboardingPersistence = () => {
   const { user } = useAuth();
   const { updateProfile } = useProfile();
 
-  // Load onboarding data from localStorage
   const loadOnboardingData = (): OnboardingData | null => {
     try {
       const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
@@ -21,35 +20,41 @@ export const useOnboardingPersistence = () => {
     }
   };
 
-  // Save onboarding data to localStorage
   const saveOnboardingData = (data: OnboardingData) => {
     try {
       localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(data));
+      console.log('Onboarding data saved to localStorage:', data);
     } catch (error) {
       console.error('Error saving onboarding data:', error);
     }
   };
 
-  // Clear onboarding data from localStorage
   const clearOnboardingData = () => {
     try {
       localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+      console.log('Onboarding data cleared from localStorage');
     } catch (error) {
       console.error('Error clearing onboarding data:', error);
     }
   };
 
-  // Save onboarding data to user profile
   const saveOnboardingToProfile = async (data: OnboardingData): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      console.error('No user found when trying to save onboarding data');
+      return false;
+    }
 
     try {
-      // Convert onboarding main goal to database enum values
+      console.log('Starting to save onboarding data to profile:', data);
+
       const convertMainGoal = (goal: string | null) => {
         if (!goal) return null;
-        // Map onboarding values to database values - updated to match current UserProfile type
         const goalMap: { [key: string]: string } = {
-          'gain_muscle': 'gain_muscle', // Now both use 'gain_muscle'
+          'gain_muscle': 'gain_muscle',
+          'lose_weight': 'lose_weight',
+          'maintain_weight': 'maintain_weight',
+          'improve_health': 'improve_health',
+          'increase_strength': 'increase_strength'
         };
         return goalMap[goal] || goal;
       };
@@ -74,11 +79,15 @@ export const useOnboardingPersistence = () => {
         unit_system_preference: data.unit_system_preference as 'metric' | 'imperial' | null
       };
 
+      console.log('Profile updates to be saved:', profileUpdates);
+
       const success = await updateProfile(profileUpdates);
       
       if (success) {
         clearOnboardingData();
-        console.log('Onboarding data saved to profile successfully');
+        console.log('Onboarding data successfully saved to profile and cleared from localStorage');
+      } else {
+        console.error('Failed to save onboarding data to profile');
       }
       
       return success;
