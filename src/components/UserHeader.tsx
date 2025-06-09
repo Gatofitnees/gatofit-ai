@@ -42,11 +42,9 @@ const UserHeader: React.FC<UserHeaderProps> = ({
 
   const handleChangeAccount = async () => {
     try {
-      const { error } = await signOut();
-      if (!error) {
-        // Redirect to login with account selector
-        window.location.href = '/onboarding/login';
-      }
+      await signOut();
+      // Redirect to login with account selector
+      window.location.href = '/onboarding/login';
     } catch (error) {
       console.error('Error changing account:', error);
       toast({
@@ -62,7 +60,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
   const currentLevel = streakData?.current_level || 1;
 
-  // FIXED: Only use profile data, never fallback to Google data
+  // Only use profile data, never fallback to Google data
   const displayName = profileLoading ? "" : (profile?.full_name || profile?.username || "Usuario");
   const avatarUrl = profileLoading ? "" : profile?.avatar_url;
 
