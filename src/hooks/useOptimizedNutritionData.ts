@@ -1,9 +1,9 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useTimezone } from './useTimezone';
+import { useOptimizedTimezone } from './useOptimizedTimezone';
 import { FoodLogEntry } from './useFoodLog';
 
 interface CachedNutritionData {
@@ -12,18 +12,19 @@ interface CachedNutritionData {
   lastFetch: number;
 }
 
-const CACHE_DURATION = 30000; // 30 seconds cache
+const CACHE_DURATION = 60000; // 1 minute cache
 const VISIBLE_DAYS_RANGE = 32; // Days to fetch
 
 export const useOptimizedNutritionData = (selectedDate: Date) => {
   const { user } = useAuth();
   const { profile } = useProfileContext();
-  const { getUserCurrentDateString } = useTimezone();
+  const { timezoneInfo } = useOptimizedTimezone();
   
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [datesWithFood, setDatesWithFood] = useState<Date[]>([]);
   const [cachedData, setCachedData] = useState<CachedNutritionData | null>(null);
+  const loadingRef = useRef(false);
 
   const selectedDateString = selectedDate.toISOString().split('T')[0];
 
@@ -61,7 +62,7 @@ export const useOptimizedNutritionData = (selectedDate: Date) => {
 
   // Optimized function to fetch dates with food entries
   const fetchDatesWithFoodOptimized = useCallback(async () => {
-    if (!user) return [];
+    if (!user || !timezoneInfo) return [];
     
     try {
       const userCurrentDate = new Date();
@@ -92,11 +93,11 @@ export const useOptimizedNutritionData = (selectedDate: Date) => {
       console.error("Error fetching dates with food:", error);
       return [];
     }
-  }, [user]);
+  }, [user, timezoneInfo]);
 
   // Optimized function to fetch entries for a specific date
   const fetchEntriesForDateOptimized = useCallback(async (dateString: string) => {
-    if (!user) return [];
+    if (!user || !timezoneInfo) return [];
     
     try {
       const { data, error } = await supabase
@@ -133,11 +134,11 @@ export const useOptimizedNutritionData = (selectedDate: Date) => {
       console.error("Error fetching entries for date:", error);
       return [];
     }
-  }, [user]);
+  }, [user, timezoneInfo]);
 
   // Load optimized data with caching
   const loadOptimizedNutritionData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !timezoneInfo || loadingRef.current) return;
     
     const now = Date.now();
     
@@ -153,6 +154,7 @@ export const useOptimizedNutritionData = (selectedDate: Date) => {
     }
     
     setIsLoading(true);
+    loadingRef.current = true;
     
     try {
       // Fetch dates with food and entries for selected date in parallel
@@ -175,26 +177,25 @@ export const useOptimizedNutritionData = (selectedDate: Date) => {
       setDatesWithFood(foodDates);
       setEntries(selectedDateEntries);
       
-      console.log('Optimized nutrition data loaded:', {
-        foodDatesCount: foodDates.length,
-        entriesCount: selectedDateEntries.length,
-        selectedDate: selectedDateString
-      });
     } catch (error) {
       console.error("Error loading optimized nutrition data:", error);
     } finally {
       setIsLoading(false);
+      loadingRef.current = false;
     }
-  }, [user, selectedDateString, cachedData, fetchDatesWithFoodOptimized, fetchEntriesForDateOptimized]);
+  }, [user, timezoneInfo, selectedDateString, cachedData, fetchDatesWithFoodOptimized, fetchEntriesForDateOptimized]);
 
   // Load data when component mounts or selected date changes
   useEffect(() => {
-    loadOptimizedNutritionData();
-  }, [loadOptimizedNutritionData]);
+    if (timezoneInfo) {
+      loadOptimizedNutritionData();
+    }
+  }, [loadOptimizedNutritionData, timezoneInfo]);
 
   // Refresh function for manual refresh
   const refreshNutritionData = useCallback(() => {
     setCachedData(null); // Clear cache to force fresh fetch
+    loadingRef.current = false;
     loadOptimizedNutritionData();
   }, [loadOptimizedNutritionData]);
 

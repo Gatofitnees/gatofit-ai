@@ -1,9 +1,9 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useTimezone } from './useTimezone';
+import { useOptimizedTimezone } from './useOptimizedTimezone';
 
 interface WorkoutSummary {
   id: number;
@@ -25,13 +25,13 @@ interface CachedActivityData {
   lastFetch: number;
 }
 
-const CACHE_DURATION = 30000; // 30 seconds cache
+const CACHE_DURATION = 60000; // 1 minute cache
 const VISIBLE_DAYS_RANGE = 32; // Days to fetch (30 past + today + 1 future)
 
 export const useOptimizedHomeData = () => {
   const { user } = useAuth();
   const { profile } = useProfileContext();
-  const { getUserCurrentDateString, convertToUserTimezone, getUserCurrentDate } = useTimezone();
+  const { getUserCurrentDateString, convertToUserTimezone, getUserCurrentDate, timezoneInfo } = useOptimizedTimezone();
   
   const [selectedDate, setSelectedDate] = useState(getUserCurrentDate());
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
@@ -39,6 +39,8 @@ export const useOptimizedHomeData = () => {
   const [loading, setLoading] = useState(true);
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
   const [cachedData, setCachedData] = useState<CachedActivityData | null>(null);
+  const initializationRef = useRef(false);
+  const loadingRef = useRef(false);
   
   // Calculate today's totals from cached data
   const [todayTotals, setTodayTotals] = useState({
@@ -71,7 +73,7 @@ export const useOptimizedHomeData = () => {
 
   // Optimized function to fetch activity dates with limited range
   const fetchActivityDatesOptimized = useCallback(async () => {
-    if (!user) return [];
+    if (!user || !timezoneInfo) return [];
     
     try {
       const userCurrentDate = getUserCurrentDate();
@@ -121,11 +123,11 @@ export const useOptimizedHomeData = () => {
       console.error("Error fetching activity dates:", error);
       return [];
     }
-  }, [user, getUserCurrentDate, convertToUserTimezone]);
+  }, [user, getUserCurrentDate, convertToUserTimezone, timezoneInfo]);
 
   // Optimized function to fetch today's food data
   const fetchTodaysFoodDataOptimized = useCallback(async () => {
-    if (!user) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    if (!user || !timezoneInfo) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
     
     try {
       const today = getUserCurrentDateString();
@@ -155,47 +157,51 @@ export const useOptimizedHomeData = () => {
       console.error("Error fetching today's food data:", error);
       return { calories: 0, protein: 0, carbs: 0, fat: 0 };
     }
-  }, [user, getUserCurrentDateString]);
+  }, [user, getUserCurrentDateString, timezoneInfo]);
 
-  // Load cached data or fetch fresh data
+  // Load cached data or fetch fresh data (optimized with debounce)
   const loadOptimizedData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !timezoneInfo || loadingRef.current) return;
     
+    loadingRef.current = true;
     const now = Date.now();
     
     // Check if we have valid cached data
     if (cachedData && (now - cachedData.lastFetch) < CACHE_DURATION) {
       setDatesWithWorkouts(cachedData.workoutDates);
       setTodayTotals(cachedData.todayTotals);
+      loadingRef.current = false;
       return;
     }
     
-    // Fetch fresh data in parallel
-    const [activityDates, todaysTotals] = await Promise.all([
-      fetchActivityDatesOptimized(),
-      fetchTodaysFoodDataOptimized()
-    ]);
-    
-    // Update cache
-    const newCachedData: CachedActivityData = {
-      workoutDates: activityDates,
-      todayTotals: todaysTotals,
-      lastFetch: now
-    };
-    
-    setCachedData(newCachedData);
-    setDatesWithWorkouts(activityDates);
-    setTodayTotals(todaysTotals);
-    
-    console.log('Optimized data loaded:', {
-      activityDatesCount: activityDates.length,
-      todaysTotals
-    });
-  }, [user, cachedData, fetchActivityDatesOptimized, fetchTodaysFoodDataOptimized]);
+    try {
+      // Fetch fresh data in parallel
+      const [activityDates, todaysTotals] = await Promise.all([
+        fetchActivityDatesOptimized(),
+        fetchTodaysFoodDataOptimized()
+      ]);
+      
+      // Update cache
+      const newCachedData: CachedActivityData = {
+        workoutDates: activityDates,
+        todayTotals: todaysTotals,
+        lastFetch: now
+      };
+      
+      setCachedData(newCachedData);
+      setDatesWithWorkouts(activityDates);
+      setTodayTotals(todaysTotals);
+      
+    } catch (error) {
+      console.error("Error loading optimized data:", error);
+    } finally {
+      loadingRef.current = false;
+    }
+  }, [user, timezoneInfo, cachedData, fetchActivityDatesOptimized, fetchTodaysFoodDataOptimized]);
 
   // Load workout data for selected date using user's timezone
   const fetchDailyWorkout = useCallback(async () => {
-    if (!user) return;
+    if (!user || !timezoneInfo) return;
     
     setLoading(true);
     try {
@@ -249,19 +255,29 @@ export const useOptimizedHomeData = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, selectedDate]);
+  }, [user, selectedDate, timezoneInfo]);
 
-  // Initial data load
+  // Initial data load (only once when dependencies are ready)
   useEffect(() => {
-    if (user) {
+    if (user && timezoneInfo && !initializationRef.current) {
+      initializationRef.current = true;
       loadOptimizedData();
     }
-  }, [user, loadOptimizedData]);
+  }, [user, timezoneInfo]);
 
   // Load workout for selected date
   useEffect(() => {
-    fetchDailyWorkout();
-  }, [fetchDailyWorkout]);
+    if (timezoneInfo) {
+      fetchDailyWorkout();
+    }
+  }, [fetchDailyWorkout, timezoneInfo]);
+
+  // Update selected date when timezone info changes
+  useEffect(() => {
+    if (timezoneInfo && selectedDate.toDateString() !== getUserCurrentDate().toDateString()) {
+      setSelectedDate(getUserCurrentDate());
+    }
+  }, [timezoneInfo, getUserCurrentDate]);
 
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedDate(date);
@@ -270,6 +286,7 @@ export const useOptimizedHomeData = () => {
   // Refresh function for manual refresh
   const refreshData = useCallback(() => {
     setCachedData(null); // Clear cache to force fresh fetch
+    initializationRef.current = false;
     loadOptimizedData();
     fetchDailyWorkout();
   }, [loadOptimizedData, fetchDailyWorkout]);

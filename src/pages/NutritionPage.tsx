@@ -15,10 +15,12 @@ import { AlertTriangle } from "lucide-react";
 import { useFoodCapture } from "../hooks/useFoodCapture";
 import { useOptimizedNutritionData } from "../hooks/useOptimizedNutritionData";
 import { FoodLogEntry } from "../hooks/useFoodLog";
+import { useOptimizedTimezone } from "../hooks/useOptimizedTimezone";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { getUserCurrentDate } = useOptimizedTimezone();
+  const [selectedDate, setSelectedDate] = useState(getUserCurrentDate());
   const navigate = useNavigate();
 
   const { 
@@ -34,13 +36,13 @@ const NutritionPage: React.FC = () => {
   
   const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
 
-  const isToday = selectedDate.toDateString() === new Date().toDateString();
+  const isToday = selectedDate.toDateString() === getUserCurrentDate().toDateString();
   const isSelectedDay = !isToday;
 
   const formatSelectedDate = () => {
     if (isToday) return "Hoy";
     
-    const today = new Date();
+    const today = getUserCurrentDate();
     const selected = new Date(selectedDate);
     const diffTime = today.getTime() - selected.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -55,11 +57,8 @@ const NutritionPage: React.FC = () => {
   };
 
   const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
-    console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
-    
     // If there's a capture error, don't navigate - stay in camera to show error dialog
     if (captureError) {
-      console.log('Capture error detected, staying in camera view');
       return;
     }
     
@@ -89,7 +88,6 @@ const NutritionPage: React.FC = () => {
     } else {
       // Fallback to old analysis method only if no capture error
       const analysis = await analyzeFood(imageUrl);
-      console.log('Fallback analysis result:', analysis);
       
       if (analysis) {
         const pendingFoodData = {

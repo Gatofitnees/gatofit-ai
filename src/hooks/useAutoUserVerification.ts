@@ -1,20 +1,22 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTimezone } from './useTimezone';
+import { useOptimizedTimezone } from './useOptimizedTimezone';
 
 export const useAutoUserVerification = () => {
   const { user } = useAuth();
-  const { saveTimezoneToProfile } = useTimezone();
+  const { getCurrentTimezone } = useOptimizedTimezone();
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const verificationRef = useRef(false);
 
   const verifyAndSetupUser = async () => {
-    if (!user || isVerifying) return;
+    if (!user || isVerifying || verificationRef.current) return;
 
     try {
       setIsVerifying(true);
+      verificationRef.current = true;
       
       // Check if profile already exists
       const { data: existingProfile, error: profileError } = await supabase
@@ -30,13 +32,12 @@ export const useAutoUserVerification = () => {
 
       // If profile doesn't exist, create it with Google data
       if (!existingProfile) {
-        console.log('Creating new profile for user:', user.id);
-        
         // Generate unique username from email
         const emailUsername = user.email?.split('@')[0] || 'usuario';
         const randomSuffix = Math.floor(Math.random() * 1000);
         const proposedUsername = `${emailUsername}${randomSuffix}`;
 
+        const currentTimezone = getCurrentTimezone();
         const profileData = {
           id: user.id,
           full_name: user.user_metadata?.name || user.user_metadata?.full_name || 'Usuario',
@@ -44,8 +45,8 @@ export const useAutoUserVerification = () => {
           avatar_url: user.user_metadata?.avatar_url || null,
           is_profile_public: true,
           // Save timezone info during profile creation
-          timezone_offset: -new Date().getTimezoneOffset(),
-          timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone
+          timezone_offset: currentTimezone.timezoneOffset,
+          timezone_name: currentTimezone.timezoneName
         };
 
         const { error: insertError } = await supabase
@@ -56,14 +57,16 @@ export const useAutoUserVerification = () => {
           console.error('Error creating profile:', insertError);
           return;
         }
-        
-        console.log('Profile created successfully');
       } else if (!existingProfile.timezone_offset) {
         // Update timezone info for existing profiles that don't have it
-        await saveTimezoneToProfile({
-          timezoneOffset: -new Date().getTimezoneOffset(),
-          timezoneName: Intl.DateTimeFormat().resolvedOptions().timeZone
-        });
+        const currentTimezone = getCurrentTimezone();
+        await supabase
+          .from('profiles')
+          .update({
+            timezone_offset: currentTimezone.timezoneOffset,
+            timezone_name: currentTimezone.timezoneName
+          })
+          .eq('id', user.id);
       }
 
       // Ensure user_streaks record exists
@@ -79,8 +82,6 @@ export const useAutoUserVerification = () => {
       }
 
       if (!existingStreak) {
-        console.log('Creating initial streak record for user:', user.id);
-        
         const { error: streakInsertError } = await supabase
           .from('user_streaks')
           .insert({
@@ -99,12 +100,9 @@ export const useAutoUserVerification = () => {
           console.error('Error creating streak record:', streakInsertError);
           return;
         }
-        
-        console.log('Streak record created successfully');
       }
 
       setIsVerified(true);
-      console.log('User verification completed successfully');
       
     } catch (error) {
       console.error('Error in user verification:', error);
@@ -114,7 +112,7 @@ export const useAutoUserVerification = () => {
   };
 
   useEffect(() => {
-    if (user && !isVerified) {
+    if (user && !isVerified && !verificationRef.current) {
       verifyAndSetupUser();
     }
   }, [user]);

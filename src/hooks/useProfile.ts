@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,9 +15,10 @@ export const useProfile = () => {
   const [updating, setUpdating] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const { recalculateMacros } = useMacroCalculations();
+  const fetchingRef = useRef(false);
 
   const fetchProfile = async (forceRefresh = false) => {
-    if (!user) return;
+    if (!user || fetchingRef.current) return;
     
     // Avoid unnecessary refetches (cache for 30 seconds)
     const now = Date.now();
@@ -27,6 +28,8 @@ export const useProfile = () => {
     
     try {
       setLoading(true);
+      fetchingRef.current = true;
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -39,7 +42,6 @@ export const useProfile = () => {
       setProfile(convertedProfile);
       setLastFetchTime(now);
       
-      console.log('Profile fetched successfully:', convertedProfile);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -49,6 +51,7 @@ export const useProfile = () => {
       });
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   };
 
@@ -57,7 +60,6 @@ export const useProfile = () => {
 
     try {
       setUpdating(true);
-      console.log('Updating profile with:', updates);
       
       const dbUpdates = convertProfileToDatabase(updates);
       
@@ -75,7 +77,6 @@ export const useProfile = () => {
       } = {};
       
       if (shouldRecalculateMacros && profile) {
-        console.log('Recalculating macros for profile update...');
         const updatedProfile = { ...profile, ...updates };
         const newMacros = await recalculateMacros(updatedProfile);
         
@@ -86,7 +87,6 @@ export const useProfile = () => {
             initial_recommended_carbs_g: newMacros.carbs_g,
             initial_recommended_fats_g: newMacros.fats_g
           };
-          console.log('New macro recommendations:', newMacros);
         }
       }
 
@@ -114,7 +114,6 @@ export const useProfile = () => {
       setProfile(updatedLocalProfile);
       setLastFetchTime(Date.now());
       
-      console.log('Profile updated successfully:', updatedLocalProfile);
       return true;
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -149,16 +148,16 @@ export const useProfile = () => {
 
   // Enhanced refresh function with better error handling
   const refreshProfile = async () => {
-    console.log('Refreshing profile data...');
     await fetchProfile(true);
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && !fetchingRef.current) {
       fetchProfile();
-    } else {
+    } else if (!user) {
       setProfile(null);
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, [user]);
 

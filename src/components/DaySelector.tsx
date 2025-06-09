@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { format, addDays, subDays, isSameDay, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useTimezone } from "@/hooks/useTimezone";
+import { useOptimizedTimezone } from "@/hooks/useOptimizedTimezone";
 
 interface DateCardProps {
   date: Date;
@@ -63,10 +63,11 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   datesWithRecords = [],
   selectedDate: propSelectedDate
 }) => {
-  const { getUserCurrentDate } = useTimezone();
+  const { getUserCurrentDate, timezoneInfo } = useOptimizedTimezone();
   const [selectedDate, setSelectedDate] = useState(propSelectedDate || getUserCurrentDate());
   const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
   
   // Update local state when prop changes
   useEffect(() => {
@@ -77,6 +78,8 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   
   // Generate range of dates (past and future dates) based on user's timezone
   useEffect(() => {
+    if (!timezoneInfo) return;
+    
     const userToday = getUserCurrentDate();
     const range: Date[] = [];
     
@@ -87,22 +90,40 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     
     setDateRange(range);
     
-    // Auto-scroll on component mount to show current day in the proper position
-    setTimeout(() => {
-      if (scrollContainerRef.current) {
-        // Calculate scroll position to put today as the second-to-last item visible
-        const cardWidth = 72; // approximate width of each card + gap (64px + 8px)
-        const containerWidth = scrollContainerRef.current.clientWidth;
-        const todayIndex = 30; // Index of today in our dateRange (since we have 30 days before)
-        const itemsInView = Math.floor(containerWidth / cardWidth);
-        
-        // Calculate position to show today as the second-to-last item
-        const scrollPosition = Math.max(0, (todayIndex - itemsInView + 2) * cardWidth);
-        
-        scrollContainerRef.current.scrollLeft = scrollPosition;
-      }
-    }, 100);
-  }, [getUserCurrentDate]);
+    // Reset scroll flag when timezone or range changes
+    hasScrolledRef.current = false;
+  }, [getUserCurrentDate, timezoneInfo]);
+
+  // Auto-scroll animation when component mounts or date range changes
+  useEffect(() => {
+    if (!dateRange.length || hasScrolledRef.current || !scrollContainerRef.current) return;
+    
+    const scrollToToday = () => {
+      if (!scrollContainerRef.current) return;
+      
+      // Calculate scroll position to put today as the second-to-last item visible
+      const cardWidth = 72; // approximate width of each card + gap (64px + 8px)
+      const containerWidth = scrollContainerRef.current.clientWidth;
+      const todayIndex = 30; // Index of today in our dateRange (since we have 30 days before)
+      const itemsInView = Math.floor(containerWidth / cardWidth);
+      
+      // Calculate position to show today as the second-to-last item
+      const scrollPosition = Math.max(0, (todayIndex - itemsInView + 2) * cardWidth);
+      
+      // Smooth scroll to position
+      scrollContainerRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      hasScrolledRef.current = true;
+    };
+
+    // Use a longer timeout to ensure the component is fully rendered
+    const timeoutId = setTimeout(scrollToToday, 200);
+    
+    return () => clearTimeout(timeoutId);
+  }, [dateRange]);
 
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
@@ -115,6 +136,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 
   // Check if date is today based on user's timezone
   const isUserToday = (date: Date) => {
+    if (!timezoneInfo) return false;
     const userToday = getUserCurrentDate();
     return isSameDay(date, userToday);
   };
