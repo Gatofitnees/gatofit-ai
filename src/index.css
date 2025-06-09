@@ -44,10 +44,16 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Mobile optimizations */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
 
+  /* Default scrollbar styles - hide by default */
   body::-webkit-scrollbar {
-    width: 0.4em;
+    width: 0;
+    background: transparent;
   }
 
   body::-webkit-scrollbar-track {
@@ -55,7 +61,7 @@
   }
 
   body::-webkit-scrollbar-thumb {
-    @apply bg-primary/20 rounded-full;
+    @apply bg-transparent;
   }
 
   /* Hide number input spinners completely */
@@ -67,6 +73,26 @@
 
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+
+  /* Mobile touch optimizations */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection for inputs and content */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
   }
 }
 
@@ -84,13 +110,29 @@
     @apply bg-card/90 border border-white/5 shadow-neu-card rounded-xl backdrop-blur-sm;
   }
   
+  /* Mobile-optimized scrollbar hiding */
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
   
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+
+  /* Smooth scrolling for mobile */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Touch-friendly interactive elements */
+  .touch-element {
+    @apply active:scale-95 transition-transform duration-150;
   }
   
   /* Galactic AI button effect */
@@ -156,5 +198,16 @@
       opacity: 1;
       transform: scale(1);
     }
+  }
+
+  /* Fast mobile transitions */
+  .fast-transition {
+    transition: all 0.15s ease-out;
+  }
+
+  /* Mobile carousel optimizations */
+  .mobile-carousel {
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
   }
 }

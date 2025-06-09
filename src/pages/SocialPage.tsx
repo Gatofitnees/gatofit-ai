@@ -170,11 +170,11 @@ const SocialPage: React.FC = () => {
               No hay usuarios disponibles
             </p>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-96 overflow-y-auto hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
               {topUsers.map((rankingUser, index) => (
                 <div 
                   key={rankingUser.user_id} 
-                  className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors"
+                  className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors active:bg-muted/30"
                   onClick={() => handleUserClick(rankingUser.user_id)}
                 >
                   <div className="flex items-center gap-2 min-w-[32px]">
@@ -213,11 +213,11 @@ const SocialPage: React.FC = () => {
                 No se encontraron usuarios con "{searchQuery}"
               </p>
             ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {filteredUsers.map((rankingUser) => (
                   <div 
                     key={rankingUser.user_id} 
-                    className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors"
+                    className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors active:bg-muted/30"
                     onClick={() => handleUserClick(rankingUser.user_id)}
                   >
                     <Avatar

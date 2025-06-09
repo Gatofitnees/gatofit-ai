@@ -27,24 +27,27 @@ const WorkoutCarouselContent: React.FC<WorkoutCarouselProps> = ({ workouts, chil
 
     const onSelect = () => {
       const currentIndex = api.selectedScrollSnap();
+      console.log('Carousel slide changed to index:', currentIndex);
       onSlideChange(currentIndex);
     };
 
-    // Set initial index
-    onSlideChange(0);
+    // Set initial index immediately
+    setTimeout(() => onSlideChange(0), 0);
 
     // Listen for slide changes
     api.on('select', onSelect);
+    api.on('settle', onSelect); // Additional event for when animation settles
 
     return () => {
       api.off('select', onSelect);
+      api.off('settle', onSelect);
     };
   }, [api, onSlideChange]);
 
   return (
-    <CarouselContent>
+    <CarouselContent className="-ml-2 md:-ml-4">
       {workouts.map((workout, index) => (
-        <CarouselItem key={workout.id || index} className="basis-full">
+        <CarouselItem key={workout.id || index} className="basis-full pl-2 md:pl-4">
           {children(workout, index, workouts.length)}
         </CarouselItem>
       ))}
@@ -62,7 +65,16 @@ const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ workouts, children, o
   }
 
   return (
-    <Carousel className="w-full" opts={{ loop: false }}>
+    <Carousel 
+      className="w-full" 
+      opts={{ 
+        loop: false,
+        duration: 20, // Faster animation for mobile
+        dragFree: true, // Smooth drag on mobile
+        skipSnaps: false,
+        align: 'start'
+      }}
+    >
       <WorkoutCarouselContent workouts={workouts} onSlideChange={onSlideChange}>
         {children}
       </WorkoutCarouselContent>

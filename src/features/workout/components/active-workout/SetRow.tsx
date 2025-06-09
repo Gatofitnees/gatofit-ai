@@ -45,7 +45,7 @@ export const SetRow: React.FC<SetRowProps> = ({
     if (weight % 1 === 0) {
       return weight.toString();
     } else {
-      return weight.toFixed(2).replace(/\.?0+$/, ''); // Remove trailing zeros
+      return weight.toFixed(1); // Show only 1 decimal place
     }
   };
 
@@ -78,7 +78,7 @@ export const SetRow: React.FC<SetRowProps> = ({
           {formatPreviousData()}
         </div>
         
-        {/* Peso column - with decimal support */}
+        {/* Peso column - with decimal support (max 1 decimal) */}
         <div>
           <NumericInput
             className="w-full h-8 text-sm"
@@ -86,6 +86,7 @@ export const SetRow: React.FC<SetRowProps> = ({
             onChange={(e) => onInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
             placeholder="kg"
             allowDecimals={true}
+            maxDecimals={1}
           />
         </div>
         
