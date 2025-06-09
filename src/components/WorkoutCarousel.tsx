@@ -4,14 +4,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkoutSummary {
-  id: number;
+  id?: number;
   name: string;
-  duration: string;
-  calories: number;
-  date: string;
-  exercises: string[];
+  duration?: string;
+  calories?: number;
+  exercises?: string[];
   exerciseCount?: number;
   totalSets?: number;
+  date?: string;
 }
 
 interface WorkoutCarouselProps {
@@ -72,7 +72,7 @@ const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ workouts, children })
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {workouts.map((workout, index) => (
-            <div key={workout.id} className="w-full flex-shrink-0">
+            <div key={workout.id || index} className="w-full flex-shrink-0">
               {children(workout, index, workouts.length)}
             </div>
           ))}
