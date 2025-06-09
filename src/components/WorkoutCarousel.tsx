@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { useCarousel } from '@/components/ui/carousel';
 
 interface WorkoutSummary {
   id?: number;
@@ -19,6 +20,39 @@ interface WorkoutCarouselProps {
   onSlideChange?: (index: number) => void;
 }
 
+const WorkoutCarouselContent: React.FC<WorkoutCarouselProps> = ({ workouts, children, onSlideChange }) => {
+  const { api } = useCarousel();
+
+  useEffect(() => {
+    if (!api || !onSlideChange) return;
+
+    const onSelect = () => {
+      const currentIndex = api.selectedScrollSnap();
+      onSlideChange(currentIndex);
+    };
+
+    // Set initial index
+    onSlideChange(0);
+
+    // Listen for slide changes
+    api.on('select', onSelect);
+
+    return () => {
+      api.off('select', onSelect);
+    };
+  }, [api, onSlideChange]);
+
+  return (
+    <CarouselContent>
+      {workouts.map((workout, index) => (
+        <CarouselItem key={workout.id || index}>
+          {children(workout, index, workouts.length)}
+        </CarouselItem>
+      ))}
+    </CarouselContent>
+  );
+};
+
 const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ workouts, children, onSlideChange }) => {
   if (workouts.length === 0) {
     return null;
@@ -29,14 +63,10 @@ const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ workouts, children, o
   }
 
   return (
-    <Carousel className="w-full" opts={{ loop: true }}>
-      <CarouselContent>
-        {workouts.map((workout, index) => (
-          <CarouselItem key={workout.id || index}>
-            {children(workout, index, workouts.length)}
-          </CarouselItem>
-        ))}
-      </CarouselContent>
+    <Carousel className="w-full" opts={{ loop: false }}>
+      <WorkoutCarouselContent workouts={workouts} onSlideChange={onSlideChange}>
+        {children}
+      </WorkoutCarouselContent>
     </Carousel>
   );
 };

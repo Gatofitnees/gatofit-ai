@@ -35,6 +35,10 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
 }) => {
   const [currentWorkoutIndex, setCurrentWorkoutIndex] = useState(0);
 
+  const handleSlideChange = (index: number) => {
+    setCurrentWorkoutIndex(index);
+  };
+
   if (loading) {
     return (
       <Card className="mb-5">
@@ -123,7 +127,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
           {completed && workouts.length > 0 ? (
             <WorkoutCarousel 
               workouts={workouts}
-              onSlideChange={setCurrentWorkoutIndex}
+              onSlideChange={handleSlideChange}
             >
               {renderWorkoutContent}
             </WorkoutCarousel>
