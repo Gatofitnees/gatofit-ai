@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { sanitizeFoodName, validateCalories, validateMacronutrient } from '@/utils/validation';
 import { createSecureErrorMessage, logSecurityEvent } from '@/utils/errorHandling';
-import { useTimezone } from './useTimezone';
 
 export interface FoodLogEntry {
   id?: number;
@@ -55,7 +54,6 @@ export const useFoodLog = (selectedDate?: string) => {
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { getUserCurrentDateString, timezoneInfo } = useTimezone();
 
   const ensureUserProfile = async (userId: string) => {
     try {
@@ -99,8 +97,7 @@ export const useFoodLog = (selectedDate?: string) => {
   const fetchEntriesForDate = async (date?: string) => {
     try {
       setIsLoading(true);
-      // Use user's timezone-aware date if no specific date provided
-      const queryDate = date || getUserCurrentDateString();
+      const queryDate = date || new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
         .from('daily_food_log_entries')
@@ -146,8 +143,7 @@ export const useFoodLog = (selectedDate?: string) => {
       if (!user) return;
 
       await supabase.rpc('update_user_streak', {
-        p_user_id: user.id,
-        p_user_timezone_offset: timezoneInfo.timezoneOffset
+        p_user_id: user.id
       });
     } catch (err) {
       console.error('Error updating user streak:', err);
@@ -186,19 +182,16 @@ export const useFoodLog = (selectedDate?: string) => {
 
       await ensureUserProfile(user.id);
 
-      // Use user's timezone-aware date and time
-      const userDate = getUserCurrentDateString();
-      const now = new Date(); // Current UTC time for logging
-      
+      const now = new Date();
       const newEntry = {
         ...sanitizedEntry,
         user_id: user.id,
         logged_at: now.toISOString(),
-        log_date: userDate, // Use user's date
+        log_date: now.toISOString().split('T')[0],
         ingredients: sanitizedEntry.ingredients ? sanitizedEntry.ingredients as Json : null
       };
 
-      console.log('Inserting validated food entry with user date:', userDate);
+      console.log('Inserting validated food entry');
 
       const { data, error } = await supabase
         .from('daily_food_log_entries')

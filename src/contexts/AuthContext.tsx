@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -20,7 +21,6 @@ interface AuthContextProps {
     data: any | null;
   }>;
   signOut: () => Promise<void>;
-  switchAccount: () => Promise<void>;
   loading: boolean;
 }
 
@@ -40,86 +40,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  // Function to create/update user profile automatically
-  const ensureUserProfile = async (userData: User) => {
-    try {
-      // Check if profile exists
-      const { data: existingProfile, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userData.id)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error('Error checking profile:', checkError);
-        return;
-      }
-
-      // If profile doesn't exist, create it
-      if (!existingProfile) {
-        const emailUsername = userData.email?.split('@')[0] || 'usuario';
-        const randomSuffix = Math.floor(Math.random() * 1000);
-        const proposedUsername = `${emailUsername}${randomSuffix}`;
-
-        const profileData = {
-          id: userData.id,
-          full_name: userData.user_metadata?.name || userData.user_metadata?.full_name || 'Usuario',
-          username: proposedUsername,
-          avatar_url: userData.user_metadata?.avatar_url || null,
-          is_profile_public: true,
-          timezone_offset: -new Date().getTimezoneOffset(),
-          timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone
-        };
-
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert(profileData);
-
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-        } else {
-          console.log('Profile created successfully for user:', userData.id);
-        }
-      }
-
-      // Ensure user_streaks record exists
-      const { data: existingStreak, error: streakCheckError } = await supabase
-        .from('user_streaks')
-        .select('id')
-        .eq('user_id', userData.id)
-        .maybeSingle();
-
-      if (streakCheckError) {
-        console.error('Error checking streak:', streakCheckError);
-        return;
-      }
-
-      if (!existingStreak) {
-        const { error: streakInsertError } = await supabase
-          .from('user_streaks')
-          .insert({
-            user_id: userData.id,
-            current_streak: 0,
-            total_points: 0,
-            total_experience: 0,
-            current_level: 1,
-            experience_today: 0,
-            workouts_today: 0,
-            foods_today: 0,
-            last_xp_date: new Date().toISOString().split('T')[0]
-          });
-
-        if (streakInsertError) {
-          console.error('Error creating streak record:', streakInsertError);
-        } else {
-          console.log('Streak record created successfully for user:', userData.id);
-        }
-      }
-    } catch (error) {
-      console.error('Error in ensureUserProfile:', error);
-    }
-  };
-
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -128,12 +48,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       }
       setSession(session);
       setUser(session?.user ?? null);
-      
-      // Auto-create profile if user exists
-      if (session?.user) {
-        ensureUserProfile(session.user);
-      }
-      
       setLoading(false);
     });
 
@@ -144,11 +58,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // Auto-create profile for new sessions
-      if (session?.user && _event === 'SIGNED_IN') {
-        ensureUserProfile(session.user);
-      }
       
       // Log authentication events for security monitoring
       if (_event === 'SIGNED_IN') {
@@ -200,9 +109,24 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         return { error, data: null };
       }
 
-      // Auto-create profile for new user
+      // Create profile record
       if (data.user) {
-        await ensureUserProfile(data.user);
+        const { error: profileError } = await supabase.from("profiles").insert([
+          {
+            id: data.user.id,
+          },
+        ]);
+
+        if (profileError) {
+          const secureError = createSecureErrorMessage(profileError, 'database');
+          logSecurityEvent('profile_creation_failed', profileError.message, data.user.id);
+          toast({
+            title: "Error al crear perfil",
+            description: secureError,
+            variant: "destructive",
+          });
+          return { error: profileError, data: null };
+        }
       }
 
       toast({
@@ -306,40 +230,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   };
 
-  const switchAccount = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `https://appsecret.gatofit.com/onboarding/app-transition`,
-          queryParams: {
-            prompt: 'select_account'
-          }
-        },
-      });
-
-      if (error) {
-        const secureError = createSecureErrorMessage(error, 'auth');
-        logSecurityEvent('account_switch_failed', error.message);
-        toast({
-          title: "Error al cambiar cuenta",
-          description: secureError,
-          variant: "destructive",
-        });
-      } else {
-        logSecurityEvent('account_switch_initiated', 'Account switch initiated');
-      }
-    } catch (err: any) {
-      const secureError = createSecureErrorMessage(err, 'auth');
-      logSecurityEvent('account_switch_error', err.message);
-      toast({
-        title: "Error",
-        description: secureError,
-        variant: "destructive",
-      });
-    }
-  };
-
   const signOut = async () => {
     try {
       const userId = user?.id;
@@ -362,7 +252,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     signIn,
     signInWithGoogle,
     signOut,
-    switchAccount,
     loading,
   };
 

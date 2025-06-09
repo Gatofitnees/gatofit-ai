@@ -391,8 +391,6 @@ export type Database = {
           target_kg_per_week: number | null
           target_pace: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg: number | null
-          timezone_name: string | null
-          timezone_offset: number | null
           total_workouts: number | null
           trainings_per_week: number | null
           unit_system_preference:
@@ -428,8 +426,6 @@ export type Database = {
           target_kg_per_week?: number | null
           target_pace?: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg?: number | null
-          timezone_name?: string | null
-          timezone_offset?: number | null
           total_workouts?: number | null
           trainings_per_week?: number | null
           unit_system_preference?:
@@ -465,8 +461,6 @@ export type Database = {
           target_kg_per_week?: number | null
           target_pace?: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg?: number | null
-          timezone_name?: string | null
-          timezone_offset?: number | null
           total_workouts?: number | null
           trainings_per_week?: number | null
           unit_system_preference?:
@@ -1032,10 +1026,7 @@ export type Database = {
         }[]
       }
       update_user_streak: {
-        Args:
-          | Record<PropertyKey, never>
-          | { p_user_id: string }
-          | { p_user_id: string; p_user_timezone_offset?: number }
+        Args: Record<PropertyKey, never> | { p_user_id: string }
         Returns: undefined
       }
     }

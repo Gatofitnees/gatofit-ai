@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useTimezone } from './useTimezone';
 
 export interface UserStreak {
   id: number;
@@ -23,7 +22,6 @@ export const useStreaks = () => {
   const [streakData, setStreakData] = useState<UserStreak | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { timezoneInfo } = useTimezone();
 
   const fetchStreakData = async () => {
     try {
@@ -52,10 +50,9 @@ export const useStreaks = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Call the database function with user's timezone offset
+      // Call the database function to update streak
       const { error } = await supabase.rpc('update_user_streak', {
-        p_user_id: user.id,
-        p_user_timezone_offset: timezoneInfo.timezoneOffset
+        p_user_id: user.id
       });
 
       if (error) throw error;

@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useOptimizedHomeData } from "@/hooks/useOptimizedHomeData";
+import { useHomePageData } from "@/hooks/useHomePageData";
 import UserHeader from "../components/UserHeader";
 import DaySelector from "../components/DaySelector";
 import TrainingCard from "../components/TrainingCard";
@@ -22,9 +22,8 @@ const HomePage: React.FC = () => {
     loading,
     datesWithWorkouts,
     macros,
-    handleDateSelect,
-    refreshData
-  } = useOptimizedHomeData();
+    handleDateSelect
+  } = useHomePageData();
 
   const handleStartWorkout = () => {
     navigate("/workout");
@@ -54,11 +53,10 @@ const HomePage: React.FC = () => {
       {/* User header and profile */}
       <UserHeader />
       
-      {/* Day selector with optimized data loading */}
+      {/* Day selector */}
       <DaySelector 
         onSelectDate={handleDateSelect}
         datesWithRecords={datesWithWorkouts}
-        selectedDate={selectedDate}
       />
 
       {/* Training card */}
@@ -70,7 +68,7 @@ const HomePage: React.FC = () => {
         onViewDetails={() => handleViewWorkoutDetails(workoutSummary?.id)}
       />
       
-      {/* Macros card - now uses optimized data */}
+      {/* Macros card - now uses data from useHomePageData hook which should include profile data */}
       <MacrosCard 
         macros={macros}
         onAddFood={handleAddFood}

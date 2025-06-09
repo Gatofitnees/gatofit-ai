@@ -12,19 +12,19 @@ import ProfileStats from '@/components/profile/ProfileStats';
 import AvatarUpload from '@/components/profile/AvatarUpload';
 import BodyMeasurements from '@/components/profile/BodyMeasurements';
 import UserInformation from '@/components/profile/UserInformation';
-import ProfileSkeleton from '@/components/profile/ProfileSkeleton';
 import { useToast } from '@/components/ui/use-toast';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { profile, loading, updating, updateProfile } = useProfileContext();
+  const { profile, loading, updateProfile } = useProfileContext();
   const { stats, loading: statsLoading } = useUserStats(user?.id);
   const { toast } = useToast();
   
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Update form state when profile loads, with Google data as fallback
@@ -67,6 +67,7 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
+    setSaving(true);
     const success = await updateProfile({
       full_name: fullName || null,
       username: username?.toLowerCase() || null
@@ -76,6 +77,7 @@ const ProfilePage: React.FC = () => {
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 3000);
     }
+    setSaving(false);
   };
 
   const handleAvatarUpdate = async (newUrl: string) => {
@@ -113,9 +115,12 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // Show skeleton while loading
   if (loading) {
-    return <ProfileSkeleton />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-primary">Cargando perfil...</div>
+      </div>
+    );
   }
 
   // Use fallback data for display
@@ -143,7 +148,6 @@ const ProfilePage: React.FC = () => {
             size="sm"
             onClick={handleShare}
             className="p-2"
-            disabled={updating}
           >
             <Share2 className="h-5 w-5" />
           </Button>
@@ -185,7 +189,6 @@ const ProfilePage: React.FC = () => {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Tu nombre completo"
-            disabled={updating}
           />
         </div>
 
@@ -201,7 +204,6 @@ const ProfilePage: React.FC = () => {
               onChange={(e) => handleUsernameChange(e.target.value)}
               placeholder="nombreusuario"
               className="pl-8"
-              disabled={updating}
             />
           </div>
           {usernameAvailable === false && (
@@ -218,10 +220,10 @@ const ProfilePage: React.FC = () => {
 
         <Button 
           onClick={handleSave}
-          disabled={updating || usernameAvailable === false}
+          disabled={saving || usernameAvailable === false}
           className="w-full"
         >
-          {updating ? 'Guardando...' : 'Guardar cambios'}
+          {saving ? 'Guardando...' : 'Guardar cambios'}
         </Button>
       </div>
 

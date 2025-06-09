@@ -7,44 +7,73 @@ import MacroProgress from "../components/MacroProgress";
 import DaySelector from "../components/DaySelector";
 import { CameraCapture } from "../components/nutrition/CameraCapture";
 import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
+import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { useFoodCapture } from "../hooks/useFoodCapture";
-import { useOptimizedNutritionData } from "../hooks/useOptimizedNutritionData";
-import { FoodLogEntry } from "../hooks/useFoodLog";
-import { useOptimizedTimezone } from "../hooks/useOptimizedTimezone";
+import { useProfile } from "../hooks/useProfile";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
-  const { getUserCurrentDate } = useOptimizedTimezone();
-  
-  // Always start with user's current date
-  const userCurrentDate = getUserCurrentDate();
-  const [selectedDate, setSelectedDate] = useState(userCurrentDate);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const navigate = useNavigate();
 
-  const { 
-    entries, 
-    isLoading, 
-    datesWithFood, 
-    macros, 
-    deleteEntry 
-  } = useOptimizedNutritionData(selectedDate);
-  
+  const selectedDateString = selectedDate.toISOString().split('T')[0];
+  const { entries, deleteEntry, isLoading } = useFoodLog(selectedDateString);
   const { analyzeFood, isAnalyzing } = useFoodAnalysis();
   const { error: captureError } = useFoodCapture();
+  const { profile } = useProfile();
+
+  // Calculate today's totals from actual entries
+  const todayTotals = entries.reduce(
+    (totals, entry) => ({
+      calories: totals.calories + entry.calories_consumed,
+      protein: totals.protein + entry.protein_g_consumed,
+      carbs: totals.carbs + entry.carbs_g_consumed,
+      fat: totals.fat + entry.fat_g_consumed
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
+
+  // Use initial recommendations from profile as targets, with fallbacks
+  const macros = {
+    calories: { 
+      current: todayTotals.calories, 
+      target: profile?.initial_recommended_calories || 2000, 
+      unit: "kcal" 
+    },
+    protein: { 
+      current: todayTotals.protein, 
+      target: profile?.initial_recommended_protein_g || 120 
+    },
+    carbs: { 
+      current: todayTotals.carbs, 
+      target: profile?.initial_recommended_carbs_g || 200 
+    },
+    fats: { 
+      current: todayTotals.fat, 
+      target: profile?.initial_recommended_fats_g || 65 
+    }
+  };
   
   const calorieProgress = Math.round((macros.calories.current / macros.calories.target) * 100);
 
-  const isToday = selectedDate.toDateString() === userCurrentDate.toDateString();
+  // Get dates with food entries for the day selector
+  const getDatesWithEntries = (): Date[] => {
+    // For now, we'll just return the selected date if it has entries
+    // In a real implementation, you might want to fetch this from the database
+    return entries.length > 0 ? [selectedDate] : [];
+  };
+
+  const isToday = selectedDateString === new Date().toISOString().split('T')[0];
   const isSelectedDay = !isToday;
 
   const formatSelectedDate = () => {
     if (isToday) return "Hoy";
     
-    const today = userCurrentDate;
+    const today = new Date();
     const selected = new Date(selectedDate);
     const diffTime = today.getTime() - selected.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -59,8 +88,11 @@ const NutritionPage: React.FC = () => {
   };
 
   const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
+    console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
+    
     // If there's a capture error, don't navigate - stay in camera to show error dialog
     if (captureError) {
+      console.log('Capture error detected, staying in camera view');
       return;
     }
     
@@ -90,6 +122,7 @@ const NutritionPage: React.FC = () => {
     } else {
       // Fallback to old analysis method only if no capture error
       const analysis = await analyzeFood(imageUrl);
+      console.log('Fallback analysis result:', analysis);
       
       if (analysis) {
         const pendingFoodData = {
@@ -151,10 +184,10 @@ const NutritionPage: React.FC = () => {
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-6">Nutrición</h1>
       
-      {/* Day selector with optimized food dates - always pass current date to reset */}
+      {/* Day selector */}
       <DaySelector 
         onSelectDate={setSelectedDate}
-        datesWithRecords={datesWithFood}
+        datesWithRecords={getDatesWithEntries()}
         selectedDate={selectedDate}
       />
       
@@ -269,16 +302,15 @@ const NutritionPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Add Food Button - Only show for today with improved centering */}
+      {/* Add Food Button - Only show for today */}
       {isToday && (
         <div className="fixed bottom-24 right-4 animate-fade-in">
           <Button 
-            className="h-14 w-14 rounded-full shadow-neu-button flex items-center justify-center p-0"
+            className="h-14 w-14 rounded-full shadow-neu-button"
+            leftIcon={<Camera className="h-6 w-6" />}
             variant="primary"
             onClick={() => setShowCamera(true)}
-          >
-            <Camera className="h-6 w-6" />
-          </Button>
+          />
         </div>
       )}
 

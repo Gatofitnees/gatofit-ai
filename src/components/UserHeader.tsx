@@ -4,12 +4,10 @@ import Avatar from "./Avatar";
 import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
 import AIChat from "./AIChat";
-import UserHeaderSkeleton from "./UserHeaderSkeleton";
 import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
-import { useAutoUserVerification } from "@/hooks/useAutoUserVerification";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -25,10 +23,9 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   progress = 75
 }) => {
   const [showMenu, setShowMenu] = useState(false);
-  const { user, signOut, switchAccount } = useAuth();
-  const { profile, loading } = useProfileContext();
+  const { user, signOut } = useAuth();
+  const { profile } = useProfileContext();
   const { streakData } = useStreaks();
-  const { isVerifying } = useAutoUserVerification();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -37,20 +34,10 @@ const UserHeader: React.FC<UserHeaderProps> = ({
     setShowMenu(false);
   };
 
-  const handleSwitchAccount = async () => {
-    await switchAccount();
-    setShowMenu(false);
-  };
-
   const handleProfileClick = () => {
     setShowMenu(false);
     navigate('/profile');
   };
-
-  // Show skeleton while loading
-  if (loading || isVerifying) {
-    return <UserHeaderSkeleton />;
-  }
 
   // Get experience progress
   const experienceProgress = streakData ? getExperienceProgress(streakData.total_experience) : null;
@@ -172,7 +159,10 @@ const UserHeader: React.FC<UserHeaderProps> = ({
               variant="secondary" 
               size="sm" 
               className="justify-start"
-              onClick={handleSwitchAccount}
+              onClick={() => toast({
+                title: "Cambiar cuenta",
+                description: "Función próximamente disponible",
+              })}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Cambiar cuenta
