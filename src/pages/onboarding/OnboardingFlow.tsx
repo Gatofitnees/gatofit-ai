@@ -1,3 +1,4 @@
+
 import React, { createContext, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +27,7 @@ import AppTransition from "./steps/AppTransition";
 export interface OnboardingData {
   gender?: "male" | "female" | "other";
   birthDate?: string;
+  dateOfBirth?: Date | string;
   mainGoal?: "lose_weight" | "gain_muscle" | "maintain_weight" | "improve_health";
   targetWeight?: number;
   height?: number;
@@ -36,14 +38,25 @@ export interface OnboardingData {
   unit_system_preference?: "metric" | "imperial";
   experienceLevel?: "beginner" | "intermediate" | "advanced";
   trainingFrequency?: number;
+  trainingsPerWeek?: number;
+  previousAppExperience?: boolean;
   dietPreference?: "omnivore" | "vegetarian" | "vegan" | "keto" | "paleo" | "mediterranean";
+  diet?: number;
   desiredPace?: "slow" | "moderate" | "fast";
+  targetPace?: "sloth" | "rabbit" | "leopard";
+  targetKgPerWeek?: number;
   commonObstacles?: string[];
+  obstacles?: string[];
   desiredAchievements?: string[];
+  achievements?: string[];
   email?: string;
   password?: string;
   firstName?: string;
   lastName?: string;
+  initial_recommended_calories?: number;
+  initial_recommended_protein_g?: number;
+  initial_recommended_carbs_g?: number;
+  initial_recommended_fats_g?: number;
 }
 
 interface OnboardingContextType {
@@ -55,7 +68,10 @@ export const OnboardingContext = createContext<OnboardingContextType | null>(nul
 
 const OnboardingFlow: React.FC = () => {
   const location = useLocation();
-  const [data, setData] = useState<OnboardingData>({});
+  const [data, setData] = useState<OnboardingData>({
+    achievements: [], // Initialize as empty array to prevent undefined errors
+    obstacles: [], // Initialize as empty array to prevent undefined errors
+  });
 
   const updateData = (newData: Partial<OnboardingData>) => {
     setData(prev => ({ ...prev, ...newData }));
@@ -64,7 +80,7 @@ const OnboardingFlow: React.FC = () => {
   const pageVariants = {
     initial: { 
       opacity: 0,
-      x: 50,
+      x: 30,
       scale: 0.98
     },
     in: { 
@@ -74,7 +90,7 @@ const OnboardingFlow: React.FC = () => {
     },
     out: { 
       opacity: 0,
-      x: -50,
+      x: -30,
       scale: 0.98
     }
   };
@@ -82,7 +98,7 @@ const OnboardingFlow: React.FC = () => {
   const pageTransition = {
     type: "tween",
     ease: [0.25, 0.46, 0.45, 0.94],
-    duration: 0.4
+    duration: 0.3
   };
 
   return (

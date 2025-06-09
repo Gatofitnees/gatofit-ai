@@ -5,7 +5,6 @@ import { Check, Zap, Dumbbell, Timer, HeartPulse, Moon, Calendar } from "lucide-
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import { OnboardingContext } from "../OnboardingFlow";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Achievement {
   id: number;
@@ -33,17 +32,20 @@ const DesiredAchievements: React.FC = () => {
 
   const { data, updateData } = context;
 
+  // Ensure achievements is always an array
+  const currentAchievements = data.achievements || [];
+
   const toggleAchievement = (achievementId: string) => {
-    const currentAchievements = [...data.achievements];
-    const index = currentAchievements.indexOf(achievementId);
+    const updatedAchievements = [...currentAchievements];
+    const index = updatedAchievements.indexOf(achievementId);
     
     if (index === -1) {
-      currentAchievements.push(achievementId);
+      updatedAchievements.push(achievementId);
     } else {
-      currentAchievements.splice(index, 1);
+      updatedAchievements.splice(index, 1);
     }
     
-    updateData({ achievements: currentAchievements });
+    updateData({ achievements: updatedAchievements });
   };
 
   const handleNext = () => {
@@ -65,14 +67,14 @@ const DesiredAchievements: React.FC = () => {
           <div
             key={achievement.id}
             className={`flex items-center space-x-3 rounded-lg p-4 transition-all cursor-pointer ${
-              data.achievements.includes(achievement.id.toString())
+              currentAchievements.includes(achievement.id.toString())
                 ? "bg-primary/10 neu-button-active"
                 : "bg-secondary/20 neu-button hover:bg-secondary/30"
             }`}
             onClick={() => toggleAchievement(achievement.id.toString())}
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              data.achievements.includes(achievement.id.toString())
+              currentAchievements.includes(achievement.id.toString())
                 ? "bg-primary text-white"
                 : "bg-secondary/30 text-muted-foreground"
             }`}>
@@ -81,7 +83,7 @@ const DesiredAchievements: React.FC = () => {
             <div className="flex-1 font-medium">
               {achievement.name}
             </div>
-            {data.achievements.includes(achievement.id.toString()) && (
+            {currentAchievements.includes(achievement.id.toString()) && (
               <Check className="h-4 w-4 text-primary" />
             )}
           </div>
@@ -90,7 +92,7 @@ const DesiredAchievements: React.FC = () => {
 
       <OnboardingNavigation 
         onNext={handleNext}
-        nextDisabled={data.achievements.length === 0}
+        nextDisabled={currentAchievements.length === 0}
       />
     </OnboardingLayout>
   );
