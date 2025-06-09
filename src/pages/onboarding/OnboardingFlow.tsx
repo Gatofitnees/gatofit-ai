@@ -1,3 +1,4 @@
+
 import React, { createContext, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,8 +78,16 @@ const OnboardingFlow: React.FC = () => {
   });
 
   const updateData = (newData: Partial<OnboardingData>) => {
+    console.log("Updating onboarding data:", newData);
     setData(prev => ({ ...prev, ...newData }));
   };
+
+  const contextValue = {
+    data,
+    updateData
+  };
+
+  console.log("OnboardingFlow context value:", contextValue);
 
   const pageVariants = {
     initial: { 
@@ -105,7 +114,7 @@ const OnboardingFlow: React.FC = () => {
   };
 
   return (
-    <OnboardingContext.Provider value={{ data, updateData }}>
+    <OnboardingContext.Provider value={contextValue}>
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}

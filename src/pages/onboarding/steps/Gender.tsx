@@ -11,7 +11,11 @@ const Gender: React.FC = () => {
   const navigate = useNavigate();
   const context = useContext(OnboardingContext);
   
+  // Add error logging to debug the issue
+  console.log("OnboardingContext in Gender:", context);
+  
   if (!context) {
+    console.error("OnboardingContext is null in Gender component");
     throw new Error("Gender must be used within OnboardingContext");
   }
 
