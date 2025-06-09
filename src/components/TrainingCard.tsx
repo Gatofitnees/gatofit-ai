@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Check, ChevronRight, Plus, Clock, Flame, Dumbbell, Target } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
@@ -146,7 +145,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   return (
     <div className="mb-5">
       {completed && workouts.length > 0 ? (
-        <>
+        <div className="space-y-3">
           <WorkoutCarousel 
             workouts={workouts}
             onSlideChange={handleSlideChange}
@@ -156,7 +155,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
           
           {/* Indicadores fuera del carrusel */}
           {workouts.length > 1 && (
-            <div className="flex items-center justify-center gap-1 mt-3">
+            <div className="flex items-center justify-center gap-1">
               {workouts.map((_, index) => (
                 <div
                   key={index}
@@ -170,7 +169,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
               ))}
             </div>
           )}
-        </>
+        </div>
       ) : (
         <Card>
           <CardHeader 
