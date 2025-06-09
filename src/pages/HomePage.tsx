@@ -16,7 +16,7 @@ const HomePage: React.FC = () => {
   const {
     selectedDate,
     hasCompletedWorkout,
-    workoutSummary,
+    workoutSummaries,
     loading,
     datesWithWorkouts,
     macros,
@@ -58,9 +58,9 @@ const HomePage: React.FC = () => {
       <TrainingCard
         loading={loading}
         completed={hasCompletedWorkout}
-        workout={workoutSummary}
+        workouts={workoutSummaries}
         onStartWorkout={handleStartWorkout}
-        onViewDetails={() => handleViewWorkoutDetails(workoutSummary?.id)}
+        onViewDetails={handleViewWorkoutDetails}
       />
       
       <MacrosCard 

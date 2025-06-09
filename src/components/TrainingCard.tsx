@@ -3,6 +3,7 @@ import React from "react";
 import { Check, ChevronRight, Plus, Clock, Flame, Dumbbell, Target } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import Button from "./Button";
+import WorkoutCarousel from "./WorkoutCarousel";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -19,15 +20,15 @@ interface WorkoutSummary {
 
 interface TrainingCardProps {
   completed?: boolean;
-  workout?: WorkoutSummary;
+  workouts?: WorkoutSummary[];
   onStartWorkout: () => void;
-  onViewDetails?: () => void;
+  onViewDetails?: (workoutId?: number) => void;
   loading?: boolean;
 }
 
 const TrainingCard: React.FC<TrainingCardProps> = ({
   completed = false,
-  workout,
+  workouts = [],
   onStartWorkout,
   onViewDetails,
   loading = false
@@ -50,6 +51,65 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
     );
   }
 
+  const renderWorkoutContent = (workout: WorkoutSummary, index: number, total: number) => (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium">{workout.name}</h4>
+        {workout.calories && workout.calories > 0 && (
+          <div className="flex items-center text-sm px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+            <Flame className="h-3.5 w-3.5 mr-1" />
+            <span>{workout.calories} kcal</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Stats row */}
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        {workout.duration && (
+          <div className="flex items-center">
+            <Clock className="h-3.5 w-3.5 mr-1" />
+            <span>{workout.duration}</span>
+          </div>
+        )}
+        
+        {workout.exerciseCount && (
+          <div className="flex items-center">
+            <Dumbbell className="h-3.5 w-3.5 mr-1" />
+            <span>{workout.exerciseCount} ejercicios</span>
+          </div>
+        )}
+        
+        {workout.totalSets && (
+          <div className="flex items-center">
+            <Target className="h-3.5 w-3.5 mr-1" />
+            <span>{workout.totalSets} series</span>
+          </div>
+        )}
+      </div>
+      
+      {workout.exercises && workout.exercises.length > 0 && (
+        <div className="bg-background/40 rounded-lg p-3">
+          <span className="text-xs text-muted-foreground block mb-2">Ejercicios realizados:</span>
+          <div className="flex flex-wrap gap-1">
+            {workout.exercises.map((exercise, exerciseIndex) => (
+              <span 
+                key={exerciseIndex}
+                className="text-xs px-2 py-1 bg-background/80 rounded-full border border-white/10"
+              >
+                {exercise}
+              </span>
+            ))}
+            {workout.exerciseCount && workout.exerciseCount > workout.exercises.length && (
+              <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                +{workout.exerciseCount - workout.exercises.length} más
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <Card className="mb-5">
       <CardHeader 
@@ -57,63 +117,10 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
         icon={completed ? <Check className="h-5 w-5 text-primary" /> : <Clock className="h-5 w-5" />} 
       />
       <CardBody>
-        {completed && workout ? (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium">{workout.name}</h4>
-              {workout.calories && (
-                <div className="flex items-center text-sm px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  <Flame className="h-3.5 w-3.5 mr-1" />
-                  <span>{workout.calories} kcal</span>
-                </div>
-              )}
-            </div>
-            
-            {/* Stats row */}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              {workout.duration && (
-                <div className="flex items-center">
-                  <Clock className="h-3.5 w-3.5 mr-1" />
-                  <span>{workout.duration}</span>
-                </div>
-              )}
-              
-              {workout.exerciseCount && (
-                <div className="flex items-center">
-                  <Dumbbell className="h-3.5 w-3.5 mr-1" />
-                  <span>{workout.exerciseCount} ejercicios</span>
-                </div>
-              )}
-              
-              {workout.totalSets && (
-                <div className="flex items-center">
-                  <Target className="h-3.5 w-3.5 mr-1" />
-                  <span>{workout.totalSets} series</span>
-                </div>
-              )}
-            </div>
-            
-            {workout.exercises && workout.exercises.length > 0 && (
-              <div className="bg-background/40 rounded-lg p-3">
-                <span className="text-xs text-muted-foreground block mb-2">Ejercicios realizados:</span>
-                <div className="flex flex-wrap gap-1">
-                  {workout.exercises.map((exercise, index) => (
-                    <span 
-                      key={index}
-                      className="text-xs px-2 py-1 bg-background/80 rounded-full border border-white/10"
-                    >
-                      {exercise}
-                    </span>
-                  ))}
-                  {workout.exerciseCount && workout.exerciseCount > workout.exercises.length && (
-                    <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-                      +{workout.exerciseCount - workout.exercises.length} más
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+        {completed && workouts.length > 0 ? (
+          <WorkoutCarousel workouts={workouts}>
+            {renderWorkoutContent}
+          </WorkoutCarousel>
         ) : (
           <div className="text-center py-3">
             <p className="text-sm text-muted-foreground mb-2">
@@ -134,7 +141,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
             <Button 
               variant="outline"
               size="sm"
-              onClick={onViewDetails}
+              onClick={() => onViewDetails && onViewDetails(workouts[0]?.id)}
               rightIcon={<ChevronRight className="h-4 w-4" />}
             >
               Ver Detalles

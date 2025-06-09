@@ -11,6 +11,8 @@ interface WorkoutSummary {
   calories: number;
   date: string;
   exercises: string[];
+  exerciseCount?: number;
+  totalSets?: number;
 }
 
 interface MacroData {
@@ -25,7 +27,7 @@ export const useHomePageData = () => {
   const { profile } = useProfileContext();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [hasCompletedWorkout, setHasCompletedWorkout] = useState(false);
-  const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined);
+  const [workoutSummaries, setWorkoutSummaries] = useState<WorkoutSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
 
@@ -77,9 +79,9 @@ export const useHomePageData = () => {
     fetchWorkoutDates();
   }, [user]);
 
-  // Load daily workout
+  // Load daily workouts (changed to get ALL workouts for the day)
   useEffect(() => {
-    const fetchDailyWorkout = async () => {
+    const fetchDailyWorkouts = async () => {
       if (!user) return;
       
       setLoading(true);
@@ -98,44 +100,59 @@ export const useHomePageData = () => {
           `)
           .eq('user_id', user.id)
           .like('workout_date', `${dateString}%`)
-          .order('workout_date', { ascending: false })
-          .limit(1);
+          .order('workout_date', { ascending: false });
           
         if (error) throw error;
         
         if (workoutLogs && workoutLogs.length > 0) {
-          const workout = workoutLogs[0];
-          
-          const exerciseNames = Array.from(
-            new Set(
-              workout.workout_log_exercise_details
-                .map((detail: any) => detail.exercise_name_snapshot)
-            )
-          ).slice(0, 3);
-          
-          setWorkoutSummary({
-            id: workout.id,
-            name: workout.routine_name_snapshot || "Entrenamiento",
-            duration: `${workout.duration_completed_minutes || 0} min`,
-            calories: workout.calories_burned_estimated || 0,
-            date: workout.workout_date,
-            exercises: exerciseNames
+          const workouts = workoutLogs.map(workout => {
+            const exerciseNames = Array.from(
+              new Set(
+                workout.workout_log_exercise_details
+                  .map((detail: any) => detail.exercise_name_snapshot)
+              )
+            );
+            
+            // Calculate estimated duration if not recorded
+            let duration = workout.duration_completed_minutes || 0;
+            if (duration === 0 && exerciseNames.length > 0) {
+              duration = Math.max(15, exerciseNames.length * 3); // Estimate 3 min per exercise, min 15 min
+            }
+            
+            // Calculate estimated calories if not recorded
+            let calories = workout.calories_burned_estimated || 0;
+            if (calories === 0 && duration > 0) {
+              calories = Math.round(duration * 6); // Estimate 6 calories per minute
+            }
+            
+            return {
+              id: workout.id,
+              name: workout.routine_name_snapshot || "Entrenamiento",
+              duration: `${duration} min`,
+              calories: calories,
+              date: workout.workout_date,
+              exercises: exerciseNames.slice(0, 3), // Show only first 3
+              exerciseCount: exerciseNames.length,
+              totalSets: workout.workout_log_exercise_details.length
+            };
           });
+          
+          setWorkoutSummaries(workouts);
           setHasCompletedWorkout(true);
         } else {
-          setWorkoutSummary(undefined);
+          setWorkoutSummaries([]);
           setHasCompletedWorkout(false);
         }
       } catch (error) {
-        console.error("Error loading workout:", error);
+        console.error("Error loading workouts:", error);
         setHasCompletedWorkout(false);
-        setWorkoutSummary(undefined);
+        setWorkoutSummaries([]);
       } finally {
         setLoading(false);
       }
     };
     
-    fetchDailyWorkout();
+    fetchDailyWorkouts();
   }, [user, selectedDate]);
 
   const handleDateSelect = (date: Date) => {
@@ -145,7 +162,7 @@ export const useHomePageData = () => {
   return {
     selectedDate,
     hasCompletedWorkout,
-    workoutSummary,
+    workoutSummaries,
     loading,
     datesWithWorkouts,
     macros,
