@@ -23,8 +23,15 @@ import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
 import WorkoutSummaryPage from "./pages/WorkoutSummaryPage";
 import { FoodEditPage } from "./pages/FoodEditPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
+import { useEffect } from 'react';
+import { optimizeForMobile } from '@/utils/mobileOptimizations';
 
 function App() {
+  useEffect(() => {
+    // Initialize mobile optimizations
+    optimizeForMobile();
+  }, []);
+
   return (
     <AuthProvider>
       <ProfileProvider>
