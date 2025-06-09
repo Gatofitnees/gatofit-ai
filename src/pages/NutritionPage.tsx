@@ -13,15 +13,12 @@ import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
 import { useFoodCapture } from "../hooks/useFoodCapture";
 import { useProfile } from "../hooks/useProfile";
 import { useNavigate } from "react-router-dom";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   const selectedDateString = selectedDate.toISOString().split('T')[0];
@@ -97,29 +94,31 @@ const NutritionPage: React.FC = () => {
   };
 
   const handleImageCaptured = async (imageUrl: string, imageBlob?: Blob) => {
-    console.log('Image captured:', imageUrl);
+    console.log('Image captured, showing preview:', imageUrl);
     setShowCamera(false);
     setShowPreview(true);
 
     // If we have the blob, start analysis immediately
     if (imageBlob) {
+      console.log('Starting analysis...');
       await analyzeImage(imageUrl, imageBlob);
     }
   };
 
   const handleRetryAnalysis = async () => {
-    if (capturedImageUrl) {
-      // For retry, we need to recapture since we don't store the blob
-      setShowPreview(false);
-      setShowCamera(true);
-      clearAll();
-    }
+    console.log('Retrying analysis...');
+    setShowPreview(false);
+    setShowCamera(true);
+    clearAll();
   };
 
   const handleSaveFood = async () => {
-    if (!analysisResult || !capturedImageUrl) return;
+    if (!analysisResult || !capturedImageUrl) {
+      console.log('No analysis result or image URL');
+      return;
+    }
 
-    setIsSaving(true);
+    console.log('Saving food entry...');
     try {
       const foodEntry = {
         custom_food_name: analysisResult.name,
@@ -147,12 +146,11 @@ const NutritionPage: React.FC = () => {
     } catch (error) {
       console.error('Error saving food:', error);
       toast.error('Error al guardar la comida');
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleClosePreview = () => {
+    console.log('Closing preview...');
     setShowPreview(false);
     clearAll();
   };
@@ -304,7 +302,7 @@ const NutritionPage: React.FC = () => {
         />
       )}
 
-      {/* Food Analysis Preview */}
+      {/* Food Analysis Preview - Show when we have an image captured */}
       {showPreview && capturedImageUrl && (
         <FoodAnalysisPreview
           imageUrl={capturedImageUrl}
@@ -314,7 +312,7 @@ const NutritionPage: React.FC = () => {
           onClose={handleClosePreview}
           onRetry={handleRetryAnalysis}
           onSave={handleSaveFood}
-          isSaving={isSaving}
+          isSaving={false}
         />
       )}
     </div>

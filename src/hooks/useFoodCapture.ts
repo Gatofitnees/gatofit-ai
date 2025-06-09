@@ -32,6 +32,7 @@ export const useFoodCapture = () => {
   };
 
   const clearAll = () => {
+    console.log('Clearing all food capture state');
     setCapturedImageUrl(null);
     setAnalysisResult(null);
     setError(null);
@@ -39,6 +40,7 @@ export const useFoodCapture = () => {
   };
 
   const captureImageOnly = async (fromCamera: boolean = true): Promise<string | null> => {
+    console.log('Capturing image only...');
     setIsLoading(true);
     setError(null);
     setCapturedImageUrl(null);
@@ -48,6 +50,7 @@ export const useFoodCapture = () => {
       const result = fromCamera ? await captureFromCamera() : await captureFromGallery();
       
       if (result) {
+        console.log('Image captured successfully:', result.imageUrl);
         setCapturedImageUrl(result.imageUrl);
         return result.imageUrl;
       } else {
@@ -64,8 +67,10 @@ export const useFoodCapture = () => {
   };
 
   const analyzeImage = async (imageUrl: string, imageBlob: Blob): Promise<FoodAnalysisResult | null> => {
+    console.log('Starting image analysis...');
     try {
       const result = await sendToWebhookWithResponse(imageUrl, imageBlob);
+      console.log('Analysis completed:', result);
       setAnalysisResult(result);
       return result;
     } catch (err) {
