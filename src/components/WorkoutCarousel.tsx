@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import { useCarousel } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, useCarousel } from '@/components/ui/carousel';
 
 interface WorkoutSummary {
   id?: number;
