@@ -88,6 +88,10 @@ export const useHomePageData = () => {
       try {
         const dateString = selectedDate.toISOString().split('T')[0];
         
+        // Use date range instead of like operator
+        const startOfDay = `${dateString}T00:00:00`;
+        const endOfDay = `${dateString}T23:59:59`;
+        
         const { data: workoutLogs, error } = await supabase
           .from('workout_logs')
           .select(`
@@ -99,7 +103,8 @@ export const useHomePageData = () => {
             workout_log_exercise_details(exercise_name_snapshot)
           `)
           .eq('user_id', user.id)
-          .like('workout_date', `${dateString}%`)
+          .gte('workout_date', startOfDay)
+          .lte('workout_date', endOfDay)
           .order('workout_date', { ascending: false });
           
         if (error) throw error;
