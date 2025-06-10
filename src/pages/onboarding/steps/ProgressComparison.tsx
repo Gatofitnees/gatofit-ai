@@ -46,7 +46,7 @@ const ProgressComparison: React.FC = () => {
     navigate("/onboarding/physical-data");
   };
 
-  // Generate SVG path for line
+  // Generate SVG path for line with better alignment
   const createPath = (data: number[], progress: number) => {
     const width = 300;
     const height = 180;
@@ -58,17 +58,22 @@ const ProgressComparison: React.FC = () => {
     const points = data.map((value, index) => {
       const x = padding + (index / (data.length - 1)) * chartWidth;
       const y = padding + chartHeight - (value / 100) * chartHeight;
-      return `${x},${y}`;
+      return { x, y, value };
     });
     
     // Calculate how much of the path to show based on progress
-    const visiblePoints = Math.floor((points.length - 1) * (progress / 100)) + 1;
-    const pathPoints = points.slice(0, visiblePoints);
+    const visiblePointsCount = Math.floor((points.length - 1) * (progress / 100)) + 1;
+    const pathPoints = points.slice(0, visiblePointsCount);
     
-    if (pathPoints.length < 2) return "";
+    if (pathPoints.length < 2) return { path: "", points: [] };
     
-    return `M ${pathPoints[0]} L ${pathPoints.slice(1).join(" L ")}`;
+    const pathString = `M ${pathPoints[0].x},${pathPoints[0].y} L ${pathPoints.slice(1).map(p => `${p.x},${p.y}`).join(" L ")}`;
+    
+    return { path: pathString, points: pathPoints };
   };
+
+  const traditionalPathData = createPath(traditionalData, traditionalProgress);
+  const aiPathData = createPath(aiData, aiProgress);
 
   return (
     <OnboardingLayout currentStep={5} totalSteps={20}>
@@ -81,12 +86,12 @@ const ProgressComparison: React.FC = () => {
           Nuestra IA personaliza tu plan para resultados óptimos.
         </p>
 
-        <div className="flex-1 min-h-[300px] bg-background/40 rounded-xl p-4 border border-white/5 flex items-center justify-center">
+        <div className="flex-1 min-h-[300px] bg-background/30 rounded-lg p-3 border border-white/3 flex items-center justify-center">
           <svg width="320" height="200" className="w-full max-w-[320px]">
             {/* Grid lines */}
             <defs>
               <pattern id="grid" width="40" height="30" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                <path d="M 40 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
               </pattern>
             </defs>
             <rect width="320" height="200" fill="url(#grid)" />
@@ -112,7 +117,7 @@ const ProgressComparison: React.FC = () => {
             
             {/* Traditional app line */}
             <motion.path
-              d={createPath(traditionalData, traditionalProgress)}
+              d={traditionalPathData.path}
               fill="none"
               stroke="#9CA3AF"
               strokeWidth="3"
@@ -122,30 +127,24 @@ const ProgressComparison: React.FC = () => {
               transition={{ duration: 1.5, ease: "easeInOut" }}
             />
             
-            {/* Traditional app dots */}
-            {traditionalData.map((value, index) => {
-              const x = 40 + (index / (traditionalData.length - 1)) * 240;
-              const y = 40 + 120 - (value / 100) * 120;
-              const shouldShow = index <= (traditionalData.length - 1) * (traditionalProgress / 100);
-              
-              return shouldShow ? (
-                <motion.circle
-                  key={`trad-${index}`}
-                  cx={x}
-                  cy={y}
-                  r="4"
-                  fill="#9CA3AF"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.3, duration: 0.3 }}
-                />
-              ) : null;
-            })}
+            {/* Traditional app dots - properly aligned */}
+            {traditionalPathData.points.map((point, index) => (
+              <motion.circle
+                key={`trad-${index}`}
+                cx={point.x}
+                cy={point.y}
+                r="4"
+                fill="#9CA3AF"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: index * 0.3, duration: 0.3 }}
+              />
+            ))}
             
             {/* AI app line */}
             {showAI && (
               <motion.path
-                d={createPath(aiData, aiProgress)}
+                d={aiPathData.path}
                 fill="none"
                 stroke="hsl(var(--primary))"
                 strokeWidth="4"
@@ -156,28 +155,22 @@ const ProgressComparison: React.FC = () => {
               />
             )}
             
-            {/* AI app dots */}
-            {showAI && aiData.map((value, index) => {
-              const x = 40 + (index / (aiData.length - 1)) * 240;
-              const y = 40 + 120 - (value / 100) * 120;
-              const shouldShow = index <= (aiData.length - 1) * (aiProgress / 100);
-              
-              return shouldShow ? (
-                <motion.circle
-                  key={`ai-${index}`}
-                  cx={x}
-                  cy={y}
-                  r="5"
-                  fill="hsl(var(--primary))"
-                  stroke="hsl(var(--background))"
-                  strokeWidth="2"
-                  filter="drop-shadow(0 0 4px hsl(var(--primary)/0.5))"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.4, duration: 0.3 }}
-                />
-              ) : null;
-            })}
+            {/* AI app dots - properly aligned */}
+            {showAI && aiPathData.points.map((point, index) => (
+              <motion.circle
+                key={`ai-${index}`}
+                cx={point.x}
+                cy={point.y}
+                r="5"
+                fill="hsl(var(--primary))"
+                stroke="hsl(var(--background))"
+                strokeWidth="2"
+                filter="drop-shadow(0 0 4px hsl(var(--primary)/0.5))"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: index * 0.4, duration: 0.3 }}
+              />
+            ))}
           </svg>
         </div>
 
