@@ -9,7 +9,6 @@ import { OnboardingContext } from "../OnboardingFlow";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import SwipeableCarousel from "@/components/onboarding/SwipeableCarousel";
 import GatofitAILogo from "@/components/GatofitAILogo";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const FeatureCard: React.FC<{
   title: string;
@@ -35,7 +34,6 @@ const FeatureCard: React.FC<{
 const FeaturesPreview: React.FC = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
   const context = useContext(OnboardingContext);
   
   if (!context) {
@@ -75,76 +73,18 @@ const FeaturesPreview: React.FC = () => {
     },
   ];
 
-  // Initialize component
+  // Auto-scroll carousel every 4 seconds
   useEffect(() => {
-    const initializeComponent = () => {
-      // Small delay to ensure proper rendering
-      setTimeout(() => {
-        setIsLoaded(true);
-      }, 100);
-    };
-    
-    initializeComponent();
-  }, []);
-
-  // Auto-scroll carousel every 4 seconds (only when loaded)
-  useEffect(() => {
-    if (!isLoaded) return;
-    
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % features.length);
     }, 4000);
     
     return () => clearInterval(interval);
-  }, [features.length, isLoaded]);
+  }, [features.length]);
 
   const handleNext = () => {
     navigate("/onboarding/create-account");
   };
-
-  // Loading skeleton
-  if (!isLoaded) {
-    return (
-      <OnboardingLayout currentStep={17} totalSteps={20}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-col h-full min-h-[calc(100vh-200px)]"
-        >
-          <h1 className="text-2xl font-bold mb-2">
-            Descubre cómo <GatofitAILogo size="lg" className="inline-block" /> te impulsará
-          </h1>
-          
-          <p className="text-muted-foreground mb-6">
-            Estas son algunas de las características clave que te ayudarán a alcanzar tus objetivos
-          </p>
-
-          <div className="w-full flex-1 flex flex-col justify-center">
-            <div className="flex-grow">
-              <div className="h-[calc(100%-30px)]">
-                <div className="px-1 py-1 h-full">
-                  <AspectRatio ratio={1/1} className="h-full max-w-[60vh] mx-auto">
-                    <div className="flex flex-col items-center p-4 rounded-2xl bg-secondary/20 shadow-neu-card text-center h-full">
-                      <Skeleton className="h-12 w-12 rounded-xl mb-3" />
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-2/3 mt-1" />
-                    </div>
-                  </AspectRatio>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <OnboardingNavigation 
-          onNext={handleNext}
-          nextLabel="Crear Cuenta"
-        />
-      </OnboardingLayout>
-    );
-  }
 
   return (
     <OnboardingLayout currentStep={17} totalSteps={20}>
@@ -193,7 +133,7 @@ const FeaturesPreview: React.FC = () => {
         nextLabel="Crear Cuenta"
       />
     </OnboardingLayout>
-    );
+  );
 };
 
 export default FeaturesPreview;
