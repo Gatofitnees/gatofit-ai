@@ -634,6 +634,75 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          duration_days: number
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          price_usd: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_days: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          price_usd: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_days?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          price_usd?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      usage_limits: {
+        Row: {
+          ai_chat_messages_used: number | null
+          created_at: string | null
+          id: string
+          nutrition_photos_used: number | null
+          routines_created: number | null
+          updated_at: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          ai_chat_messages_used?: number | null
+          created_at?: string | null
+          id?: string
+          nutrition_photos_used?: number | null
+          routines_created?: number | null
+          updated_at?: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          ai_chat_messages_used?: number | null
+          created_at?: string | null
+          id?: string
+          nutrition_photos_used?: number | null
+          routines_created?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_type_id: number
@@ -857,6 +926,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          auto_renewal: boolean | null
+          cancelled_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          started_at: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          store_platform: string | null
+          store_transaction_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_renewal?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          store_platform?: string | null
+          store_transaction_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_renewal?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          store_platform?: string | null
+          store_transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       workout_log_exercise_details: {
         Row: {
           duration_seconds_completed: number | null
@@ -1031,6 +1145,31 @@ export type Database = {
           total_workout_hours: number
         }[]
       }
+      get_user_weekly_usage: {
+        Args: { user_id: string }
+        Returns: {
+          routines_created: number
+          nutrition_photos_used: number
+          ai_chat_messages_used: number
+          week_start_date: string
+        }[]
+      }
+      get_week_start: {
+        Args: { input_date?: string }
+        Returns: string
+      }
+      increment_usage_counter: {
+        Args: { user_id: string; counter_type: string; increment_by?: number }
+        Returns: boolean
+      }
+      is_user_premium: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      update_expired_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_user_streak: {
         Args:
           | Record<PropertyKey, never>
@@ -1051,6 +1190,13 @@ export type Database = {
         | "increase_strength"
       meal_type: "breakfast" | "lunch" | "dinner" | "snack1" | "snack2"
       pace_type: "sloth" | "rabbit" | "leopard"
+      subscription_plan_type: "free" | "monthly" | "yearly"
+      subscription_status:
+        | "active"
+        | "expired"
+        | "cancelled"
+        | "pending"
+        | "trial"
       unit_system: "metric" | "imperial"
     }
     CompositeTypes: {
@@ -1179,6 +1325,14 @@ export const Constants = {
       ],
       meal_type: ["breakfast", "lunch", "dinner", "snack1", "snack2"],
       pace_type: ["sloth", "rabbit", "leopard"],
+      subscription_plan_type: ["free", "monthly", "yearly"],
+      subscription_status: [
+        "active",
+        "expired",
+        "cancelled",
+        "pending",
+        "trial",
+      ],
       unit_system: ["metric", "imperial"],
     },
   },
