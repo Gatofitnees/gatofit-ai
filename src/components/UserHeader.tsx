@@ -40,6 +40,11 @@ const UserHeader: React.FC<UserHeaderProps> = ({
     navigate('/profile');
   };
 
+  const handleManageSubscription = () => {
+    setShowMenu(false);
+    navigate('/subscription');
+  };
+
   const handleChangeAccount = async () => {
     try {
       await signOut();
@@ -180,10 +185,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
               variant="secondary" 
               size="sm" 
               className="justify-start"
-              onClick={() => toast({
-                title: "Gestionar plan de pago",
-                description: "Función próximamente disponible",
-              })}
+              onClick={handleManageSubscription}
             >
               <CreditCard className="h-4 w-4 mr-2" />
               Gestionar plan de pago

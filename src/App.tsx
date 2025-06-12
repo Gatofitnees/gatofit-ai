@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
@@ -10,6 +11,7 @@ import BodyMeasurementsPage from "./pages/BodyMeasurementsPage";
 import UserInformationPage from "./pages/UserInformationPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import AIChatPage from "./pages/AIChatPage";
+import SubscriptionPage from "./pages/SubscriptionPage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
@@ -68,6 +70,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/subscription"
+                  element={
+                    <ProtectedRoute>
+                      <SubscriptionPage />
                     </ProtectedRoute>
                   }
                 />
