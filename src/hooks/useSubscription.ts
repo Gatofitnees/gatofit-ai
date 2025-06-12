@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export interface SubscriptionPlan {
   id: string;
@@ -76,7 +76,16 @@ export const useSubscription = () => {
         .order('price_usd');
 
       if (error) throw error;
-      setPlans(data || []);
+      
+      // Transform the data to match our SubscriptionPlan interface
+      const transformedPlans: SubscriptionPlan[] = (data || []).map(plan => ({
+        ...plan,
+        features: typeof plan.features === 'string' 
+          ? JSON.parse(plan.features)
+          : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_weekly: number; }
+      }));
+      
+      setPlans(transformedPlans);
     } catch (error) {
       console.error('Error fetching plans:', error);
     }

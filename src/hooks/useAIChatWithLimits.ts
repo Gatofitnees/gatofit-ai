@@ -16,21 +16,19 @@ export const useAIChatWithLimits = () => {
     if (!limitCheck.canProceed) {
       showLimitReachedToast('ai_chat_messages');
       setShowPremiumModal(true);
-      return null;
+      return;
     }
 
     try {
-      const result = await aiChatHook.sendMessage(message);
+      // Call the original sendMessage method (which returns void)
+      aiChatHook.sendMessage(message);
       
-      if (result && !isPremium) {
+      if (!isPremium) {
         // Increment usage counter for free users
         await incrementUsage('ai_chat_messages');
       }
-      
-      return result;
     } catch (error) {
       console.error('Error sending AI message:', error);
-      return null;
     }
   };
 

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useRoutines } from '@/hooks/useRoutines';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useRoutinesWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -12,7 +13,7 @@ export const useRoutinesWithLimits = () => {
   const { incrementUsage, checkRoutineLimit, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
-  const createRoutineWithLimitCheck = async (routineData: any) => {
+  const createRoutine = async (routineData: any) => {
     const limitCheck = checkRoutineLimit(isPremium);
     
     if (!limitCheck.canProceed) {
@@ -22,16 +23,37 @@ export const useRoutinesWithLimits = () => {
     }
 
     try {
-      const result = await routinesHook.createRoutine(routineData);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const { data, error } = await supabase
+        .from('routines')
+        .insert({
+          ...routineData,
+          user_id: user.id,
+          is_predefined: false
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
       
-      if (result && !isPremium) {
+      if (data && !isPremium) {
         // Increment usage counter for free users
         await incrementUsage('routines');
       }
+
+      // Refetch routines to update the list
+      await routinesHook.refetch();
       
-      return result;
+      return data;
     } catch (error) {
       console.error('Error creating routine:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo crear la rutina",
+        variant: "destructive"
+      });
       return null;
     }
   };
@@ -48,7 +70,7 @@ export const useRoutinesWithLimits = () => {
 
   return {
     ...routinesHook,
-    createRoutine: createRoutineWithLimitCheck,
+    createRoutine,
     getRoutineUsageInfo,
     showPremiumModal,
     setShowPremiumModal,
