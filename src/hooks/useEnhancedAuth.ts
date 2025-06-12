@@ -1,9 +1,14 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import { validateStrongPassword, authRateLimiter, logSecurityEvent } from '@/utils/enhancedSecurityValidation';
-import { validateUsername } from '@/utils/securityValidation';
+import { useToast } from '@/hooks/use-toast';
+import { validateStrongPassword } from '@/utils/enhancedPasswordValidation';
+import { validateSecureEmail, validateSecureUsername } from '@/utils/enhancedInputValidation';
+import { logAuthEvent } from '@/utils/securityLogger';
+import { RateLimiter } from '@/utils/securityValidation';
+
+// Enhanced rate limiting for auth operations
+const authRateLimiter = new RateLimiter(5, 300000); // 5 attempts per 5 minutes
 
 export const useEnhancedAuth = () => {
   const { toast } = useToast();
@@ -18,7 +23,18 @@ export const useEnhancedAuth = () => {
         description: "Too many signup attempts. Please wait 5 minutes before trying again.",
         variant: "destructive"
       });
-      logSecurityEvent('signup_rate_limit_exceeded', email, 'medium');
+      logAuthEvent('signup_rate_limit_exceeded', undefined, 'medium');
+      return { success: false };
+    }
+
+    // Enhanced email validation
+    const emailValidation = validateSecureEmail(email);
+    if (!emailValidation.isValid) {
+      toast({
+        title: "Error",
+        description: emailValidation.error,
+        variant: "destructive"
+      });
       return { success: false };
     }
 
@@ -27,7 +43,7 @@ export const useEnhancedAuth = () => {
     if (!passwordValidation.isValid) {
       toast({
         title: "Error",
-        description: passwordValidation.error,
+        description: passwordValidation.errors[0],
         variant: "destructive"
       });
       return { success: false };
@@ -35,7 +51,7 @@ export const useEnhancedAuth = () => {
 
     // Username validation if provided
     if (username) {
-      const usernameValidation = validateUsername(username);
+      const usernameValidation = validateSecureUsername(username);
       if (!usernameValidation.isValid) {
         toast({
           title: "Error",
@@ -44,11 +60,26 @@ export const useEnhancedAuth = () => {
         });
         return { success: false };
       }
+
+      // Check username availability
+      const { data: existingUsers } = await supabase
+        .from('profiles')
+        .select('username')
+        .ilike('username', username);
+
+      if (existingUsers && existingUsers.length > 0) {
+        toast({
+          title: "Error",
+          description: "This username is already taken",
+          variant: "destructive"
+        });
+        return { success: false };
+      }
     }
 
     setLoading(true);
     try {
-      logSecurityEvent('signup_attempt', email, 'low');
+      logAuthEvent('signup_attempt', undefined, 'low');
 
       const { data, error } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
@@ -62,11 +93,11 @@ export const useEnhancedAuth = () => {
       });
 
       if (error) {
-        logSecurityEvent('signup_failed', `${email}: ${error.message}`, 'medium');
+        logAuthEvent('signup_failed', undefined, 'medium');
         throw error;
       }
 
-      logSecurityEvent('signup_success', email, 'low');
+      logAuthEvent('signup_success', data.user?.id, 'low');
       
       toast({
         title: "Success",
@@ -96,13 +127,24 @@ export const useEnhancedAuth = () => {
         description: "Too many login attempts. Please wait 5 minutes before trying again.",
         variant: "destructive"
       });
-      logSecurityEvent('signin_rate_limit_exceeded', email, 'high');
+      logAuthEvent('signin_rate_limit_exceeded', undefined, 'high');
+      return { success: false };
+    }
+
+    // Basic email validation
+    const emailValidation = validateSecureEmail(email);
+    if (!emailValidation.isValid) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
       return { success: false };
     }
 
     setLoading(true);
     try {
-      logSecurityEvent('signin_attempt', email, 'low');
+      logAuthEvent('signin_attempt', undefined, 'low');
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.toLowerCase().trim(),
@@ -110,7 +152,7 @@ export const useEnhancedAuth = () => {
       });
 
       if (error) {
-        logSecurityEvent('signin_failed', `${email}: ${error.message}`, 'medium');
+        logAuthEvent('signin_failed', undefined, 'medium');
         
         // Don't reveal whether email exists or not
         toast({
@@ -121,7 +163,7 @@ export const useEnhancedAuth = () => {
         return { success: false };
       }
 
-      logSecurityEvent('signin_success', email, 'low');
+      logAuthEvent('signin_success', data.user?.id, 'low');
       
       toast({
         title: "Success",
@@ -131,7 +173,7 @@ export const useEnhancedAuth = () => {
       return { success: true, data };
     } catch (error: any) {
       console.error('Signin error:', error);
-      logSecurityEvent('signin_error', `${email}: ${error.message}`, 'medium');
+      logAuthEvent('signin_error', undefined, 'medium');
       
       toast({
         title: "Error",
@@ -151,7 +193,7 @@ export const useEnhancedAuth = () => {
       
       if (error) throw error;
 
-      logSecurityEvent('signout_success', 'User signed out', 'low');
+      logAuthEvent('signout_success', undefined, 'low');
       
       toast({
         title: "Success",
@@ -161,7 +203,7 @@ export const useEnhancedAuth = () => {
       return { success: true };
     } catch (error: any) {
       console.error('Signout error:', error);
-      logSecurityEvent('signout_error', error.message, 'medium');
+      logAuthEvent('signout_error', undefined, 'medium');
       
       toast({
         title: "Error",
