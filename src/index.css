@@ -135,6 +135,35 @@
     @apply active:scale-95 transition-transform duration-150;
   }
   
+  /* Enhanced galactic effects for premium elements */
+  .premium-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(99, 102, 241, 0.2);
+  }
+  
+  .premium-aura {
+    position: relative;
+  }
+  
+  .premium-aura::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #3b82f6, #6366f1, #8b5cf6, #3b82f6);
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0.6;
+    filter: blur(8px);
+    animation: premium-pulse 3s ease-in-out infinite;
+  }
+  
+  @keyframes premium-pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.02); }
+  }
+  
   /* Galactic AI button effect */
   .ai-galactic-text {
     @apply font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300 drop-shadow-[0_0_5px_rgba(59,130,246,0.5)];
@@ -143,6 +172,11 @@
 
   .glow-effect {
     filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.6));
+  }
+  
+  /* Enhanced shadow-glow for premium cards */
+  .shadow-glow {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), 0 4px 20px rgba(0, 0, 0, 0.3);
   }
   
   @keyframes pulse {
@@ -209,5 +243,23 @@
   .mobile-carousel {
     touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Premium subscription specific styles */
+  .subscription-card-glow {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+  }
+  
+  .premium-badge-glow {
+    background: linear-gradient(45deg, #3b82f6, #6366f1);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    animation: gentle-glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes gentle-glow {
+    from { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+    to { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
   }
 }
