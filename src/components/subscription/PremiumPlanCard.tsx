@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Star, Zap, Crown } from 'lucide-react';
+import { Check, Star, Zap, Crown, CheckCircle } from 'lucide-react';
 import Button from '@/components/Button';
 import { SubscriptionPlan } from '@/hooks/useSubscription';
 
@@ -10,6 +10,7 @@ interface PremiumPlanCardProps {
   onSelect: (planType: 'monthly' | 'yearly') => void;
   isLoading?: boolean;
   discountText?: string;
+  isCurrentPlan?: boolean;
 }
 
 export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
@@ -17,19 +18,49 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
   isRecommended = false,
   onSelect,
   isLoading = false,
-  discountText
+  discountText,
+  isCurrentPlan = false
 }) => {
   const monthlyEquivalent = plan.plan_type === 'yearly' ? (plan.price_usd / 12).toFixed(2) : null;
 
   const handleSelect = () => {
-    // Only call onSelect if the plan type is valid (not 'free')
-    if (plan.plan_type === 'monthly' || plan.plan_type === 'yearly') {
+    // Only call onSelect if the plan type is valid and it's not the current plan
+    if (!isCurrentPlan && (plan.plan_type === 'monthly' || plan.plan_type === 'yearly')) {
       onSelect(plan.plan_type);
     }
   };
 
+  const getButtonContent = () => {
+    if (isCurrentPlan) {
+      return (
+        <div className="flex items-center justify-center gap-2">
+          <CheckCircle className="h-4 w-4" />
+          Tu plan actual
+        </div>
+      );
+    }
+    
+    if (isLoading) {
+      return 'Procesando...';
+    }
+    
+    return `Cambiar a ${plan.name}`;
+  };
+
+  const getButtonStyles = () => {
+    if (isCurrentPlan) {
+      return 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default';
+    }
+    
+    if (isRecommended) {
+      return 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-glow';
+    }
+    
+    return 'bg-secondary hover:bg-secondary/80';
+  };
+
   return (
-    <div className={`relative neu-card ${isRecommended ? 'pt-10 pb-6 px-6 ring-2 ring-primary/50 shadow-glow' : 'p-6'}`}>
+    <div className={`relative neu-card ${isRecommended ? 'pt-12 pb-6 px-6 ring-2 ring-primary/50 shadow-glow' : 'p-6'} ${isCurrentPlan ? 'ring-2 ring-green-500/50' : ''}`}>
       {/* Recommended Badge */}
       {isRecommended && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -40,10 +71,20 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
         </div>
       )}
 
+      {/* Current Plan Badge */}
+      {isCurrentPlan && (
+        <div className="absolute -top-3 right-4">
+          <div className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+            <CheckCircle className="h-3 w-3" />
+            Activo
+          </div>
+        </div>
+      )}
+
       {/* Discount Text */}
-      {discountText && !isRecommended && (
+      {discountText && !isRecommended && !isCurrentPlan && (
         <div className="absolute -top-2 right-4">
-          <span className="bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+          <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
             {discountText}
           </span>
         </div>
@@ -112,15 +153,11 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
         {/* Action Button */}
         <Button
           onClick={handleSelect}
-          disabled={isLoading}
-          className={`w-full py-3 text-base font-semibold ${
-            isRecommended 
-              ? 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-glow' 
-              : 'bg-secondary hover:bg-secondary/80'
-          }`}
+          disabled={isLoading || isCurrentPlan}
+          className={`w-full py-3 text-base font-semibold ${getButtonStyles()}`}
           size="lg"
         >
-          {isLoading ? 'Procesando...' : `Obtener ${plan.name}`}
+          {getButtonContent()}
         </Button>
       </div>
     </div>

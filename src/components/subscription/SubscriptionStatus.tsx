@@ -2,7 +2,6 @@
 import React from 'react';
 import { Crown, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { UserSubscription } from '@/hooks/useSubscription';
-import { PremiumBadge } from '@/components/premium/PremiumBadge';
 
 interface SubscriptionStatusProps {
   subscription: UserSubscription | null;
@@ -71,7 +70,11 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
           <Crown className="h-5 w-5 text-yellow-500" />
           Estado actual
         </h2>
-        {isPremium && <PremiumBadge />}
+        {isPremium && (
+          <div className="bg-gradient-to-r from-primary to-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+            Premium
+          </div>
+        )}
       </div>
       
       {subscription ? (

@@ -7,19 +7,34 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
 import { PremiumPlanCard } from '@/components/subscription/PremiumPlanCard';
-import { SubscriptionManager } from '@/components/subscription/SubscriptionManager';
 import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
+import { PlanChangeConfirmDialog } from '@/components/subscription/PlanChangeConfirmDialog';
+import { CancelConfirmDialog } from '@/components/subscription/CancelConfirmDialog';
 
 const SubscriptionPage: React.FC = () => {
   const navigate = useNavigate();
   const { subscription, plans, isPremium, upgradeSubscription, cancelSubscription } = useSubscription();
   const { usage } = useUsageLimits();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPlanChangeDialog, setShowPlanChangeDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | null>(null);
 
   const monthlyPlan = plans.find(p => p.plan_type === 'monthly');
   const yearlyPlan = plans.find(p => p.plan_type === 'yearly');
 
-  const handleUpgrade = async (planType: 'monthly' | 'yearly') => {
+  const handlePlanSelection = async (planType: 'monthly' | 'yearly') => {
+    // If user already has a premium plan, show confirmation dialog
+    if (isPremium && subscription?.status === 'active') {
+      setSelectedPlan(planType);
+      setShowPlanChangeDialog(true);
+    } else {
+      // Direct upgrade for free users
+      await handleDirectUpgrade(planType);
+    }
+  };
+
+  const handleDirectUpgrade = async (planType: 'monthly' | 'yearly') => {
     setIsLoading(true);
     try {
       const success = await upgradeSubscription(planType);
@@ -31,23 +46,26 @@ const SubscriptionPage: React.FC = () => {
     }
   };
 
-  const handleReactivate = async () => {
-    if (subscription && (subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly')) {
-      await handleUpgrade(subscription.plan_type);
+  const handleConfirmPlanChange = async () => {
+    if (!selectedPlan) return;
+    
+    setIsLoading(true);
+    try {
+      const success = await upgradeSubscription(selectedPlan);
+      if (success) {
+        setShowPlanChangeDialog(false);
+        setSelectedPlan(null);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleChangePlan = async () => {
-    if (subscription && (subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly')) {
-      const newPlanType = subscription.plan_type === 'monthly' ? 'yearly' : 'monthly';
-      await handleUpgrade(newPlanType);
-    }
-  };
-
-  const handleCancel = async () => {
+  const handleCancelSubscription = async () => {
     setIsLoading(true);
     try {
       await cancelSubscription();
+      setShowCancelDialog(false);
     } finally {
       setIsLoading(false);
     }
@@ -78,14 +96,6 @@ const SubscriptionPage: React.FC = () => {
         {/* Current Status */}
         <SubscriptionStatus subscription={subscription} isPremium={isPremium} />
 
-        {/* Subscription Management */}
-        <SubscriptionManager
-          subscription={subscription}
-          onReactivate={handleReactivate}
-          onChangePlan={handleChangePlan}
-          isLoading={isLoading}
-        />
-
         {/* Usage Stats for Free Users */}
         {!isPremium && usage && (
           <div className="space-y-4">
@@ -105,37 +115,42 @@ const SubscriptionPage: React.FC = () => {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <Crown className="h-6 w-6 text-yellow-500" />
-            <h2 className="text-xl font-bold">Beneficios Premium</h2>
+            <h2 className="text-xl font-bold">
+              {isPremium ? 'Planes Premium' : 'Beneficios Premium'}
+            </h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Desbloquea todo el potencial de tu entrenamiento
+            {isPremium ? 
+              'Cambia tu plan cuando quieras' : 
+              'Desbloquea todo el potencial de tu entrenamiento'
+            }
           </p>
         </div>
 
         {/* Subscription Plans */}
-        {!isPremium && (
-          <div className="space-y-4">
-            {/* Yearly Plan - Recommended */}
-            {yearlyPlan && (
-              <PremiumPlanCard
-                plan={yearlyPlan}
-                isRecommended={true}
-                onSelect={handleUpgrade}
-                isLoading={isLoading}
-              />
-            )}
+        <div className="space-y-4">
+          {/* Yearly Plan - Recommended */}
+          {yearlyPlan && (
+            <PremiumPlanCard
+              plan={yearlyPlan}
+              isRecommended={!isPremium}
+              onSelect={handlePlanSelection}
+              isLoading={isLoading}
+              isCurrentPlan={subscription?.plan_type === 'yearly' && subscription?.status === 'active'}
+            />
+          )}
 
-            {/* Monthly Plan */}
-            {monthlyPlan && (
-              <PremiumPlanCard
-                plan={monthlyPlan}
-                onSelect={handleUpgrade}
-                isLoading={isLoading}
-                discountText="Flexible"
-              />
-            )}
-          </div>
-        )}
+          {/* Monthly Plan */}
+          {monthlyPlan && (
+            <PremiumPlanCard
+              plan={monthlyPlan}
+              onSelect={handlePlanSelection}
+              isLoading={isLoading}
+              discountText="Flexible"
+              isCurrentPlan={subscription?.plan_type === 'monthly' && subscription?.status === 'active'}
+            />
+          )}
+        </div>
 
         {/* Cancel Subscription */}
         {isPremium && subscription?.status === 'active' && (
@@ -146,11 +161,11 @@ const SubscriptionPage: React.FC = () => {
             </p>
             <Button
               variant="secondary"
-              onClick={handleCancel}
+              onClick={() => setShowCancelDialog(true)}
               disabled={isLoading}
               className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
             >
-              {isLoading ? 'Cancelando...' : 'Cancelar suscripción'}
+              Cancelar suscripción
             </Button>
           </div>
         )}
@@ -164,6 +179,28 @@ const SubscriptionPage: React.FC = () => {
           <p>Cancela en cualquier momento desde la configuración de tu cuenta.</p>
         </div>
       </div>
+
+      {/* Plan Change Confirmation Dialog */}
+      <PlanChangeConfirmDialog
+        isOpen={showPlanChangeDialog}
+        onClose={() => {
+          setShowPlanChangeDialog(false);
+          setSelectedPlan(null);
+        }}
+        onConfirm={handleConfirmPlanChange}
+        currentPlan={subscription?.plan_type === 'monthly' ? monthlyPlan : yearlyPlan}
+        newPlan={selectedPlan === 'monthly' ? monthlyPlan : yearlyPlan}
+        expirationDate={subscription?.expires_at || null}
+        isLoading={isLoading}
+      />
+
+      {/* Cancel Confirmation Dialog */}
+      <CancelConfirmDialog
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirm={handleCancelSubscription}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
