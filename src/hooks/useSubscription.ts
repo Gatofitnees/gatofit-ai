@@ -82,7 +82,7 @@ export const useSubscription = () => {
         ...plan,
         features: typeof plan.features === 'string' 
           ? JSON.parse(plan.features)
-          : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_weekly: number; }
+          : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_used: number; }
       }));
       
       setPlans(transformedPlans);
@@ -122,18 +122,43 @@ export const useSubscription = () => {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
 
-      const { error } = await supabase
+      // Check if user already has a subscription
+      const { data: existingSubscription } = await supabase
         .from('user_subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan_type: planType,
-          status: 'active',
-          expires_at: expiresAt.toISOString(),
-          store_transaction_id: transactionId,
-          auto_renewal: true
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) throw error;
+      if (existingSubscription) {
+        // Update existing subscription
+        const { error } = await supabase
+          .from('user_subscriptions')
+          .update({
+            plan_type: planType,
+            status: 'active',
+            expires_at: expiresAt.toISOString(),
+            store_transaction_id: transactionId,
+            auto_renewal: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+      } else {
+        // Create new subscription
+        const { error } = await supabase
+          .from('user_subscriptions')
+          .insert({
+            user_id: user.id,
+            plan_type: planType,
+            status: 'active',
+            expires_at: expiresAt.toISOString(),
+            store_transaction_id: transactionId,
+            auto_renewal: true
+          });
+
+        if (error) throw error;
+      }
 
       await fetchSubscriptionData();
       

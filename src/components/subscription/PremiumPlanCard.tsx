@@ -29,10 +29,10 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
   };
 
   return (
-    <div className={`relative neu-card p-6 ${isRecommended ? 'ring-2 ring-primary/50 shadow-glow' : ''}`}>
+    <div className={`relative neu-card ${isRecommended ? 'pt-10 pb-6 px-6 ring-2 ring-primary/50 shadow-glow' : 'p-6'}`}>
       {/* Recommended Badge */}
       {isRecommended && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
           <div className="bg-gradient-to-r from-primary to-blue-500 text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-1 shadow-lg">
             <Star className="h-3 w-3 fill-current" />
             ¡Oferta Especial: Ahorra 61%!
