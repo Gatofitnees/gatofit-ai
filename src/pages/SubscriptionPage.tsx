@@ -32,13 +32,13 @@ const SubscriptionPage: React.FC = () => {
   };
 
   const handleReactivate = async () => {
-    if (subscription) {
+    if (subscription && (subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly')) {
       await handleUpgrade(subscription.plan_type);
     }
   };
 
   const handleChangePlan = async () => {
-    if (subscription) {
+    if (subscription && (subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly')) {
       const newPlanType = subscription.plan_type === 'monthly' ? 'yearly' : 'monthly';
       await handleUpgrade(newPlanType);
     }

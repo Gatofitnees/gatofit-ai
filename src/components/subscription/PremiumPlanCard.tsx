@@ -21,6 +21,13 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
 }) => {
   const monthlyEquivalent = plan.plan_type === 'yearly' ? (plan.price_usd / 12).toFixed(2) : null;
 
+  const handleSelect = () => {
+    // Only call onSelect if the plan type is valid (not 'free')
+    if (plan.plan_type === 'monthly' || plan.plan_type === 'yearly') {
+      onSelect(plan.plan_type);
+    }
+  };
+
   return (
     <div className={`relative neu-card p-6 ${isRecommended ? 'ring-2 ring-primary/50 shadow-glow' : ''}`}>
       {/* Recommended Badge */}
@@ -104,7 +111,7 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
 
         {/* Action Button */}
         <Button
-          onClick={() => onSelect(plan.plan_type)}
+          onClick={handleSelect}
           disabled={isLoading}
           className={`w-full py-3 text-base font-semibold ${
             isRecommended 
