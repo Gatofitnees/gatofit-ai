@@ -41,17 +41,17 @@ export const useOnboardingPersistence = () => {
 
   const getCurrentUser = async (): Promise<any> => {
     try {
-      // First try to get user from Supabase directly
-      const { data: { user: directUser }, error } = await supabase.auth.getUser();
+      // Get fresh session from Supabase
+      const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
-        console.error('Error getting user from Supabase:', error);
+        console.error('Error getting session from Supabase:', error);
         return null;
       }
 
-      if (directUser) {
-        console.log('Got user directly from Supabase:', directUser.id);
-        return directUser;
+      if (session?.user) {
+        console.log('Got user from fresh session:', session.user.id);
+        return session.user;
       }
 
       // Fallback to context user
@@ -91,7 +91,7 @@ export const useOnboardingPersistence = () => {
     
     // Wait for user with retry logic
     let retryCount = 0;
-    const maxRetries = 3; // Reduced retries for faster feedback
+    const maxRetries = 3;
     let validationResult = { isValid: false, user: null };
 
     while (retryCount < maxRetries && !validationResult.isValid) {
@@ -101,8 +101,8 @@ export const useOnboardingPersistence = () => {
       if (!validationResult.isValid) {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(`Waiting 500ms before retry ${retryCount + 1}...`);
-          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log(`Waiting 1000ms before retry ${retryCount + 1}...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     }
@@ -129,23 +129,24 @@ export const useOnboardingPersistence = () => {
         return goalMap[goal] || goal;
       };
 
+      // Prepare profile updates with better validation
       const profileUpdates = {
         gender: data.gender as 'male' | 'female' | null,
-        height_cm: data.height,
-        current_weight_kg: data.weight,
-        body_fat_percentage: data.bodyFatPercentage,
-        date_of_birth: typeof data.dateOfBirth === 'string' ? data.dateOfBirth : data.dateOfBirth?.toISOString().split('T')[0],
-        trainings_per_week: data.trainingsPerWeek,
-        previous_app_experience: data.previousAppExperience,
+        height_cm: data.height || null,
+        current_weight_kg: data.weight || null,
+        body_fat_percentage: data.bodyFatPercentage || null,
+        date_of_birth: typeof data.dateOfBirth === 'string' ? data.dateOfBirth : data.dateOfBirth?.toISOString().split('T')[0] || null,
+        trainings_per_week: data.trainingsPerWeek || null,
+        previous_app_experience: data.previousAppExperience !== undefined ? data.previousAppExperience : null,
         main_goal: convertMainGoal(data.mainGoal) as 'lose_weight' | 'gain_weight' | 'maintain_weight' | 'gain_muscle' | 'improve_health' | 'increase_strength' | null,
-        target_weight_kg: data.targetWeight,
+        target_weight_kg: data.targetWeight || null,
         target_pace: data.targetPace as 'sloth' | 'rabbit' | 'leopard' | null,
-        target_kg_per_week: data.targetKgPerWeek,
-        diet_id: data.diet,
-        initial_recommended_calories: data.initial_recommended_calories,
-        initial_recommended_protein_g: data.initial_recommended_protein_g,
-        initial_recommended_carbs_g: data.initial_recommended_carbs_g,
-        initial_recommended_fats_g: data.initial_recommended_fats_g,
+        target_kg_per_week: data.targetKgPerWeek || null,
+        diet_id: data.diet || null,
+        initial_recommended_calories: data.initial_recommended_calories || null,
+        initial_recommended_protein_g: data.initial_recommended_protein_g || null,
+        initial_recommended_carbs_g: data.initial_recommended_carbs_g || null,
+        initial_recommended_fats_g: data.initial_recommended_fats_g || null,
         unit_system_preference: data.unit_system_preference as 'metric' | 'imperial' | null
       };
 
@@ -179,7 +180,7 @@ export const useOnboardingPersistence = () => {
       if (validationResult.isValid) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, 250)); // Check more frequently
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
     return false;

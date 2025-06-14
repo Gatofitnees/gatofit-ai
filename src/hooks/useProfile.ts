@@ -39,11 +39,30 @@ export const useProfile = () => {
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user) return false;
+    if (!user) {
+      console.error('No user found for profile update');
+      return false;
+    }
+
+    console.log('Updating profile with:', updates);
 
     try {
       const dbUpdates = convertProfileToDatabase(updates);
+      console.log('Database updates:', dbUpdates);
       
+      // First, update the basic profile data
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(dbUpdates)
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Error updating basic profile:', updateError);
+        throw updateError;
+      }
+
+      console.log('Basic profile updated successfully');
+
       // Check if we need to recalculate macros
       const shouldRecalculateMacros = [
         'current_weight_kg', 'height_cm', 'date_of_birth', 'gender',
@@ -58,29 +77,37 @@ export const useProfile = () => {
       } = {};
       
       if (shouldRecalculateMacros && profile) {
+        console.log('Attempting to recalculate macros...');
         const updatedProfile = { ...profile, ...updates };
         const newMacros = await recalculateMacros(updatedProfile);
         
         if (newMacros) {
+          console.log('New macros calculated:', newMacros);
           macroUpdates = {
             initial_recommended_calories: newMacros.calories,
             initial_recommended_protein_g: newMacros.protein_g,
             initial_recommended_carbs_g: newMacros.carbs_g,
             initial_recommended_fats_g: newMacros.fats_g
           };
+
+          // Update macros separately - if this fails, we still have the basic profile saved
+          const { error: macroError } = await supabase
+            .from('profiles')
+            .update(macroUpdates)
+            .eq('id', user.id);
+
+          if (macroError) {
+            console.error('Error updating macros (but basic profile saved):', macroError);
+            // Don't throw error here - basic profile is already saved
+          } else {
+            console.log('Macros updated successfully');
+          }
+        } else {
+          console.log('Macro calculation returned null, skipping macro update');
         }
       }
 
-      const finalUpdates = { ...dbUpdates, ...macroUpdates };
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(finalUpdates)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      // Immediately update local state with all changes including macros
+      // Update local state with all changes including macros
       const updatedLocalProfile = { 
         ...profile, 
         ...updates, 
@@ -93,6 +120,7 @@ export const useProfile = () => {
       };
       
       setProfile(updatedLocalProfile);
+      console.log('Profile update completed successfully');
       
       return true;
     } catch (error: any) {

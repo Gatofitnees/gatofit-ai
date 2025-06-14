@@ -32,7 +32,7 @@ const AppTransition: React.FC = () => {
       
       try {
         // Wait a moment for the auth state to settle
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         if (!isMounted) return;
         
@@ -55,6 +55,8 @@ const AppTransition: React.FC = () => {
             if (attempts > 1) {
               setProcessingStep(`Reintentando guardado (${attempts}/${maxAttempts})...`);
               console.log(`AppTransition: Save attempt ${attempts}/${maxAttempts}`);
+              // Wait longer between retries
+              await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
             try {
@@ -66,21 +68,18 @@ const AppTransition: React.FC = () => {
                 break;
               } else {
                 console.error(`AppTransition: Save attempt ${attempts} failed`);
-                if (attempts < maxAttempts) {
-                  await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
-                }
               }
             } catch (error) {
               console.error(`AppTransition: Error in save attempt ${attempts}:`, error);
-              if (attempts < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
-              }
             }
           }
           
-          if (!saveSuccess) {
+          if (saveSuccess) {
+            setProcessingStep("¡Configuración guardada exitosamente!");
+          } else {
             console.error('AppTransition: Failed to save onboarding data after all attempts');
             setProcessingStep("Completando configuración...");
+            // Continue anyway - don't block the user
           }
         } else {
           console.log('AppTransition: No onboarding data found in localStorage');
@@ -114,7 +113,7 @@ const AppTransition: React.FC = () => {
       }
     };
 
-    // Start the process immediately, don't wait for auth loading to finish
+    // Start the process immediately
     handleTransition();
     
     return () => {
