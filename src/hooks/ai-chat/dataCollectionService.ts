@@ -51,7 +51,7 @@ export const useDataCollection = () => {
         target_pace: profile?.target_pace,
         target_kg_per_week: profile?.target_kg_per_week,
         trainings_per_week: profile?.trainings_per_week,
-        previous_app_experience: profile?.previous_app_experience,
+        previous_app_experience: profile?.previous_app_experience ? 'yes' : 'no',
       },
       nutrition: {
         daily_targets: {
