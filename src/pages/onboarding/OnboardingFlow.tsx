@@ -1,7 +1,7 @@
-
 import React, { createContext, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import OnboardingErrorBoundary from "@/components/onboarding/OnboardingErrorBoundary";
 import Welcome from "./steps/Welcome";
 import Gender from "./steps/Gender";
 import BirthDate from "./steps/BirthDate";
@@ -114,42 +114,44 @@ const OnboardingFlow: React.FC = () => {
   };
 
   return (
-    <OnboardingContext.Provider value={contextValue}>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={location.pathname}
-          initial="initial"
-          animate="in"
-          exit="out"
-          variants={pageVariants}
-          transition={pageTransition}
-          className="w-full h-full"
-        >
-          <Routes location={location}>
-            <Route path="welcome" element={<Welcome />} />
-            <Route path="gender" element={<Gender />} />
-            <Route path="birth-date" element={<BirthDate />} />
-            <Route path="main-goal" element={<MainGoal />} />
-            <Route path="target-weight" element={<TargetWeight />} />
-            <Route path="progress-comparison" element={<ProgressComparison />} />
-            <Route path="physical-data" element={<PhysicalData />} />
-            <Route path="previous-experience" element={<PreviousExperience />} />
-            <Route path="training-frequency" element={<TrainingFrequency />} />
-            <Route path="diet" element={<Diet />} />
-            <Route path="goal-realism" element={<GoalRealism />} />
-            <Route path="desired-pace" element={<DesiredPace />} />
-            <Route path="common-obstacles" element={<CommonObstacles />} />
-            <Route path="desired-achievements" element={<DesiredAchievements />} />
-            <Route path="gratitude" element={<Gratitude />} />
-            <Route path="initial-recommendation" element={<InitialRecommendation />} />
-            <Route path="features-preview" element={<FeaturesPreview />} />
-            <Route path="create-account" element={<CreateAccount />} />
-            <Route path="login" element={<Login />} />
-            <Route path="app-transition" element={<AppTransition />} />
-          </Routes>
-        </motion.div>
-      </AnimatePresence>
-    </OnboardingContext.Provider>
+    <OnboardingErrorBoundary>
+      <OnboardingContext.Provider value={contextValue}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageVariants}
+            transition={pageTransition}
+            className="w-full h-full"
+          >
+            <Routes location={location}>
+              <Route path="welcome" element={<Welcome />} />
+              <Route path="gender" element={<Gender />} />
+              <Route path="birth-date" element={<BirthDate />} />
+              <Route path="main-goal" element={<MainGoal />} />
+              <Route path="target-weight" element={<TargetWeight />} />
+              <Route path="progress-comparison" element={<ProgressComparison />} />
+              <Route path="physical-data" element={<PhysicalData />} />
+              <Route path="previous-experience" element={<PreviousExperience />} />
+              <Route path="training-frequency" element={<TrainingFrequency />} />
+              <Route path="diet" element={<Diet />} />
+              <Route path="goal-realism" element={<GoalRealism />} />
+              <Route path="desired-pace" element={<DesiredPace />} />
+              <Route path="common-obstacles" element={<CommonObstacles />} />
+              <Route path="desired-achievements" element={<DesiredAchievements />} />
+              <Route path="gratitude" element={<Gratitude />} />
+              <Route path="initial-recommendation" element={<InitialRecommendation />} />
+              <Route path="features-preview" element={<FeaturesPreview />} />
+              <Route path="create-account" element={<CreateAccount />} />
+              <Route path="login" element={<Login />} />
+              <Route path="app-transition" element={<AppTransition />} />
+            </Routes>
+          </motion.div>
+        </AnimatePresence>
+      </OnboardingContext.Provider>
+    </OnboardingErrorBoundary>
   );
 };
 
