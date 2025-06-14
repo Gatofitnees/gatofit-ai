@@ -86,7 +86,7 @@ export const useSubscription = () => {
         plan_type: plan.plan_type as 'monthly' | 'yearly', // Safe type assertion after filtering
         features: typeof plan.features === 'string' 
           ? JSON.parse(plan.features)
-          : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_used: number; }
+          : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_weekly: number; }
       }));
       
       setPlans(transformedPlans);
@@ -138,6 +138,7 @@ export const useSubscription = () => {
 
       await fetchSubscriptionData();
       
+      // Check if user had a premium subscription before the change
       const isScheduled = subscription && subscription.plan_type !== 'free';
       
       toast({
