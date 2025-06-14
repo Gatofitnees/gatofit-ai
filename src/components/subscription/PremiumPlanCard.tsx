@@ -2,7 +2,7 @@
 import React from 'react';
 import { Check, Star, Zap, Crown, CheckCircle } from 'lucide-react';
 import Button from '@/components/Button';
-import { SubscriptionPlan } from '@/hooks/useSubscription';
+import { SubscriptionPlan } from '@/hooks/subscription/types';
 
 interface PremiumPlanCardProps {
   plan: SubscriptionPlan;
