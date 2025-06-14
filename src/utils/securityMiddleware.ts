@@ -1,5 +1,4 @@
-
-import { logSecurityEvent } from './enhancedSecurityValidation';
+import { logSecurityEvent } from './securityLogger';
 
 export class EnhancedRateLimiter {
   private attempts: Map<string, { count: number; resetTime: number; blocked: boolean }> = new Map();
@@ -24,7 +23,14 @@ export class EnhancedRateLimiter {
 
     // Check if still blocked
     if (record.blocked && now < record.resetTime) {
-      logSecurityEvent('rate_limit_blocked_attempt', identifier, 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'rate_limit_blocked_attempt',
+        details: identifier,
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return false;
     }
 
@@ -42,7 +48,14 @@ export class EnhancedRateLimiter {
         resetTime: now + this.blockDuration,
         blocked: true
       });
-      logSecurityEvent('rate_limit_exceeded', `${identifier} blocked for ${this.blockDuration}ms`, 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'rate_limit_exceeded',
+        details: `${identifier} blocked for ${this.blockDuration}ms`,
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return false;
     }
 
@@ -51,7 +64,14 @@ export class EnhancedRateLimiter {
     this.attempts.set(identifier, record);
     
     if (record.count > this.maxAttempts * 0.8) {
-      logSecurityEvent('rate_limit_warning', `${identifier} approaching limit: ${record.count}/${this.maxAttempts}`, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'rate_limit_warning',
+        details: `${identifier} approaching limit: ${record.count}/${this.maxAttempts}`,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
     }
     
     return true;
@@ -72,7 +92,14 @@ export class EnhancedRateLimiter {
 
   reset(identifier: string): void {
     this.attempts.delete(identifier);
-    logSecurityEvent('rate_limit_reset', identifier, 'low');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'rate_limit_reset',
+      details: identifier,
+      severity: 'low',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
   }
 }
 
@@ -167,14 +194,28 @@ export const detectSuspiciousActivity = (
   ];
   
   if (suspiciousPatterns.some(pattern => pattern.test(userAgent))) {
-    logSecurityEvent('suspicious_user_agent', userAgent, 'medium');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'suspicious_user_agent',
+      details: userAgent,
+      severity: 'medium',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     return true;
   }
   
   // Check for unusual request frequency
   const requestsPerMinute = (requestCount / timeWindow) * 60000;
   if (requestsPerMinute > 60) { // More than 1 request per second
-    logSecurityEvent('suspicious_request_frequency', `${requestsPerMinute} req/min`, 'high');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'suspicious_request_frequency',
+      details: `${requestsPerMinute} req/min`,
+      severity: 'high',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     return true;
   }
   

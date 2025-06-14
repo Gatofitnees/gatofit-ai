@@ -65,11 +65,25 @@ class SecureConfigManager {
       };
 
       this.initialized = true;
-      logSecurityEvent('config_initialized', `Environment: ${environment}`, 'low');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'config_initialized',
+        details: `Environment: ${environment}`,
+        severity: 'low',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       
       return this.config;
     } catch (error: any) {
-      logSecurityEvent('config_initialization_failed', error.message, 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'config_initialization_failed',
+        details: error.message,
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       throw new Error(`Configuration initialization failed: ${error.message}`);
     }
   }
@@ -79,7 +93,14 @@ class SecureConfigManager {
     const webhookUrl = process.env.WEBHOOK_URL;
     
     if (!webhookUrl) {
-      logSecurityEvent('webhook_url_not_configured', 'Webhooks disabled for security', 'low');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_url_not_configured',
+        details: 'Webhooks disabled for security',
+        severity: 'low',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return undefined;
     }
 
@@ -88,7 +109,14 @@ class SecureConfigManager {
       const url = new URL(webhookUrl);
       
       if (url.protocol !== 'https:') {
-        logSecurityEvent('webhook_url_insecure', 'Non-HTTPS webhook URL rejected', 'high');
+        logSecurityEvent({
+          timestamp: new Date().toISOString(),
+          eventType: 'webhook_url_insecure',
+          details: 'Non-HTTPS webhook URL rejected',
+          severity: 'high',
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+          location: typeof window !== 'undefined' ? window.location.href : undefined
+        });
         return undefined;
       }
 
@@ -104,13 +132,27 @@ class SecureConfigManager {
       ];
 
       if (blockedPatterns.some(pattern => pattern.test(hostname))) {
-        logSecurityEvent('webhook_url_private_network', 'Private network webhook URL rejected', 'high');
+        logSecurityEvent({
+          timestamp: new Date().toISOString(),
+          eventType: 'webhook_url_private_network',
+          details: 'Private network webhook URL rejected',
+          severity: 'high',
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+          location: typeof window !== 'undefined' ? window.location.href : undefined
+        });
         return undefined;
       }
 
       return webhookUrl;
     } catch (error) {
-      logSecurityEvent('webhook_url_invalid', 'Invalid webhook URL format', 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_url_invalid',
+        details: 'Invalid webhook URL format',
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return undefined;
     }
   }
@@ -142,17 +184,38 @@ class SecureConfigManager {
       // Validate security settings
       if (config.environment === 'production') {
         if (!config.security.enforceHttps) {
-          logSecurityEvent('config_validation_warning', 'HTTPS not enforced in production', 'medium');
+          logSecurityEvent({
+            timestamp: new Date().toISOString(),
+            eventType: 'config_validation_warning',
+            details: 'HTTPS not enforced in production',
+            severity: 'medium',
+            userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+            location: typeof window !== 'undefined' ? window.location.href : undefined
+          });
         }
         
         if (!config.security.enableSecurityHeaders) {
-          logSecurityEvent('config_validation_warning', 'Security headers disabled in production', 'medium');
+          logSecurityEvent({
+            timestamp: new Date().toISOString(),
+            eventType: 'config_validation_warning',
+            details: 'Security headers disabled in production',
+            severity: 'medium',
+            userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+            location: typeof window !== 'undefined' ? window.location.href : undefined
+          });
         }
       }
       
       return true;
     } catch (error: any) {
-      logSecurityEvent('config_validation_failed', error.message, 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'config_validation_failed',
+        details: error.message,
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return false;
     }
   }

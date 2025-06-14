@@ -1,3 +1,4 @@
+
 import { logSecurityEvent } from './securityLogger';
 
 export interface FileValidationResult {
@@ -9,21 +10,42 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
   // File size check (5MB max)
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
-    logSecurityEvent('file_upload_size_exceeded', `File size: ${file.size}`, 'medium');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'file_upload_size_exceeded',
+      details: `File size: ${file.size}`,
+      severity: 'medium',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     return { isValid: false, error: 'File size must be less than 5MB' };
   }
 
   // File type whitelist
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
-    logSecurityEvent('file_upload_invalid_type', `File type: ${file.type}`, 'medium');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'file_upload_invalid_type',
+      details: `File type: ${file.type}`,
+      severity: 'medium',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     return { isValid: false, error: 'Only JPEG, PNG, and WebP images are allowed' };
   }
 
   // File name validation
   const dangerousChars = /[<>:"/\\|?*\x00-\x1f]/;
   if (dangerousChars.test(file.name)) {
-    logSecurityEvent('file_upload_dangerous_filename', file.name, 'medium');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'file_upload_dangerous_filename',
+      details: file.name,
+      severity: 'medium',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     return { isValid: false, error: 'File name contains invalid characters' };
   }
 
@@ -31,7 +53,14 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
   const fileExtension = file.name.split('.').pop()?.toLowerCase();
   const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
   if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-    logSecurityEvent('file_upload_invalid_extension', fileExtension || 'none', 'medium');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'file_upload_invalid_extension',
+      details: fileExtension || 'none',
+      severity: 'medium',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     return { isValid: false, error: 'File must have a valid image extension' };
   }
 
@@ -47,11 +76,25 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
       (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46); // WebP/RIFF
 
     if (!isValidImage) {
-      logSecurityEvent('file_upload_invalid_signature', 'Invalid file signature', 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_upload_invalid_signature',
+        details: 'Invalid file signature',
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { isValid: false, error: 'File does not appear to be a valid image' };
     }
   } catch (error) {
-    logSecurityEvent('file_upload_signature_check_failed', 'Failed to read file', 'medium');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'file_upload_signature_check_failed',
+      details: 'Failed to read file',
+      severity: 'medium',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     return { isValid: false, error: 'Unable to validate file integrity' };
   }
 
@@ -68,7 +111,14 @@ export const validateWebhookPayload = (payload: any): FileValidationResult => {
   if (payload.imageUrl && typeof payload.imageUrl === 'string') {
     const urlPattern = /^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/-]+\.(jpg|jpeg|png|webp)$/i;
     if (!urlPattern.test(payload.imageUrl)) {
-      logSecurityEvent('webhook_invalid_image_url', payload.imageUrl, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_invalid_image_url',
+        details: payload.imageUrl,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { isValid: false, error: 'Invalid image URL format' };
     }
   }

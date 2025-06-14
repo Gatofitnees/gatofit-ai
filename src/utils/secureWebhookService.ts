@@ -21,7 +21,14 @@ export const sendSecureWebhookRequest = async (
   try {
     // Check if webhooks are enabled
     if (!isWebhookEnabled()) {
-      logSecurityEvent('webhook_disabled', 'Webhook request blocked - feature disabled', 'low');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_disabled',
+        details: 'Webhook request blocked - feature disabled',
+        severity: 'low',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Webhook service is not configured' };
     }
 
@@ -29,7 +36,14 @@ export const sendSecureWebhookRequest = async (
     const clientFingerprint = `webhook_${imageUrl.substring(0, 50)}`;
     if (!webhookRateLimiter.isAllowed(clientFingerprint)) {
       const resetTime = webhookRateLimiter.getTimeToReset(clientFingerprint);
-      logSecurityEvent('webhook_rate_limited', imageUrl, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_rate_limited',
+        details: imageUrl,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { 
         success: false, 
         error: 'Too many webhook requests. Please wait before trying again.',
@@ -43,7 +57,14 @@ export const sendSecureWebhookRequest = async (
     // Enhanced URL validation with stricter security
     const urlPattern = /^https:\/\/[a-zA-Z0-9.-]{1,255}\/[a-zA-Z0-9._/-]{1,500}\.(jpg|jpeg|png|webp)(\?[a-zA-Z0-9&=._-]{0,200})?$/i;
     if (!urlPattern.test(imageUrl)) {
-      logSecurityEvent('webhook_invalid_url', imageUrl, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_invalid_url',
+        details: imageUrl,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Invalid or potentially unsafe image URL format' };
     }
 
@@ -64,7 +85,14 @@ export const sendSecureWebhookRequest = async (
     ];
 
     if (blockedPatterns.some(pattern => pattern.test(hostname))) {
-      logSecurityEvent('webhook_blocked_private_url', imageUrl, 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_blocked_private_url',
+        details: imageUrl,
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Private network URLs are not allowed for security reasons' };
     }
 
@@ -73,13 +101,27 @@ export const sendSecureWebhookRequest = async (
     const webhookUrl = config.webhookUrl;
     
     if (!webhookUrl) {
-      logSecurityEvent('webhook_url_missing', 'No webhook URL configured', 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_url_missing',
+        details: 'No webhook URL configured',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Webhook endpoint not configured' };
     }
 
     // Validate webhook URL security
     if (!webhookUrl.startsWith('https://')) {
-      logSecurityEvent('webhook_insecure_url', webhookUrl, 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_insecure_url',
+        details: webhookUrl,
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Webhook URL must use HTTPS' };
     }
 
@@ -97,11 +139,25 @@ export const sendSecureWebhookRequest = async (
     // Validate payload before sending
     const validation = validateWebhookPayload(payload);
     if (!validation.isValid) {
-      logSecurityEvent('webhook_payload_invalid', validation.error || 'Invalid payload', 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_payload_invalid',
+        details: validation.error || 'Invalid payload',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: validation.error };
     }
 
-    logSecurityEvent('webhook_request_initiated', `URL: ${sanitizedImageUrl}`, 'low');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'webhook_request_initiated',
+      details: `URL: ${sanitizedImageUrl}`,
+      severity: 'low',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
 
     // Enhanced fetch configuration with stricter security
     const controller = new AbortController();
@@ -127,7 +183,14 @@ export const sendSecureWebhookRequest = async (
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      logSecurityEvent('webhook_request_failed', `Status: ${response.status}`, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_request_failed',
+        details: `Status: ${response.status}`,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { 
         success: false, 
         error: `Webhook request failed with status ${response.status}` 
@@ -137,14 +200,28 @@ export const sendSecureWebhookRequest = async (
     // Validate response content type
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      logSecurityEvent('webhook_invalid_response_type', contentType || 'unknown', 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_invalid_response_type',
+        details: contentType ||'unknown',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Invalid response format from webhook' };
     }
 
     // Parse response with stricter size limit
     const responseText = await response.text();
     if (responseText.length > 50000) { // Reduced to 50KB
-      logSecurityEvent('webhook_response_too_large', `Size: ${responseText.length}`, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_response_too_large',
+        details: `Size: ${responseText.length}`,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Webhook response too large' };
     }
 
@@ -152,14 +229,28 @@ export const sendSecureWebhookRequest = async (
     try {
       responseData = JSON.parse(responseText);
     } catch (error) {
-      logSecurityEvent('webhook_invalid_json', 'Failed to parse JSON response', 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_invalid_json',
+        details: 'Failed to parse JSON response',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Invalid JSON response from webhook' };
     }
     
     // Validate response data structure
     const responseValidation = validateWebhookResponse(responseData);
     if (!responseValidation.isValid) {
-      logSecurityEvent('webhook_response_invalid', responseValidation.error || 'Invalid response structure', 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_response_invalid',
+        details: responseValidation.error || 'Invalid response structure',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Invalid response format from webhook' };
     }
 
@@ -171,7 +262,14 @@ export const sendSecureWebhookRequest = async (
       responseData.notes = sanitizeUserInput(responseData.notes, 200);
     }
 
-    logSecurityEvent('webhook_request_success', 'Response received and validated', 'low');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'webhook_request_success',
+      details: 'Response received and validated',
+      severity: 'low',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     
     return { 
       success: true, 
@@ -184,11 +282,25 @@ export const sendSecureWebhookRequest = async (
 
   } catch (error: any) {
     if (error.name === 'AbortError') {
-      logSecurityEvent('webhook_timeout', 'Request timed out', 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_timeout',
+        details: 'Request timed out',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return { success: false, error: 'Webhook request timed out' };
     }
 
-    logSecurityEvent('webhook_request_error', error.message, 'medium');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'webhook_request_error',
+      details: error.message,
+      severity: 'medium',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     console.error('Secure webhook request failed:', error);
     
     return { 
