@@ -14,6 +14,7 @@ const AppTransition: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("Iniciando...");
   const [hasCompleted, setHasCompleted] = useState(false);
+  const [saveAttempts, setSaveAttempts] = useState(0);
   
   useEffect(() => {
     let isMounted = true;
@@ -31,7 +32,7 @@ const AppTransition: React.FC = () => {
       
       try {
         // Wait a moment for the auth state to settle
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         if (!isMounted) return;
         
@@ -42,18 +43,44 @@ const AppTransition: React.FC = () => {
           console.log('AppTransition: Found onboarding data, attempting to save...', onboardingData);
           setProcessingStep("Guardando tu configuración...");
           
-          try {
-            const success = await saveOnboardingToProfile(onboardingData);
-            if (success) {
-              console.log('AppTransition: Onboarding data saved successfully');
-              setProcessingStep("¡Configuración guardada exitosamente!");
-            } else {
-              console.error('AppTransition: Failed to save onboarding data');
-              setProcessingStep("Completando configuración...");
+          // Try to save with multiple attempts
+          let saveSuccess = false;
+          let attempts = 0;
+          const maxAttempts = 3;
+          
+          while (!saveSuccess && attempts < maxAttempts && isMounted) {
+            attempts++;
+            setSaveAttempts(attempts);
+            
+            if (attempts > 1) {
+              setProcessingStep(`Reintentando guardado (${attempts}/${maxAttempts})...`);
+              console.log(`AppTransition: Save attempt ${attempts}/${maxAttempts}`);
             }
-          } catch (error) {
-            console.error('AppTransition: Error saving onboarding data:', error);
-            setProcessingStep("Finalizando configuración...");
+            
+            try {
+              saveSuccess = await saveOnboardingToProfile(onboardingData);
+              
+              if (saveSuccess) {
+                console.log('AppTransition: Onboarding data saved successfully');
+                setProcessingStep("¡Configuración guardada exitosamente!");
+                break;
+              } else {
+                console.error(`AppTransition: Save attempt ${attempts} failed`);
+                if (attempts < maxAttempts) {
+                  await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
+                }
+              }
+            } catch (error) {
+              console.error(`AppTransition: Error in save attempt ${attempts}:`, error);
+              if (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
+              }
+            }
+          }
+          
+          if (!saveSuccess) {
+            console.error('AppTransition: Failed to save onboarding data after all attempts');
+            setProcessingStep("Completando configuración...");
           }
         } else {
           console.log('AppTransition: No onboarding data found in localStorage');
@@ -128,6 +155,16 @@ const AppTransition: React.FC = () => {
       >
         {processingStep}
       </motion.p>
+      
+      {saveAttempts > 1 && !hasCompleted && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-xs text-muted-foreground mb-4 text-center"
+        >
+          Intento {saveAttempts} de 3
+        </motion.p>
+      )}
       
       <motion.div
         initial={{ opacity: 0 }}

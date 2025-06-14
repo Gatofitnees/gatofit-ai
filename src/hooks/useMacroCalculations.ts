@@ -20,16 +20,19 @@ export const useMacroCalculations = () => {
     const age = calculateAge(profileData.date_of_birth);
     
     try {
-      // Convert frontend pace values to database values for the RPC call
-      let dbTargetPace = 'rabbit'; // default to moderate
+      // Map frontend pace values to database values correctly
+      let dbTargetPace = 'moderate'; // default to moderate
       if (profileData.target_pace === 'sloth') dbTargetPace = 'slow';
       else if (profileData.target_pace === 'rabbit') dbTargetPace = 'moderate';
       else if (profileData.target_pace === 'leopard') dbTargetPace = 'fast';
 
-      // Convert frontend goal values to database values for the RPC call
+      // Map frontend goal values to database values correctly
       let dbGoal = 'maintain_weight'; // default
-      if (profileData.main_goal === 'gain_muscle') dbGoal = 'build_muscle';
-      else if (profileData.main_goal) dbGoal = profileData.main_goal;
+      if (profileData.main_goal === 'lose_weight') dbGoal = 'lose_weight';
+      else if (profileData.main_goal === 'gain_muscle') dbGoal = 'build_muscle';
+      else if (profileData.main_goal === 'maintain_weight') dbGoal = 'maintain_weight';
+      else if (profileData.main_goal === 'improve_health') dbGoal = 'improve_health';
+      else if (profileData.main_goal === 'increase_strength') dbGoal = 'increase_strength';
 
       console.log('Calling macro calculation with:', {
         weight: profileData.current_weight_kg,

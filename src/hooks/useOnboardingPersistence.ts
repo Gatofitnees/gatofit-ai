@@ -91,7 +91,7 @@ export const useOnboardingPersistence = () => {
     
     // Wait for user with retry logic
     let retryCount = 0;
-    const maxRetries = 5;
+    const maxRetries = 3; // Reduced retries for faster feedback
     let validationResult = { isValid: false, user: null };
 
     while (retryCount < maxRetries && !validationResult.isValid) {
@@ -101,8 +101,8 @@ export const useOnboardingPersistence = () => {
       if (!validationResult.isValid) {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(`Waiting 1 second before retry ${retryCount + 1}...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log(`Waiting 500ms before retry ${retryCount + 1}...`);
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
     }
@@ -154,20 +154,24 @@ export const useOnboardingPersistence = () => {
       const success = await updateProfile(profileUpdates);
       
       if (success) {
+        console.log('Onboarding data successfully saved to profile');
+        // Only clear data after successful save
         clearOnboardingData();
-        console.log('Onboarding data successfully saved to profile and cleared from localStorage');
+        return true;
       } else {
         console.error('Failed to save onboarding data to profile - updateProfile returned false');
+        // Don't clear localStorage if save failed, so user can retry
+        return false;
       }
       
-      return success;
     } catch (error) {
       console.error('Error saving onboarding data to profile:', error);
+      // Don't clear localStorage if there was an error
       return false;
     }
   };
 
-  const waitForUserAuthentication = async (maxWaitTime = 15000): Promise<boolean> => {
+  const waitForUserAuthentication = async (maxWaitTime = 10000): Promise<boolean> => {
     const startTime = Date.now();
     
     while (Date.now() - startTime < maxWaitTime) {
@@ -175,7 +179,7 @@ export const useOnboardingPersistence = () => {
       if (validationResult.isValid) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 250)); // Check more frequently
     }
     
     return false;
