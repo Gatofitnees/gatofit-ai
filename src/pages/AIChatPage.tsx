@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +13,7 @@ const AIChatPage: React.FC = () => {
   const { messages, isLoading, sendMessage, clearMessages } = useAIChat();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,10 +24,28 @@ const AIChatPage: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
   }, []);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.style.height = 'auto';
+      
+      // Calculate line height (approximate)
+      const lineHeight = 24; // Tailwind text-sm line height
+      const maxLines = 6;
+      const maxHeight = lineHeight * maxLines;
+      
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.min(scrollHeight, maxHeight);
+      
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [inputValue]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -34,6 +53,11 @@ const AIChatPage: React.FC = () => {
     const message = inputValue;
     setInputValue('');
     await sendMessage(message);
+    
+    // Reset textarea height after sending
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
   };
 
   const handleButtonClick = async (buttonText: string) => {
@@ -178,21 +202,22 @@ const AIChatPage: React.FC = () => {
 
       {/* Input */}
       <div className="p-4 border-t border-muted/30 bg-background">
-        <div className="flex gap-2">
-          <Input
-            ref={inputRef}
+        <div className="flex gap-2 items-end">
+          <Textarea
+            ref={textareaRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Escribe tu mensaje..."
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 min-h-[40px] max-h-[144px] resize-none overflow-y-auto text-sm leading-6"
+            rows={1}
           />
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || isLoading}
             size="sm"
-            className="px-3"
+            className="px-3 h-10 flex-shrink-0"
           >
             <Send className="h-4 w-4" />
           </Button>
