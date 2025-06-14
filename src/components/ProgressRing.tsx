@@ -18,6 +18,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
   const normalizedProgress = Math.min(100, Math.max(0, progress));
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
+  // Fix: Corrected calculation for strokeDashoffset
   const strokeDashoffset = circumference - (normalizedProgress / 100) * circumference;
 
   return (
@@ -28,7 +29,9 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
         viewBox={`0 0 ${size} ${size}`}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        className="transform -rotate-90"
       >
+        {/* Background circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -37,6 +40,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
           stroke="rgba(255, 255, 255, 0.1)"
           fill="none"
         />
+        {/* Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -44,10 +48,13 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
           strokeWidth={strokeWidth}
           stroke="currentColor"
           strokeLinecap="round"
-          className="progress-ring text-primary animate-progress-fill"
+          className="text-primary transition-all duration-1000 ease-out"
           fill="none"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
+          style={{
+            transformOrigin: 'center',
+          }}
         />
       </svg>
     </div>

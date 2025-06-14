@@ -302,9 +302,9 @@ const NutritionPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Add Food Button - Only show for today */}
+      {/* Add Food Button - Only show for today - Improved centering */}
       {isToday && (
-        <div className="fixed bottom-24 right-4 animate-fade-in">
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 animate-fade-in">
           <Button 
             className="h-14 w-14 rounded-full shadow-neu-button"
             leftIcon={<Camera className="h-6 w-6" />}
