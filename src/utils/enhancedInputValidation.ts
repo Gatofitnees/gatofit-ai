@@ -74,6 +74,10 @@ export const sanitizeInput = (input: string, maxLength: number = 255): string =>
     .substring(0, maxLength);
 };
 
+export const sanitizeTextInput = (input: string, maxLength?: number): string => {
+  return sanitizeInput(input, maxLength);
+};
+
 export const validatePhoneNumber = (phone: string): ValidationResult => {
   // Remove all non-numeric characters
   const cleanPhone = phone.replace(/\D/g, '');
@@ -83,5 +87,24 @@ export const validatePhoneNumber = (phone: string): ValidationResult => {
     return { isValid: false, error: 'Phone number must be between 10 and 15 digits' };
   }
 
+  return { isValid: true };
+};
+
+export const validateNumericInput = (
+  value: any, 
+  min: number, 
+  max: number, 
+  fieldName: string
+): ValidationResult => {
+  const numValue = Number(value);
+  
+  if (isNaN(numValue)) {
+    return { isValid: false, error: `${fieldName} must be a valid number` };
+  }
+  
+  if (numValue < min || numValue > max) {
+    return { isValid: false, error: `${fieldName} must be between ${min} and ${max}` };
+  }
+  
   return { isValid: true };
 };

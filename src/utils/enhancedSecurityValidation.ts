@@ -9,21 +9,21 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
   // File size check (5MB max)
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
-    logSecurityEvent('file_upload_size_exceeded', `File size: ${file.size}`, 'medium');
+    logSecurityEventLocal('file_upload_size_exceeded', `File size: ${file.size}`, 'medium');
     return { isValid: false, error: 'File size must be less than 5MB' };
   }
 
   // File type whitelist
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
-    logSecurityEvent('file_upload_invalid_type', `File type: ${file.type}`, 'medium');
+    logSecurityEventLocal('file_upload_invalid_type', `File type: ${file.type}`, 'medium');
     return { isValid: false, error: 'Only JPEG, PNG, and WebP images are allowed' };
   }
 
   // File name validation
   const dangerousChars = /[<>:"/\\|?*\x00-\x1f]/;
   if (dangerousChars.test(file.name)) {
-    logSecurityEvent('file_upload_dangerous_filename', file.name, 'medium');
+    logSecurityEventLocal('file_upload_dangerous_filename', file.name, 'medium');
     return { isValid: false, error: 'File name contains invalid characters' };
   }
 
@@ -31,7 +31,7 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
   const fileExtension = file.name.split('.').pop()?.toLowerCase();
   const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
   if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-    logSecurityEvent('file_upload_invalid_extension', fileExtension || 'none', 'medium');
+    logSecurityEventLocal('file_upload_invalid_extension', fileExtension || 'none', 'medium');
     return { isValid: false, error: 'File must have a valid image extension' };
   }
 
@@ -47,11 +47,11 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
       (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46); // WebP/RIFF
 
     if (!isValidImage) {
-      logSecurityEvent('file_upload_invalid_signature', 'Invalid file signature', 'high');
+      logSecurityEventLocal('file_upload_invalid_signature', 'Invalid file signature', 'high');
       return { isValid: false, error: 'File does not appear to be a valid image' };
     }
   } catch (error) {
-    logSecurityEvent('file_upload_signature_check_failed', 'Failed to read file', 'medium');
+    logSecurityEventLocal('file_upload_signature_check_failed', 'Failed to read file', 'medium');
     return { isValid: false, error: 'Unable to validate file integrity' };
   }
 
@@ -68,7 +68,7 @@ export const validateWebhookPayload = (payload: any): FileValidationResult => {
   if (payload.imageUrl && typeof payload.imageUrl === 'string') {
     const urlPattern = /^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/-]+\.(jpg|jpeg|png|webp)$/i;
     if (!urlPattern.test(payload.imageUrl)) {
-      logSecurityEvent('webhook_invalid_image_url', payload.imageUrl, 'medium');
+      logSecurityEventLocal('webhook_invalid_image_url', payload.imageUrl, 'medium');
       return { isValid: false, error: 'Invalid image URL format' };
     }
   }
@@ -93,7 +93,22 @@ export const validateWebhookPayload = (payload: any): FileValidationResult => {
   return { isValid: true };
 };
 
-export const logSecurityEvent = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'low') => {
+export const validateWebhookRequest = (url: string, data: any): FileValidationResult => {
+  // Validate URL format
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== 'https:') {
+      return { isValid: false, error: 'Webhook URL must use HTTPS' };
+    }
+  } catch {
+    return { isValid: false, error: 'Invalid webhook URL format' };
+  }
+
+  // Validate data payload
+  return validateWebhookPayload(data);
+};
+
+const logSecurityEventLocal = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'low') => {
   const timestamp = new Date().toISOString();
   const logEntry = {
     timestamp,

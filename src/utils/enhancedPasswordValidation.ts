@@ -76,3 +76,21 @@ export const generatePasswordStrengthScore = (password: string): number => {
   
   return Math.min(score, 100);
 };
+
+export const getPasswordStrengthColor = (strength: string): string => {
+  switch (strength) {
+    case 'very_strong': return 'text-green-600';
+    case 'strong': return 'text-blue-600';
+    case 'medium': return 'text-yellow-600';
+    default: return 'text-red-600';
+  }
+};
+
+export const getPasswordStrengthText = (strength: string): string => {
+  switch (strength) {
+    case 'very_strong': return 'Very Strong';
+    case 'strong': return 'Strong';
+    case 'medium': return 'Medium';
+    default: return 'Weak';
+  }
+};

@@ -1,3 +1,4 @@
+
 export interface SecurityLogEntry {
   timestamp: string;
   eventType: string;
@@ -40,6 +41,25 @@ export const logDataAccessEvent = (
     eventType: `data_access_${eventType}`,
     userId,
     details: `${resourceType}${resourceId ? `:${resourceId}` : ''}`,
+    severity,
+    userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+    location: typeof window !== 'undefined' ? window.location.href : undefined
+  };
+
+  logSecurityEvent(logEntry);
+};
+
+export const logDataEvent = (
+  eventType: string,
+  userId?: string,
+  severity: 'low' | 'medium' | 'high' = 'low',
+  additionalDetails?: string
+) => {
+  const logEntry: SecurityLogEntry = {
+    timestamp: new Date().toISOString(),
+    eventType: `data_${eventType}`,
+    userId: userId || undefined,
+    details: additionalDetails || eventType,
     severity,
     userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
     location: typeof window !== 'undefined' ? window.location.href : undefined
