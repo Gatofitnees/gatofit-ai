@@ -14,14 +14,44 @@ export const useProfile = () => {
   const [loading, setLoading] = useState(true);
   const { recalculateMacros } = useMacroCalculations();
 
+  // Get current user from Supabase directly (fallback for timing issues)
+  const getCurrentUser = async (): Promise<any> => {
+    try {
+      // Get fresh session from Supabase
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error getting session from Supabase:', error);
+        return null;
+      }
+
+      if (session?.user) {
+        console.log('Got user from fresh session:', session.user.id);
+        return session.user;
+      }
+
+      // Fallback to context user
+      if (user) {
+        console.log('Using user from context:', user.id);
+        return user;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error in getCurrentUser:', error);
+      return null;
+    }
+  };
+
   const fetchProfile = async () => {
-    if (!user) return;
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return;
     
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', currentUser.id)
         .single();
 
       if (error) throw error;
@@ -38,9 +68,26 @@ export const useProfile = () => {
     }
   };
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user) {
+  const updateProfile = async (updates: Partial<UserProfile>, retryCount = 0): Promise<boolean> => {
+    const maxRetries = 3;
+    
+    // Get current user with fallback mechanism
+    let currentUser = user;
+    if (!currentUser) {
+      console.log('User from context is null, getting from Supabase directly...');
+      currentUser = await getCurrentUser();
+    }
+
+    if (!currentUser) {
       console.error('No user found for profile update');
+      
+      // Retry if we haven't exceeded max retries
+      if (retryCount < maxRetries) {
+        console.log(`Retrying profile update (attempt ${retryCount + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return updateProfile(updates, retryCount + 1);
+      }
+      
       return false;
     }
 
@@ -54,7 +101,7 @@ export const useProfile = () => {
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
-        .eq('id', user.id);
+        .eq('id', currentUser.id);
 
       if (updateError) {
         console.error('Error updating basic profile:', updateError);
@@ -94,7 +141,7 @@ export const useProfile = () => {
           const { error: macroError } = await supabase
             .from('profiles')
             .update(macroUpdates)
-            .eq('id', user.id);
+            .eq('id', currentUser.id);
 
           if (macroError) {
             console.error('Error updating macros (but basic profile saved):', macroError);
@@ -125,6 +172,14 @@ export const useProfile = () => {
       return true;
     } catch (error: any) {
       console.error('Error updating profile:', error);
+      
+      // Retry if we haven't exceeded max retries
+      if (retryCount < maxRetries) {
+        console.log(`Retrying profile update due to error (attempt ${retryCount + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return updateProfile(updates, retryCount + 1);
+      }
+      
       toast({
         title: "Error",
         description: error.message || "No se pudo actualizar el perfil",
@@ -138,11 +193,12 @@ export const useProfile = () => {
     if (!username) return false;
 
     try {
+      const currentUser = await getCurrentUser();
       const { data, error } = await supabase
         .from('profiles')
         .select('username')
         .eq('username', username.toLowerCase())
-        .neq('id', user?.id || '');
+        .neq('id', currentUser?.id || '');
 
       if (error) throw error;
       return data.length === 0;
