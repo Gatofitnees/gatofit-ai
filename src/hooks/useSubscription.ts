@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface SubscriptionPlan {
   id: string;
-  plan_type: 'free' | 'monthly' | 'yearly';
+  plan_type: 'monthly' | 'yearly';
   name: string;
   price_usd: number;
   duration_days: number;
