@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { validateSecureFileUpload, logSecurityEvent } from '@/utils/enhancedSecurityValidation';
-import { RateLimiter } from '@/utils/securityValidation';
+import { validateSecureFileUpload } from '@/utils/enhancedSecurityValidation';
+import { logSecurityEvent } from '@/utils/securityLogger';
+import { RateLimiter } from '@/utils/enhancedSecurityValidation';
 
 // Stricter rate limiting for file uploads
 const fileUploadLimiter = new RateLimiter(10, 600000); // 10 uploads per 10 minutes
@@ -35,7 +36,15 @@ export const useEnhancedFileUpload = () => {
         description: "Too many file uploads. Please wait before trying again.",
         variant: "destructive"
       });
-      logSecurityEvent('file_upload_rate_limit_exceeded', user.id, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_upload_rate_limit_exceeded',
+        userId: user.id,
+        details: 'Rate limit exceeded for file upload',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return null;
     }
 
@@ -47,7 +56,15 @@ export const useEnhancedFileUpload = () => {
         description: validation.error,
         variant: "destructive"
       });
-      logSecurityEvent('file_upload_validation_failed', validation.error || 'Unknown validation error', 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_upload_validation_failed',
+        userId: user.id,
+        details: validation.error || 'Unknown validation error',
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return null;
     }
 
@@ -59,7 +76,15 @@ export const useEnhancedFileUpload = () => {
       const randomSuffix = crypto.randomUUID().substring(0, 8);
       const fileName = path || `${user.id}/${timestamp}_${randomSuffix}.${fileExt}`;
 
-      logSecurityEvent('file_upload_started', `Bucket: ${bucket}, Size: ${file.size}`, 'low');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_upload_started',
+        userId: user.id,
+        details: `Bucket: ${bucket}, Size: ${file.size}`,
+        severity: 'low',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
 
       // Upload with enhanced security options
       const { data, error } = await supabase.storage
@@ -71,7 +96,15 @@ export const useEnhancedFileUpload = () => {
         });
 
       if (error) {
-        logSecurityEvent('file_upload_failed', `${bucket}/${fileName}: ${error.message}`, 'medium');
+        logSecurityEvent({
+          timestamp: new Date().toISOString(),
+          eventType: 'file_upload_failed',
+          userId: user.id,
+          details: `${bucket}/${fileName}: ${error.message}`,
+          severity: 'medium',
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+          location: typeof window !== 'undefined' ? window.location.href : undefined
+        });
         throw error;
       }
 
@@ -79,7 +112,15 @@ export const useEnhancedFileUpload = () => {
         .from(bucket)
         .getPublicUrl(fileName);
 
-      logSecurityEvent('file_upload_success', `${bucket}/${fileName}`, 'low');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_upload_success',
+        userId: user.id,
+        details: `${bucket}/${fileName}`,
+        severity: 'low',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
 
       toast({
         title: "Success",
@@ -90,7 +131,15 @@ export const useEnhancedFileUpload = () => {
 
     } catch (error: any) {
       console.error('File upload error:', error);
-      logSecurityEvent('file_upload_error', error.message, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_upload_error',
+        userId: user.id,
+        details: error.message,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       
       toast({
         title: "Error",
@@ -109,7 +158,15 @@ export const useEnhancedFileUpload = () => {
     try {
       // Verify user owns this file (path should start with user ID)
       if (!path.startsWith(user.id + '/')) {
-        logSecurityEvent('file_delete_unauthorized', `User ${user.id} tried to delete ${path}`, 'high');
+        logSecurityEvent({
+          timestamp: new Date().toISOString(),
+          eventType: 'file_delete_unauthorized',
+          userId: user.id,
+          details: `User ${user.id} tried to delete ${path}`,
+          severity: 'high',
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+          location: typeof window !== 'undefined' ? window.location.href : undefined
+        });
         toast({
           title: "Error",
           description: "Unauthorized file deletion attempt",
@@ -124,12 +181,28 @@ export const useEnhancedFileUpload = () => {
 
       if (error) throw error;
 
-      logSecurityEvent('file_delete_success', `${bucket}/${path}`, 'low');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_delete_success',
+        userId: user.id,
+        details: `${bucket}/${path}`,
+        severity: 'low',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       return true;
 
     } catch (error: any) {
       console.error('File deletion error:', error);
-      logSecurityEvent('file_delete_error', error.message, 'medium');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'file_delete_error',
+        userId: user.id,
+        details: error.message,
+        severity: 'medium',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       
       toast({
         title: "Error",

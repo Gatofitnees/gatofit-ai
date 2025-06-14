@@ -158,39 +158,6 @@ export const validateWebhookRequest = (url: string, data: any): FileValidationRe
   return validateWebhookPayload(data);
 };
 
-const logSecurityEvent = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'low') => {
-  const timestamp = new Date().toISOString();
-  const logEntry = {
-    timestamp,
-    eventType,
-    details,
-    severity,
-    userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
-    url: typeof window !== 'undefined' ? window.location.href : 'server'
-  };
-
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('Security Event:', logEntry);
-  }
-
-  // In production, you would send this to your logging service
-  // For now, we'll store it in sessionStorage for debugging
-  if (typeof window !== 'undefined') {
-    try {
-      const existingLogs = JSON.parse(sessionStorage.getItem('security_logs') || '[]');
-      existingLogs.push(logEntry);
-      // Keep only last 50 events
-      if (existingLogs.length > 50) {
-        existingLogs.splice(0, existingLogs.length - 50);
-      }
-      sessionStorage.setItem('security_logs', JSON.stringify(existingLogs));
-    } catch (error) {
-      console.error('Failed to log security event:', error);
-    }
-  }
-};
-
 export class RateLimiter {
   private attempts: Map<string, { count: number, resetTime: number }> = new Map();
   private maxAttempts: number;
@@ -336,3 +303,6 @@ export const validateWebhookResponse = (response: any): FileValidationResult => 
 
   return { isValid: true };
 };
+
+// Export the logSecurityEvent function from securityLogger
+export { logSecurityEvent };

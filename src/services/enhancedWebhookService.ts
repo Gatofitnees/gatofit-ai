@@ -1,6 +1,7 @@
 
-import { validateWebhookRequest, logSecurityEvent } from '@/utils/enhancedSecurityValidation';
-import { validateWebhookResponse, RateLimiter } from '@/utils/securityValidation';
+import { validateWebhookRequest } from '@/utils/enhancedSecurityValidation';
+import { logSecurityEvent } from '@/utils/securityLogger';
+import { validateWebhookResponse, RateLimiter } from '@/utils/enhancedSecurityValidation';
 import { createSecureFormData } from '@/utils/securityHelpers';
 
 // Enhanced rate limiter with stricter limits
@@ -33,14 +34,30 @@ export class EnhancedWebhookService {
 
     // Enhanced rate limiting
     if (!enhancedWebhookLimiter.isAllowed(userId)) {
-      logSecurityEvent('webhook_rate_limit_exceeded', `User ${userId}`, 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_rate_limit_exceeded',
+        userId: userId,
+        details: `User ${userId}`,
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       throw new Error('Rate limit exceeded. Please wait before trying again.');
     }
 
     // Validate request before sending
     const requestValidation = validateWebhookRequest(url, data);
     if (!requestValidation.isValid) {
-      logSecurityEvent('webhook_request_validation_failed', requestValidation.error || 'Unknown validation error', 'high');
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'webhook_request_validation_failed',
+        userId: userId,
+        details: requestValidation.error || 'Unknown validation error',
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       throw new Error(`Request validation failed: ${requestValidation.error}`);
     }
 
@@ -69,7 +86,15 @@ export class EnhancedWebhookService {
           headers['X-User-ID'] = userId;
         }
 
-        logSecurityEvent('webhook_request_initiated', `URL: ${url}, Attempt: ${attempt + 1}`, 'low');
+        logSecurityEvent({
+          timestamp: new Date().toISOString(),
+          eventType: 'webhook_request_initiated',
+          userId: userId,
+          details: `URL: ${url}, Attempt: ${attempt + 1}`,
+          severity: 'low',
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+          location: typeof window !== 'undefined' ? window.location.href : undefined
+        });
 
         const response = await fetch(url, {
           method: 'POST',
@@ -96,7 +121,15 @@ export class EnhancedWebhookService {
 
         if (!response.ok) {
           const errorText = await response.text();
-          logSecurityEvent('webhook_http_error', `Status: ${response.status}, Body: ${errorText.substring(0, 500)}`, 'medium');
+          logSecurityEvent({
+            timestamp: new Date().toISOString(),
+            eventType: 'webhook_http_error',
+            userId: userId,
+            details: `Status: ${response.status}, Body: ${errorText.substring(0, 500)}`,
+            severity: 'medium',
+            userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+            location: typeof window !== 'undefined' ? window.location.href : undefined
+          });
           throw new Error(`Webhook request failed with status ${response.status}: ${errorText}`);
         }
 
@@ -111,7 +144,15 @@ export class EnhancedWebhookService {
         try {
           responseData = JSON.parse(responseText);
         } catch (parseError) {
-          logSecurityEvent('webhook_parse_error', `Invalid JSON response: ${responseText.substring(0, 200)}`, 'medium');
+          logSecurityEvent({
+            timestamp: new Date().toISOString(),
+            eventType: 'webhook_parse_error',
+            userId: userId,
+            details: `Invalid JSON response: ${responseText.substring(0, 200)}`,
+            severity: 'medium',
+            userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+            location: typeof window !== 'undefined' ? window.location.href : undefined
+          });
           throw new Error('Invalid JSON response from webhook');
         }
 
@@ -119,13 +160,29 @@ export class EnhancedWebhookService {
         if (validateResponse) {
           const validation = validateWebhookResponse(responseData);
           if (!validation.isValid) {
-            logSecurityEvent('webhook_response_validation_failed', validation.error || 'Unknown validation error', 'medium');
+            logSecurityEvent({
+              timestamp: new Date().toISOString(),
+              eventType: 'webhook_response_validation_failed',
+              userId: userId,
+              details: validation.error || 'Unknown validation error',
+              severity: 'medium',
+              userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+              location: typeof window !== 'undefined' ? window.location.href : undefined
+            });
             throw new Error(`Invalid webhook response: ${validation.error}`);
           }
         }
 
         const duration = Date.now() - startTime;
-        logSecurityEvent('webhook_request_completed', `Duration: ${duration}ms, Size: ${responseText.length} bytes`, 'low');
+        logSecurityEvent({
+          timestamp: new Date().toISOString(),
+          eventType: 'webhook_request_completed',
+          userId: userId,
+          details: `Duration: ${duration}ms, Size: ${responseText.length} bytes`,
+          severity: 'low',
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+          location: typeof window !== 'undefined' ? window.location.href : undefined
+        });
 
         return responseData;
 
@@ -133,10 +190,15 @@ export class EnhancedWebhookService {
         lastError = error as Error;
         const duration = Date.now() - startTime;
         
-        logSecurityEvent('webhook_request_failed', 
-          `Attempt ${attempt + 1}/${retries + 1}, Duration: ${duration}ms, Error: ${lastError.message}`, 
-          'medium'
-        );
+        logSecurityEvent({
+          timestamp: new Date().toISOString(),
+          eventType: 'webhook_request_failed',
+          userId: userId,
+          details: `Attempt ${attempt + 1}/${retries + 1}, Duration: ${duration}ms, Error: ${lastError.message}`,
+          severity: 'medium',
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+          location: typeof window !== 'undefined' ? window.location.href : undefined
+        });
         
         // If it's the last attempt, don't wait
         if (attempt < retries) {
@@ -149,7 +211,15 @@ export class EnhancedWebhookService {
       }
     }
 
-    logSecurityEvent('webhook_request_failed_all_attempts', `Final error: ${lastError?.message}`, 'high');
+    logSecurityEvent({
+      timestamp: new Date().toISOString(),
+      eventType: 'webhook_request_failed_all_attempts',
+      userId: userId,
+      details: `Final error: ${lastError?.message}`,
+      severity: 'high',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      location: typeof window !== 'undefined' ? window.location.href : undefined
+    });
     throw lastError || new Error('Webhook request failed after all retries');
   }
 
