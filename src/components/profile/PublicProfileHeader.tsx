@@ -1,38 +1,26 @@
 
 import React from 'react';
-import { PremiumAvatar } from '@/components/premium/PremiumAvatar';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface PublicProfileHeaderProps {
-  profile: {
-    username?: string;
-    full_name?: string;
-    bio?: string;
-    avatar_url?: string;
-  };
+  onBack: () => void;
 }
 
-export const PublicProfileHeader: React.FC<PublicProfileHeaderProps> = ({ profile }) => {
+const PublicProfileHeader: React.FC<PublicProfileHeaderProps> = ({ onBack }) => {
   return (
-    <div className="text-center space-y-4 mb-6">
-      <PremiumAvatar
-        src={profile.avatar_url || undefined}
-        alt={profile.username || profile.full_name || 'Usuario'}
-        fallback={profile.username?.charAt(0).toUpperCase() || profile.full_name?.charAt(0).toUpperCase() || 'U'}
-        size="xl"
-        className="mx-auto"
-      />
-      
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold">
-          {profile.username || profile.full_name || 'Usuario'}
-        </h1>
-        
-        {profile.bio && (
-          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-            {profile.bio}
-          </p>
-        )}
-      </div>
+    <div className="flex items-center gap-3 mb-6">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onBack}
+        className="h-8 w-8"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <h1 className="text-xl font-bold">Perfil</h1>
     </div>
   );
 };
+
+export default PublicProfileHeader;

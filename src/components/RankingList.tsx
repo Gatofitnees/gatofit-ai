@@ -1,97 +1,91 @@
-
 import React from 'react';
-import { Trophy, Medal, Award } from 'lucide-react';
-import { PremiumAvatar } from '@/components/premium/PremiumAvatar';
+import { useNavigate } from 'react-router-dom';
+import Avatar from './Avatar';
 import RankBadge from './RankBadge';
-
-interface RankingUser {
-  user_id: string;
-  username: string;
-  avatar_url: string | null;
-  current_level: number;
-  total_experience: number;
-  current_streak: number;
-  rank_name: string;
-  total_workouts: number;
-}
+import { RankingUser } from '@/hooks/useRankings';
 
 interface RankingListProps {
   users: RankingUser[];
-  currentUserId?: string;
-  type?: 'streak' | 'experience';
-  isLoading?: boolean;
+  type: 'streak' | 'experience';
+  isLoading: boolean;
 }
 
-const RankingList: React.FC<RankingListProps> = ({ users, currentUserId }) => {
-  const getPositionIcon = (position: number) => {
-    switch (position) {
-      case 1:
-        return <Trophy className="h-5 w-5 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-5 w-5 text-gray-400" />;
-      case 3:
-        return <Award className="h-5 w-5 text-amber-600" />;
-      default:
-        return <span className="text-sm font-bold text-muted-foreground">#{position}</span>;
-    }
+const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => {
+  const navigate = useNavigate();
+
+  const handleUserClick = (userId: string) => {
+    navigate(`/public-profile/${userId}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-muted rounded-full" />
+              <div className="space-y-1">
+                <div className="w-20 h-3 bg-muted rounded" />
+                <div className="w-16 h-2 bg-muted rounded" />
+              </div>
+            </div>
+            <div className="w-12 h-4 bg-muted rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>No hay usuarios en la clasificación aún</p>
+        <p className="text-xs mt-2">Los rankings se actualizan cuando los usuarios completan entrenamientos o registran comidas</p>
+      </div>
+    );
+  }
+
+  console.log('RankingList rendering users:', users);
 
   return (
     <div className="space-y-3">
       {users.map((user, index) => {
-        const position = index + 1;
-        const isCurrentUser = user.user_id === currentUserId;
+        // Ensure we have a valid username to display
+        const displayName = user.username || `Usuario #${user.user_id.substring(0, 8)}`;
         
         return (
-          <div
-            key={user.user_id}
-            className={`neu-card p-4 ${
-              isCurrentUser ? 'ring-2 ring-primary/50 bg-primary/5' : ''
-            }`}
+          <div 
+            key={user.user_id} 
+            className="flex items-center justify-between p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+            onClick={() => handleUserClick(user.user_id)}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center justify-center w-8 h-8">
-                  {getPositionIcon(position)}
-                </div>
-                
-                <PremiumAvatar
-                  src={user.avatar_url || undefined}
-                  alt={user.username}
-                  fallback={user.username.charAt(0).toUpperCase()}
-                  size="md"
-                />
-                
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className={`font-semibold ${isCurrentUser ? 'text-primary' : ''}`}>
-                      {user.username}
-                    </h3>
-                    {isCurrentUser && (
-                      <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
-                        Tú
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                    <span>Nivel {user.current_level}</span>
-                    <span>•</span>
-                    <span>{user.total_experience} XP</span>
-                    <span>•</span>
-                    <span>{user.current_streak} días</span>
-                  </div>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 min-w-[24px]">
+                <span className="text-sm font-bold text-muted-foreground">
+                  #{index + 1}
+                </span>
               </div>
               
-              <div className="text-right">
-                <RankBadge 
-                  level={user.current_level}
-                  size="sm"
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  {user.total_workouts} entrenamientos
-                </div>
+              <Avatar
+                name={displayName}
+                size="sm"
+                src={user.avatar_url}
+              />
+              
+              <div>
+                <p className="font-medium text-sm">
+                  {displayName}
+                </p>
+                <RankBadge level={user.current_level} size="sm" showLevelNumber={true} />
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <div className="font-bold text-primary">
+                {type === 'streak' ? user.current_streak : user.total_experience}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {type === 'streak' ? 'días' : 'XP'}
               </div>
             </div>
           </div>

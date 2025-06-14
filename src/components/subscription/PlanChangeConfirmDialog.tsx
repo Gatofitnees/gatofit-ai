@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Clock } from 'lucide-react';
+import { AlertTriangle, Clock } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,8 +59,8 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
               Después de esa fecha, cambiarás automáticamente al{' '}
               <strong>{newPlan?.name}</strong> por <strong>${newPlan?.price_usd}</strong>.
             </p>
-            <p className="text-primary font-medium">
-              ¡No perderás ningún beneficio de tu plan actual! 💪
+            <p className="text-primary">
+              ¡No perderás ningún beneficio de tu plan actual!
             </p>
           </AlertDialogDescription>
         </AlertDialogHeader>

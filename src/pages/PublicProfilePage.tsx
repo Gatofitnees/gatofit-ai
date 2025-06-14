@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
 import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/contexts/AuthContext';
-import { PublicProfileHeader } from '@/components/profile/PublicProfileHeader';
+import PublicProfileHeader from '@/components/profile/PublicProfileHeader';
 import PublicProfileCard from '@/components/profile/PublicProfileCard';
 import PublicProfileStats from '@/components/profile/PublicProfileStats';
 import PublicProfileStreak from '@/components/profile/PublicProfileStreak';
@@ -44,7 +44,7 @@ const PublicProfilePage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-        <PublicProfileHeader profile={profile || { username: '', full_name: '', bio: '', avatar_url: '' }} />
+        <PublicProfileHeader onBack={handleBack} />
         
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -56,7 +56,7 @@ const PublicProfilePage: React.FC = () => {
   if (error || !profile) {
     return (
       <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-        <PublicProfileHeader profile={profile || { username: '', full_name: '', bio: '', avatar_url: '' }} />
+        <PublicProfileHeader onBack={handleBack} />
         
         <div className="text-center py-8">
           <p className="text-red-500 mb-4">
@@ -72,7 +72,7 @@ const PublicProfilePage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      <PublicProfileHeader profile={profile} />
+      <PublicProfileHeader onBack={handleBack} />
 
       <PublicProfileCard
         profile={profile}

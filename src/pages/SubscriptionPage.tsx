@@ -13,7 +13,7 @@ import { CancelConfirmDialog } from '@/components/subscription/CancelConfirmDial
 
 const SubscriptionPage: React.FC = () => {
   const navigate = useNavigate();
-  const { subscription, plans, isPremium, upgradeSubscription, cancelSubscription, cancelScheduledChange } = useSubscription();
+  const { subscription, plans, isPremium, upgradeSubscription, cancelSubscription } = useSubscription();
   const { usage } = useUsageLimits();
   const [isLoading, setIsLoading] = useState(false);
   const [showPlanChangeDialog, setShowPlanChangeDialog] = useState(false);
@@ -71,15 +71,6 @@ const SubscriptionPage: React.FC = () => {
     }
   };
 
-  const handleCancelScheduledChange = async () => {
-    setIsLoading(true);
-    try {
-      await cancelScheduledChange();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-20">
       {/* Header */}
@@ -103,11 +94,7 @@ const SubscriptionPage: React.FC = () => {
 
       <div className="max-w-md mx-auto p-4 space-y-6">
         {/* Current Status */}
-        <SubscriptionStatus 
-          subscription={subscription} 
-          isPremium={isPremium}
-          onCancelScheduledChange={handleCancelScheduledChange}
-        />
+        <SubscriptionStatus subscription={subscription} isPremium={isPremium} />
 
         {/* Usage Stats for Free Users */}
         {!isPremium && usage && (
