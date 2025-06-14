@@ -1,10 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useAIChat } from '@/hooks/useAIChat';
+import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
 import { formatAIText } from '@/utils/textFormatter';
 
