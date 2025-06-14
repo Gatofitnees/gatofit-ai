@@ -1,15 +1,14 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
-import { OnboardingData } from "../OnboardingFlow";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 
 const AppTransition: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(true);
   const [currentStatus, setCurrentStatus] = useState("Configurando tu cuenta...");
   
@@ -122,7 +121,7 @@ const AppTransition: React.FC = () => {
     };
 
     processTransition();
-  }, [user, authLoading, navigate, handleGoogleAuthData, saveOnboardingToProfile, loadOnboardingData]);
+  }, [user, authLoading, navigate, handleGoogleAuthData, saveOnboardingToProfile, loadOnboardingData, toast]);
 
   return (
     <OnboardingLayout currentStep={20} totalSteps={20}>
