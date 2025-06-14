@@ -130,8 +130,11 @@ export const useAIChat = () => {
         user_data: userData,
       };
 
-      console.log('Sending AI chat request:', payload);
+      console.log('🔍 [AI CHAT DEBUG] Enviando petición al webhook:', payload);
+      console.log('🔍 [AI CHAT DEBUG] URL del webhook:', 'https://gaton8n.gatofit.com/webhook/5ad29227-88fb-46ab-bff9-c44cb4e1d957');
 
+      const requestStart = Date.now();
+      
       const response = await fetch('https://gaton8n.gatofit.com/webhook/5ad29227-88fb-46ab-bff9-c44cb4e1d957', {
         method: 'POST',
         headers: {
@@ -140,16 +143,39 @@ export const useAIChat = () => {
         body: JSON.stringify(payload),
       });
 
+      const requestDuration = Date.now() - requestStart;
+      console.log(`🔍 [AI CHAT DEBUG] Respuesta recibida en ${requestDuration}ms`);
+      console.log('🔍 [AI CHAT DEBUG] Status de respuesta:', response.status);
+      console.log('🔍 [AI CHAT DEBUG] Headers de respuesta:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error('❌ [AI CHAT ERROR] HTTP error:', response.status, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
       }
 
+      // Check content type
+      const contentType = response.headers.get('content-type');
+      console.log('🔍 [AI CHAT DEBUG] Content-Type:', contentType);
+
       const responseText = await response.text();
+      console.log('🔍 [AI CHAT DEBUG] Respuesta raw del webhook:', responseText);
+      console.log('🔍 [AI CHAT DEBUG] Longitud de respuesta:', responseText.length);
+
+      if (!responseText || responseText.trim() === '') {
+        console.error('❌ [AI CHAT ERROR] Respuesta vacía del webhook');
+        throw new Error('El webhook devolvió una respuesta vacía');
+      }
+
       let parsedResponse: WebhookResponse[] | any;
       
       try {
         parsedResponse = JSON.parse(responseText);
+        console.log('🔍 [AI CHAT DEBUG] Respuesta parseada:', parsedResponse);
+        console.log('🔍 [AI CHAT DEBUG] Tipo de respuesta:', typeof parsedResponse, Array.isArray(parsedResponse) ? 'Array' : 'Object');
       } catch (parseError) {
+        console.error('❌ [AI CHAT ERROR] Error parseando JSON:', parseError);
+        console.log('🔍 [AI CHAT DEBUG] Intentando usar respuesta como texto plano');
+        
         // Fallback to treating as plain text
         const aiMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -161,44 +187,106 @@ export const useAIChat = () => {
         return;
       }
 
-      // Handle new JSON format
-      if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
+      // Handle new JSON format (array)
+      if (Array.isArray(parsedResponse)) {
+        console.log('🔍 [AI CHAT DEBUG] Procesando respuesta como array, longitud:', parsedResponse.length);
+        
+        if (parsedResponse.length === 0) {
+          console.error('❌ [AI CHAT ERROR] Array de respuesta vacío');
+          throw new Error('El webhook devolvió un array vacío');
+        }
+
         const firstResponse = parsedResponse[0];
-        if (firstResponse.output) {
+        console.log('🔍 [AI CHAT DEBUG] Primer elemento del array:', firstResponse);
+        
+        if (firstResponse && firstResponse.output) {
+          console.log('🔍 [AI CHAT DEBUG] Output encontrado:', firstResponse.output);
+          
           const aiMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: firstResponse.output.text || 'No se recibió respuesta.',
+            content: firstResponse.output.text || 'No se recibió texto en la respuesta.',
             timestamp: new Date(),
             buttons: firstResponse.output.button ? [firstResponse.output.button] : undefined,
           };
+          
+          console.log('✅ [AI CHAT SUCCESS] Mensaje AI creado:', aiMessage);
           setMessages(prev => [...prev, aiMessage]);
         } else {
-          throw new Error('Invalid response format');
+          console.error('❌ [AI CHAT ERROR] Estructura de respuesta inválida - falta output');
+          throw new Error('Estructura de respuesta inválida - falta el campo output');
+        }
+      } else if (typeof parsedResponse === 'object' && parsedResponse !== null) {
+        console.log('🔍 [AI CHAT DEBUG] Procesando respuesta como objeto');
+        
+        // Check for direct output field
+        if (parsedResponse.output) {
+          console.log('🔍 [AI CHAT DEBUG] Output directo encontrado:', parsedResponse.output);
+          
+          const aiMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: parsedResponse.output.text || 'No se recibió texto en la respuesta.',
+            timestamp: new Date(),
+            buttons: parsedResponse.output.button ? [parsedResponse.output.button] : undefined,
+          };
+          
+          console.log('✅ [AI CHAT SUCCESS] Mensaje AI creado desde objeto:', aiMessage);
+          setMessages(prev => [...prev, aiMessage]);
+        } else if (parsedResponse.text) {
+          // Direct text field
+          console.log('🔍 [AI CHAT DEBUG] Campo text directo encontrado:', parsedResponse.text);
+          
+          const aiMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: parsedResponse.text,
+            timestamp: new Date(),
+          };
+          
+          console.log('✅ [AI CHAT SUCCESS] Mensaje AI creado desde text directo:', aiMessage);
+          setMessages(prev => [...prev, aiMessage]);
+        } else {
+          console.error('❌ [AI CHAT ERROR] Objeto de respuesta sin campos reconocidos:', Object.keys(parsedResponse));
+          // Fallback: try to use the whole object as text
+          const aiMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: JSON.stringify(parsedResponse),
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, aiMessage]);
         }
       } else {
-        // Fallback for old format
+        console.error('❌ [AI CHAT ERROR] Tipo de respuesta no reconocido:', typeof parsedResponse);
+        // Fallback to string representation
         const aiMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'ai',
-          content: typeof parsedResponse === 'string' ? parsedResponse : 'Lo siento, no pude procesar tu mensaje.',
+          content: String(parsedResponse) || 'Lo siento, no pude procesar tu mensaje.',
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiMessage]);
       }
     } catch (error) {
-      console.error('Error sending message to AI:', error);
+      console.error('❌ [AI CHAT ERROR] Error completo:', error);
+      console.error('❌ [AI CHAT ERROR] Tipo de error:', error instanceof Error ? error.constructor.name : typeof error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('❌ [AI CHAT ERROR] Error de red - problema de conectividad');
+      }
       
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: 'Lo siento, hubo un error al procesar tu mensaje. Inténtalo de nuevo.',
+        content: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}. Por favor, inténtalo de nuevo.`,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      console.log('🔍 [AI CHAT DEBUG] Proceso completado, isLoading = false');
     }
   };
 
