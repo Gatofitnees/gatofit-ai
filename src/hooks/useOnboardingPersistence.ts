@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const ONBOARDING_STORAGE_KEY = 'gatofit_onboarding_data';
+const GOOGLE_AUTH_PENDING_KEY = 'gatofit_google_auth_pending';
 
 export const useOnboardingPersistence = () => {
   const { user, loading: authLoading } = useAuth();
@@ -30,10 +31,51 @@ export const useOnboardingPersistence = () => {
     }
   };
 
+  const markGoogleAuthPending = (data: OnboardingData) => {
+    try {
+      localStorage.setItem(GOOGLE_AUTH_PENDING_KEY, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+      console.log('Google auth pending data saved:', data);
+    } catch (error) {
+      console.error('Error saving Google auth pending data:', error);
+    }
+  };
+
+  const getGoogleAuthPendingData = (): OnboardingData | null => {
+    try {
+      const stored = localStorage.getItem(GOOGLE_AUTH_PENDING_KEY);
+      if (!stored) return null;
+      
+      const parsed = JSON.parse(stored);
+      // Check if data is less than 30 minutes old
+      if (Date.now() - parsed.timestamp > 30 * 60 * 1000) {
+        localStorage.removeItem(GOOGLE_AUTH_PENDING_KEY);
+        return null;
+      }
+      
+      return parsed.data;
+    } catch (error) {
+      console.error('Error loading Google auth pending data:', error);
+      return null;
+    }
+  };
+
+  const clearGoogleAuthPending = () => {
+    try {
+      localStorage.removeItem(GOOGLE_AUTH_PENDING_KEY);
+      console.log('Google auth pending data cleared');
+    } catch (error) {
+      console.error('Error clearing Google auth pending data:', error);
+    }
+  };
+
   const clearOnboardingData = () => {
     try {
       localStorage.removeItem(ONBOARDING_STORAGE_KEY);
-      console.log('Onboarding data cleared from localStorage');
+      localStorage.removeItem(GOOGLE_AUTH_PENDING_KEY);
+      console.log('All onboarding data cleared from localStorage');
     } catch (error) {
       console.error('Error clearing onboarding data:', error);
     }
@@ -86,12 +128,18 @@ export const useOnboardingPersistence = () => {
     return { isValid: true, user: currentUser };
   };
 
-  const saveOnboardingToProfile = async (data: OnboardingData): Promise<boolean> => {
+  const saveOnboardingToProfile = async (data: OnboardingData, skipRetries: boolean = false): Promise<boolean> => {
     console.log('Starting to save onboarding data to profile:', data);
+    
+    // Check for Google auth pending data first
+    const pendingData = getGoogleAuthPendingData();
+    const dataToSave = pendingData || data;
+    
+    console.log('Data to save (with pending check):', dataToSave);
     
     // Wait for user with retry logic
     let retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = skipRetries ? 1 : 5;
     let validationResult = { isValid: false, user: null };
 
     while (retryCount < maxRetries && !validationResult.isValid) {
@@ -101,8 +149,8 @@ export const useOnboardingPersistence = () => {
       if (!validationResult.isValid) {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(`Waiting 1000ms before retry ${retryCount + 1}...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log(`Waiting ${1000 * retryCount}ms before retry ${retryCount + 1}...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         }
       }
     }
@@ -131,23 +179,23 @@ export const useOnboardingPersistence = () => {
 
       // Prepare profile updates with better validation
       const profileUpdates = {
-        gender: data.gender as 'male' | 'female' | null,
-        height_cm: data.height || null,
-        current_weight_kg: data.weight || null,
-        body_fat_percentage: data.bodyFatPercentage || null,
-        date_of_birth: typeof data.dateOfBirth === 'string' ? data.dateOfBirth : data.dateOfBirth?.toISOString().split('T')[0] || null,
-        trainings_per_week: data.trainingsPerWeek || null,
-        previous_app_experience: data.previousAppExperience !== undefined ? data.previousAppExperience : null,
-        main_goal: convertMainGoal(data.mainGoal) as 'lose_weight' | 'gain_weight' | 'maintain_weight' | 'gain_muscle' | 'improve_health' | 'increase_strength' | null,
-        target_weight_kg: data.targetWeight || null,
-        target_pace: data.targetPace as 'sloth' | 'rabbit' | 'leopard' | null,
-        target_kg_per_week: data.targetKgPerWeek || null,
-        diet_id: data.diet || null,
-        initial_recommended_calories: data.initial_recommended_calories || null,
-        initial_recommended_protein_g: data.initial_recommended_protein_g || null,
-        initial_recommended_carbs_g: data.initial_recommended_carbs_g || null,
-        initial_recommended_fats_g: data.initial_recommended_fats_g || null,
-        unit_system_preference: data.unit_system_preference as 'metric' | 'imperial' | null
+        gender: dataToSave.gender as 'male' | 'female' | null,
+        height_cm: dataToSave.height || null,
+        current_weight_kg: dataToSave.weight || null,
+        body_fat_percentage: dataToSave.bodyFatPercentage || null,
+        date_of_birth: typeof dataToSave.dateOfBirth === 'string' ? dataToSave.dateOfBirth : dataToSave.dateOfBirth?.toISOString().split('T')[0] || null,
+        trainings_per_week: dataToSave.trainingsPerWeek || null,
+        previous_app_experience: dataToSave.previousAppExperience !== undefined ? dataToSave.previousAppExperience : null,
+        main_goal: convertMainGoal(dataToSave.mainGoal) as 'lose_weight' | 'gain_weight' | 'maintain_weight' | 'gain_muscle' | 'improve_health' | 'increase_strength' | null,
+        target_weight_kg: dataToSave.targetWeight || null,
+        target_pace: dataToSave.targetPace as 'sloth' | 'rabbit' | 'leopard' | null,
+        target_kg_per_week: dataToSave.targetKgPerWeek || null,
+        diet_id: dataToSave.diet || null,
+        initial_recommended_calories: dataToSave.initial_recommended_calories || null,
+        initial_recommended_protein_g: dataToSave.initial_recommended_protein_g || null,
+        initial_recommended_carbs_g: dataToSave.initial_recommended_carbs_g || null,
+        initial_recommended_fats_g: dataToSave.initial_recommended_fats_g || null,
+        unit_system_preference: dataToSave.unit_system_preference as 'metric' | 'imperial' | null
       };
 
       console.log('Profile updates to be saved:', profileUpdates);
@@ -156,23 +204,21 @@ export const useOnboardingPersistence = () => {
       
       if (success) {
         console.log('Onboarding data successfully saved to profile');
-        // Only clear data after successful save
+        // Clear all onboarding data after successful save
         clearOnboardingData();
         return true;
       } else {
         console.error('Failed to save onboarding data to profile - updateProfile returned false');
-        // Don't clear localStorage if save failed, so user can retry
         return false;
       }
       
     } catch (error) {
       console.error('Error saving onboarding data to profile:', error);
-      // Don't clear localStorage if there was an error
       return false;
     }
   };
 
-  const waitForUserAuthentication = async (maxWaitTime = 10000): Promise<boolean> => {
+  const waitForUserAuthentication = async (maxWaitTime = 15000): Promise<boolean> => {
     const startTime = Date.now();
     
     while (Date.now() - startTime < maxWaitTime) {
@@ -186,12 +232,47 @@ export const useOnboardingPersistence = () => {
     return false;
   };
 
+  const handleGoogleAuthData = async (): Promise<boolean> => {
+    console.log('Handling Google auth data...');
+    
+    // Check if there's pending Google auth data
+    const pendingData = getGoogleAuthPendingData();
+    if (!pendingData) {
+      console.log('No pending Google auth data found');
+      return false;
+    }
+    
+    console.log('Found pending Google auth data:', pendingData);
+    
+    // Wait for authentication to complete
+    const authSuccess = await waitForUserAuthentication();
+    if (!authSuccess) {
+      console.error('Google authentication did not complete in time');
+      return false;
+    }
+    
+    // Save the pending data
+    const saveSuccess = await saveOnboardingToProfile(pendingData, true);
+    if (saveSuccess) {
+      console.log('Successfully saved Google auth pending data');
+      clearGoogleAuthPending();
+      return true;
+    }
+    
+    console.error('Failed to save Google auth pending data');
+    return false;
+  };
+
   return {
     loadOnboardingData,
     saveOnboardingData,
     clearOnboardingData,
     saveOnboardingToProfile,
     waitForUserAuthentication,
-    validateUserForSaving
+    validateUserForSaving,
+    markGoogleAuthPending,
+    getGoogleAuthPendingData,
+    clearGoogleAuthPending,
+    handleGoogleAuthData
   };
 };

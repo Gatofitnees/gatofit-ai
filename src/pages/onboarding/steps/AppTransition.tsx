@@ -10,7 +10,13 @@ const AppTransition: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const context = useContext(OnboardingContext);
-  const { saveOnboardingToProfile, loadOnboardingData } = useOnboardingPersistence();
+  const { 
+    saveOnboardingToProfile, 
+    loadOnboardingData, 
+    handleGoogleAuthData,
+    getGoogleAuthPendingData 
+  } = useOnboardingPersistence();
+  
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("Iniciando...");
   const [hasCompleted, setHasCompleted] = useState(false);
@@ -32,58 +38,81 @@ const AppTransition: React.FC = () => {
       
       try {
         // Wait a moment for the auth state to settle
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
         if (!isMounted) return;
         
-        setProcessingStep("Buscando datos de configuración...");
-        const onboardingData = loadOnboardingData();
-        
-        if (onboardingData) {
-          console.log('AppTransition: Found onboarding data, attempting to save...', onboardingData);
-          setProcessingStep("Guardando tu configuración...");
+        // Check for Google auth pending data first
+        const pendingData = getGoogleAuthPendingData();
+        if (pendingData) {
+          console.log('AppTransition: Found Google auth pending data, processing...');
+          setProcessingStep("Procesando datos de Google...");
           
-          // Try to save with multiple attempts
-          let saveSuccess = false;
-          let attempts = 0;
-          const maxAttempts = 3;
-          
-          while (!saveSuccess && attempts < maxAttempts && isMounted) {
-            attempts++;
-            setSaveAttempts(attempts);
-            
-            if (attempts > 1) {
-              setProcessingStep(`Reintentando guardado (${attempts}/${maxAttempts})...`);
-              console.log(`AppTransition: Save attempt ${attempts}/${maxAttempts}`);
-              // Wait longer between retries
-              await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-            
-            try {
-              saveSuccess = await saveOnboardingToProfile(onboardingData);
-              
-              if (saveSuccess) {
-                console.log('AppTransition: Onboarding data saved successfully');
-                setProcessingStep("¡Configuración guardada exitosamente!");
-                break;
-              } else {
-                console.error(`AppTransition: Save attempt ${attempts} failed`);
-              }
-            } catch (error) {
-              console.error(`AppTransition: Error in save attempt ${attempts}:`, error);
-            }
-          }
-          
-          if (saveSuccess) {
-            setProcessingStep("¡Configuración guardada exitosamente!");
+          const googleAuthSuccess = await handleGoogleAuthData();
+          if (googleAuthSuccess) {
+            console.log('AppTransition: Google auth data processed successfully');
+            setProcessingStep("¡Datos de Google guardados exitosamente!");
           } else {
-            console.error('AppTransition: Failed to save onboarding data after all attempts');
-            setProcessingStep("Completando configuración...");
-            // Continue anyway - don't block the user
+            console.log('AppTransition: Google auth data processing failed, trying fallback...');
+            setProcessingStep("Intentando método alternativo...");
+            
+            // Fallback: try to save pending data directly
+            const fallbackSuccess = await saveOnboardingToProfile(pendingData);
+            if (fallbackSuccess) {
+              setProcessingStep("¡Configuración guardada exitosamente!");
+            } else {
+              setProcessingStep("Finalizando configuración...");
+            }
           }
         } else {
-          console.log('AppTransition: No onboarding data found in localStorage');
-          setProcessingStep("Preparando tu experiencia...");
+          // Check for regular onboarding data
+          setProcessingStep("Buscando datos de configuración...");
+          const onboardingData = loadOnboardingData();
+          
+          if (onboardingData) {
+            console.log('AppTransition: Found regular onboarding data, attempting to save...', onboardingData);
+            setProcessingStep("Guardando tu configuración...");
+            
+            // Try to save with multiple attempts
+            let saveSuccess = false;
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            while (!saveSuccess && attempts < maxAttempts && isMounted) {
+              attempts++;
+              setSaveAttempts(attempts);
+              
+              if (attempts > 1) {
+                setProcessingStep(`Reintentando guardado (${attempts}/${maxAttempts})...`);
+                console.log(`AppTransition: Save attempt ${attempts}/${maxAttempts}`);
+                // Wait longer between retries
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+              
+              try {
+                saveSuccess = await saveOnboardingToProfile(onboardingData);
+                
+                if (saveSuccess) {
+                  console.log('AppTransition: Onboarding data saved successfully');
+                  setProcessingStep("¡Configuración guardada exitosamente!");
+                  break;
+                } else {
+                  console.error(`AppTransition: Save attempt ${attempts} failed`);
+                }
+              } catch (error) {
+                console.error(`AppTransition: Error in save attempt ${attempts}:`, error);
+              }
+            }
+            
+            if (!saveSuccess) {
+              console.error('AppTransition: Failed to save onboarding data after all attempts');
+              setProcessingStep("Completando configuración...");
+              // Continue anyway - don't block the user
+            }
+          } else {
+            console.log('AppTransition: No onboarding data found');
+            setProcessingStep("Preparando tu experiencia...");
+          }
         }
         
         // Mark as completed and redirect after a short delay

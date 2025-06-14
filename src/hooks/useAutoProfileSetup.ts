@@ -50,17 +50,11 @@ export const useAutoProfileSetup = (user: User | null) => {
         // Check if profile already has data
         const { data: existingProfile } = await supabase
           .from('profiles')
-          .select('full_name, avatar_url, username')
+          .select('full_name, avatar_url, username, height_cm, current_weight_kg')
           .eq('id', user.id)
           .single();
 
         console.log('Existing profile:', existingProfile);
-
-        // If profile already has complete data, skip auto-setup
-        if (existingProfile?.full_name && existingProfile?.username && existingProfile?.avatar_url) {
-          console.log('Profile already complete, skipping auto-setup');
-          return;
-        }
 
         const metadata = user.user_metadata as GoogleUserMetadata;
         const isGoogleUser = metadata.provider_id?.includes('google') || user.app_metadata?.provider === 'google';
@@ -111,6 +105,7 @@ export const useAutoProfileSetup = (user: User | null) => {
 
         // Prepare updates - always update missing fields
         const updates: any = {};
+        
         if (!existingProfile?.full_name && fullName) {
           updates.full_name = fullName;
         }
@@ -136,6 +131,28 @@ export const useAutoProfileSetup = (user: User | null) => {
             console.log('Profile auto-configured successfully:', updates);
           }
         }
+
+        // Check if this is a Google user who might have onboarding data pending
+        if (isGoogleUser && (!existingProfile?.height_cm || !existingProfile?.current_weight_kg)) {
+          console.log('Google user detected, checking for pending onboarding data...');
+          
+          // Check localStorage for onboarding data (this might exist if the flow was interrupted)
+          try {
+            const pendingDataStr = localStorage.getItem('gatofit_google_auth_pending');
+            const regularDataStr = localStorage.getItem('gatofit_onboarding_data');
+            
+            if (pendingDataStr || regularDataStr) {
+              console.log('Found potential onboarding data for Google user');
+              toast({
+                title: "Datos de configuración detectados",
+                description: "Procesando tu información del onboarding...",
+              });
+            }
+          } catch (storageError) {
+            console.log('No accessible localStorage data:', storageError);
+          }
+        }
+        
       } catch (error) {
         console.error('Error in auto profile setup:', error);
       }
