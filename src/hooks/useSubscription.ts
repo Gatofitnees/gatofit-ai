@@ -139,11 +139,11 @@ export const useSubscription = () => {
       await fetchSubscriptionData();
       
       // Check if user had a premium subscription before the change
-      const isScheduled = subscription && subscription.plan_type !== 'free';
+      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly';
       
       toast({
-        title: isScheduled ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",
-        description: isScheduled 
+        title: hadPremiumPlan ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",
+        description: hadPremiumPlan 
           ? `Tu cambio al ${plan.name} se aplicará cuando expire tu plan actual`
           : `Ahora tienes acceso al ${plan.name}`,
       });
