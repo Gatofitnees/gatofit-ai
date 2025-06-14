@@ -933,7 +933,12 @@ export type Database = {
           created_at: string | null
           expires_at: string | null
           id: string
+          next_plan_starts_at: string | null
+          next_plan_type:
+            | Database["public"]["Enums"]["subscription_plan_type"]
+            | null
           plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          scheduled_change_created_at: string | null
           started_at: string
           status: Database["public"]["Enums"]["subscription_status"]
           store_platform: string | null
@@ -947,7 +952,12 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          next_plan_starts_at?: string | null
+          next_plan_type?:
+            | Database["public"]["Enums"]["subscription_plan_type"]
+            | null
           plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          scheduled_change_created_at?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["subscription_status"]
           store_platform?: string | null
@@ -961,7 +971,12 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          next_plan_starts_at?: string | null
+          next_plan_type?:
+            | Database["public"]["Enums"]["subscription_plan_type"]
+            | null
           plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          scheduled_change_created_at?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["subscription_status"]
           store_platform?: string | null
@@ -1165,6 +1180,10 @@ export type Database = {
       is_user_premium: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      process_scheduled_plan_changes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_expired_subscriptions: {
         Args: Record<PropertyKey, never>

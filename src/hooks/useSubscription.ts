@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +25,9 @@ export interface UserSubscription {
   store_transaction_id?: string;
   store_platform?: string;
   auto_renewal: boolean;
+  next_plan_type?: 'monthly' | 'yearly';
+  next_plan_starts_at?: string;
+  scheduled_change_created_at?: string;
 }
 
 export const useSubscription = () => {
@@ -119,15 +121,45 @@ export const useSubscription = () => {
       const plan = plans.find(p => p.plan_type === planType);
       if (!plan) throw new Error('Plan no encontrado');
 
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
-
-      // Check if user already has a subscription
+      // Check if user already has an active subscription
       const { data: existingSubscription } = await supabase
         .from('user_subscriptions')
-        .select('id')
+        .select('*')
         .eq('user_id', user.id)
         .single();
+
+      // If user has an active premium subscription, schedule the change instead of immediate upgrade
+      if (existingSubscription && 
+          existingSubscription.status === 'active' && 
+          existingSubscription.plan_type !== 'free' &&
+          existingSubscription.expires_at) {
+        
+        // Schedule plan change for when current plan expires
+        const { error } = await supabase
+          .from('user_subscriptions')
+          .update({
+            next_plan_type: planType,
+            next_plan_starts_at: existingSubscription.expires_at,
+            scheduled_change_created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        await fetchSubscriptionData();
+        
+        toast({
+          title: "¡Cambio de plan programado!",
+          description: `Tu plan cambiará a ${plan.name} cuando expire tu suscripción actual`,
+        });
+
+        return true;
+      }
+
+      // For free users or expired subscriptions, proceed with immediate upgrade
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
 
       if (existingSubscription) {
         // Update existing subscription
@@ -139,6 +171,9 @@ export const useSubscription = () => {
             expires_at: expiresAt.toISOString(),
             store_transaction_id: transactionId,
             auto_renewal: true,
+            next_plan_type: null,
+            next_plan_starts_at: null,
+            scheduled_change_created_at: null,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);
@@ -173,6 +208,42 @@ export const useSubscription = () => {
       toast({
         title: "Error",
         description: "No se pudo actualizar la suscripción",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const cancelScheduledChange = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          next_plan_type: null,
+          next_plan_starts_at: null,
+          scheduled_change_created_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      await fetchSubscriptionData();
+      
+      toast({
+        title: "Cambio cancelado",
+        description: "El cambio de plan programado ha sido cancelado",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error canceling scheduled change:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cancelar el cambio programado",
         variant: "destructive"
       });
       return false;
@@ -222,6 +293,7 @@ export const useSubscription = () => {
     checkPremiumStatus,
     upgradeSubscription,
     cancelSubscription,
+    cancelScheduledChange,
     refetch: fetchSubscriptionData
   };
 };

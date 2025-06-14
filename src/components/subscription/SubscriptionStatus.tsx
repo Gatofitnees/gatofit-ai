@@ -1,16 +1,19 @@
 
 import React from 'react';
-import { Crown, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Crown, Calendar, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
+import Button from '@/components/Button';
 import { UserSubscription } from '@/hooks/useSubscription';
 
 interface SubscriptionStatusProps {
   subscription: UserSubscription | null;
   isPremium: boolean;
+  onCancelScheduledChange?: () => void;
 }
 
 export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
   subscription,
-  isPremium
+  isPremium,
+  onCancelScheduledChange
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -53,7 +56,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
   const getPlanName = (planType: string) => {
     switch (planType) {
       case 'free':
-        return 'Gratuito';
+        return 'Plan Gratuito';
       case 'monthly':
         return 'Premium Mensual';
       case 'yearly':
@@ -79,20 +82,50 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
       
       {subscription ? (
         <div className="space-y-4">
-          {/* Plan Info */}
+          {/* Current Plan Info */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-muted-foreground">Plan:</span>
+            <span className="text-muted-foreground">Plan actual:</span>
             <span className="font-medium">{getPlanName(subscription.plan_type)}</span>
           </div>
           
-          {/* Expiration Date */}
+          {/* Current Plan Expiration */}
           {subscription.expires_at && (
             <div className="flex justify-between items-center py-2">
               <span className="text-muted-foreground flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Expira:
+                {subscription.next_plan_type ? 'Válido hasta:' : 'Expira:'}
               </span>
               <span className="font-medium">{formatDate(subscription.expires_at)}</span>
+            </div>
+          )}
+
+          {/* Scheduled Plan Change */}
+          {subscription.next_plan_type && subscription.next_plan_starts_at && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2 text-blue-600">
+                <ArrowRight className="h-4 w-4" />
+                <span className="font-semibold text-sm">Cambio Programado</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Próximo plan:</span>
+                  <span className="font-medium">{getPlanName(subscription.next_plan_type)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Inicio:</span>
+                  <span className="font-medium">{formatDate(subscription.next_plan_starts_at)}</span>
+                </div>
+              </div>
+              {onCancelScheduledChange && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={onCancelScheduledChange}
+                  className="w-full text-xs border-blue-500/30 text-blue-600 hover:bg-blue-500/10"
+                >
+                  Cancelar cambio programado
+                </Button>
+              )}
             </div>
           )}
           
@@ -106,7 +139,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
           </div>
 
           {/* Auto Renewal */}
-          {subscription.status === 'active' && (
+          {subscription.status === 'active' && !subscription.next_plan_type && (
             <div className="flex justify-between items-center py-2">
               <span className="text-muted-foreground">Renovación automática:</span>
               <span className={`font-medium ${subscription.auto_renewal ? 'text-green-500' : 'text-yellow-500'}`}>
