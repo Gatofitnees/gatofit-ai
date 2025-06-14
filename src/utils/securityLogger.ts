@@ -1,95 +1,102 @@
-// Enhanced security event logging
-export type SecurityEventLevel = 'low' | 'medium' | 'high' | 'critical';
-
-export interface SecurityEvent {
+export interface SecurityLogEntry {
   timestamp: string;
-  level: SecurityEventLevel;
-  event: string;
-  description: string;
+  eventType: string;
   userId?: string;
-  ipAddress?: string;
+  details: string;
+  severity: 'low' | 'medium' | 'high';
   userAgent?: string;
+  ipAddress?: string;
+  location?: string;
 }
 
-class SecurityLogger {
-  private events: SecurityEvent[] = [];
-  private maxEvents = 1000; // Keep last 1000 events in memory
+export const logAuthEvent = (
+  eventType: string, 
+  userId?: string, 
+  severity: 'low' | 'medium' | 'high' = 'low',
+  additionalDetails?: string
+) => {
+  const logEntry: SecurityLogEntry = {
+    timestamp: new Date().toISOString(),
+    eventType: `auth_${eventType}`,
+    userId: userId || undefined,
+    details: additionalDetails || eventType,
+    severity,
+    userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+    location: typeof window !== 'undefined' ? window.location.href : undefined
+  };
 
-  logEvent(
-    event: string,
-    description: string,
-    level: SecurityEventLevel = 'low',
-    userId?: string
-  ): void {
-    const securityEvent: SecurityEvent = {
-      timestamp: new Date().toISOString(),
-      level,
-      event,
-      description,
-      userId,
-      ipAddress: this.getClientIP(),
-      userAgent: navigator.userAgent
-    };
-
-    this.events.unshift(securityEvent);
-    
-    // Keep only the latest events
-    if (this.events.length > this.maxEvents) {
-      this.events = this.events.slice(0, this.maxEvents);
-    }
-
-    // Console log for development
-    console.log(`[SECURITY ${level.toUpperCase()}] ${event}: ${description}`);
-
-    // In production, you might want to send critical events to a monitoring service
-    if (level === 'critical' || level === 'high') {
-      this.sendToMonitoring(securityEvent);
-    }
-  }
-
-  private getClientIP(): string {
-    // In a real application, this would be obtained from the server
-    return 'client_ip_not_available';
-  }
-
-  private sendToMonitoring(event: SecurityEvent): void {
-    // In production, send to monitoring service
-    // For now, just log to console
-    console.error('CRITICAL SECURITY EVENT:', event);
-  }
-
-  getEvents(level?: SecurityEventLevel): SecurityEvent[] {
-    if (level) {
-      return this.events.filter(event => event.level === level);
-    }
-    return [...this.events];
-  }
-
-  getEventsByUser(userId: string): SecurityEvent[] {
-    return this.events.filter(event => event.userId === userId);
-  }
-
-  clearEvents(): void {
-    this.events = [];
-  }
-}
-
-export const securityLogger = new SecurityLogger();
-
-// Convenience functions
-export const logSecurityEvent = (
-  event: string,
-  description: string,
-  level: SecurityEventLevel = 'low',
-  userId?: string
-): void => {
-  securityLogger.logEvent(event, description, level, userId);
+  logSecurityEvent(logEntry);
 };
 
-export const logAuthEvent = (event: string, userId?: string, level: SecurityEventLevel = 'low'): void => {
-  securityLogger.logEvent(`auth_${event}`, `Authentication event: ${event}`, level, userId);
+export const logDataAccessEvent = (
+  eventType: string,
+  userId: string,
+  resourceType: string,
+  resourceId?: string,
+  severity: 'low' | 'medium' | 'high' = 'low'
+) => {
+  const logEntry: SecurityLogEntry = {
+    timestamp: new Date().toISOString(),
+    eventType: `data_access_${eventType}`,
+    userId,
+    details: `${resourceType}${resourceId ? `:${resourceId}` : ''}`,
+    severity,
+    userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+    location: typeof window !== 'undefined' ? window.location.href : undefined
+  };
+
+  logSecurityEvent(logEntry);
 };
 
-export const logDataEvent = (event: string, userId?: string, level: SecurityEventLevel = 'low'): void => {
-  securityLogger.logEvent(`data_${event}`, `Data access event: ${event}`, level, userId);
+export const logSecurityEvent = (logEntry: SecurityLogEntry) => {
+  // Console logging for development
+  if (process.env.NODE_ENV === 'development') {
+    const logColor = logEntry.severity === 'high' ? 'red' : 
+                     logEntry.severity === 'medium' ? 'orange' : 'blue';
+    console.log(
+      `%c[SECURITY ${logEntry.severity.toUpperCase()}] ${logEntry.eventType}`,
+      `color: ${logColor}; font-weight: bold;`,
+      logEntry
+    );
+  }
+
+  // Store in session storage for debugging (client-side only)
+  if (typeof window !== 'undefined') {
+    try {
+      const existingLogs = JSON.parse(sessionStorage.getItem('security_audit_log') || '[]');
+      existingLogs.push(logEntry);
+      
+      // Keep only last 100 entries
+      if (existingLogs.length > 100) {
+        existingLogs.splice(0, existingLogs.length - 100);
+      }
+      
+      sessionStorage.setItem('security_audit_log', JSON.stringify(existingLogs));
+    } catch (error) {
+      console.error('Failed to store security log:', error);
+    }
+  }
+
+  // In production, send to your logging service
+  // This could be Sentry, LogRocket, or your own service
+  if (process.env.NODE_ENV === 'production' && logEntry.severity !== 'low') {
+    // Example: Send to external logging service
+    // sendToLoggingService(logEntry);
+  }
+};
+
+export const getSecurityLogs = (): SecurityLogEntry[] => {
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    return JSON.parse(sessionStorage.getItem('security_audit_log') || '[]');
+  } catch {
+    return [];
+  }
+};
+
+export const clearSecurityLogs = () => {
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('security_audit_log');
+  }
 };

@@ -1,78 +1,59 @@
 
-// Enhanced password validation with stronger requirements
 export interface PasswordValidationResult {
   isValid: boolean;
   errors: string[];
-  strength: 'weak' | 'medium' | 'strong' | 'very_strong';
+  strength: 'weak' | 'medium' | 'strong';
 }
 
 export const validateStrongPassword = (password: string): PasswordValidationResult => {
   const errors: string[] = [];
-  let score = 0;
+  let strength: 'weak' | 'medium' | 'strong' = 'weak';
 
   // Minimum length check
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters long');
-  } else if (password.length >= 12) {
-    score += 2;
-  } else {
-    score += 1;
   }
 
-  // Uppercase letter check
-  if (!/[A-Z]/.test(password)) {
+  // Character type checks
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (!hasUpperCase) {
     errors.push('Password must contain at least one uppercase letter');
-  } else {
-    score += 1;
   }
-
-  // Lowercase letter check
-  if (!/[a-z]/.test(password)) {
+  if (!hasLowerCase) {
     errors.push('Password must contain at least one lowercase letter');
-  } else {
-    score += 1;
   }
-
-  // Number check
-  if (!/\d/.test(password)) {
+  if (!hasNumbers) {
     errors.push('Password must contain at least one number');
-  } else {
-    score += 1;
   }
-
-  // Special character check
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (!hasSpecialChar) {
     errors.push('Password must contain at least one special character');
-  } else {
-    score += 1;
   }
 
-  // Common password patterns check
-  const commonPatterns = [
-    /123456/,
-    /password/i,
-    /qwerty/i,
-    /abc123/i,
-    /admin/i,
-    /welcome/i
+  // Common password checks
+  const commonPasswords = [
+    'password', '123456', '123456789', 'qwerty', 'abc123',
+    'password123', '12345678', 'welcome', 'admin', 'letmein'
   ];
-
-  if (commonPatterns.some(pattern => pattern.test(password))) {
-    errors.push('Password contains common patterns and is too predictable');
+  
+  if (commonPasswords.includes(password.toLowerCase())) {
+    errors.push('Password is too common, please choose a more unique password');
   }
 
-  // Sequential characters check
-  if (/(.)\1{2,}/.test(password)) {
-    errors.push('Password should not contain repeated characters');
+  // Sequential character check
+  const hasSequential = /(?:abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|123|234|345|456|567|678|789)/i.test(password);
+  if (hasSequential) {
+    errors.push('Password should not contain sequential characters');
   }
 
   // Determine strength
-  let strength: 'weak' | 'medium' | 'strong' | 'very_strong' = 'weak';
-  if (score >= 6 && errors.length === 0) {
-    strength = 'very_strong';
-  } else if (score >= 4 && errors.length <= 1) {
+  const criteriaCount = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar].filter(Boolean).length;
+  if (password.length >= 12 && criteriaCount >= 3) {
     strength = 'strong';
-  } else if (score >= 3 && errors.length <= 2) {
+  } else if (password.length >= 8 && criteriaCount >= 3) {
     strength = 'medium';
   }
 
@@ -83,21 +64,15 @@ export const validateStrongPassword = (password: string): PasswordValidationResu
   };
 };
 
-// Password strength indicator
-export const getPasswordStrengthColor = (strength: string): string => {
-  switch (strength) {
-    case 'very_strong': return 'text-green-600';
-    case 'strong': return 'text-blue-600';
-    case 'medium': return 'text-yellow-600';
-    default: return 'text-red-600';
-  }
-};
-
-export const getPasswordStrengthText = (strength: string): string => {
-  switch (strength) {
-    case 'very_strong': return 'Very Strong';
-    case 'strong': return 'Strong';
-    case 'medium': return 'Medium';
-    default: return 'Weak';
-  }
+export const generatePasswordStrengthScore = (password: string): number => {
+  let score = 0;
+  
+  if (password.length >= 8) score += 25;
+  if (password.length >= 12) score += 25;
+  if (/[a-z]/.test(password)) score += 10;
+  if (/[A-Z]/.test(password)) score += 10;
+  if (/[0-9]/.test(password)) score += 10;
+  if (/[^A-Za-z0-9]/.test(password)) score += 20;
+  
+  return Math.min(score, 100);
 };
