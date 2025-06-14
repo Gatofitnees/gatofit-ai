@@ -121,7 +121,7 @@ export const useSubscription = () => {
       const plan = plans.find(p => p.plan_type === planType);
       if (!plan) throw new Error('Plan no encontrado');
 
-      // If user is on free plan, upgrade immediately
+      // If user is on free plan or no subscription exists, upgrade immediately
       if (!subscription || subscription.plan_type === 'free') {
         return await upgradeSubscription(planType, transactionId);
       }
@@ -136,7 +136,7 @@ export const useSubscription = () => {
 
       await fetchSubscriptionData();
       
-      const isScheduled = subscription?.plan_type !== 'free';
+      const isScheduled = subscription && subscription.plan_type !== 'free';
       
       toast({
         title: isScheduled ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",
