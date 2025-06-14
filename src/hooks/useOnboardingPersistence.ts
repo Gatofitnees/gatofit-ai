@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { OnboardingData } from '@/pages/onboarding/OnboardingFlow';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const ONBOARDING_STORAGE_KEY = 'gatofit_onboarding_data';
 
@@ -38,43 +39,83 @@ export const useOnboardingPersistence = () => {
     }
   };
 
-  const validateUserForSaving = (): boolean => {
-    if (authLoading) {
-      console.log('Auth is still loading, cannot save onboarding data yet');
-      return false;
+  const getCurrentUser = async (): Promise<any> => {
+    try {
+      // First try to get user from Supabase directly
+      const { data: { user: directUser }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error('Error getting user from Supabase:', error);
+        return null;
+      }
+
+      if (directUser) {
+        console.log('Got user directly from Supabase:', directUser.id);
+        return directUser;
+      }
+
+      // Fallback to context user
+      if (user) {
+        console.log('Using user from context:', user.id);
+        return user;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error in getCurrentUser:', error);
+      return null;
+    }
+  };
+
+  const validateUserForSaving = async (): Promise<{ isValid: boolean; user: any }> => {
+    console.log('Validating user for saving...');
+    
+    const currentUser = await getCurrentUser();
+    
+    if (!currentUser) {
+      console.log('No user found for validation');
+      return { isValid: false, user: null };
     }
     
-    if (!user) {
-      console.error('No user found when trying to save onboarding data');
-      return false;
-    }
-    
-    if (!user.id) {
+    if (!currentUser.id) {
       console.error('User ID is missing, cannot save onboarding data');
-      return false;
+      return { isValid: false, user: null };
     }
     
-    return true;
+    console.log('User validation successful:', currentUser.id);
+    return { isValid: true, user: currentUser };
   };
 
   const saveOnboardingToProfile = async (data: OnboardingData): Promise<boolean> => {
     console.log('Starting to save onboarding data to profile:', data);
     
-    // Validate user state first
-    if (!validateUserForSaving()) {
+    // Wait for user with retry logic
+    let retryCount = 0;
+    const maxRetries = 5;
+    let validationResult = { isValid: false, user: null };
+
+    while (retryCount < maxRetries && !validationResult.isValid) {
+      console.log(`Validation attempt ${retryCount + 1}/${maxRetries}`);
+      validationResult = await validateUserForSaving();
+      
+      if (!validationResult.isValid) {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          console.log(`Waiting 1 second before retry ${retryCount + 1}...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+
+    if (!validationResult.isValid) {
+      console.error(`Failed to validate user after ${maxRetries} attempts`);
       return false;
     }
 
-    // Add a small delay to ensure user is fully authenticated
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Re-validate after delay
-    if (!validateUserForSaving()) {
-      return false;
-    }
+    const authenticatedUser = validationResult.user;
 
     try {
-      console.log('User validated, proceeding with profile update:', user);
+      console.log('User validated, proceeding with profile update:', authenticatedUser.id);
 
       const convertMainGoal = (goal: string | null) => {
         if (!goal) return null;
@@ -126,14 +167,15 @@ export const useOnboardingPersistence = () => {
     }
   };
 
-  const waitForUserAuthentication = async (maxWaitTime = 10000): Promise<boolean> => {
+  const waitForUserAuthentication = async (maxWaitTime = 15000): Promise<boolean> => {
     const startTime = Date.now();
     
     while (Date.now() - startTime < maxWaitTime) {
-      if (!authLoading && user?.id) {
+      const validationResult = await validateUserForSaving();
+      if (validationResult.isValid) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
     return false;
