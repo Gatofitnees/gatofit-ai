@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -75,12 +76,14 @@ export const useSubscription = () => {
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
+        .in('plan_type', ['monthly', 'yearly']) // Only fetch paid plans
         .order('price_usd');
 
       if (error) throw error;
       
       const transformedPlans: SubscriptionPlan[] = (data || []).map(plan => ({
         ...plan,
+        plan_type: plan.plan_type as 'monthly' | 'yearly', // Safe type assertion after filtering
         features: typeof plan.features === 'string' 
           ? JSON.parse(plan.features)
           : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_used: number; }
