@@ -9,21 +9,21 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
   // File size check (5MB max)
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
-    logSecurityEventLocal('file_upload_size_exceeded', `File size: ${file.size}`, 'medium');
+    logSecurityEvent('file_upload_size_exceeded', `File size: ${file.size}`, 'medium');
     return { isValid: false, error: 'File size must be less than 5MB' };
   }
 
   // File type whitelist
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
-    logSecurityEventLocal('file_upload_invalid_type', `File type: ${file.type}`, 'medium');
+    logSecurityEvent('file_upload_invalid_type', `File type: ${file.type}`, 'medium');
     return { isValid: false, error: 'Only JPEG, PNG, and WebP images are allowed' };
   }
 
   // File name validation
   const dangerousChars = /[<>:"/\\|?*\x00-\x1f]/;
   if (dangerousChars.test(file.name)) {
-    logSecurityEventLocal('file_upload_dangerous_filename', file.name, 'medium');
+    logSecurityEvent('file_upload_dangerous_filename', file.name, 'medium');
     return { isValid: false, error: 'File name contains invalid characters' };
   }
 
@@ -31,7 +31,7 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
   const fileExtension = file.name.split('.').pop()?.toLowerCase();
   const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
   if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-    logSecurityEventLocal('file_upload_invalid_extension', fileExtension || 'none', 'medium');
+    logSecurityEvent('file_upload_invalid_extension', fileExtension || 'none', 'medium');
     return { isValid: false, error: 'File must have a valid image extension' };
   }
 
@@ -47,11 +47,11 @@ export const validateSecureFileUpload = async (file: File): Promise<FileValidati
       (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46); // WebP/RIFF
 
     if (!isValidImage) {
-      logSecurityEventLocal('file_upload_invalid_signature', 'Invalid file signature', 'high');
+      logSecurityEvent('file_upload_invalid_signature', 'Invalid file signature', 'high');
       return { isValid: false, error: 'File does not appear to be a valid image' };
     }
   } catch (error) {
-    logSecurityEventLocal('file_upload_signature_check_failed', 'Failed to read file', 'medium');
+    logSecurityEvent('file_upload_signature_check_failed', 'Failed to read file', 'medium');
     return { isValid: false, error: 'Unable to validate file integrity' };
   }
 
@@ -68,7 +68,7 @@ export const validateWebhookPayload = (payload: any): FileValidationResult => {
   if (payload.imageUrl && typeof payload.imageUrl === 'string') {
     const urlPattern = /^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/-]+\.(jpg|jpeg|png|webp)$/i;
     if (!urlPattern.test(payload.imageUrl)) {
-      logSecurityEventLocal('webhook_invalid_image_url', payload.imageUrl, 'medium');
+      logSecurityEvent('webhook_invalid_image_url', payload.imageUrl, 'medium');
       return { isValid: false, error: 'Invalid image URL format' };
     }
   }
@@ -108,7 +108,7 @@ export const validateWebhookRequest = (url: string, data: any): FileValidationRe
   return validateWebhookPayload(data);
 };
 
-const logSecurityEventLocal = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'low') => {
+export const logSecurityEvent = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'low') => {
   const timestamp = new Date().toISOString();
   const logEntry = {
     timestamp,
