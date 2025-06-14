@@ -30,27 +30,104 @@ export const useHomePageData = () => {
   const [workoutSummaries, setWorkoutSummaries] = useState<WorkoutSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
-
-  // Generate macros data from profile or defaults
-  const macros: MacroData = {
+  const [macros, setMacros] = useState<MacroData>({
     calories: { 
-      current: 0, // This would come from daily food log
+      current: 0, 
       target: profile?.initial_recommended_calories || 2000, 
       unit: "kcal" 
     },
     protein: { 
-      current: 0, // This would come from daily food log
+      current: 0, 
       target: profile?.initial_recommended_protein_g || 120 
     },
     carbs: { 
-      current: 0, // This would come from daily food log
+      current: 0, 
       target: profile?.initial_recommended_carbs_g || 200 
     },
     fats: { 
-      current: 0, // This would come from daily food log
+      current: 0, 
       target: profile?.initial_recommended_fats_g || 65 
     }
-  };
+  });
+
+  // Update macro targets when profile changes
+  useEffect(() => {
+    setMacros(prev => ({
+      calories: { 
+        current: prev.calories.current, 
+        target: profile?.initial_recommended_calories || 2000, 
+        unit: "kcal" 
+      },
+      protein: { 
+        current: prev.protein.current, 
+        target: profile?.initial_recommended_protein_g || 120 
+      },
+      carbs: { 
+        current: prev.carbs.current, 
+        target: profile?.initial_recommended_carbs_g || 200 
+      },
+      fats: { 
+        current: prev.fats.current, 
+        target: profile?.initial_recommended_fats_g || 65 
+      }
+    }));
+  }, [profile]);
+
+  // Load daily food consumption
+  useEffect(() => {
+    const fetchDailyFoodConsumption = async () => {
+      if (!user) return;
+      
+      try {
+        const dateString = selectedDate.toISOString().split('T')[0];
+        
+        const { data: foodEntries, error } = await supabase
+          .from('daily_food_log_entries')
+          .select('calories_consumed, protein_g_consumed, carbs_g_consumed, fat_g_consumed')
+          .eq('user_id', user.id)
+          .eq('log_date', dateString);
+          
+        if (error) throw error;
+        
+        // Calculate totals from food entries
+        const totals = (foodEntries || []).reduce(
+          (sum, entry) => ({
+            calories: sum.calories + (entry.calories_consumed || 0),
+            protein: sum.protein + (entry.protein_g_consumed || 0),
+            carbs: sum.carbs + (entry.carbs_g_consumed || 0),
+            fats: sum.fats + (entry.fat_g_consumed || 0)
+          }),
+          { calories: 0, protein: 0, carbs: 0, fats: 0 }
+        );
+        
+        // Update macros with real consumption data
+        setMacros(prev => ({
+          calories: { 
+            current: Math.round(totals.calories), 
+            target: prev.calories.target, 
+            unit: "kcal" 
+          },
+          protein: { 
+            current: Math.round(totals.protein), 
+            target: prev.protein.target 
+          },
+          carbs: { 
+            current: Math.round(totals.carbs), 
+            target: prev.carbs.target 
+          },
+          fats: { 
+            current: Math.round(totals.fats), 
+            target: prev.fats.target 
+          }
+        }));
+        
+      } catch (error) {
+        console.error("Error loading daily food consumption:", error);
+      }
+    };
+    
+    fetchDailyFoodConsumption();
+  }, [user, selectedDate]);
 
   // Load workout dates
   useEffect(() => {
