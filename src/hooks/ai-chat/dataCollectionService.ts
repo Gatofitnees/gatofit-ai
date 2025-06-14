@@ -77,7 +77,7 @@ export const useDataCollection = () => {
         })) || [],
       },
       routines: routines.map(routine => ({
-        id: routine.id,
+        id: routine.id.toString(), // Convert number to string
         name: routine.name,
         type: routine.type,
         description: routine.description,

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useAIChat } from '@/hooks/useAIChat';
+import { useAIChat } from '@/hooks/ai-chat';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 
