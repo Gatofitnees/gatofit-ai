@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ const AIChatPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate(-1);
+    navigate('/');
   };
 
   return (
