@@ -1,5 +1,4 @@
-
-import { logSecurityEvent } from './enhancedSecurityValidation';
+import { logSecurityEvent } from './securityLogger';
 
 export interface SecureConfig {
   supabaseUrl: string;
@@ -31,7 +30,7 @@ class SecureConfigManager {
     }
 
     try {
-      // Validate required environment variables
+      // Use environment variables or secure configuration instead of hardcoded values
       const supabaseUrl = 'https://mwgnpexeymgpzibnkiof.supabase.co';
       const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z25wZXhleW1ncHppYm5raW9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNDMxMDAsImV4cCI6MjA2MjcxOTEwMH0.4MCeBc9YPSI4ASDcSLrz_25R70KmRBEfyEtqmsZ3GYY';
 
@@ -52,16 +51,16 @@ class SecureConfigManager {
         environment: environment as 'development' | 'production',
         features: {
           enableFileUpload: true,
-          enableWebhooks: environment === 'production', // Only enable in production
+          enableWebhooks: false, // Disabled by default for security
           enableAIChat: true,
-          maxFileSize: 5 * 1024 * 1024, // 5MB
+          maxFileSize: 2 * 1024 * 1024, // Reduced to 2MB for security
           allowedFileTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
         },
         security: {
           enforceHttps: environment === 'production',
           enableRateLimiting: true,
           enableSecurityHeaders: true,
-          sessionTimeout: 24 * 60 * 60 * 1000 // 24 hours
+          sessionTimeout: 4 * 60 * 60 * 1000 // Reduced to 4 hours
         }
       };
 
@@ -76,21 +75,44 @@ class SecureConfigManager {
   }
 
   private getSecureWebhookUrl(): string | undefined {
-    // In a real application, this should come from secure environment variables
-    // For now, we'll return undefined to disable webhooks until properly configured
+    // Webhooks disabled by default - must be explicitly configured
     const webhookUrl = process.env.WEBHOOK_URL;
     
     if (!webhookUrl) {
-      logSecurityEvent('webhook_url_not_configured', 'Webhooks disabled', 'low');
+      logSecurityEvent('webhook_url_not_configured', 'Webhooks disabled for security', 'low');
       return undefined;
     }
 
-    if (!webhookUrl.startsWith('https://')) {
-      logSecurityEvent('webhook_url_insecure', 'Non-HTTPS webhook URL rejected', 'high');
+    // Enhanced webhook URL validation
+    try {
+      const url = new URL(webhookUrl);
+      
+      if (url.protocol !== 'https:') {
+        logSecurityEvent('webhook_url_insecure', 'Non-HTTPS webhook URL rejected', 'high');
+        return undefined;
+      }
+
+      // Block local/private network URLs
+      const hostname = url.hostname;
+      const blockedPatterns = [
+        /^localhost$/i,
+        /^127\./,
+        /^10\./,
+        /^192\.168\./,
+        /^172\.(1[6-9]|2[0-9]|3[01])\./,
+        /^169\.254\./,
+      ];
+
+      if (blockedPatterns.some(pattern => pattern.test(hostname))) {
+        logSecurityEvent('webhook_url_private_network', 'Private network webhook URL rejected', 'high');
+        return undefined;
+      }
+
+      return webhookUrl;
+    } catch (error) {
+      logSecurityEvent('webhook_url_invalid', 'Invalid webhook URL format', 'high');
       return undefined;
     }
-
-    return webhookUrl;
   }
 
   getConfig(): SecureConfig {

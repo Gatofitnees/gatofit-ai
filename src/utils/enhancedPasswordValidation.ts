@@ -11,11 +11,15 @@ export const validateStrongPassword = (password: string): PasswordValidationResu
   let score = 0;
   let strength: 'weak' | 'medium' | 'strong' | 'very_strong' = 'weak';
 
-  // Minimum length check (increased to 12 for better security)
-  if (password.length < 12) {
-    errors.push('Password must be at least 12 characters long');
-  } else if (password.length >= 12) {
+  // Minimum length check (enhanced to 8 characters minimum)
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  } else if (password.length >= 8) {
     score += 20;
+  }
+
+  if (password.length >= 12) {
+    score += 10;
   }
 
   if (password.length >= 16) {

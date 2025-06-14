@@ -108,7 +108,7 @@ export const validateWebhookRequest = (url: string, data: any): FileValidationRe
   return validateWebhookPayload(data);
 };
 
-export const logSecurityEvent = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'low') => {
+const logSecurityEvent = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'low') => {
   const timestamp = new Date().toISOString();
   const logEntry = {
     timestamp,
