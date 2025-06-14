@@ -1,18 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export interface SubscriptionPlan {
   id: string;
-  plan_type: 'free' | 'monthly' | 'yearly';
   name: string;
   price_usd: number;
   duration_days: number;
-  features: {
-    routines_limit: number;
-    nutrition_photos_weekly: number;
-    ai_chat_messages_weekly: number;
-  };
+  plan_type: 'free' | 'monthly' | 'yearly';
+  features: any;
 }
 
 export interface UserSubscription {
@@ -21,49 +19,55 @@ export interface UserSubscription {
   plan_type: 'free' | 'monthly' | 'yearly';
   status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial';
   started_at: string;
-  expires_at?: string;
-  store_transaction_id?: string;
-  store_platform?: string;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
   auto_renewal: boolean;
-  next_plan_type?: 'monthly' | 'yearly';
-  next_plan_starts_at?: string;
-  scheduled_change_created_at?: string;
+  cancelled_at: string | null;
+  store_platform: string | null;
+  store_transaction_id: string | null;
+  next_plan_type: 'monthly' | 'yearly' | null;
+  next_plan_starts_at: string | null;
+  scheduled_change_created_at: string | null;
 }
 
 export const useSubscription = () => {
+  const { user } = useAuth();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPremium, setIsPremium] = useState(false);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchSubscriptionData();
-    fetchPlans();
-  }, []);
+  const fetchSubscription = async () => {
+    if (!user) {
+      setSubscription(null);
+      setIsLoading(false);
+      return;
+    }
 
-  const fetchSubscriptionData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching subscription:', error);
         return;
       }
 
       if (data) {
-        setSubscription(data);
-        setIsPremium(data.plan_type !== 'free' && data.status === 'active');
+        // Transform the data to match our interface
+        const transformedData: UserSubscription = {
+          ...data,
+          next_plan_type: data.next_plan_type === 'free' ? null : data.next_plan_type
+        };
+        setSubscription(transformedData);
+      } else {
+        setSubscription(null);
       }
     } catch (error) {
-      console.error('Error in fetchSubscriptionData:', error);
+      console.error('Error fetching subscription:', error);
     } finally {
       setIsLoading(false);
     }
@@ -75,150 +79,102 @@ export const useSubscription = () => {
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
-        .order('price_usd');
+        .order('price_usd', { ascending: true });
 
-      if (error) throw error;
-      
-      // Transform the data to match our SubscriptionPlan interface
-      const transformedPlans: SubscriptionPlan[] = (data || []).map(plan => ({
-        ...plan,
-        features: typeof plan.features === 'string' 
-          ? JSON.parse(plan.features)
-          : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_used: number; }
-      }));
-      
-      setPlans(transformedPlans);
+      if (error) {
+        console.error('Error fetching plans:', error);
+        return;
+      }
+
+      setPlans(data || []);
     } catch (error) {
       console.error('Error fetching plans:', error);
     }
   };
 
-  const checkPremiumStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-
-      const { data, error } = await supabase.rpc('is_user_premium', {
-        user_id: user.id
-      });
-
-      if (error) throw error;
-      
-      const premium = data as boolean;
-      setIsPremium(premium);
-      return premium;
-    } catch (error) {
-      console.error('Error checking premium status:', error);
+  const upgradeSubscription = async (planType: 'monthly' | 'yearly') => {
+    if (!user) {
+      toast.error('Debes estar autenticado para cambiar de plan');
       return false;
     }
-  };
 
-  const upgradeSubscription = async (planType: 'monthly' | 'yearly', transactionId?: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
-
       const plan = plans.find(p => p.plan_type === planType);
-      if (!plan) throw new Error('Plan no encontrado');
+      if (!plan) {
+        toast.error('Plan no encontrado');
+        return false;
+      }
 
-      // Check if user already has an active subscription
-      const { data: existingSubscription } = await supabase
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      // If user has an active premium subscription, schedule the change instead of immediate upgrade
-      if (existingSubscription && 
-          existingSubscription.status === 'active' && 
-          existingSubscription.plan_type !== 'free' &&
-          existingSubscription.expires_at) {
-        
-        // Schedule plan change for when current plan expires
+      // Check if user has an active subscription
+      if (subscription && subscription.status === 'active' && subscription.expires_at) {
+        // Schedule the plan change instead of changing immediately
         const { error } = await supabase
           .from('user_subscriptions')
           .update({
             next_plan_type: planType,
-            next_plan_starts_at: existingSubscription.expires_at,
+            next_plan_starts_at: subscription.expires_at,
             scheduled_change_created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', user.id);
+          .eq('id', subscription.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error scheduling plan change:', error);
+          toast.error('Error al programar el cambio de plan');
+          return false;
+        }
 
-        await fetchSubscriptionData();
-        
-        toast({
-          title: "¡Cambio de plan programado!",
-          description: `Tu plan cambiará a ${plan.name} cuando expire tu suscripción actual`,
-        });
+        toast.success(`Plan ${plan.name} programado para ${new Date(subscription.expires_at).toLocaleDateString()}`);
+        await fetchSubscription(); // Refresh subscription data
+        return true;
+      } else {
+        // Create new subscription or update expired one
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
 
+        const subscriptionData = {
+          user_id: user.id,
+          plan_type: planType,
+          status: 'active' as const,
+          started_at: new Date().toISOString(),
+          expires_at: expiresAt.toISOString(),
+          auto_renewal: true,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = subscription?.id
+          ? await supabase
+              .from('user_subscriptions')
+              .update(subscriptionData)
+              .eq('id', subscription.id)
+          : await supabase
+              .from('user_subscriptions')
+              .insert([subscriptionData]);
+
+        if (error) {
+          console.error('Error updating subscription:', error);
+          toast.error('Error al actualizar la suscripción');
+          return false;
+        }
+
+        toast.success(`¡Plan ${plan.name} activado con éxito!`);
+        await fetchSubscription();
         return true;
       }
-
-      // For free users or expired subscriptions, proceed with immediate upgrade
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
-
-      if (existingSubscription) {
-        // Update existing subscription
-        const { error } = await supabase
-          .from('user_subscriptions')
-          .update({
-            plan_type: planType,
-            status: 'active',
-            expires_at: expiresAt.toISOString(),
-            store_transaction_id: transactionId,
-            auto_renewal: true,
-            next_plan_type: null,
-            next_plan_starts_at: null,
-            scheduled_change_created_at: null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        // Create new subscription
-        const { error } = await supabase
-          .from('user_subscriptions')
-          .insert({
-            user_id: user.id,
-            plan_type: planType,
-            status: 'active',
-            expires_at: expiresAt.toISOString(),
-            store_transaction_id: transactionId,
-            auto_renewal: true
-          });
-
-        if (error) throw error;
-      }
-
-      await fetchSubscriptionData();
-      
-      toast({
-        title: "¡Suscripción actualizada!",
-        description: `Ahora tienes acceso al ${plan.name}`,
-      });
-
-      return true;
     } catch (error) {
       console.error('Error upgrading subscription:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la suscripción",
-        variant: "destructive"
-      });
+      toast.error('Error al cambiar de plan');
       return false;
     }
   };
 
   const cancelScheduledChange = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
+    if (!user || !subscription?.next_plan_type) {
+      toast.error('No hay cambio programado para cancelar');
+      return false;
+    }
 
+    try {
       const { error } = await supabase
         .from('user_subscriptions')
         .update({
@@ -227,73 +183,73 @@ export const useSubscription = () => {
           scheduled_change_created_at: null,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('id', subscription.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error cancelling scheduled change:', error);
+        toast.error('Error al cancelar el cambio programado');
+        return false;
+      }
 
-      await fetchSubscriptionData();
-      
-      toast({
-        title: "Cambio cancelado",
-        description: "El cambio de plan programado ha sido cancelado",
-      });
-
+      toast.success('Cambio programado cancelado exitosamente');
+      await fetchSubscription();
       return true;
     } catch (error) {
-      console.error('Error canceling scheduled change:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cancelar el cambio programado",
-        variant: "destructive"
-      });
+      console.error('Error cancelling scheduled change:', error);
+      toast.error('Error al cancelar el cambio programado');
       return false;
     }
   };
 
   const cancelSubscription = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
+    if (!user || !subscription) {
+      toast.error('No hay suscripción para cancelar');
+      return false;
+    }
 
+    try {
       const { error } = await supabase
         .from('user_subscriptions')
         .update({
           status: 'cancelled',
           cancelled_at: new Date().toISOString(),
-          auto_renewal: false
+          auto_renewal: false,
+          updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('id', subscription.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error cancelling subscription:', error);
+        toast.error('Error al cancelar la suscripción');
+        return false;
+      }
 
-      await fetchSubscriptionData();
-      
-      toast({
-        title: "Suscripción cancelada",
-        description: "Tu suscripción se ha cancelado correctamente",
-      });
-
+      toast.success('Suscripción cancelada exitosamente');
+      await fetchSubscription();
       return true;
     } catch (error) {
-      console.error('Error canceling subscription:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cancelar la suscripción",
-        variant: "destructive"
-      });
+      console.error('Error cancelling subscription:', error);
+      toast.error('Error al cancelar la suscripción');
       return false;
     }
   };
+
+  useEffect(() => {
+    fetchSubscription();
+    fetchPlans();
+  }, [user]);
+
+  const isPremium = subscription?.status === 'active' && 
+    (subscription?.plan_type === 'monthly' || subscription?.plan_type === 'yearly');
 
   return {
     subscription,
     plans,
     isLoading,
     isPremium,
-    checkPremiumStatus,
     upgradeSubscription,
     cancelSubscription,
     cancelScheduledChange,
-    refetch: fetchSubscriptionData
+    refetch: fetchSubscription
   };
 };

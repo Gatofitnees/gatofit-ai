@@ -7,7 +7,7 @@ import RankBadge from './RankBadge';
 interface RankingUser {
   user_id: string;
   username: string;
-  avatar_url: string;
+  avatar_url: string | null;
   current_level: number;
   total_experience: number;
   current_streak: number;
@@ -18,6 +18,8 @@ interface RankingUser {
 interface RankingListProps {
   users: RankingUser[];
   currentUserId?: string;
+  type?: 'streak' | 'experience';
+  isLoading?: boolean;
 }
 
 const RankingList: React.FC<RankingListProps> = ({ users, currentUserId }) => {
@@ -54,7 +56,7 @@ const RankingList: React.FC<RankingListProps> = ({ users, currentUserId }) => {
                 </div>
                 
                 <PremiumAvatar
-                  src={user.avatar_url}
+                  src={user.avatar_url || undefined}
                   alt={user.username}
                   fallback={user.username.charAt(0).toUpperCase()}
                   size="md"
@@ -84,7 +86,6 @@ const RankingList: React.FC<RankingListProps> = ({ users, currentUserId }) => {
               
               <div className="text-right">
                 <RankBadge 
-                  rank={user.rank_name}
                   level={user.current_level}
                   size="sm"
                 />

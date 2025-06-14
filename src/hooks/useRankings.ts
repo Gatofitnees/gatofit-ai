@@ -10,7 +10,7 @@ export interface RankingUser {
   total_experience: number;
   current_level: number;
   rank_name: string;
-  total_workouts?: number;
+  total_workouts: number;
   followers_count?: number;
   following_count?: number;
 }
