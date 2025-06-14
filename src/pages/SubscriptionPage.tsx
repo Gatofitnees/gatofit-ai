@@ -10,10 +10,19 @@ import { PremiumPlanCard } from '@/components/subscription/PremiumPlanCard';
 import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
 import { PlanChangeConfirmDialog } from '@/components/subscription/PlanChangeConfirmDialog';
 import { CancelConfirmDialog } from '@/components/subscription/CancelConfirmDialog';
+import { ScheduledChangeCard } from '@/components/subscription/ScheduledChangeCard';
 
 const SubscriptionPage: React.FC = () => {
   const navigate = useNavigate();
-  const { subscription, plans, isPremium, upgradeSubscription, cancelSubscription } = useSubscription();
+  const { 
+    subscription, 
+    plans, 
+    isPremium, 
+    hasScheduledChange,
+    upgradeSubscription, 
+    cancelSubscription,
+    cancelScheduledPlanChange
+  } = useSubscription();
   const { usage } = useUsageLimits();
   const [isLoading, setIsLoading] = useState(false);
   const [showPlanChangeDialog, setShowPlanChangeDialog] = useState(false);
@@ -71,6 +80,15 @@ const SubscriptionPage: React.FC = () => {
     }
   };
 
+  const handleCancelScheduledChange = async () => {
+    setIsLoading(true);
+    try {
+      await cancelScheduledPlanChange();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-20">
       {/* Header */}
@@ -95,6 +113,16 @@ const SubscriptionPage: React.FC = () => {
       <div className="max-w-md mx-auto p-4 space-y-6">
         {/* Current Status */}
         <SubscriptionStatus subscription={subscription} isPremium={isPremium} />
+
+        {/* Scheduled Change Card */}
+        {hasScheduledChange && (
+          <ScheduledChangeCard
+            subscription={subscription!}
+            plans={plans}
+            onCancelScheduledChange={handleCancelScheduledChange}
+            isLoading={isLoading}
+          />
+        )}
 
         {/* Usage Stats for Free Users */}
         {!isPremium && usage && (

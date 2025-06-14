@@ -1123,6 +1123,10 @@ export type Database = {
         }
         Returns: Json
       }
+      cancel_scheduled_plan_change: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       clean_old_food_entries: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1180,6 +1184,13 @@ export type Database = {
       process_scheduled_plan_changes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      schedule_plan_change: {
+        Args: {
+          p_user_id: string
+          p_new_plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+        }
+        Returns: Json
       }
       update_expired_subscriptions: {
         Args: Record<PropertyKey, never>
