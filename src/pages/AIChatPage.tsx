@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +30,9 @@ const AIChatPage: React.FC = () => {
     if (inputEl) {
       const resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          setInputHeight(entry.target.offsetHeight);
+          if (entry.target instanceof HTMLElement) {
+            setInputHeight(entry.target.offsetHeight);
+          }
         }
       });
       resizeObserver.observe(inputEl);
