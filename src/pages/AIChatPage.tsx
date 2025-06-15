@@ -17,27 +17,21 @@ const AIChatPage: React.FC = () => {
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
-    // Este polyfill es para navegadores más antiguos o entornos donde visualViewport no está disponible
     if (!visualViewport) return;
 
     const handleResize = () => {
       if (pageRef.current) {
-        // Un chequeo simple para ver si el teclado está abierto.
-        // Asumimos que está abierto si la altura del viewport es significantemente menor que la de la ventana.
         const isKeyboardOpen = window.innerHeight > visualViewport.height + 100;
-
         if (isKeyboardOpen) {
-          // Cuando el teclado está abierto, ajustamos la altura al área visible.
           pageRef.current.style.height = `${visualViewport.height}px`;
         } else {
-          // Cuando el teclado se cierra, eliminamos el estilo en línea para que se aplique la clase de CSS.
           pageRef.current.style.height = '';
         }
       }
     };
 
     visualViewport.addEventListener('resize', handleResize);
-    handleResize(); // Llamada inicial para establecer el tamaño correcto
+    handleResize();
 
     return () => {
       visualViewport.removeEventListener('resize', handleResize);
@@ -73,6 +67,9 @@ const AIChatPage: React.FC = () => {
     <div
       ref={pageRef}
       className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto overflow-hidden"
+      style={{
+        paddingTop: 'var(--safe-area-inset-top)',
+      }}
     >
       <AIChatHeader 
         onBack={handleBack}
@@ -95,10 +92,13 @@ const AIChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* El contenedor del input es ahora parte del flujo natural, pegado abajo */}
       <div 
         className="p-2 border-t border-muted/20"
-        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
+        style={{ 
+          paddingBottom: 'calc(0.5rem + var(--safe-area-inset-bottom))',
+          paddingLeft: 'calc(0.5rem + var(--safe-area-inset-left))',
+          paddingRight: 'calc(0.5rem + var(--safe-area-inset-right))',
+        }}
       >
         <AIMessageInput
           inputValue={inputValue}

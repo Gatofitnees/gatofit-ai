@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Home, Dumbbell, Utensils, Users, Flame } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -42,7 +41,14 @@ const NavBar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md z-50 p-1 animate-fade-in border-t border-white/5 shadow-neu-float">
+    <div 
+      className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md z-50 p-1 animate-fade-in border-t border-white/5 shadow-neu-float"
+      style={{
+        paddingBottom: `calc(0.25rem + var(--safe-area-inset-bottom))`,
+        paddingLeft: `var(--safe-area-inset-left)`,
+        paddingRight: `var(--safe-area-inset-right)`,
+      }}
+    >
       <div className="max-w-md mx-auto flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;

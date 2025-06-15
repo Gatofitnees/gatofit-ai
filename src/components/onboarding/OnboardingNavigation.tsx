@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -37,7 +36,14 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background backdrop-blur-md border-t border-white/5 z-[100]">
+    <div 
+      className="fixed bottom-0 left-0 right-0 p-4 bg-background backdrop-blur-md border-t border-white/5 z-[100]"
+      style={{
+        paddingBottom: `calc(1rem + var(--safe-area-inset-bottom))`,
+        paddingLeft: `calc(1rem + var(--safe-area-inset-left))`,
+        paddingRight: `calc(1rem + var(--safe-area-inset-right))`,
+      }}
+    >
       <div className="max-w-md mx-auto space-y-4">
         <button
           onClick={handleNext}

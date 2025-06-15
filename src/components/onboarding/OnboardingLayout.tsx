@@ -20,7 +20,12 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div 
+      className="min-h-screen bg-background text-foreground flex flex-col"
+      style={{
+        paddingTop: 'var(--safe-area-inset-top)',
+      }}
+    >
       {showProgress && (
         <div className="w-full px-4 pt-6 pb-2">
           <div className="max-w-md mx-auto">

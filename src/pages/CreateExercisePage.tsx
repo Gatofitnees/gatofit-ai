@@ -15,7 +15,14 @@ const CreateExercisePage: React.FC = () => {
   } = useCreateExercise();
 
   return (
-    <div className="min-h-screen pb-24 max-w-md mx-auto">
+    <div 
+      className="min-h-screen pb-24 max-w-md mx-auto"
+      style={{
+        paddingTop: 'var(--safe-area-inset-top)',
+        paddingLeft: 'var(--safe-area-inset-left)',
+        paddingRight: 'var(--safe-area-inset-right)',
+      }}
+    >
       <CreateExerciseHeader
         onCancel={actionHandlers.handleCancel}
         onSave={actionHandlers.handleSave}
