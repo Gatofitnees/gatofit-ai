@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -20,14 +19,14 @@ import { AnimatePresence } from "framer-motion";
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [processingFoods, setProcessingFoods] = useState<{ id: string; imageSrc: string; }[]>([]);
+  const [processingFoods, setProcessingFoods] = useState<{ id: string; imageSrc: string; blob: Blob; error?: string | null }[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const selectedDateString = selectedDate.toISOString().split('T')[0];
   const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(selectedDateString);
   const { isAnalyzing } = useFoodAnalysis();
-  const { uploadImageWithAnalysis, clearError } = useFoodCapture();
+  const { uploadImageWithAnalysis, clearError, error: foodCaptureError } = useFoodCapture();
   const { profile } = useProfile();
 
   // Calculate today's totals from actual entries
@@ -91,17 +90,10 @@ const NutritionPage: React.FC = () => {
     });
   };
 
-  const handlePhotoTaken = async (photoBlob: Blob) => {
-    setShowCamera(false);
+  const runAnalysis = async (blob: Blob, id: string, imageSrc: string) => {
     clearError();
-
-    const tempId = Date.now().toString();
-    const imageSrc = URL.createObjectURL(photoBlob);
-
-    setProcessingFoods(prev => [{ id: tempId, imageSrc }, ...prev]);
-
     try {
-      const result = await uploadImageWithAnalysis(photoBlob);
+      const result = await uploadImageWithAnalysis(blob);
 
       if (result && result.analysisResult) {
         const analysis = result.analysisResult;
@@ -119,23 +111,51 @@ const NutritionPage: React.FC = () => {
           meal_type: 'snack1', // Default meal type, can be changed on edit
         };
         await addEntry(newEntryData);
+        setProcessingFoods(prev => prev.filter(p => p.id !== id));
+        URL.revokeObjectURL(imageSrc);
       } else {
+        const errorMessage = foodCaptureError || "No se pudo analizar la comida. Revisa tu conexión o la imagen.";
         toast({
           title: "Error de Análisis",
-          description: "No se pudo analizar la comida. Por favor, inténtalo de nuevo.",
+          description: errorMessage,
           variant: "destructive",
         });
+        setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
       }
     } catch (error) {
       console.error("Error processing food:", error);
+      const errorMessage = foodCaptureError || "Ocurrió un error al procesar la imagen.";
       toast({
         title: "Error Inesperado",
-        description: "Ocurrió un error al procesar la imagen.",
+        description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setProcessingFoods(prev => prev.filter(p => p.id !== tempId));
-      URL.revokeObjectURL(imageSrc);
+      setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
+    }
+  };
+
+  const handlePhotoTaken = async (photoBlob: Blob) => {
+    setShowCamera(false);
+    const tempId = Date.now().toString();
+    const imageSrc = URL.createObjectURL(photoBlob);
+
+    setProcessingFoods(prev => [{ id: tempId, imageSrc, blob: photoBlob, error: null }, ...prev]);
+    await runAnalysis(photoBlob, tempId, imageSrc);
+  };
+
+  const handleRetryAnalysis = async (foodId: string) => {
+    const foodToRetry = processingFoods.find(f => f.id === foodId);
+    if (!foodToRetry) return;
+
+    setProcessingFoods(prev => prev.map(p => p.id === foodId ? { ...p, error: null } : p));
+    await runAnalysis(foodToRetry.blob, foodToRetry.id, foodToRetry.imageSrc);
+  };
+
+  const handleCancelProcessing = (foodId: string) => {
+    const foodToRemove = processingFoods.find(f => f.id === foodId);
+    if (foodToRemove) {
+      URL.revokeObjectURL(foodToRemove.imageSrc);
+      setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
     }
   };
 
@@ -226,7 +246,13 @@ const NutritionPage: React.FC = () => {
         
         <div className="space-y-3">
           {processingFoods.map((food) => (
-            <ProcessingFoodCard key={food.id} imageUrl={food.imageSrc} />
+            <ProcessingFoodCard 
+              key={food.id} 
+              imageUrl={food.imageSrc} 
+              error={food.error}
+              onRetry={() => handleRetryAnalysis(food.id)}
+              onCancel={() => handleCancelProcessing(food.id)}
+            />
           ))}
           {isLoading && processingFoods.length === 0 ? (
             <div className="text-center py-8">
