@@ -9,6 +9,7 @@ interface Exercise {
   muscle_group_main: string;
   equipment_required?: string;
   image_url?: string;
+  video_url?: string;
 }
 
 interface ExerciseItemProps {
@@ -38,7 +39,11 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
       onClick={() => onSelect(exercise.id)}
     >
       {/* Exercise Preview */}
-      <ExercisePreview imageUrl={exercise.image_url} exerciseName={exercise.name} />
+      <ExercisePreview 
+        videoUrl={exercise.video_url}
+        imageUrl={exercise.image_url} 
+        exerciseName={exercise.name} 
+      />
       
       {/* Exercise info */}
       <div className="flex-1">
