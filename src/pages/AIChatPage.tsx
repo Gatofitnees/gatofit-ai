@@ -1,12 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, MessageCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
 import { formatAIText } from '@/utils/textFormatter';
+import GatofitAvatar from '/photo-1535268647677-300dbf3d78d1.jpeg';
 
 const AIChatPage: React.FC = () => {
   const navigate = useNavigate();
@@ -89,11 +90,11 @@ const AIChatPage: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 via-purple-600 to-blue-500 flex items-center justify-center">
-            <MessageCircle className="h-4 w-4 text-white" />
+          <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+            <img src={GatofitAvatar} alt="Gatofit Avatar" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="font-semibold text-lg">Chat con IA</h1>
+            <h1 className="font-semibold text-lg">Chatea con Gatofit</h1>
             <p className="text-xs text-muted-foreground">Tu asistente personal de fitness</p>
           </div>
         </div>
@@ -113,12 +114,12 @@ const AIChatPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-16">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 via-purple-600 to-blue-500 flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="h-8 w-8 text-white" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+              <img src={GatofitAvatar} alt="Gatofit Avatar" className="w-full h-full object-cover" />
             </div>
-            <h2 className="text-lg font-semibold mb-2">¡Hola! Soy tu asistente de fitness con IA</h2>
+            <h2 className="text-lg font-semibold mb-2">¡Hola! Soy Gatofit</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Pregúntame sobre entrenamientos, nutrición o tus objetivos de fitness.
+              Tu asistente personal de fitness. Pregúntame sobre entrenamientos, nutrición o tus objetivos.
             </p>
             <div className="text-xs text-muted-foreground space-y-1">
               <p>• "¿Qué ejercicios puedo hacer hoy?"</p>
