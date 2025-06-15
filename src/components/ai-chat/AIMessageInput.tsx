@@ -1,8 +1,8 @@
+
 import React, { useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 
 interface AIMessageInputProps {
   inputValue: string;
@@ -21,8 +21,6 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
   textareaRef,
   onKeyPress,
 }, ref) => {
-  const keyboardHeight = useVirtualKeyboard();
-
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
@@ -43,11 +41,9 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
   return (
     <div
       ref={ref}
-      className="fixed left-0 right-0 w-full max-w-md mx-auto bg-background/90 backdrop-blur-sm z-20"
+      className="w-full bg-background/90 backdrop-blur-sm"
       style={{
-        bottom: `${keyboardHeight}px`,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        // Se elimina la transición para que el ajuste sea instantáneo y sin saltos
       }}
     >
       <div className="p-4 pt-2 border-t border-muted/30">

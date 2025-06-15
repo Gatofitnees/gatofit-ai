@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
@@ -5,6 +6,7 @@ import AIChatHeader from '@/components/ai-chat/AIChatHeader';
 import AIMessageList from '@/components/ai-chat/AIMessageList';
 import AIWelcomeScreen from '@/components/ai-chat/AIWelcomeScreen';
 import AIMessageInput from '@/components/ai-chat/AIMessageInput';
+import { useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 
 const AIChatPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,14 +16,18 @@ const AIChatPage: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const [inputHeight, setInputHeight] = useState(0);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const keyboardHeight = useVirtualKeyboard();
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, inputHeight]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [inputHeight, keyboardHeight]);
 
   // Measure the height of the input container to add padding to the message list
   useEffect(() => {
@@ -29,9 +35,7 @@ const AIChatPage: React.FC = () => {
     if (inputEl) {
       const resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          if (entry.target instanceof HTMLElement) {
-            setInputHeight(entry.target.offsetHeight);
-          }
+          setInputHeight(entry.target.getBoundingClientRect().height);
         }
       });
       resizeObserver.observe(inputEl);
@@ -45,10 +49,6 @@ const AIChatPage: React.FC = () => {
     const message = inputValue;
     setInputValue('');
     await sendMessage(message);
-    
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
   };
 
   const handleButtonClick = async (buttonText: string) => {
@@ -68,7 +68,7 @@ const AIChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col max-w-md mx-auto overflow-hidden">
+    <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto overflow-hidden">
       <AIChatHeader 
         onBack={handleBack}
         onClear={clearMessages}
@@ -91,15 +91,20 @@ const AIChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      <AIMessageInput
-        ref={inputContainerRef}
-        inputValue={inputValue}
-        onInputChange={setInputValue}
-        onSend={handleSend}
-        isLoading={isLoading}
-        textareaRef={textareaRef}
-        onKeyPress={handleKeyPress}
-      />
+      <div
+        className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-20"
+        style={{ transform: `translateY(-${keyboardHeight}px)` }}
+      >
+        <AIMessageInput
+          ref={inputContainerRef}
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+          onSend={handleSend}
+          isLoading={isLoading}
+          textareaRef={textareaRef}
+          onKeyPress={handleKeyPress}
+        />
+      </div>
     </div>
   );
 };
