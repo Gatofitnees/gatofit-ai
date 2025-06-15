@@ -14,8 +14,8 @@ const AIChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const inputContainerRef = useRef<HTMLDivElement>(null);
-  const [inputHeight, setInputHeight] = useState(0);
+  const inputWrapperRef = useRef<HTMLDivElement>(null);
+  const [inputWrapperHeight, setInputWrapperHeight] = useState(0);
   const keyboardHeight = useVirtualKeyboard();
 
   useEffect(() => {
@@ -25,17 +25,17 @@ const AIChatPage: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-    }, 100);
+    }, 150);
     return () => clearTimeout(timer);
-  }, [inputHeight, keyboardHeight]);
+  }, [keyboardHeight, inputWrapperHeight]);
 
-  // Measure the height of the input container to add padding to the message list
+  // Medimos la altura del contenedor del input para añadir el padding de scroll.
   useEffect(() => {
-    const inputEl = inputContainerRef.current;
+    const inputEl = inputWrapperRef.current;
     if (inputEl) {
       const resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          setInputHeight(entry.target.getBoundingClientRect().height);
+          setInputWrapperHeight(entry.target.getBoundingClientRect().height);
         }
       });
       resizeObserver.observe(inputEl);
@@ -57,7 +57,7 @@ const AIChatPage: React.FC = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) { // Se envía con Enter, nueva línea con Shift+Enter
       e.preventDefault();
       handleSend();
     }
@@ -77,7 +77,7 @@ const AIChatPage: React.FC = () => {
 
       <div
         className="flex-1 overflow-y-auto p-4 space-y-4"
-        style={{ paddingBottom: `${inputHeight}px` }}
+        style={{ scrollPaddingBottom: `${inputWrapperHeight}px` }}
       >
         {messages.length === 0 ? (
           <AIWelcomeScreen />
@@ -91,12 +91,16 @@ const AIChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
+      {/* Contenedor fijo para el input flotante */}
       <div
-        className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-20"
-        style={{ transform: `translateY(-${keyboardHeight}px)` }}
+        ref={inputWrapperRef}
+        className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-20 p-3 pointer-events-none"
+        style={{ 
+          bottom: `${keyboardHeight}px`,
+          transition: 'bottom 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        }}
       >
         <AIMessageInput
-          ref={inputContainerRef}
           inputValue={inputValue}
           onInputChange={setInputValue}
           onSend={handleSend}

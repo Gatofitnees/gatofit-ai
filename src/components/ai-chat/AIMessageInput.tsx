@@ -13,23 +13,24 @@ interface AIMessageInputProps {
   onKeyPress: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
-const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
+// Ya no usamos forwardRef. Es un componente autocontenido.
+const AIMessageInput: React.FC<AIMessageInputProps> = ({
   inputValue,
   onInputChange,
   onSend,
   isLoading,
   textareaRef,
   onKeyPress,
-}, ref) => {
-  // Auto-resize textarea
+}) => {
+  // El efecto de auto-redimensionamiento del textarea se mantiene igual.
   useEffect(() => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
       textarea.style.height = 'auto'; // Reset height
       
-      const lineHeight = 24; // Corresponds to leading-6
+      const lineHeight = 24; // Corresponde a leading-6
       const maxLines = 6;
-      const maxHeight = lineHeight * maxLines; // Corresponds to max-h-[144px]
+      const maxHeight = lineHeight * maxLines; // Corresponde a max-h-[144px]
       
       const scrollHeight = textarea.scrollHeight;
       const newHeight = Math.min(scrollHeight, maxHeight);
@@ -39,39 +40,37 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
   }, [inputValue, textareaRef]);
 
   return (
+    // Este es el nuevo contenedor flotante.
+    // 'pointer-events-auto' asegura que sea interactivo.
     <div
-      ref={ref}
-      className="w-full bg-background/90 backdrop-blur-sm"
-      style={{
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
+      className="w-full bg-background/75 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl focus-within:ring-2 focus-within:ring-ring pointer-events-auto"
     >
-      <div className="p-4 pt-2 border-t border-muted/30">
-        <div className="flex gap-2 items-end bg-input rounded-xl p-2 focus-within:ring-2 focus-within:ring-ring">
-          <Textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyPress={onKeyPress}
-            placeholder="Escribe tu mensaje..."
-            disabled={isLoading}
-            className="flex-1 min-h-[24px] max-h-[144px] resize-none text-sm leading-6 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 mobile-scrollbar"
-            rows={1}
-          />
-          <Button
-            onClick={onSend}
-            disabled={!inputValue.trim() || isLoading}
-            size="icon"
-            className="h-9 w-9 flex-shrink-0 bg-primary hover:bg-primary/90 rounded-lg touch-element"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+      <div 
+        className="p-2 flex gap-2 items-end"
+        // Añadimos padding en la parte inferior para respetar la barra de inicio en iOS.
+        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
+      >
+        <Textarea
+          ref={textareaRef}
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
+          onKeyPress={onKeyPress}
+          placeholder="Escribe tu mensaje..."
+          disabled={isLoading}
+          className="flex-1 min-h-[24px] max-h-[144px] resize-none text-base leading-6 bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0 mobile-scrollbar"
+          rows={1}
+        />
+        <Button
+          onClick={onSend}
+          disabled={!inputValue.trim() || isLoading}
+          size="icon"
+          className="h-9 w-9 flex-shrink-0 bg-primary hover:bg-primary/90 rounded-lg touch-element"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
-});
-
-AIMessageInput.displayName = 'AIMessageInput';
+};
 
 export default AIMessageInput;
