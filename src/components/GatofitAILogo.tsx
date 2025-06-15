@@ -6,6 +6,7 @@ interface GatofitAILogoProps {
   className?: string;
   size?: "sm" | "md" | "lg" | "xl";
   iconOnly?: boolean;
+  textOnly?: boolean;
 }
 
 const GatofitAIIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -34,6 +35,7 @@ const GatofitAILogo: React.FC<GatofitAILogoProps> = ({
   className,
   size = "md",
   iconOnly = false,
+  textOnly = false,
 }) => {
   const sizeClasses = {
     icon: {
@@ -54,15 +56,27 @@ const GatofitAILogo: React.FC<GatofitAILogoProps> = ({
     return <GatofitAIIcon className={cn(sizeClasses.icon[size], className)} />;
   }
 
+  const textElement = (
+    <span className={cn(
+      "font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-600 to-blue-500 animate-galaxy-pulse animate-galaxy-glow", 
+      sizeClasses.text[size]
+    )}>
+      GatofitAI
+    </span>
+  );
+
+  if (textOnly) {
+    return (
+      <div className={cn("inline-flex items-center align-middle", className)}>
+        {textElement}
+      </div>
+    );
+  }
+
   return (
     <div className={cn("inline-flex items-center gap-3 align-middle", className)}>
         <GatofitAIIcon className={cn(sizeClasses.icon[size])} />
-        <span className={cn(
-          "font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-600 to-blue-500 animate-galaxy-pulse animate-galaxy-glow", 
-          sizeClasses.text[size]
-        )}>
-          GatofitAI
-        </span>
+        {textElement}
     </div>
   );
 };

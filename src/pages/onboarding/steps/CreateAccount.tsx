@@ -145,7 +145,7 @@ const CreateAccount: React.FC = () => {
   return (
     <OnboardingLayout currentStep={18} totalSteps={20}>
       <h1 className="text-2xl font-bold mb-2">
-        Crea tu Cuenta <GatofitAILogo size="lg" className="inline-block" />
+        Crea tu Cuenta <GatofitAILogo size="lg" className="inline-block" textOnly />
       </h1>
       
       <p className="text-muted-foreground mb-6">
