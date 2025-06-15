@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Save, X } from "lucide-react";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { validateImageFile } from "@/utils/validation";
+import { extractFrameFromVideo } from "@/utils/videoUtils";
 
 const muscleGroups = [
   "Pecho", "Espalda", "Piernas", "Hombros", "Bíceps", "Tríceps", "Core", "Glúteos"
@@ -100,13 +100,70 @@ const CreateExercisePage: React.FC = () => {
         return;
       }
 
+      let videoUrl: string | null = null;
+      let imageUrl: string | null = null;
+      let thumbnailUrl: string | null = null;
+
+      // Handle media file upload if one is present
+      if (mediaFile) {
+        const isVideo = mediaFile.type.startsWith('video/');
+        const fileExt = mediaFile.name.split('.').pop();
+        // NOTE: This logic assumes a public bucket named 'exercise-media' exists for videos and images.
+        // If it doesn't exist, the upload will fail.
+        const bucket = 'exercise-media'; 
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+            .from(bucket)
+            .upload(fileName, mediaFile);
+
+        if (uploadError) {
+            console.error('Error uploading media:', uploadError);
+            toast.error(`Error al subir el archivo. Asegúrate de que el bucket de almacenamiento '${bucket}' existe y es público.`);
+            setSaving(false);
+            return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
+
+        if (isVideo) {
+          videoUrl = publicUrl;
+
+          // Extract and upload thumbnail from video
+          try {
+            const frameBlob = await extractFrameFromVideo(mediaFile);
+            if (frameBlob) {
+              const thumbFileName = `${user.id}/thumb-${Date.now()}.jpg`;
+              const { error: thumbUploadError } = await supabase.storage
+                .from('exercise-thumbnails') // This bucket was created previously
+                .upload(thumbFileName, frameBlob, { contentType: 'image/jpeg' });
+
+              if (thumbUploadError) {
+                console.warn('Thumbnail upload failed:', thumbUploadError);
+                toast.warning("El video se subió, pero no se pudo generar la miniatura.");
+              } else {
+                const { data: { publicUrl: thumbPublicUrl } } = supabase.storage
+                  .from('exercise-thumbnails')
+                  .getPublicUrl(thumbFileName);
+                thumbnailUrl = thumbPublicUrl;
+              }
+            }
+          } catch (thumbError) {
+            console.error("Error generating thumbnail:", thumbError);
+            toast.warning("El video se subió, pero no se pudo generar la miniatura.");
+          }
+        } else {
+          imageUrl = publicUrl;
+        }
+      }
+
       // Map difficulty level to enum values
       let difficultyEnum: "beginner" | "intermediate" | "advanced" | null = null;
       if (difficulty === "Principiante") difficultyEnum = "beginner";
       else if (difficulty === "Intermedio") difficultyEnum = "intermediate";
       else if (difficulty === "Avanzado") difficultyEnum = "advanced";
 
-      // FIXED: Actually save the exercise to the database
+      // FIXED: Actually save the exercise to the database with media URLs
       const exerciseData = {
         name: name.trim(),
         description: description.trim() || null,
@@ -114,7 +171,9 @@ const CreateExercisePage: React.FC = () => {
         equipment_required: equipment || null,
         difficulty_level: difficultyEnum,
         created_by_user_id: user.id,
-        video_url: null // For now, we'll implement file upload later
+        video_url: videoUrl,
+        image_url: imageUrl,
+        thumbnail_url: thumbnailUrl
       };
 
       const { error } = await supabase
@@ -131,7 +190,7 @@ const CreateExercisePage: React.FC = () => {
       navigate(-1);
     } catch (error) {
       console.error("Error saving exercise:", error);
-      toast.error("Error al guardar el ejercicio. Intenta de nuevo.");
+      toast.error("Ocurrió un error inesperado al guardar. Intenta de nuevo.");
     } finally {
       setSaving(false);
     }
