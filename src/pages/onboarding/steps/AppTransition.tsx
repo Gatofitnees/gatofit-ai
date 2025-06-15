@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnboardingPersistence } from "@/hooks/useOnboardingPersistence";
@@ -11,6 +12,7 @@ const AppTransition: React.FC = () => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(true);
   const [currentStatus, setCurrentStatus] = useState("Configurando tu cuenta...");
+  const hasRedirectedRef = useRef(false);
   
   const { 
     handleGoogleAuthData, 
@@ -21,6 +23,12 @@ const AppTransition: React.FC = () => {
 
   useEffect(() => {
     const processTransition = async () => {
+      // Prevent multiple executions
+      if (hasRedirectedRef.current) {
+        console.log('AppTransition: Already redirected, skipping...');
+        return;
+      }
+
       console.log('AppTransition: Starting transition process');
       setIsProcessing(true);
       
@@ -34,7 +42,8 @@ const AppTransition: React.FC = () => {
       // If no user, redirect to welcome
       if (!user) {
         console.log('AppTransition: No user found, redirecting to welcome');
-        navigate("/onboarding/welcome");
+        hasRedirectedRef.current = true;
+        navigate("/onboarding/welcome", { replace: true });
         return;
       }
 
@@ -73,19 +82,13 @@ const AppTransition: React.FC = () => {
           }
         }
 
-        // Show appropriate messages
+        // Show appropriate messages and redirect
         if (saveSuccess) {
           setCurrentStatus("¡Configuración completada!");
           toast({
             title: "¡Bienvenido a GatofitAI!",
             description: "Tu perfil ha sido configurado exitosamente",
           });
-          
-          // Wait a moment before redirecting
-          setTimeout(() => {
-            console.log('AppTransition: Redirecting to home...');
-            navigate("/");
-          }, 1500);
         } else {
           console.error('AppTransition: Failed to save onboarding data');
           setCurrentStatus("Finalizando configuración...");
@@ -94,11 +97,15 @@ const AppTransition: React.FC = () => {
             description: "Algunos datos no se pudieron guardar, pero puedes completarlos desde tu perfil",
             variant: "default"
           });
-          
-          // Still redirect to avoid blocking the user
-          setTimeout(() => {
-            navigate("/");
-          }, 2000);
+        }
+
+        // Wait a moment before redirecting to ensure everything is ready
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        if (!hasRedirectedRef.current) {
+          console.log('AppTransition: Redirecting to home...');
+          hasRedirectedRef.current = true;
+          navigate("/home", { replace: true });
         }
 
       } catch (error) {
@@ -111,10 +118,13 @@ const AppTransition: React.FC = () => {
           variant: "default"
         });
         
-        // Don't block the user, redirect anyway
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
+        // Don't block the user, redirect anyway after a delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (!hasRedirectedRef.current) {
+          hasRedirectedRef.current = true;
+          navigate("/home", { replace: true });
+        }
       } finally {
         setIsProcessing(false);
       }
