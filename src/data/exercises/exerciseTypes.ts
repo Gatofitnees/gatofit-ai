@@ -1,4 +1,3 @@
-
 import { DifficultyLevel } from '@/features/workout/types';
 
 // Define the Exercise type to be used across all exercise files
@@ -10,6 +9,7 @@ export interface Exercise {
   difficulty_level?: DifficultyLevel;
   video_url?: string;
   description?: string;
+  image_url?: string;
 }
 
 // Define the exercise history type

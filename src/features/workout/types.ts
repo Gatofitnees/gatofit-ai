@@ -1,9 +1,9 @@
-
 export interface ExerciseItem {
   id: number;
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
+  image_url?: string;
 }
 
 export interface ExerciseSet {

@@ -1,12 +1,14 @@
 
 import React from "react";
 import { ChevronRight, Check } from "lucide-react";
+import ExercisePreview from "./ExercisePreview";
 
 interface Exercise {
   id: number;
   name: string;
   muscle_group_main: string;
   equipment_required?: string;
+  image_url?: string;
 }
 
 interface ExerciseItemProps {
@@ -26,19 +28,20 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
 }) => {
   return (
     <div 
-      className={`relative p-3 rounded-lg border flex items-center space-x-3 ${
+      className={`relative p-3 rounded-lg border flex items-center space-x-4 cursor-pointer ${
         isSelected 
           ? 'border-primary/70 bg-primary/10' 
           : 'border-border/50 hover:border-border'
       } ${
         isAlreadyInRoutine ? 'opacity-60' : ''
       }`}
+      onClick={() => onSelect(exercise.id)}
     >
+      {/* Exercise Preview */}
+      <ExercisePreview imageUrl={exercise.image_url} exerciseName={exercise.name} />
+      
       {/* Exercise info */}
-      <div 
-        className="flex-1 cursor-pointer" 
-        onClick={() => onSelect(exercise.id)}
-      >
+      <div className="flex-1">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-medium text-base">
@@ -63,7 +66,7 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
           
           {/* Selection indicator */}
           <div 
-            className={`w-5 h-5 rounded-full flex items-center justify-center ${
+            className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 ${
               isSelected ? 'bg-primary text-white' : 'border border-muted-foreground/30'
             }`}
             onClick={(e) => {
@@ -78,7 +81,10 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
       
       {/* Details button */}
       <button 
-        onClick={() => onViewDetails(exercise.id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onViewDetails(exercise.id);
+        }}
         className="p-1.5 rounded-full hover:bg-muted"
         aria-label="View exercise details"
       >

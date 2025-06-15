@@ -9,6 +9,7 @@ interface Exercise {
   equipment_required?: string;
   difficulty_level?: string;
   video_url?: string;
+  image_url?: string;
 }
 
 interface ExerciseListProps {
