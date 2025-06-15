@@ -13,7 +13,6 @@ interface AIMessageInputProps {
   onKeyPress: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
-// Ya no usamos forwardRef. Es un componente autocontenido.
 const AIMessageInput: React.FC<AIMessageInputProps> = ({
   inputValue,
   onInputChange,
@@ -22,7 +21,6 @@ const AIMessageInput: React.FC<AIMessageInputProps> = ({
   textareaRef,
   onKeyPress,
 }) => {
-  // El efecto de auto-redimensionamiento del textarea se mantiene igual.
   useEffect(() => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
@@ -40,15 +38,11 @@ const AIMessageInput: React.FC<AIMessageInputProps> = ({
   }, [inputValue, textareaRef]);
 
   return (
-    // Este es el nuevo contenedor flotante.
-    // 'pointer-events-auto' asegura que sea interactivo.
     <div
       className="w-full bg-background/75 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl focus-within:ring-2 focus-within:ring-ring pointer-events-auto"
     >
       <div 
         className="p-2 flex gap-2 items-end"
-        // Añadimos padding en la parte inferior para respetar la barra de inicio en iOS.
-        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
       >
         <Textarea
           ref={textareaRef}
