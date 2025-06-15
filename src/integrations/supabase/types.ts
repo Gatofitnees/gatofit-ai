@@ -240,8 +240,10 @@ export type Database = {
             | null
           equipment_required: string | null
           id: number
+          image_url: string | null
           muscle_group_main: string | null
           name: string
+          thumbnail_url: string | null
           video_url: string | null
         }
         Insert: {
@@ -252,8 +254,10 @@ export type Database = {
             | null
           equipment_required?: string | null
           id?: number
+          image_url?: string | null
           muscle_group_main?: string | null
           name: string
+          thumbnail_url?: string | null
           video_url?: string | null
         }
         Update: {
@@ -264,8 +268,10 @@ export type Database = {
             | null
           equipment_required?: string | null
           id?: number
+          image_url?: string | null
           muscle_group_main?: string | null
           name?: string
+          thumbnail_url?: string | null
           video_url?: string | null
         }
         Relationships: [

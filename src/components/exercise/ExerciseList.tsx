@@ -1,4 +1,5 @@
 
+
 import React from "react";
 import ExerciseItem from "./ExerciseItem";
 
@@ -10,6 +11,7 @@ interface Exercise {
   difficulty_level?: string;
   video_url?: string;
   image_url?: string;
+  thumbnail_url?: string;
 }
 
 interface ExerciseListProps {

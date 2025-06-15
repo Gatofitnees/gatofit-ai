@@ -4,6 +4,7 @@ export interface ExerciseItem {
   muscle_group_main: string;
   equipment_required?: string;
   image_url?: string;
+  thumbnail_url?: string;
 }
 
 export interface ExerciseSet {

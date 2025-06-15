@@ -10,6 +10,7 @@ export interface Exercise {
   video_url?: string;
   description?: string;
   image_url?: string;
+  thumbnail_url?: string;
 }
 
 // Define the exercise history type

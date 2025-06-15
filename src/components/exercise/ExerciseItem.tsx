@@ -1,4 +1,5 @@
 
+
 import React from "react";
 import { ChevronRight, Check } from "lucide-react";
 import ExercisePreview from "./ExercisePreview";
@@ -10,6 +11,7 @@ interface Exercise {
   equipment_required?: string;
   image_url?: string;
   video_url?: string;
+  thumbnail_url?: string;
 }
 
 interface ExerciseItemProps {
@@ -40,6 +42,7 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
     >
       {/* Exercise Preview */}
       <ExercisePreview 
+        thumbnailUrl={exercise.thumbnail_url}
         videoUrl={exercise.video_url}
         imageUrl={exercise.image_url} 
         exerciseName={exercise.name} 
