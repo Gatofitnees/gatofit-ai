@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.628cddace2d9484da252d981a8e3ed9f',
+  appId: 'com.gatofit.app',
   appName: 'GatofitAI',
   webDir: 'dist',
   server: {
@@ -26,6 +26,11 @@ const config: CapacitorConfig = {
       splashImmersive: true,
       layoutName: 'launch_screen',
       useDialog: true
+    },
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '175681669860-6r9ejdog30rsm6l5auge5bmdnrak4n6e.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true
     }
   },
   android: {

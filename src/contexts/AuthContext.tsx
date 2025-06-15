@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
 import { createSecureErrorMessage, logSecurityEvent } from "@/utils/errorHandling";
 import { useAutoProfileSetup } from "@/hooks/useAutoProfileSetup";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 interface AuthContextProps {
   session: Session | null;
@@ -39,6 +41,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
+  const { signInWithGoogle: googleSignIn, loading: googleLoading } = useGoogleAuth();
 
   // Auto-setup profile for Google users
   useAutoProfileSetup(user);
@@ -201,29 +204,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signInWithGoogle = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `https://appsecret.gatofit.com/onboarding/app-transition`,
-          queryParams: {
-            prompt: 'select_account'
-          }
-        },
-      });
-
-      if (error) {
-        const secureError = createSecureErrorMessage(error, 'auth');
-        logSecurityEvent('google_signin_failed', error.message);
-        toast({
-          title: "Error al iniciar sesión con Google",
-          description: secureError,
-          variant: "destructive",
-        });
-        return { error, data: null };
-      }
-
       logSecurityEvent('google_signin_initiated', 'Google OAuth initiated');
-      return { error: null, data };
+      return await googleSignIn();
     } catch (err: any) {
       const secureError = createSecureErrorMessage(err, 'auth');
       logSecurityEvent('google_signin_error', err.message);
@@ -258,7 +240,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     signIn,
     signInWithGoogle,
     signOut,
-    loading,
+    loading: loading || googleLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
