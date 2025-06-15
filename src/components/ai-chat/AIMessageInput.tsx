@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 
 interface AIMessageInputProps {
   inputValue: string;
@@ -21,7 +22,7 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
   textareaRef,
   onKeyPress,
 }, ref) => {
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const keyboardHeight = useVirtualKeyboard();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -39,24 +40,6 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
       textarea.style.height = `${newHeight}px`;
     }
   }, [inputValue, textareaRef]);
-
-  // Handle virtual keyboard for mobile
-  useEffect(() => {
-    const visualViewport = window.visualViewport;
-    if (!visualViewport) return;
-
-    const handleResize = () => {
-      const newKeyboardHeight = window.innerHeight - visualViewport.height;
-      setKeyboardHeight(Math.max(0, newKeyboardHeight));
-    };
-
-    visualViewport.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => {
-      visualViewport.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   return (
     <div
