@@ -15,6 +15,7 @@ const AIChatPage: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    // Scroll suave para nuevos mensajes, para que se vea la animación
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
@@ -23,7 +24,7 @@ const AIChatPage: React.FC = () => {
     
     const message = inputValue;
     if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = 'auto'; // Resetea la altura al enviar
     }
     setInputValue('');
     await sendMessage(message);
@@ -32,14 +33,6 @@ const AIChatPage: React.FC = () => {
   const handleButtonClick = async (buttonText: string) => {
     if (isLoading) return;
     await sendMessage(buttonText);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Se envía con Shift+Enter, nueva línea solo con Enter
-    if (e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
   };
 
   const handleBack = () => {
@@ -55,7 +48,7 @@ const AIChatPage: React.FC = () => {
       />
 
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain"
       >
         {messages.length === 0 ? (
           <AIWelcomeScreen />
@@ -69,9 +62,9 @@ const AIChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Contenedor de input dentro del flow natural del flexbox */}
+      {/* El contenedor del input es ahora parte del flujo natural, pegado abajo */}
       <div 
-        className="p-3 pt-0"
+        className="p-3 pt-2 border-t border-muted/20"
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
       >
         <AIMessageInput
@@ -80,7 +73,6 @@ const AIChatPage: React.FC = () => {
           onSend={handleSend}
           isLoading={isLoading}
           textareaRef={textareaRef}
-          onKeyPress={handleKeyPress}
         />
       </div>
     </div>

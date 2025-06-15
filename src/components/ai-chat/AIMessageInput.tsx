@@ -10,7 +10,6 @@ interface AIMessageInputProps {
   onSend: () => void;
   isLoading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
-  onKeyPress: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
 const AIMessageInput: React.FC<AIMessageInputProps> = ({
@@ -19,16 +18,15 @@ const AIMessageInput: React.FC<AIMessageInputProps> = ({
   onSend,
   isLoading,
   textareaRef,
-  onKeyPress,
 }) => {
   useEffect(() => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
-      textarea.style.height = 'auto'; // Reset height
+      textarea.style.height = 'auto'; // Resetea la altura para calcular el scrollHeight
       
-      const lineHeight = 24; // Corresponde a leading-6
+      const lineHeight = 24; // Corresponde a 'leading-6' de Tailwind
       const maxLines = 6;
-      const maxHeight = lineHeight * maxLines; // Corresponde a max-h-[144px]
+      const maxHeight = lineHeight * maxLines;
       
       const scrollHeight = textarea.scrollHeight;
       const newHeight = Math.min(scrollHeight, maxHeight);
@@ -39,7 +37,7 @@ const AIMessageInput: React.FC<AIMessageInputProps> = ({
 
   return (
     <div
-      className="w-full bg-background/75 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl focus-within:ring-2 focus-within:ring-ring pointer-events-auto"
+      className="w-full bg-background rounded-2xl border border-white/10 shadow-lg focus-within:ring-2 focus-within:ring-ring"
     >
       <div 
         className="p-2 flex gap-2 items-end"
@@ -48,7 +46,7 @@ const AIMessageInput: React.FC<AIMessageInputProps> = ({
           ref={textareaRef}
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
-          onKeyPress={onKeyPress}
+          // onKeyPress se elimina para permitir nuevas líneas con Enter
           placeholder="Escribe tu mensaje..."
           disabled={isLoading}
           className="flex-1 min-h-[24px] max-h-[144px] resize-none text-base leading-6 bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0 mobile-scrollbar"
