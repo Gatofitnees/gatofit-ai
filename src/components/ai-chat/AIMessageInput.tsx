@@ -22,7 +22,7 @@ const AIMessageInput: React.FC<AIMessageInputProps> = ({
   onKeyPress,
 }) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-background/80 backdrop-blur-sm z-20">
+    <div className="w-full max-w-md mx-auto bg-background/80 backdrop-blur-sm z-20">
       <div className="p-4 border-t border-muted/30">
         <div className="flex gap-2 items-end bg-input rounded-xl p-2 focus-within:ring-2 focus-within:ring-ring transition-all">
           <Textarea

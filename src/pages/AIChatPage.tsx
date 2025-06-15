@@ -13,6 +13,7 @@ const AIChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -22,10 +23,30 @@ const AIChatPage: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Removed auto-focus on textarea to prevent keyboard from opening automatically.
+
+  // Adjust page height when virtual keyboard appears/disappears
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
+    const page = pageRef.current;
+    if (!page) return;
+
+    const handleResize = () => {
+      if (window.visualViewport) {
+        page.style.height = `${window.visualViewport.height}px`;
+        scrollToBottom();
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      handleResize(); // Set initial size
     }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
   }, []);
 
   // Auto-resize textarea
@@ -74,14 +95,14 @@ const AIChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col max-w-md mx-auto">
+    <div ref={pageRef} className="h-screen bg-background flex flex-col max-w-md mx-auto overflow-hidden">
       <AIChatHeader 
         onBack={handleBack}
         onClear={clearMessages}
         hasMessages={messages.length > 0}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <AIWelcomeScreen />
         ) : (

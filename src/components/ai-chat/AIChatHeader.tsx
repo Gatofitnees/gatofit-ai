@@ -29,7 +29,7 @@ const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onBack, onClear, hasMessage
           <img src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
         </div>
         <div>
-          <h1 className="font-semibold text-lg">Chatea con Gatofit</h1>
+          <h1 className="font-semibold text-lg">Gatofit</h1>
           <p className="text-xs text-muted-foreground">Tu asistente personal de fitness</p>
         </div>
       </div>
