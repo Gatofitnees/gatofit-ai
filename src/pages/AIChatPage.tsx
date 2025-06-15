@@ -22,9 +22,17 @@ const AIChatPage: React.FC = () => {
 
     const handleResize = () => {
       if (pageRef.current) {
-        // Ajustamos la altura del contenedor principal a la del viewport visible.
-        // Esto tiene en cuenta el teclado virtual en móviles.
-        pageRef.current.style.height = `${visualViewport.height}px`;
+        // Un chequeo simple para ver si el teclado está abierto.
+        // Asumimos que está abierto si la altura del viewport es significantemente menor que la de la ventana.
+        const isKeyboardOpen = window.innerHeight > visualViewport.height + 100;
+
+        if (isKeyboardOpen) {
+          // Cuando el teclado está abierto, ajustamos la altura al área visible.
+          pageRef.current.style.height = `${visualViewport.height}px`;
+        } else {
+          // Cuando el teclado se cierra, eliminamos el estilo en línea para que se aplique la clase de CSS.
+          pageRef.current.style.height = '';
+        }
       }
     };
 
@@ -64,7 +72,7 @@ const AIChatPage: React.FC = () => {
   return (
     <div
       ref={pageRef}
-      className="bg-background flex flex-col max-w-md mx-auto overflow-hidden"
+      className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto overflow-hidden"
     >
       <AIChatHeader 
         onBack={handleBack}
@@ -89,8 +97,8 @@ const AIChatPage: React.FC = () => {
       
       {/* El contenedor del input es ahora parte del flujo natural, pegado abajo */}
       <div 
-        className="p-3 pt-2 border-t border-muted/20"
-        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+        className="p-2 border-t border-muted/20"
+        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
       >
         <AIMessageInput
           inputValue={inputValue}
