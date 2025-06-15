@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
@@ -12,27 +13,36 @@ const AIChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [inputContainerHeight, setInputContainerHeight] = useState(0);
-  const inputContainerRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const inputEl = inputContainerRef.current;
-    if (inputEl) {
-      const resizeObserver = new ResizeObserver(() => {
-        if (inputEl.offsetHeight !== inputContainerHeight) {
-          setInputContainerHeight(inputEl.offsetHeight);
-        }
-      });
-      resizeObserver.observe(inputEl);
-      
-      // Set initial height to avoid jump
-      if (inputEl.offsetHeight > 0) {
-        setInputContainerHeight(inputEl.offsetHeight);
-      }
+    const visualViewport = window.visualViewport;
+    // Este polyfill es para navegadores más antiguos o entornos donde visualViewport no está disponible
+    if (!visualViewport) return;
 
-      return () => resizeObserver.disconnect();
-    }
-  }, [inputContainerHeight]);
+    const handleResize = () => {
+      if (pageRef.current) {
+        // Un chequeo simple para ver si el teclado está abierto.
+        // Asumimos que está abierto si la altura del viewport es significantemente menor que la de la ventana.
+        const isKeyboardOpen = window.innerHeight > visualViewport.height + 100;
+
+        if (isKeyboardOpen) {
+          // Cuando el teclado está abierto, ajustamos la altura al área visible.
+          pageRef.current.style.height = `${visualViewport.height}px`;
+        } else {
+          // Cuando el teclado se cierra, eliminamos el estilo en línea para que se aplique la clase de CSS.
+          pageRef.current.style.height = '';
+        }
+      }
+    };
+
+    visualViewport.addEventListener('resize', handleResize);
+    handleResize(); // Llamada inicial para establecer el tamaño correcto
+
+    return () => {
+      visualViewport.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     // Scroll suave para nuevos mensajes, para que se vea la animación
@@ -61,7 +71,8 @@ const AIChatPage: React.FC = () => {
 
   return (
     <div
-      className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto relative overflow-hidden"
+      ref={pageRef}
+      className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto overflow-hidden"
     >
       <AIChatHeader 
         onBack={handleBack}
@@ -71,7 +82,6 @@ const AIChatPage: React.FC = () => {
 
       <div
         className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain"
-        style={{ paddingBottom: inputContainerHeight ? `${inputContainerHeight}px` : '70px' }}
       >
         {messages.length === 0 ? (
           <AIWelcomeScreen />
@@ -85,22 +95,18 @@ const AIChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
+      {/* El contenedor del input es ahora parte del flujo natural, pegado abajo */}
       <div 
-        ref={inputContainerRef}
-        className="absolute bottom-0 left-0 right-0 bg-background"
+        className="p-2 border-t border-muted/20"
+        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
       >
-        <div 
-          className="p-2 border-t border-muted/20"
-          style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
-        >
-          <AIMessageInput
-            inputValue={inputValue}
-            onInputChange={setInputValue}
-            onSend={handleSend}
-            isLoading={isLoading}
-            textareaRef={textareaRef}
-          />
-        </div>
+        <AIMessageInput
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+          onSend={handleSend}
+          isLoading={isLoading}
+          textareaRef={textareaRef}
+        />
       </div>
     </div>
   );
