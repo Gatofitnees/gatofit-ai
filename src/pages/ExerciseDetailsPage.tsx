@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Dumbbell } from "lucide-react";
@@ -40,7 +39,7 @@ const ExerciseDetailsPage: React.FC = () => {
         const { data, error } = await supabase
           .from('exercises')
           .select('*')
-          .eq('id', id)
+          .eq('id', Number(id))
           .single();
 
         if (error) {
