@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,7 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
       }}
     >
       <div className="p-4 pt-2 border-t border-muted/30">
-        <div className="flex gap-2 items-end bg-input rounded-xl p-2 focus-within:ring-2 focus-within:ring-ring transition-all">
+        <div className="flex gap-2 items-end bg-input rounded-xl p-2 focus-within:ring-2 focus-within:ring-ring">
           <Textarea
             ref={textareaRef}
             value={inputValue}
