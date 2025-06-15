@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +12,8 @@ const AIChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const pageRef = useRef<HTMLDivElement>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
+  const [inputHeight, setInputHeight] = useState(0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -21,32 +21,20 @@ const AIChatPage: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, inputHeight]);
 
-  // Removed auto-focus on textarea to prevent keyboard from opening automatically.
-
-  // Adjust page height when virtual keyboard appears/disappears
+  // Measure the height of the input container to add padding to the message list
   useEffect(() => {
-    const page = pageRef.current;
-    if (!page) return;
-
-    const handleResize = () => {
-      if (window.visualViewport) {
-        page.style.height = `${window.visualViewport.height}px`;
-        scrollToBottom();
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      handleResize(); // Set initial size
+    const inputEl = inputContainerRef.current;
+    if (inputEl) {
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setInputHeight(entry.target.offsetHeight);
+        }
+      });
+      resizeObserver.observe(inputEl);
+      return () => resizeObserver.disconnect();
     }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
   }, []);
 
   // Auto-resize textarea
@@ -95,14 +83,17 @@ const AIChatPage: React.FC = () => {
   };
 
   return (
-    <div ref={pageRef} className="h-screen bg-background flex flex-col max-w-md mx-auto overflow-hidden">
+    <div className="h-screen bg-background flex flex-col max-w-md mx-auto overflow-hidden">
       <AIChatHeader 
         onBack={handleBack}
         onClear={clearMessages}
         hasMessages={messages.length > 0}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        style={{ paddingBottom: `${inputHeight}px` }}
+      >
         {messages.length === 0 ? (
           <AIWelcomeScreen />
         ) : (
@@ -116,6 +107,7 @@ const AIChatPage: React.FC = () => {
       </div>
       
       <AIMessageInput
+        ref={inputContainerRef}
         inputValue={inputValue}
         onInputChange={setInputValue}
         onSend={handleSend}

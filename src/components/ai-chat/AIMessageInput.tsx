@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,17 +13,44 @@ interface AIMessageInputProps {
   onKeyPress: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
-const AIMessageInput: React.FC<AIMessageInputProps> = ({
+const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
   inputValue,
   onInputChange,
   onSend,
   isLoading,
   textareaRef,
   onKeyPress,
-}) => {
+}, ref) => {
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const visualViewport = window.visualViewport;
+    if (!visualViewport) return;
+
+    const handleResize = () => {
+      const newKeyboardHeight = window.innerHeight - visualViewport.height;
+      setKeyboardHeight(Math.max(0, newKeyboardHeight));
+    };
+
+    visualViewport.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => {
+      visualViewport.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
-    <div className="w-full max-w-md mx-auto bg-background/80 backdrop-blur-sm z-20">
-      <div className="p-4 border-t border-muted/30">
+    <div
+      ref={ref}
+      className="fixed left-0 right-0 w-full max-w-md mx-auto bg-background/90 backdrop-blur-sm z-20"
+      style={{
+        bottom: `${keyboardHeight}px`,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        transition: 'bottom 0.2s ease-out',
+      }}
+    >
+      <div className="p-4 pt-2 border-t border-muted/30">
         <div className="flex gap-2 items-end bg-input rounded-xl p-2 focus-within:ring-2 focus-within:ring-ring transition-all">
           <Textarea
             ref={textareaRef}
@@ -47,6 +74,8 @@ const AIMessageInput: React.FC<AIMessageInputProps> = ({
       </div>
     </div>
   );
-};
+});
+
+AIMessageInput.displayName = 'AIMessageInput';
 
 export default AIMessageInput;
