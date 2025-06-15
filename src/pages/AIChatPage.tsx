@@ -40,7 +40,7 @@ const AIChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col max-w-md mx-auto overflow-hidden">
+    <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto overflow-hidden">
       <AIChatHeader 
         onBack={handleBack}
         onClear={clearMessages}
