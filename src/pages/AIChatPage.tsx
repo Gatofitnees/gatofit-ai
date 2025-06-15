@@ -74,14 +74,14 @@ const AIChatPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto">
+    <div className="h-screen bg-background flex flex-col max-w-md mx-auto">
       <AIChatHeader 
         onBack={handleBack}
         onClear={clearMessages}
         hasMessages={messages.length > 0}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
         {messages.length === 0 ? (
           <AIWelcomeScreen />
         ) : (
