@@ -95,7 +95,7 @@ const FeaturesPreview: React.FC = () => {
         className="flex flex-col h-full min-h-[calc(100vh-200px)]"
       >
         <h1 className="text-2xl font-bold mb-2">
-          Descubre cómo <GatofitAILogo size="lg" textOnly /> te impulsará
+          Descubre cómo <GatofitAILogo size="lg" className="inline-block" /> te impulsará
         </h1>
         
         <p className="text-muted-foreground mb-6">
