@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
@@ -39,23 +38,6 @@ const AIChatPage: React.FC = () => {
       return () => resizeObserver.disconnect();
     }
   }, []);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      textarea.style.height = 'auto';
-      
-      const lineHeight = 24; // Tailwind text-sm line height
-      const maxLines = 6;
-      const maxHeight = lineHeight * maxLines;
-      
-      const scrollHeight = textarea.scrollHeight;
-      const newHeight = Math.min(scrollHeight, maxHeight);
-      
-      textarea.style.height = `${newHeight}px`;
-    }
-  }, [inputValue]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;

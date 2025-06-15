@@ -23,6 +23,24 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
 }, ref) => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.style.height = 'auto'; // Reset height
+      
+      const lineHeight = 24; // Corresponds to leading-6
+      const maxLines = 6;
+      const maxHeight = lineHeight * maxLines; // Corresponds to max-h-[144px]
+      
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.min(scrollHeight, maxHeight);
+      
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [inputValue, textareaRef]);
+
+  // Handle virtual keyboard for mobile
   useEffect(() => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) return;
@@ -59,7 +77,7 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
             onKeyPress={onKeyPress}
             placeholder="Escribe tu mensaje..."
             disabled={isLoading}
-            className="flex-1 min-h-[24px] max-h-[144px] resize-none text-sm leading-6 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 hide-scrollbar"
+            className="flex-1 min-h-[24px] max-h-[144px] resize-none text-sm leading-6 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 mobile-scrollbar"
             rows={1}
           />
           <Button
