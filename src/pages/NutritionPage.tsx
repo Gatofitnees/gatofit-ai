@@ -10,20 +10,22 @@ import { FoodPreviewCard } from "../components/nutrition/FoodPreviewCard";
 import { useFoodLog, FoodLogEntry } from "../hooks/useFoodLog";
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis";
 import { useNavigate } from "react-router-dom";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
 import { useFoodCapture } from "../hooks/useFoodCapture";
 import { useProfile } from "../hooks/useProfile";
+import { useToast } from "@/components/ui/use-toast";
+import { ProcessingFoodCard } from "@/components/nutrition/ProcessingFoodCard";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [processingFoods, setProcessingFoods] = useState<{ id: string; imageSrc: string; }[]>([]);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const selectedDateString = selectedDate.toISOString().split('T')[0];
-  const { entries, deleteEntry, isLoading } = useFoodLog(selectedDateString);
-  const { analyzeFood, isAnalyzing } = useFoodAnalysis();
-  const { error: captureError } = useFoodCapture();
+  const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(selectedDateString);
+  const { isAnalyzing } = useFoodAnalysis();
+  const { uploadImageWithAnalysis, clearError } = useFoodCapture();
   const { profile } = useProfile();
 
   // Calculate today's totals from actual entries
@@ -87,82 +89,51 @@ const NutritionPage: React.FC = () => {
     });
   };
 
-  const handleImageCaptured = async (imageUrl: string, analysisResult?: any) => {
-    console.log('Image captured:', imageUrl, 'Analysis result:', analysisResult);
-    
-    // If there's a capture error, don't navigate - stay in camera to show error dialog
-    if (captureError) {
-      console.log('Capture error detected, staying in camera view');
-      return;
-    }
-    
-    if (analysisResult) {
-      // Use webhook analysis result with all data including ingredients
-      const pendingFoodData = {
-        custom_food_name: analysisResult.name,
-        quantity_consumed: analysisResult.servingSize,
-        unit_consumed: analysisResult.servingUnit,
-        calories_consumed: analysisResult.calories,
-        protein_g_consumed: analysisResult.protein,
-        carbs_g_consumed: analysisResult.carbs,
-        fat_g_consumed: analysisResult.fat,
-        healthScore: analysisResult.healthScore,
-        ingredients: analysisResult.ingredients, // Pass ingredients data
-        photo_url: imageUrl
-      };
-      
-      // Navigate to the full-screen edit page
-      navigate('/food-edit', {
-        state: {
-          initialData: pendingFoodData,
-          imageUrl: imageUrl,
-          isEditing: false
-        }
-      });
-    } else {
-      // Fallback to old analysis method only if no capture error
-      const analysis = await analyzeFood(imageUrl);
-      console.log('Fallback analysis result:', analysis);
-      
-      if (analysis) {
-        const pendingFoodData = {
-          custom_food_name: analysis.name,
-          quantity_consumed: analysis.servingSize,
-          unit_consumed: analysis.servingUnit,
-          calories_consumed: analysis.calories,
-          protein_g_consumed: analysis.protein,
-          carbs_g_consumed: analysis.carbs,
-          fat_g_consumed: analysis.fat,
-          photo_url: imageUrl
+  const handlePhotoTaken = async (photoBlob: Blob) => {
+    setShowCamera(false);
+    clearError();
+
+    const tempId = Date.now().toString();
+    const imageSrc = URL.createObjectURL(photoBlob);
+
+    setProcessingFoods(prev => [{ id: tempId, imageSrc }, ...prev]);
+
+    try {
+      const result = await uploadImageWithAnalysis(photoBlob);
+
+      if (result && result.analysisResult) {
+        const analysis = result.analysisResult;
+        const newEntryData: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> = {
+          custom_food_name: analysis.name || 'Alimento Analizado',
+          quantity_consumed: analysis.servingSize || 1,
+          unit_consumed: analysis.servingUnit || 'porción',
+          calories_consumed: analysis.calories || 0,
+          protein_g_consumed: analysis.protein || 0,
+          carbs_g_consumed: analysis.carbs || 0,
+          fat_g_consumed: analysis.fat || 0,
+          health_score: analysis.healthScore,
+          ingredients: analysis.ingredients,
+          photo_url: result.imageUrl,
+          meal_type: 'snack1', // Default meal type, can be changed on edit
         };
-        
-        navigate('/food-edit', {
-          state: {
-            initialData: pendingFoodData,
-            imageUrl: imageUrl,
-            isEditing: false
-          }
-        });
+        await addEntry(newEntryData);
       } else {
-        // Navigate to manual entry when all analysis fails
-        navigate('/food-edit', {
-          state: {
-            initialData: {
-              custom_food_name: '',
-              quantity_consumed: 1,
-              unit_consumed: 'porción',
-              calories_consumed: 0,
-              protein_g_consumed: 0,
-              carbs_g_consumed: 0,
-              fat_g_consumed: 0,
-              photo_url: imageUrl
-            },
-            imageUrl: imageUrl,
-            isEditing: false,
-            hasAnalysisError: true
-          }
+        toast({
+          title: "Error de Análisis",
+          description: "No se pudo analizar la comida. Por favor, inténtalo de nuevo.",
+          variant: "destructive",
         });
       }
+    } catch (error) {
+      console.error("Error processing food:", error);
+      toast({
+        title: "Error Inesperado",
+        description: "Ocurrió un error al procesar la imagen.",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingFoods(prev => prev.filter(p => p.id !== tempId));
+      URL.revokeObjectURL(imageSrc);
     }
   };
 
@@ -190,16 +161,6 @@ const NutritionPage: React.FC = () => {
         datesWithRecords={getDatesWithEntries()}
         selectedDate={selectedDate}
       />
-      
-      {/* Error Alert - Only show if camera is not open */}
-      {captureError && !showCamera && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {captureError}
-          </AlertDescription>
-        </Alert>
-      )}
       
       {/* Calories Summary */}
       <div className="flex items-center justify-center mb-8 animate-fade-in">
@@ -262,7 +223,10 @@ const NutritionPage: React.FC = () => {
         </div>
         
         <div className="space-y-3">
-          {isLoading ? (
+          {processingFoods.map((food) => (
+            <ProcessingFoodCard key={food.id} imageUrl={food.imageSrc} />
+          ))}
+          {isLoading && processingFoods.length === 0 ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               <p className="text-sm text-muted-foreground mt-2">Cargando comidas...</p>
@@ -283,21 +247,23 @@ const NutritionPage: React.FC = () => {
               />
             ))
           ) : (
-            <Card>
-              <CardBody>
-                <div className="text-center py-8">
-                  <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    {isSelectedDay ? 'No hay comidas registradas en este día' : 'No has registrado comidas hoy'}
-                  </p>
-                  {isToday && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Usa el botón de cámara para empezar
+            processingFoods.length === 0 && (
+              <Card>
+                <CardBody>
+                  <div className="text-center py-8">
+                    <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      {isSelectedDay ? 'No hay comidas registradas en este día' : 'No has registrado comidas hoy'}
                     </p>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
+                    {isToday && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Usa el botón de cámara para empezar
+                      </p>
+                    )}
+                  </div>
+                </CardBody>
+              </Card>
+            )
           )}
         </div>
       </div>
@@ -320,12 +286,11 @@ const NutritionPage: React.FC = () => {
         <CameraCapture
           isOpen={showCamera}
           onClose={() => setShowCamera(false)}
-          onImageCaptured={handleImageCaptured}
-          analysisError={captureError}
+          onPhotoTaken={handlePhotoTaken}
         />
       )}
 
-      {/* Loading overlay for analysis */}
+      {/* Loading overlay for analysis (can be removed if not desired) */}
       {isAnalyzing && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="neu-card p-6 text-center">
