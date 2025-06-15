@@ -5,7 +5,6 @@ import { ArrowLeft, Plus, Dumbbell } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Button from "@/components/Button";
 import { supabase } from "@/integrations/supabase/client";
-import { useExercises } from "@/hooks/useExercises";
 import { useToast } from "@/components/ui/use-toast";
 import ExerciseHistoryDialog from "@/components/exercise/ExerciseHistoryDialog";
 
@@ -25,31 +24,35 @@ const ExerciseDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { exercises, loading: exercisesLoading } = useExercises();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchExerciseDetails = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      
+      setLoading(true);
+      
       try {
-        setLoading(true);
-        
-        if (!id) return;
-        
-        // Try to find exercise in our list by matching either string or number ID
-        const numericId = parseInt(id);
-        const foundExercise = exercises.find(ex => 
-          ex.id === numericId || ex.id.toString() === id
-        );
-        
-        if (foundExercise) {
-          setExercise(foundExercise);
-        } else {
+        const { data, error } = await supabase
+          .from('exercises')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching exercise details:", error);
           toast({
             title: "Error",
             description: "No se pudo encontrar el ejercicio",
             variant: "destructive"
           });
+          setExercise(null);
+        } else {
+          setExercise(data as Exercise);
         }
       } catch (error) {
         console.error("Error fetching exercise details:", error);
@@ -63,10 +66,8 @@ const ExerciseDetailsPage: React.FC = () => {
       }
     };
     
-    if (exercises.length > 0) {
-      fetchExerciseDetails();
-    }
-  }, [id, exercises, toast]);
+    fetchExerciseDetails();
+  }, [id, toast]);
 
   const handleAddToRoutine = () => {
     // Add to routine and navigate back - preserving state
@@ -87,7 +88,7 @@ const ExerciseDetailsPage: React.FC = () => {
     }
   };
 
-  if (exercisesLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-primary">Cargando...</div>
