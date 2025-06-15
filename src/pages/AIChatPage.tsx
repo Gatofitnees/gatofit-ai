@@ -90,7 +90,7 @@ const AIChatPage: React.FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-            <img src="/lovable-uploads/20f035ee-975b-4bbc-bd88-bcd1b8bf30f8.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
+            <img src="/lovable-uploads/4d4446c4-3e6c-420c-b845-c89b0f5bda48.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="font-semibold text-lg">Chatea con Gatofit</h1>
@@ -114,7 +114,7 @@ const AIChatPage: React.FC = () => {
         {messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-16">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-              <img src="/lovable-uploads/20f035ee-975b-4bbc-bd88-bcd1b8bf30f8.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
+              <img src="/lovable-uploads/4d4446c4-3e6c-420c-b845-c89b0f5bda48.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
             </div>
             <h2 className="text-lg font-semibold mb-2">¡Hola! Soy Gatofit</h2>
             <p className="text-sm text-muted-foreground mb-4">
