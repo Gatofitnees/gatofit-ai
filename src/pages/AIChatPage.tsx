@@ -13,6 +13,28 @@ const AIChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const visualViewport = window.visualViewport;
+    // Este polyfill es para navegadores más antiguos o entornos donde visualViewport no está disponible
+    if (!visualViewport) return;
+
+    const handleResize = () => {
+      if (pageRef.current) {
+        // Ajustamos la altura del contenedor principal a la del viewport visible.
+        // Esto tiene en cuenta el teclado virtual en móviles.
+        pageRef.current.style.height = `${visualViewport.height}px`;
+      }
+    };
+
+    visualViewport.addEventListener('resize', handleResize);
+    handleResize(); // Llamada inicial para establecer el tamaño correcto
+
+    return () => {
+      visualViewport.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     // Scroll suave para nuevos mensajes, para que se vea la animación
@@ -40,7 +62,10 @@ const AIChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto overflow-hidden">
+    <div
+      ref={pageRef}
+      className="bg-background flex flex-col max-w-md mx-auto overflow-hidden"
+    >
       <AIChatHeader 
         onBack={handleBack}
         onClear={clearMessages}
