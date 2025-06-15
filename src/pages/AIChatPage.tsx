@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -91,7 +90,7 @@ const AIChatPage: React.FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-            <img src={GatofitAvatar} alt="Gatofit Avatar" className="w-full h-full object-cover" />
+            <img src="/photo-1535268647677-300dbf3d78d1.jpeg" alt="Gatofit Avatar" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="font-semibold text-lg">Chatea con Gatofit</h1>
@@ -115,7 +114,7 @@ const AIChatPage: React.FC = () => {
         {messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-16">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-              <img src={GatofitAvatar} alt="Gatofit Avatar" className="w-full h-full object-cover" />
+              <img src="/photo-1535268647677-300dbf3d78d1.jpeg" alt="Gatofit Avatar" className="w-full h-full object-cover" />
             </div>
             <h2 className="text-lg font-semibold mb-2">¡Hola! Soy Gatofit</h2>
             <p className="text-sm text-muted-foreground mb-4">
