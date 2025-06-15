@@ -12,6 +12,7 @@ const SelectExercisesPage: React.FC = () => {
   
   const {
     filteredExercises,
+    exerciseCount,
     selectedExercises,
     muscleGroups,
     equipmentTypes,
@@ -28,7 +29,10 @@ const SelectExercisesPage: React.FC = () => {
     handleExerciseDetails,
     handleNavigateBack,
     handleCreateExercise,
-    handleAddExercises
+    handleAddExercises,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useExerciseSelection();
   
   // Effect to set previously selected IDs from location state
@@ -58,7 +62,7 @@ const SelectExercisesPage: React.FC = () => {
       {/* Exercise List with Actions */}
       <div className="p-4">
         <ExerciseListActions 
-          exerciseCount={filteredExercises.length}
+          exerciseCount={exerciseCount}
           onCreateExercise={handleCreateExercise}
         />
 
@@ -69,6 +73,9 @@ const SelectExercisesPage: React.FC = () => {
           onViewDetails={handleExerciseDetails}
           loading={loading}
           previouslySelectedIds={previouslySelectedIds}
+          fetchNextPage={fetchNextPage}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
         />
       </div>
 

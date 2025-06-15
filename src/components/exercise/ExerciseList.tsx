@@ -1,7 +1,8 @@
 
-
 import React from "react";
 import ExerciseItem from "./ExerciseItem";
+import Button from "@/components/Button";
+import { Loader2 } from "lucide-react";
 
 interface Exercise {
   id: number;
@@ -20,7 +21,10 @@ interface ExerciseListProps {
   onSelectExercise: (id: number) => void;
   onViewDetails: (id: number) => void;
   loading: boolean;
-  previouslySelectedIds?: number[]; // Add this prop to mark previously selected exercises
+  previouslySelectedIds?: number[];
+  fetchNextPage: () => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
 }
 
 const ExerciseList: React.FC<ExerciseListProps> = ({ 
@@ -29,9 +33,12 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   onSelectExercise,
   onViewDetails,
   loading,
-  previouslySelectedIds = []
+  previouslySelectedIds = [],
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
 }) => {
-  if (loading) {
+  if (loading && exercises.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -40,7 +47,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 pb-8">
       {exercises && exercises.length > 0 ? (
         exercises.map(exercise => {
           // Check if this exercise is already in the routine
@@ -57,9 +64,29 @@ const ExerciseList: React.FC<ExerciseListProps> = ({
             />
           );
         })
-      ) : (
+      ) : !loading ? (
         <div className="text-center py-8 text-muted-foreground">
           No se encontraron ejercicios
+        </div>
+      ) : null}
+
+      {hasNextPage && (
+        <div className="flex justify-center mt-6">
+          <Button
+            variant="secondary"
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="w-full"
+          >
+            {isFetchingNextPage ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Cargando...
+              </>
+            ) : (
+              "Cargar más"
+            )}
+          </Button>
         </div>
       )}
     </div>

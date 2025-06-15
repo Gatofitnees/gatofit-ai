@@ -1,11 +1,12 @@
 
-import { useExercises } from "@/hooks/useExercises";
 import { useSelectionStorage } from "./exercise-selection/useSelectionStorage";
-import { useExerciseFilters } from "./exercise-selection/useExerciseFilters";
 import { useExerciseNavigation } from "./exercise-selection/useExerciseNavigation";
+import { usePaginatedExercises } from "./usePaginatedExercises";
+import { useExerciseFilterOptions } from "./useExerciseFilterOptions";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export const useExerciseSelection = () => {
-  const { exercises, loading, muscleGroups, equipmentTypes } = useExercises();
+  const { muscleGroups, equipmentTypes } = useExerciseFilterOptions();
   
   const {
     searchTerm,
@@ -21,8 +22,18 @@ export const useExerciseSelection = () => {
     resetSessionStorage
   } = useSelectionStorage();
 
-  const { filteredExercises, handleMuscleFilterToggle, handleEquipmentFilterToggle } = 
-    useExerciseFilters(exercises, { searchTerm, muscleFilters, equipmentFilters });
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const { 
+    data, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    isLoading: loading,
+  } = usePaginatedExercises({ searchTerm: debouncedSearchTerm, muscleFilters, equipmentFilters });
+
+  const filteredExercises = data?.pages.flatMap(page => page.data) ?? [];
+  const exerciseCount = data?.pages[0]?.count ?? 0;
 
   const { 
     handleExerciseDetails, 
@@ -32,19 +43,21 @@ export const useExerciseSelection = () => {
   } = useExerciseNavigation();
 
   const handleExerciseSelect = (id: number) => {
-    if (selectedExercises.includes(id)) {
-      setSelectedExercises(selectedExercises.filter(exId => exId !== id));
-    } else {
-      setSelectedExercises([...selectedExercises, id]);
-    }
+    setSelectedExercises(prev => 
+      prev.includes(id) ? prev.filter(exId => exId !== id) : [...prev, id]
+    );
+  };
+  
+  const handleMuscleFilterToggle = (muscle: string) => {
+    setMuscleFilters(prev => 
+      prev.includes(muscle) ? prev.filter(m => m !== muscle) : [...prev, muscle]
+    );
   };
 
-  const handleMuscleFilterToggleWrapper = (muscle: string) => {
-    handleMuscleFilterToggle(muscle, setMuscleFilters);
-  };
-
-  const handleEquipmentFilterToggleWrapper = (equipment: string) => {
-    handleEquipmentFilterToggle(equipment, setEquipmentFilters);
+  const handleEquipmentFilterToggle = (equipment: string) => {
+    setEquipmentFilters(prev => 
+      prev.includes(equipment) ? prev.filter(e => e !== equipment) : [...prev, equipment]
+    );
   };
 
   const handleNavigateBack = () => {
@@ -52,11 +65,13 @@ export const useExerciseSelection = () => {
   };
 
   const handleAddExercises = () => {
-    baseHandleAddExercises(selectedExercises, exercises, resetSessionStorage);
+    const allFetchedExercises = data?.pages.flatMap(page => page.data) ?? [];
+    baseHandleAddExercises(selectedExercises, allFetchedExercises, resetSessionStorage);
   };
 
   return {
     filteredExercises,
+    exerciseCount,
     selectedExercises,
     muscleGroups,
     equipmentTypes,
@@ -68,11 +83,14 @@ export const useExerciseSelection = () => {
     setSearchTerm,
     setPreviouslySelectedIds,
     handleExerciseSelect,
-    handleMuscleFilterToggle: handleMuscleFilterToggleWrapper,
-    handleEquipmentFilterToggle: handleEquipmentFilterToggleWrapper,
+    handleMuscleFilterToggle,
+    handleEquipmentFilterToggle,
     handleExerciseDetails,
     handleNavigateBack,
     handleCreateExercise,
-    handleAddExercises
+    handleAddExercises,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   };
 };
