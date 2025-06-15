@@ -1,9 +1,9 @@
 
 import { useMemo } from 'react';
 import { FoodLogEntry } from './useFoodLog';
-import { Profile } from './useProfile';
+import { UserProfile } from '@/types/userProfile';
 
-export const useNutritionCalculations = (entries: FoodLogEntry[], profile: Profile | null) => {
+export const useNutritionCalculations = (entries: FoodLogEntry[], profile: UserProfile | null) => {
   const todayTotals = useMemo(() => {
     return entries.reduce(
       (totals, entry) => ({

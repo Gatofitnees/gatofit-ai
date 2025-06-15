@@ -59,7 +59,7 @@ const NutritionPage: React.FC = () => {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">
-            Comidas - {formatSelectedDate()}
+            Comidas - {formatSelectedDate}
           </h2>
           {isToday && (
             <Button 
