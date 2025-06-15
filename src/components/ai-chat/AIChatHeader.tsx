@@ -22,7 +22,7 @@ const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onBack, onClear, hasMessage
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-          <img src="/lovable-uploads/4d4446c4-3e6c-420c-b845-c89b0f5bda48.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
+          <img src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
         </div>
         <div>
           <h1 className="font-semibold text-lg">Chatea con Gatofit</h1>

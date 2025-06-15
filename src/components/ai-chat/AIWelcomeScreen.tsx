@@ -5,7 +5,7 @@ const AIWelcomeScreen: React.FC = () => {
   return (
     <div className="text-center text-muted-foreground py-16">
       <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-        <img src="/lovable-uploads/4d4446c4-3e6c-420c-b845-c89b0f5bda48.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
+        <img src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
       </div>
       <h2 className="text-lg font-semibold mb-2">¡Hola! Soy Gatofit</h2>
       <p className="text-sm text-muted-foreground mb-4">
