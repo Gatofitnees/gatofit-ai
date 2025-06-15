@@ -48,11 +48,11 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
       style={{
         bottom: `${keyboardHeight}px`,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        transition: 'bottom 0.2s ease-out',
+        // Se elimina la transición para que el ajuste sea instantáneo y sin saltos
       }}
     >
       <div className="p-4 pt-2 border-t border-muted/30">
-        <div className="flex gap-2 items-start bg-input rounded-xl p-2 focus-within:ring-2 focus-within:ring-ring transition-all">
+        <div className="flex gap-2 items-end bg-input rounded-xl p-2 focus-within:ring-2 focus-within:ring-ring transition-all">
           <Textarea
             ref={textareaRef}
             value={inputValue}
@@ -67,7 +67,7 @@ const AIMessageInput = React.forwardRef<HTMLDivElement, AIMessageInputProps>(({
             onClick={onSend}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
-            className="h-9 w-9 flex-shrink-0 bg-primary hover:bg-primary/90 rounded-lg touch-element self-end"
+            className="h-9 w-9 flex-shrink-0 bg-primary hover:bg-primary/90 rounded-lg touch-element"
           >
             <Send className="h-4 w-4" />
           </Button>
