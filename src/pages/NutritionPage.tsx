@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Camera, Plus, Utensils } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../components/Card";
@@ -14,6 +15,7 @@ import { useFoodCapture } from "../hooks/useFoodCapture";
 import { useProfile } from "../hooks/useProfile";
 import { useToast } from "@/components/ui/use-toast";
 import { ProcessingFoodCard } from "@/components/nutrition/ProcessingFoodCard";
+import { AnimatePresence } from "framer-motion";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
@@ -282,13 +284,15 @@ const NutritionPage: React.FC = () => {
       )}
 
       {/* Camera Capture - Only show for today */}
-      {isToday && (
-        <CameraCapture
-          isOpen={showCamera}
-          onClose={() => setShowCamera(false)}
-          onPhotoTaken={handlePhotoTaken}
-        />
-      )}
+      <AnimatePresence>
+        {isToday && showCamera && (
+          <CameraCapture
+            isOpen={showCamera}
+            onClose={() => setShowCamera(false)}
+            onPhotoTaken={handlePhotoTaken}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Loading overlay for analysis (can be removed if not desired) */}
       {isAnalyzing && (

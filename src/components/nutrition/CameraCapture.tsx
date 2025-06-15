@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useFoodCapture } from '@/hooks/useFoodCapture';
 import { CameraControls } from './camera/CameraControls';
 import { CameraErrorDialog } from './camera/CameraErrorDialog';
 import { CameraLoadingOverlay } from './camera/CameraLoadingOverlay';
 import { CameraViewfinder } from './camera/CameraViewfinder';
+import { motion } from 'framer-motion';
 
 interface CameraCaptureProps {
   isOpen: boolean;
@@ -150,10 +152,14 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black z-[100]">
+    <motion.div
+      className="fixed inset-0 bg-black z-[100]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="relative w-full h-full">
         <CameraErrorDialog
           isVisible={!!cameraError}
@@ -194,6 +200,6 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
           isVisible={!isProcessing && !isLoading && !cameraError}
         />
       </div>
-    </div>
+    </motion.div>
   );
 };
