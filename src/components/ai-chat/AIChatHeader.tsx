@@ -2,6 +2,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface AIChatHeaderProps {
   onBack: () => void;
@@ -21,7 +22,10 @@ const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onBack, onClear, hasMessage
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+        <div className={cn(
+          "w-8 h-8 rounded-full overflow-hidden flex items-center justify-center",
+          "gatofit-aura"
+        )}>
           <img src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
         </div>
         <div>

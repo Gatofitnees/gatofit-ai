@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -115,6 +116,10 @@ export default {
           "0%": { filter: "drop-shadow(0 0 2px rgba(59, 130, 246, 0.5))" },
           "50%": { filter: "drop-shadow(0 0 8px rgba(99, 102, 241, 0.8))" },
           "100%": { filter: "drop-shadow(0 0 2px rgba(59, 130, 246, 0.5))" }
+        },
+        "gatofit-pulse": {
+          "0%, 100%": { filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.6))" },
+          "50%": { filter: "drop-shadow(0 0 16px hsl(var(--primary) / 0.9))" },
         }
       },
       animation: {
@@ -125,7 +130,8 @@ export default {
         "progress-fill": "progress-fill 1s ease-out forwards",
         "shine": "shine 4s linear infinite",
         "galaxy-pulse": "galaxy-shift 8s ease-in-out infinite",
-        "galaxy-glow": "galaxy-glow 3s ease-in-out infinite"
+        "galaxy-glow": "galaxy-glow 3s ease-in-out infinite",
+        "gatofit-pulse": "gatofit-pulse 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1)",
       },
       boxShadow: {
         'inner-light': 'inset 1px 1px 1px rgba(255, 255, 255, 0.07)',
