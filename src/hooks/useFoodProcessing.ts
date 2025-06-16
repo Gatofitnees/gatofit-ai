@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useFoodCapture } from './useFoodCapture';
 import { useToast } from '@/hooks/use-toast';
@@ -15,7 +14,7 @@ export interface ProcessingFood {
 
 export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
-  const { uploadImageWithAnalysis, clearError, error: foodCaptureError } = useFoodCapture();
+  const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
   const { toast } = useToast();
 
   const runAnalysis = async (blob: Blob, id: string, imageSrc: string) => {
@@ -90,6 +89,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
     processingFoods,
     handlePhotoTaken,
     handleRetryAnalysis,
-    handleCancelProcessing
+    handleCancelProcessing,
+    isCompressing
   };
 };

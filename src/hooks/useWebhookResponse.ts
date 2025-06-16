@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { validateImageFile, sanitizeFoodName } from '@/utils/validation';
 import { sanitizeWebhookData, createSecureFormData } from '@/utils/securityHelpers';
 import { createSecureErrorMessage, logSecurityEvent } from '@/utils/errorHandling';
+import { shouldCompressForWebhook, compressForWebhook } from '@/utils/imageCompression';
 
 export interface WebhookIngredient {
   name: string;
@@ -58,6 +58,7 @@ export interface FoodAnalysisResult {
 export const useWebhookResponse = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const sendToWebhookWithResponse = async (imageUrl: string, imageBlob: Blob): Promise<FoodAnalysisResult | null> => {
     setIsAnalyzing(true);
@@ -76,9 +77,24 @@ export const useWebhookResponse = () => {
       blobSize: imageBlob.size,
       mimeType: imageBlob.type
     });
+
+    // Check if we need to compress the image
+    let processedBlob = imageBlob;
+    if (shouldCompressForWebhook(imageBlob)) {
+      try {
+        setIsCompressing(true);
+        console.log('Image is too large for webhook, compressing...');
+        processedBlob = await compressForWebhook(imageBlob);
+      } catch (compressionError) {
+        console.warn('Image compression failed, using original:', compressionError);
+        processedBlob = imageBlob;
+      } finally {
+        setIsCompressing(false);
+      }
+    }
     
     try {
-      const formData = createSecureFormData(imageBlob, imageUrl);
+      const formData = createSecureFormData(processedBlob, imageUrl);
       
       const response = await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
         method: 'POST',
@@ -149,6 +165,28 @@ export const useWebhookResponse = () => {
           setAnalysisError('No se detectó información de comida');
           return null;
         }
+      } else if (response.status === 413) {
+        // Handle 413 Request Entity Too Large specifically
+        console.warn('Request too large (413), attempting with higher compression');
+        
+        if (!shouldCompressForWebhook(imageBlob)) {
+          // If original wasn't compressed, try compressing now
+          try {
+            setIsCompressing(true);
+            const highlyCompressed = await compressForWebhook(imageBlob);
+            setIsCompressing(false);
+            
+            // Retry with compressed image
+            return await sendToWebhookWithResponse(imageUrl, highlyCompressed);
+          } catch (retryError) {
+            setIsCompressing(false);
+            setAnalysisError('La imagen es demasiado grande. Intenta con una imagen más pequeña.');
+            return null;
+          }
+        } else {
+          setAnalysisError('La imagen es demasiado grande incluso después de comprimirla. Intenta con una imagen más pequeña.');
+          return null;
+        }
       } else {
         console.warn('Webhook request failed:', response.status);
         setAnalysisError(createSecureErrorMessage(new Error(`HTTP ${response.status}`), 'network'));
@@ -159,9 +197,24 @@ export const useWebhookResponse = () => {
       console.error('Error sending to webhook:', error);
       logSecurityEvent('webhook_network_error', error instanceof Error ? error.message : 'Unknown error');
       
+      // If it's a network error and we haven't tried compression yet, try it
+      if (!shouldCompressForWebhook(processedBlob) && error instanceof Error && error.message.includes('fetch')) {
+        try {
+          setIsCompressing(true);
+          const compressedBlob = await compressForWebhook(imageBlob);
+          setIsCompressing(false);
+          
+          console.log('Retrying with compressed image after network error');
+          return await sendToWebhookWithResponse(imageUrl, compressedBlob);
+        } catch (retryError) {
+          setIsCompressing(false);
+          console.error('Retry with compression also failed');
+        }
+      }
+      
       // Fallback with no-cors
       try {
-        const fallbackFormData = createSecureFormData(imageBlob, imageUrl);
+        const fallbackFormData = createSecureFormData(processedBlob, imageUrl);
         await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
           method: 'POST',
           mode: 'no-cors',
@@ -176,6 +229,7 @@ export const useWebhookResponse = () => {
       return null;
     } finally {
       setIsAnalyzing(false);
+      setIsCompressing(false);
     }
   };
 
@@ -214,8 +268,9 @@ export const useWebhookResponse = () => {
 
   return {
     sendToWebhookWithResponse,
-    isAnalyzing,
+    isAnalyzing: isAnalyzing || isCompressing,
     analysisError,
+    isCompressing,
     clearError: () => setAnalysisError(null)
   };
 };
