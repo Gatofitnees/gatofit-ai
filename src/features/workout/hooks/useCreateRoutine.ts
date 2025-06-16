@@ -1,7 +1,7 @@
+
 import { useCallback, useState } from "react";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
-// Updated import path to use the new location from the navigation folder
 import { useRoutineNavigation } from "./navigation";
 import { useRoutineSheets } from "./useRoutineSheets";
 import { useRoutineSave } from "./useRoutineSave";
@@ -9,6 +9,7 @@ import { useRoutineForm } from "./useRoutineForm";
 import { RoutineExercise } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { convertRoutineTypeToUi } from "../utils/routineTypeMapping";
 
 export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editRoutineId?: number) => {
   const { toast } = useToast();
@@ -97,9 +98,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
         throw routineError || new Error("No se encontró la rutina");
       }
 
-      // Establecer nombre y tipo
+      // Establecer nombre y tipo (convertir de DB a UI)
       setRoutineName(routineData.name);
-      setRoutineType(routineData.type || "");
+      setRoutineType(convertRoutineTypeToUi(routineData.type) || "general");
 
       // Obtener ejercicios de la rutina
       const { data: routineExercisesData, error: exercisesError } = await supabase
@@ -126,7 +127,6 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
             equipment_required: exerciseData.equipment_required,
             sets: Array(item.sets || 1).fill({}).map((_, idx) => ({
               set_number: idx + 1,
-              // Use actual values if they exist, otherwise use 0 for empty state
               reps_min: item.reps_min || 0,
               reps_max: item.reps_max || 0,
               rest_seconds: item.rest_between_sets_seconds || 60

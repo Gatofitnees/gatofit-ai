@@ -1,7 +1,6 @@
 
 import React from "react";
-import { ChevronDown } from "lucide-react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ROUTINE_TYPES_FOR_UI } from "../utils/routineTypeMapping";
 
 interface RoutineFormProps {
   routineName: string;
@@ -22,41 +21,48 @@ const RoutineForm: React.FC<RoutineFormProps> = ({
   onTypeChange
 }) => {
   return (
-    <div>
-      <label className="block text-sm font-medium mb-1">Nombre de la Rutina</label>
-      <input 
-        type="text" 
-        placeholder="Ej: Día de Pierna" 
-        className={`w-full h-10 rounded-xl px-4 bg-secondary border ${validationErrors.name ? 'border-destructive ring-1 ring-destructive' : 'border-transparent'} focus:ring-1 focus:ring-primary outline-none shadow-neu-button`}
-        value={routineName}
-        onChange={(e) => onNameChange(e.target.value)}
-      />
-      {validationErrors.name && (
-        <p className="mt-1 text-xs text-destructive">Este campo es obligatorio</p>
-      )}
-      
-      <div className="mt-4">
-        <label className="block text-sm font-medium mb-1">Tipo de Rutina</label>
-        <Select value={routineType} onValueChange={onTypeChange}>
-          <SelectTrigger className={`w-full h-10 rounded-xl px-4 bg-secondary border ${validationErrors.type ? 'border-destructive ring-1 ring-destructive' : 'border-transparent'} focus:ring-1 focus:ring-primary outline-none shadow-neu-button`}>
-            <SelectValue placeholder="Seleccionar tipo" />
-            <ChevronDown className="h-4 w-4 text-primary" />
-          </SelectTrigger>
-          <SelectContent className="bg-background/95 backdrop-blur-sm border border-secondary">
-            <SelectGroup>
-              <SelectItem value="strength">Fuerza</SelectItem>
-              <SelectItem value="cardio">Cardio</SelectItem>
-              <SelectItem value="flexibility">Flexibilidad</SelectItem>
-              <SelectItem value="mixed">Mixto</SelectItem>
-              <SelectItem value="custom">Personalizado</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        {validationErrors.type && (
-          <p className="mt-1 text-xs text-destructive">Este campo es obligatorio</p>
+    <>
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Nombre de la rutina *
+        </label>
+        <input
+          type="text"
+          value={routineName}
+          onChange={(e) => onNameChange(e.target.value)}
+          placeholder="Ej: Rutina de fuerza para principiantes"
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none ${
+            validationErrors.name ? 'border-red-500' : 'border-gray-300'
+          }`}
+        />
+        {validationErrors.name && (
+          <p className="text-red-500 text-xs mt-1">El nombre es requerido</p>
         )}
       </div>
-    </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Tipo de rutina *
+        </label>
+        <select
+          value={routineType}
+          onChange={(e) => onTypeChange(e.target.value)}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none ${
+            validationErrors.type ? 'border-red-500' : 'border-gray-300'
+          }`}
+        >
+          <option value="">Selecciona un tipo</option>
+          {ROUTINE_TYPES_FOR_UI.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
+        </select>
+        {validationErrors.type && (
+          <p className="text-red-500 text-xs mt-1">El tipo es requerido</p>
+        )}
+      </div>
+    </>
   );
 };
 

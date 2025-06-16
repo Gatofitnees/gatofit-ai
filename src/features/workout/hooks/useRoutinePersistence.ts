@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutineExercise } from '../types';
 
@@ -16,11 +16,13 @@ export const useRoutinePersistence = (
 ) => {
   const location = useLocation();
   const storageKey = editRoutineId ? `${STORAGE_KEY}_${editRoutineId}` : STORAGE_KEY;
+  const hasLoadedFromStorage = useRef(false);
+  const isProcessingLocationState = useRef(false);
 
-  // Cargar estado desde sessionStorage al montar el componente
+  // Cargar estado desde sessionStorage al montar el componente (solo una vez)
   useEffect(() => {
-    // Si estamos editando, no cargamos del almacenamiento hasta que se carguen los datos del backend
-    if (editRoutineId) {
+    // Si estamos editando o ya cargamos desde storage, no cargar
+    if (editRoutineId || hasLoadedFromStorage.current) {
       return;
     }
     
@@ -30,27 +32,34 @@ export const useRoutinePersistence = (
         const { name, type, exercises } = JSON.parse(savedState);
         
         // Solo cargamos desde almacenamiento si el estado del contexto está vacío
-        if (!routineName) {
-          setRoutineName(name || "");
+        if (!routineName && name) {
+          setRoutineName(name);
         }
         
-        if (!routineType) {
-          setRoutineType(type || "");
+        if (!routineType && type) {
+          setRoutineType(type);
         }
         
         if (exercises && exercises.length > 0 && routineExercises.length === 0) {
           setRoutineExercises(exercises);
         }
+        
+        hasLoadedFromStorage.current = true;
       } catch (error) {
         console.error("Error parsing saved routine state:", error);
-        // En caso de error, limpiamos el storage para evitar errores futuros
         sessionStorage.removeItem(storageKey);
       }
+    } else {
+      hasLoadedFromStorage.current = true;
     }
-  }, [setRoutineName, setRoutineType, setRoutineExercises, storageKey, editRoutineId, routineName, routineType, routineExercises.length]);
+  }, []);
 
-  // Guardar estado en sessionStorage cuando cambia
+  // Guardar estado en sessionStorage cuando cambia (solo si no estamos procesando location state)
   useEffect(() => {
+    if (!hasLoadedFromStorage.current || isProcessingLocationState.current) {
+      return;
+    }
+
     // Solo guardamos si hay algo que guardar
     if (routineName || routineType || routineExercises.length > 0) {
       const stateToSave = {
@@ -65,31 +74,35 @@ export const useRoutinePersistence = (
 
   // Manejar ejercicios desde el state de location (al regresar de select exercises)
   useEffect(() => {
-    if (location.state && location.state.selectedExercises) {
+    if (location.state?.selectedExercises && !isProcessingLocationState.current) {
+      isProcessingLocationState.current = true;
+      
       const newExercises = location.state.selectedExercises;
-      // FIX: Consideramos shouldAddToExisting siempre true por defecto
       const shouldAddToExisting = location.state.shouldAddToExisting !== false;
       
       console.log("Nuevos ejercicios recibidos:", newExercises.length);
       console.log("Debe añadirse a existentes:", shouldAddToExisting);
       console.log("Ejercicios existentes antes:", routineExercises.length);
       
-      // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
-      const existingExerciseIds = new Set(routineExercises.map(ex => ex.id));
-      
-      // Filtrar ejercicios nuevos para evitar duplicados
-      const uniqueNewExercises = newExercises.filter(
-        (ex: any) => !existingExerciseIds.has(ex.id)
-      );
-      
-      console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
-      
-      // FIX IMPORTANTE: Siempre añadimos los ejercicios nuevos a los existentes
-      // No debemos usar el flag shouldAddToExisting para determinar esto
-      if (uniqueNewExercises.length > 0) {
-        const updatedExercises = [...routineExercises, ...uniqueNewExercises];
-        console.log("Ejercicios actualizados después de combinar:", updatedExercises.length);
-        setRoutineExercises(updatedExercises);
+      if (shouldAddToExisting) {
+        // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
+        const existingExerciseIds = new Set(routineExercises.map(ex => ex.id));
+        
+        // Filtrar ejercicios nuevos para evitar duplicados
+        const uniqueNewExercises = newExercises.filter(
+          (ex: any) => !existingExerciseIds.has(ex.id)
+        );
+        
+        console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
+        
+        if (uniqueNewExercises.length > 0) {
+          const updatedExercises = [...routineExercises, ...uniqueNewExercises];
+          console.log("Ejercicios actualizados después de combinar:", updatedExercises.length);
+          setRoutineExercises(updatedExercises);
+        }
+      } else {
+        // Reemplazar todos los ejercicios
+        setRoutineExercises(newExercises);
       }
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
@@ -106,13 +119,19 @@ export const useRoutinePersistence = (
           ''
         );
       }
+      
+      // Reset flag después de un breve delay
+      setTimeout(() => {
+        isProcessingLocationState.current = false;
+      }, 100);
     }
-  }, [location.state, setRoutineExercises, routineExercises]);
+  }, [location.state?.selectedExercises]);
 
   // Limpiar sessionStorage y resetear el formulario
   const clearStoredRoutine = () => {
     console.log("Limpiando datos de rutina en sessionStorage");
     sessionStorage.removeItem(storageKey);
+    hasLoadedFromStorage.current = false;
   };
   
   return { clearStoredRoutine };

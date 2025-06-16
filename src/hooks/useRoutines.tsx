@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { convertRoutineTypeToUi } from "@/features/workout/utils/routineTypeMapping";
 
 interface WorkoutRoutine {
   id: number;
@@ -31,14 +32,12 @@ export const useRoutines = () => {
           *,
           routine_exercises!routine_exercises_routine_id_fkey(count)
         `)
-        .eq('is_predefined', false) // Solo traer rutinas no predefinidas
+        .eq('is_predefined', false)
         .order('created_at', { ascending: false });
       
       if (user) {
-        // Si el usuario está autenticado, traer solo sus rutinas
         query = query.eq('user_id', user.id);
       } else {
-        // Si no hay usuario autenticado, no traer nada
         setRoutines([]);
         setLoading(false);
         return;
@@ -52,9 +51,10 @@ export const useRoutines = () => {
       }
 
       if (data) {
-        // Transform data to include exercise count
+        // Transform data to include exercise count and convert types
         const formattedData = data.map(routine => ({
           ...routine,
+          type: routine.type ? convertRoutineTypeToUi(routine.type) : 'General',
           exercise_count: routine.routine_exercises?.[0]?.count || 0
         }));
         

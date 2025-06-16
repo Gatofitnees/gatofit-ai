@@ -9,6 +9,7 @@ import WorkoutList from "@/components/workout/WorkoutList";
 import { useRoutines } from "@/hooks/useRoutines";
 import { syncExercisesToDatabase } from "@/features/workout/services/exerciseSyncService";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const WorkoutPage: React.FC = () => {
   const { toast } = useToast();
@@ -20,20 +21,15 @@ const WorkoutPage: React.FC = () => {
     muscles: []
   });
   const [initializing, setInitializing] = useState(false);
+  const [routinesWithMuscles, setRoutinesWithMuscles] = useState<any[]>([]);
   
-  // Inicializar ejercicios pero no rutinas predefinidas
+  // Inicializar ejercicios
   useEffect(() => {
     const initialize = async () => {
       try {
         setInitializing(true);
-        
-        // First ensure all exercises exist in the database
         await syncExercisesToDatabase();
         console.log("Exercise synchronization completed");
-        
-        // No inicializamos rutinas predefinidas
-        
-        // Refetch routines after initialization
         await refetch();
       } catch (error: any) {
         console.error("Error loading data:", error);
@@ -44,19 +40,84 @@ const WorkoutPage: React.FC = () => {
     
     initialize();
   }, [toast, refetch]); 
+
+  // Cargar rutinas con información de músculos cuando cambian las rutinas
+  useEffect(() => {
+    const loadRoutinesWithMuscles = async () => {
+      if (routines.length === 0) {
+        setRoutinesWithMuscles([]);
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Obtener rutinas con sus ejercicios y grupos musculares
+        const { data, error } = await supabase
+          .from('routines')
+          .select(`
+            *,
+            routine_exercises!inner(
+              exercise:exercise_id!inner(
+                muscle_group_main
+              )
+            )
+          `)
+          .eq('user_id', user.id)
+          .eq('is_predefined', false);
+
+        if (error) {
+          console.error("Error loading routines with muscles:", error);
+          setRoutinesWithMuscles(routines);
+          return;
+        }
+
+        // Combinar con datos de rutinas existentes y añadir grupos musculares
+        const enrichedRoutines = routines.map(routine => {
+          const dbRoutine = data?.find(r => r.id === routine.id);
+          const muscles = new Set<string>();
+          
+          dbRoutine?.routine_exercises?.forEach(re => {
+            if (re.exercise?.muscle_group_main) {
+              re.exercise.muscle_group_main.split(/[,\s]+/).forEach(muscle => {
+                if (muscle.trim()) {
+                  muscles.add(muscle.trim().charAt(0).toUpperCase() + muscle.trim().slice(1));
+                }
+              });
+            }
+          });
+
+          return {
+            ...routine,
+            muscles: Array.from(muscles)
+          };
+        });
+
+        setRoutinesWithMuscles(enrichedRoutines);
+      } catch (error) {
+        console.error("Error enriching routines:", error);
+        setRoutinesWithMuscles(routines);
+      }
+    };
+
+    loadRoutinesWithMuscles();
+  }, [routines]);
   
   // Filter routines based on search term and filters
-  const filteredRoutines = routines.filter(routine => {
+  const filteredRoutines = routinesWithMuscles.filter(routine => {
     // Search filter
     const matchesSearch = routine.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Type filter
-    const matchesType = filters.types.length === 0 || 
+    const matchesType = filters.types.length === 0 ||
       (routine.type && filters.types.includes(routine.type));
     
-    // For muscle filter, we would need to check routine exercises
-    // For now, we'll implement basic filtering and this can be enhanced later
-    const matchesMuscle = filters.muscles.length === 0; // Simplified for now
+    // Muscle filter - check if routine has any of the selected muscles
+    const matchesMuscle = filters.muscles.length === 0 ||
+      (routine.muscles && routine.muscles.some((muscle: string) => 
+        filters.muscles.includes(muscle)
+      ));
     
     return matchesSearch && matchesType && matchesMuscle;
   });
