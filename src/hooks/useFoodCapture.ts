@@ -14,7 +14,7 @@ export interface CapturedFood {
 export const useFoodCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { sendToWebhookWithResponse, isAnalyzing, analysisError, clearError: clearAnalysisError } = useWebhookResponse();
+  const { sendToWebhookWithResponse, isAnalyzing, analysisError, isCompressing, clearError: clearAnalysisError } = useWebhookResponse();
   const { captureFromCamera, captureFromGallery } = useCameraCapture(sendToWebhookWithResponse);
 
   const clearError = () => {
@@ -90,6 +90,7 @@ export const useFoodCapture = () => {
     sendToWebhook,
     isLoading: isLoading || isAnalyzing,
     error: error || analysisError,
+    isCompressing,
     clearError
   };
 };
