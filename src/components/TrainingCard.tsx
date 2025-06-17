@@ -1,8 +1,10 @@
+
 import React, { useState } from "react";
 import { Check, ChevronRight, Plus, Clock, Flame, Dumbbell, Target } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import Button from "./Button";
 import WorkoutCarousel from "./WorkoutCarousel";
+import PromoVideoCard from "./PromoVideoCard";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -142,64 +144,47 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
     </Card>
   );
 
+  // Crear array de elementos del carrusel: siempre incluir la tarjeta promocional como primer elemento
+  const carouselItems = [
+    { type: 'promo' as const },
+    ...workouts.map(workout => ({ type: 'workout' as const, data: workout }))
+  ];
+
+  const totalItems = carouselItems.length;
+
   return (
     <div className="mb-5">
-      {completed && workouts.length > 0 ? (
-        <div className="space-y-3">
-          <WorkoutCarousel 
-            workouts={workouts}
-            onSlideChange={handleSlideChange}
-          >
-            {renderCompletedWorkoutCard}
-          </WorkoutCarousel>
-          
-          {/* Indicadores fuera del carrusel */}
-          {workouts.length > 1 && (
-            <div className="flex items-center justify-center gap-1">
-              {workouts.map((_, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-colors",
-                    index === currentWorkoutIndex 
-                      ? "bg-primary" 
-                      : "bg-muted"
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <Card>
-          <CardHeader 
-            title="Mi Entrenamiento Hoy" 
-            icon={<Clock className="h-5 w-5" />} 
-          />
-          <CardBody>
-            <div className="text-center py-3">
-              <p className="text-sm text-muted-foreground mb-2">
-                Es un buen día para mejorar 💪
-              </p>
-              <div className="bg-background/40 rounded-lg p-3 mb-3">
-                <h5 className="text-sm font-medium mb-1">Entrenamiento Sugerido</h5>
-                <p className="text-xs text-muted-foreground">
-                  Basado en tu objetivo y nivel actual
-                </p>
-              </div>
-            </div>
-          </CardBody>
-          <CardFooter className="flex justify-center">
-            <Button 
-              variant="primary"
-              leftIcon={<Plus className="h-4 w-4" />}
-              onClick={onStartWorkout}
-            >
-              Iniciar Entrenamiento
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+      <div className="space-y-3">
+        <WorkoutCarousel 
+          items={carouselItems}
+          onSlideChange={handleSlideChange}
+        >
+          {(item, index, total) => {
+            if (item.type === 'promo') {
+              return <PromoVideoCard onStartWorkout={onStartWorkout} />;
+            } else {
+              return renderCompletedWorkoutCard(item.data, index - 1, total - 1);
+            }
+          }}
+        </WorkoutCarousel>
+        
+        {/* Indicadores del carrusel */}
+        {totalItems > 1 && (
+          <div className="flex items-center justify-center gap-1">
+            {carouselItems.map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-colors",
+                  index === currentWorkoutIndex 
+                    ? "bg-primary" 
+                    : "bg-muted"
+                )}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

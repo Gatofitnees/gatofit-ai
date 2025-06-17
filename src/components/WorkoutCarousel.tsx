@@ -13,13 +13,17 @@ interface WorkoutSummary {
   date?: string;
 }
 
+type CarouselItem = 
+  | { type: 'promo' }
+  | { type: 'workout'; data: WorkoutSummary };
+
 interface WorkoutCarouselProps {
-  workouts: WorkoutSummary[];
-  children: (workout: WorkoutSummary, index: number, total: number) => React.ReactNode;
+  items: CarouselItem[];
+  children: (item: CarouselItem, index: number, total: number) => React.ReactNode;
   onSlideChange?: (index: number) => void;
 }
 
-const WorkoutCarouselContent: React.FC<WorkoutCarouselProps> = ({ workouts, children, onSlideChange }) => {
+const WorkoutCarouselContent: React.FC<WorkoutCarouselProps> = ({ items, children, onSlideChange }) => {
   const { api } = useCarousel();
 
   useEffect(() => {
@@ -48,22 +52,22 @@ const WorkoutCarouselContent: React.FC<WorkoutCarouselProps> = ({ workouts, chil
 
   return (
     <CarouselContent className="-ml-2 md:-ml-4">
-      {workouts.map((workout, index) => (
-        <CarouselItem key={workout.id || index} className="basis-full pl-2 md:pl-4">
-          {children(workout, index, workouts.length)}
+      {items.map((item, index) => (
+        <CarouselItem key={`${item.type}-${index}`} className="basis-full pl-2 md:pl-4">
+          {children(item, index, items.length)}
         </CarouselItem>
       ))}
     </CarouselContent>
   );
 };
 
-const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ workouts, children, onSlideChange }) => {
-  if (workouts.length === 0) {
+const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ items, children, onSlideChange }) => {
+  if (items.length === 0) {
     return null;
   }
 
-  if (workouts.length === 1) {
-    return <>{children(workouts[0], 0, 1)}</>;
+  if (items.length === 1) {
+    return <>{children(items[0], 0, 1)}</>;
   }
 
   return (
@@ -80,7 +84,7 @@ const WorkoutCarousel: React.FC<WorkoutCarouselProps> = ({ workouts, children, o
         inViewThreshold: 0.8 // Require 80% visibility to consider slide "in view"
       }}
     >
-      <WorkoutCarouselContent workouts={workouts} onSlideChange={onSlideChange}>
+      <WorkoutCarouselContent items={items} onSlideChange={onSlideChange}>
         {children}
       </WorkoutCarouselContent>
     </Carousel>
