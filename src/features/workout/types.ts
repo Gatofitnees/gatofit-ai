@@ -1,3 +1,4 @@
+
 export interface ExerciseItem {
   id: number;
   name: string;
@@ -15,6 +16,7 @@ export interface ExerciseSet {
 
 export interface RoutineExercise extends ExerciseItem {
   sets: ExerciseSet[];
+  notes?: string;
 }
 
 export type DifficultyLevel = "beginner" | "intermediate" | "advanced";
