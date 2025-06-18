@@ -12,24 +12,35 @@ interface AIChatHeaderProps {
 
 const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onBack, onClear, hasMessages }) => {
   return (
-    <div className="flex items-center justify-between p-4 border-b border-muted/30 bg-background sticky top-0 z-10">
+    <div 
+      className="flex items-center justify-between p-4 border-b border-muted/30 bg-background/95 backdrop-blur-sm sticky top-0 z-10"
+      style={{
+        paddingTop: 'max(1rem, var(--safe-area-inset-top, 0px))',
+        paddingLeft: 'max(1rem, var(--safe-area-inset-left, 0px))',
+        paddingRight: 'max(1rem, var(--safe-area-inset-right, 0px))',
+      }}
+    >
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="p-2"
+          className="p-2 hover:bg-muted transition-colors active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className={cn(
           "w-8 h-8 rounded-full overflow-hidden flex items-center justify-center",
-          "gatofit-aura"
+          "ring-2 ring-primary/20 transition-all duration-200"
         )}>
-          <img src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" alt="Gatofit Avatar" className="w-full h-full object-cover" />
+          <img 
+            src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" 
+            alt="Gatofit Avatar" 
+            className="w-full h-full object-cover"
+          />
         </div>
         <div>
-          <h1 className="font-semibold text-lg">Gatofit</h1>
+          <h1 className="font-semibold text-lg text-foreground">Gatofit</h1>
           <p className="text-xs text-muted-foreground">Tu asistente personal de fitness</p>
         </div>
       </div>
@@ -38,7 +49,7 @@ const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onBack, onClear, hasMessage
           variant="ghost"
           size="sm"
           onClick={onClear}
-          className="text-xs"
+          className="text-xs hover:bg-muted transition-colors active:scale-95"
         >
           Limpiar
         </Button>
