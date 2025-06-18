@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from './Avatar';
 import RankBadge from './RankBadge';
@@ -15,6 +15,30 @@ interface RankingListProps {
 const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => {
   const navigate = useNavigate();
   const { checkUserPremiumStatus } = useSubscription();
+  const [premiumUsers, setPremiumUsers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const checkPremiumStatus = async () => {
+      if (!checkUserPremiumStatus || users.length === 0) return;
+      
+      const premiumChecks = await Promise.all(
+        users.map(async (user) => {
+          const isPremium = await checkUserPremiumStatus(user.user_id);
+          return { userId: user.user_id, isPremium };
+        })
+      );
+      
+      const premiumUserIds = new Set(
+        premiumChecks
+          .filter(check => check.isPremium)
+          .map(check => check.userId)
+      );
+      
+      setPremiumUsers(premiumUserIds);
+    };
+
+    checkPremiumStatus();
+  }, [users, checkUserPremiumStatus]);
 
   const handleUserClick = (userId: string) => {
     navigate(`/public-profile/${userId}`);
@@ -54,7 +78,7 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
     <div className="space-y-3">
       {users.map((user, index) => {
         const displayName = user.username || `Usuario #${user.user_id.substring(0, 8)}`;
-        const isPremiumUser = checkUserPremiumStatus ? checkUserPremiumStatus(user.user_id) : false;
+        const isPremiumUser = premiumUsers.has(user.user_id);
         
         return (
           <div 

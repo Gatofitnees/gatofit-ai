@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus } from 'lucide-react';
 import { Card, CardBody } from '@/components/Card';
 import { Button } from '@/components/ui/button';
@@ -24,10 +24,24 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
   followLoading
 }) => {
   const { checkUserPremiumStatus } = useSubscription();
+  const [isPremiumUser, setIsPremiumUser] = useState(false);
   const displayName = profile.username || profile.full_name || 'Usuario';
   
-  // Check if this profile belongs to a premium user
-  const isPremiumUser = checkUserPremiumStatus ? checkUserPremiumStatus(profile.id) : false;
+  useEffect(() => {
+    const checkPremiumStatus = async () => {
+      if (!checkUserPremiumStatus) return;
+      
+      try {
+        const premiumStatus = await checkUserPremiumStatus(profile.id);
+        setIsPremiumUser(premiumStatus);
+      } catch (error) {
+        console.error('Error checking premium status:', error);
+        setIsPremiumUser(false);
+      }
+    };
+
+    checkPremiumStatus();
+  }, [profile.id, checkUserPremiumStatus]);
   
   console.log('PublicProfileCard Debug:', {
     profileId: profile.id,
