@@ -58,7 +58,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
         const savedEntry = await addEntry(newEntryData);
         
         if (savedEntry) {
-          // Solo incrementar contador si el análisis fue exitoso y para usuarios free
+          // Solo incrementar contador DESPUÉS de que el análisis y guardado sean exitosos
           if (!isPremium) {
             await incrementUsage('nutrition_photos');
           }

@@ -83,20 +83,21 @@ const AIChatPage: React.FC = () => {
 
   return (
     <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">
-      {/* Header fijo con banner en la esquina superior derecha */}
+      {/* Header con banner de uso */}
       <div className="flex-shrink-0 z-20 relative">
         <AIChatHeader 
           onBack={handleBack}
           onClear={clearMessages}
           hasMessages={messages.length > 0}
         />
-        {/* Usage banner en la esquina superior derecha del header */}
-        {!isPremium && (
-          <div className="absolute top-2 right-4">
-            <UsageLimitsBanner type="ai_chat" />
-          </div>
-        )}
       </div>
+
+      {/* Usage banner fijo en la parte superior */}
+      {!isPremium && (
+        <div className="fixed top-4 right-4 z-30">
+          <UsageLimitsBanner type="ai_chat" />
+        </div>
+      )}
 
       {/* Contenido del chat scrollable */}
       <div
