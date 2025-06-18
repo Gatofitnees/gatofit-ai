@@ -1,15 +1,30 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useAIChat } from '@/hooks/ai-chat';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
+import { useAIChatWithLimits } from '@/hooks/useAIChatWithLimits';
 import AIChatHeader from '@/components/ai-chat/AIChatHeader';
 import AIMessageList from '@/components/ai-chat/AIMessageList';
 import AIWelcomeScreen from '@/components/ai-chat/AIWelcomeScreen';
 import AIMessageInput from '@/components/ai-chat/AIMessageInput';
+import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
+import { PremiumModal } from '@/components/premium/PremiumModal';
 
 const AIChatPage: React.FC = () => {
   const navigate = useNavigate();
-  const { messages, isLoading, sendMessage, clearMessages } = useAIChat();
+  const { isPremium } = useSubscription();
+  const { usage } = useUsageLimits();
+  const { 
+    messages, 
+    isLoading, 
+    sendMessage, 
+    clearMessages,
+    showPremiumModal,
+    setShowPremiumModal,
+    getAIChatUsageInfo
+  } = useAIChatWithLimits();
+  
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -69,6 +84,8 @@ const AIChatPage: React.FC = () => {
     navigate('/');
   };
 
+  const usageInfo = getAIChatUsageInfo();
+
   return (
     <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">
       {/* Header fijo */}
@@ -78,6 +95,10 @@ const AIChatPage: React.FC = () => {
           onClear={clearMessages}
           hasMessages={messages.length > 0}
         />
+        {/* Usage banner para usuarios free */}
+        {!isPremium && (
+          <UsageLimitsBanner type="ai_chat" />
+        )}
       </div>
 
       {/* Contenido del chat scrollable */}
@@ -120,6 +141,15 @@ const AIChatPage: React.FC = () => {
           textareaRef={textareaRef}
         />
       </div>
+
+      {/* Premium Modal */}
+      <PremiumModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        feature="ai_chat"
+        currentUsage={usageInfo.current}
+        limit={usageInfo.limit}
+      />
     </div>
   );
 };

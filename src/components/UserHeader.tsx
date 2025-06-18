@@ -8,6 +8,7 @@ import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-rea
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -27,6 +28,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const { user, signOut } = useAuth();
   const { profile, loading: profileLoading } = useProfileContext();
   const { streakData } = useStreaks();
+  const { isPremium } = useSubscription();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -98,6 +100,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             progress={experienceProgress?.progress || progress} 
             size="md"
             src={avatarUrl}
+            isPremium={isPremium}
           />
           <div className="ml-4">
             <h1 className="text-xl font-bold">
@@ -130,6 +133,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
                 progress={experienceProgress?.progress || progress} 
                 size="sm" 
                 src={avatarUrl}
+                isPremium={isPremium}
               />
               <div className="ml-2">
                 <p className="font-medium text-sm">{displayName}</p>
@@ -202,9 +206,9 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             </Button>
             
             <Button 
-              variant="destructive" 
+              variant="secondary" 
               size="sm" 
-              className="justify-start"
+              className="justify-start text-red-400 hover:bg-red-500/10"
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4 mr-2" />

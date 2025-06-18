@@ -74,9 +74,9 @@ export const useUsageLimits = () => {
     isPremium: boolean
   ): Promise<LimitCheck> => {
     const limits = {
-      routines: 4,
+      routines: 5, // Cambiado de 4 a 5
       nutrition_photos: 10,
-      ai_chat_messages: 5
+      ai_chat_messages: 3 // Cambiado de 5 a 3
     };
 
     if (isPremium) {
@@ -115,7 +115,7 @@ export const useUsageLimits = () => {
     }
 
     const currentUsage = usage?.routines_created || 0;
-    const limit = 4;
+    const limit = 5; // Cambiado de 4 a 5
     const isOverLimit = currentUsage >= limit;
 
     return {
@@ -159,7 +159,7 @@ export const useUsageLimits = () => {
     }
 
     const currentUsage = usage?.ai_chat_messages_used || 0;
-    const limit = 5;
+    const limit = 3; // Cambiado de 5 a 3
     const isOverLimit = currentUsage >= limit;
 
     return {
@@ -172,9 +172,9 @@ export const useUsageLimits = () => {
 
   const showLimitReachedToast = (type: 'routines' | 'nutrition_photos' | 'ai_chat_messages') => {
     const messages = {
-      routines: 'Has alcanzado el límite de 4 rutinas. Actualiza a Premium para crear rutinas ilimitadas.',
+      routines: 'Has alcanzado el límite de 5 rutinas. Actualiza a Premium para crear rutinas ilimitadas.',
       nutrition_photos: 'Has usado tus 10 fotos semanales. Actualiza a Premium para fotos ilimitadas.',
-      ai_chat_messages: 'Has usado tus 5 mensajes semanales de IA. Actualiza a Premium para mensajes ilimitados.'
+      ai_chat_messages: 'Has usado tus 3 chats semanales de IA. Actualiza a Premium para chats ilimitados.'
     };
 
     toast({

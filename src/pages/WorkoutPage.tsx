@@ -6,15 +6,27 @@ import { Button } from "@/components/ui/button";
 import WorkoutHeader from "@/components/workout/WorkoutHeader";
 import WorkoutSearchFilter from "@/components/workout/WorkoutSearchFilter";
 import WorkoutList from "@/components/workout/WorkoutList";
-import { useRoutines } from "@/hooks/useRoutines";
+import { useRoutinesWithLimits } from "@/hooks/useRoutinesWithLimits";
+import { useSubscription } from "@/hooks/useSubscription";
 import { syncExercisesToDatabase } from "@/features/workout/services/exerciseSyncService";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { UsageLimitsBanner } from "@/components/premium/UsageLimitsBanner";
+import { PremiumModal } from "@/components/premium/PremiumModal";
 
 const WorkoutPage: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { routines, loading, refetch } = useRoutines();
+  const { isPremium } = useSubscription();
+  const { 
+    routines, 
+    loading, 
+    refetch,
+    showPremiumModal,
+    setShowPremiumModal,
+    getRoutineUsageInfo
+  } = useRoutinesWithLimits();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<{ types: string[], muscles: string[] }>({
     types: [],
@@ -127,6 +139,13 @@ const WorkoutPage: React.FC = () => {
   };
   
   const handleCreateRoutine = () => {
+    const usageInfo = getRoutineUsageInfo();
+    
+    if (!usageInfo.canCreate) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
     navigate("/workout/create");
   };
   
@@ -139,9 +158,17 @@ const WorkoutPage: React.FC = () => {
     console.log("Filters applied:", newFilters);
   };
 
+  const usageInfo = getRoutineUsageInfo();
+
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      <WorkoutHeader title="Mis Rutinas" />
+      <div className="flex items-center justify-between mb-4">
+        <WorkoutHeader title="Mis Rutinas" />
+        {/* Usage banner para usuarios free */}
+        {!isPremium && (
+          <UsageLimitsBanner type="routines" />
+        )}
+      </div>
       
       {/* Search and Filter */}
       <WorkoutSearchFilter 
@@ -176,6 +203,15 @@ const WorkoutPage: React.FC = () => {
           <Plus className="h-6 w-6" />
         </Button>
       </div>
+
+      {/* Premium Modal */}
+      <PremiumModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        feature="routines"
+        currentUsage={usageInfo.current}
+        limit={usageInfo.limit}
+      />
     </div>
   );
 };

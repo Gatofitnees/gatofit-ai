@@ -24,7 +24,7 @@ export const useAIChatWithLimits = () => {
       aiChatHook.sendMessage(message);
       
       if (!isPremium) {
-        // Increment usage counter for free users
+        // Increment usage counter for free users only once per session
         await incrementUsage('ai_chat_messages');
       }
     } catch (error) {

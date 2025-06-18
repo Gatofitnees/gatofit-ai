@@ -6,6 +6,7 @@ import DaySelector from "../components/DaySelector";
 import { CameraCapture } from "../components/nutrition/CameraCapture";
 import { useFoodLog } from "../hooks/useFoodLog";
 import { useProfile } from "../hooks/useProfile";
+import { useSubscription } from "@/hooks/useSubscription";
 import { AnimatePresence } from "framer-motion";
 import { useFoodProcessing } from "@/hooks/useFoodProcessing";
 import { useDateManagement } from "@/hooks/useDateManagement";
@@ -13,11 +14,15 @@ import { useNutritionCalculations } from "@/hooks/useNutritionCalculations";
 import { CaloriesSummary } from "@/components/nutrition/CaloriesSummary";
 import { MacrosSummary } from "@/components/nutrition/MacrosSummary";
 import { MealsList } from "@/components/nutrition/MealsList";
+import { UsageLimitsBanner } from "@/components/premium/UsageLimitsBanner";
+import { PremiumModal } from "@/components/premium/PremiumModal";
+import { useFoodCaptureWithLimits } from "@/hooks/useFoodCaptureWithLimits";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-
+  const { isPremium } = useSubscription();
+  
   const { profile } = useProfile();
   const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(selectedDate.toISOString().split('T')[0]);
   
@@ -37,14 +42,39 @@ const NutritionPage: React.FC = () => {
     handleCancelProcessing
   } = useFoodProcessing(addEntry);
 
+  const {
+    showPremiumModal,
+    setShowPremiumModal,
+    getNutritionUsageInfo
+  } = useFoodCaptureWithLimits();
+
   const handlePhotoTakenAndCloseCamera = async (photoBlob: Blob) => {
     setShowCamera(false);
     await handlePhotoTaken(photoBlob);
   };
 
+  const handleOpenCamera = () => {
+    const usageInfo = getNutritionUsageInfo();
+    
+    if (!usageInfo.canCapture) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
+    setShowCamera(true);
+  };
+
+  const usageInfo = getNutritionUsageInfo();
+
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-6">Nutrición</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Nutrición</h1>
+        {/* Usage banner para usuarios free */}
+        {!isPremium && (
+          <UsageLimitsBanner type="nutrition" />
+        )}
+      </div>
       
       <DaySelector 
         onSelectDate={setSelectedDate}
@@ -66,7 +96,7 @@ const NutritionPage: React.FC = () => {
               variant="primary"
               size="sm"
               leftIcon={<Plus className="h-4 w-4" />}
-              onClick={() => setShowCamera(true)}
+              onClick={handleOpenCamera}
             >
               Añadir
             </Button>
@@ -90,7 +120,7 @@ const NutritionPage: React.FC = () => {
           <Button 
             className="h-14 w-14 rounded-full shadow-neu-button"
             variant="primary"
-            onClick={() => setShowCamera(true)}
+            onClick={handleOpenCamera}
           >
             <Camera className="h-6 w-6" />
           </Button>
@@ -106,6 +136,15 @@ const NutritionPage: React.FC = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Premium Modal */}
+      <PremiumModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        feature="nutrition"
+        currentUsage={usageInfo.current}
+        limit={usageInfo.limit}
+      />
     </div>
   );
 };

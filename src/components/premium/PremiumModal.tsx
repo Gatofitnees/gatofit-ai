@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import Button from '@/components/Button';
 import { Crown, Check, X } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useNavigate } from 'react-router-dom';
 
 interface PremiumModalProps {
   isOpen: boolean;
@@ -20,13 +21,14 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   currentUsage,
   limit
 }) => {
-  const { plans, upgradeSubscription } = useSubscription();
+  const { plans } = useSubscription();
+  const navigate = useNavigate();
 
   const getFeatureMessage = () => {
     switch (feature) {
       case 'routines':
         return {
-          title: 'Limite de rutinas alcanzado',
+          title: 'Límite de rutinas alcanzado',
           description: `Has creado ${currentUsage}/${limit} rutinas. Actualiza a Premium para crear rutinas ilimitadas.`,
           benefit: 'Rutinas ilimitadas'
         };
@@ -38,8 +40,8 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         };
       case 'ai_chat':
         return {
-          title: 'Límite de mensajes IA',
-          description: `Has usado ${currentUsage}/${limit} mensajes esta semana. Actualiza a Premium para mensajes ilimitados.`,
+          title: 'Límite de chats IA',
+          description: `Has usado ${currentUsage}/${limit} chats esta semana. Actualiza a Premium para chats ilimitados.`,
           benefit: 'Chat IA ilimitado'
         };
       default:
@@ -55,13 +57,9 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   const monthlyPlan = plans.find(p => p.plan_type === 'monthly');
   const yearlyPlan = plans.find(p => p.plan_type === 'yearly');
 
-  const handleUpgrade = async (planType: 'monthly' | 'yearly') => {
-    // This would integrate with Play Store/App Store billing
-    // For now, we'll simulate the upgrade
-    const success = await upgradeSubscription(planType);
-    if (success) {
-      onClose();
-    }
+  const handleUpgrade = () => {
+    onClose();
+    navigate('/subscription');
   };
 
   const premiumFeatures = [
@@ -131,12 +129,6 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                     <span className="text-sm text-muted-foreground">/año</span>
                   </div>
                   <p className="text-xs text-green-500 mt-1">Equivale a $2.50/mes</p>
-                  <Button
-                    onClick={() => handleUpgrade('yearly')}
-                    className="w-full mt-3 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
-                  >
-                    Obtener Premium Anual
-                  </Button>
                 </div>
               </div>
             )}
@@ -149,17 +141,17 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                     <span className="text-xl font-bold">${monthlyPlan.price_usd}</span>
                     <span className="text-sm text-muted-foreground">/mes</span>
                   </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleUpgrade('monthly')}
-                    className="w-full mt-3"
-                  >
-                    Obtener Premium Mensual
-                  </Button>
                 </div>
               </div>
             )}
           </div>
+
+          <Button
+            onClick={handleUpgrade}
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
+          >
+            Ver Planes Premium
+          </Button>
 
           <p className="text-xs text-muted-foreground text-center">
             Los pagos se procesan de forma segura a través de la tienda de aplicaciones.
