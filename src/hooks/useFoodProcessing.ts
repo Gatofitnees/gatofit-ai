@@ -48,8 +48,31 @@ export const useFoodProcessing = () => {
       const foodData = await analyzeFood(imageSrc);
       console.log('✅ [FOOD PROCESSING] Análisis completado:', foodData);
 
+      // Transform FoodAnalysis to FoodLogEntry format
+      const foodLogEntry = {
+        custom_food_name: foodData.name,
+        photo_url: imageSrc,
+        meal_type: 'snack1' as const, // Default meal type
+        quantity_consumed: foodData.servingSize,
+        unit_consumed: foodData.servingUnit,
+        calories_consumed: foodData.calories,
+        protein_g_consumed: foodData.protein,
+        carbs_g_consumed: foodData.carbs,
+        fat_g_consumed: foodData.fat,
+        health_score: foodData.healthScore,
+        ingredients: foodData.ingredients.map(ingredient => ({
+          name: ingredient,
+          grams: 0, // Default values since we don't have this data
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0
+        })),
+        notes: undefined
+      };
+
       // Guardar en la base de datos
-      const savedEntry = await secureAddEntry(foodData);
+      const savedEntry = await secureAddEntry(foodLogEntry);
       
       if (savedEntry) {
         console.log('✅ [FOOD PROCESSING] Entrada guardada exitosamente');
