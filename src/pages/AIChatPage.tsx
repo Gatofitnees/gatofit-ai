@@ -13,7 +13,7 @@ import { PremiumModal } from '@/components/premium/PremiumModal';
 const AIChatPage: React.FC = () => {
   const navigate = useNavigate();
   const { isPremium } = useSubscription();
-  const { usage } = useUsageLimits();
+  const { usage, fetchUsage } = useUsageLimits();
   const { 
     messages, 
     isLoading, 
@@ -25,9 +25,24 @@ const AIChatPage: React.FC = () => {
   } = useAIChatWithLimits();
   
   const [inputValue, setInputValue] = useState('');
+  const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 3, canSend: true, isOverLimit: false });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContentRef = useRef<HTMLDivElement>(null);
+
+  // Cargar información de uso al montar el componente
+  useEffect(() => {
+    const loadUsageInfo = async () => {
+      console.log('🔄 [AI CHAT PAGE] Loading usage info on mount');
+      // Asegurar que tenemos datos frescos al entrar al chat
+      await fetchUsage();
+      const info = await getAIChatUsageInfo();
+      setUsageInfo(info);
+      console.log('📊 [AI CHAT PAGE] Usage info loaded:', info);
+    };
+    
+    loadUsageInfo();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -67,18 +82,25 @@ const AIChatPage: React.FC = () => {
     }
     setInputValue('');
     await sendMessage(message);
+    
+    // Actualizar información de uso después de enviar mensaje
+    const updatedInfo = await getAIChatUsageInfo();
+    setUsageInfo(updatedInfo);
+    console.log('📊 [AI CHAT PAGE] Usage info updated after send:', updatedInfo);
   };
 
   const handleButtonClick = async (buttonText: string) => {
     if (isLoading) return;
     await sendMessage(buttonText);
+    
+    // Actualizar información de uso después de enviar mensaje
+    const updatedInfo = await getAIChatUsageInfo();
+    setUsageInfo(updatedInfo);
   };
 
   const handleBack = () => {
     navigate('/');
   };
-
-  const usageInfo = getAIChatUsageInfo();
 
   return (
     <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">

@@ -13,8 +13,9 @@ export const useAIChatWithLimits = () => {
   const sendMessageWithLimitCheck = async (message: string) => {
     console.log('🔍 [AI CHAT LIMITS] Verificando límites para enviar mensaje');
     
-    const limitCheck = checkAIChatLimit(isPremium);
-    console.log('🔍 [AI CHAT LIMITS] Resultado verificación:', limitCheck);
+    // Verificar límites con datos frescos
+    const limitCheck = await checkAIChatLimit(isPremium);
+    console.log('🔍 [AI CHAT LIMITS] Resultado verificación (datos frescos):', limitCheck);
     
     // Para usuarios premium, sin límites
     if (isPremium) {
@@ -52,8 +53,9 @@ export const useAIChatWithLimits = () => {
     }
   };
 
-  const getAIChatUsageInfo = () => {
-    const limitCheck = checkAIChatLimit(isPremium);
+  const getAIChatUsageInfo = async () => {
+    // Obtener información fresca de límites
+    const limitCheck = await checkAIChatLimit(isPremium);
     return {
       current: limitCheck.currentUsage,
       limit: limitCheck.limit,

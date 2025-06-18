@@ -95,9 +95,9 @@ export const useUsageLimits = () => {
 
       console.log(`📈 [USAGE LIMITS] Incrementing ${type} for user:`, user.id);
 
-      // Usar función de base de datos para incrementar
+      // Usar función de base de datos para incrementar con el nuevo parámetro p_user_id
       const { data, error } = await supabase.rpc('increment_usage_counter', {
-        user_id: user.id,
+        p_user_id: user.id,
         counter_type: type,
         increment_by: 1
       });
@@ -138,10 +138,8 @@ export const useUsageLimits = () => {
       };
     }
 
-    // Asegurar que tenemos datos actualizados
-    if (!usage) {
-      await fetchUsage();
-    }
+    // Obtener datos frescos de la base de datos antes de verificar límites
+    await fetchUsage();
 
     const fieldMap = {
       'routines': 'routines_created',
@@ -157,7 +155,8 @@ export const useUsageLimits = () => {
       currentUsage,
       limit,
       isOverLimit,
-      canProceed: !isOverLimit
+      canProceed: !isOverLimit,
+      usageData: usage
     });
 
     return {
@@ -168,7 +167,7 @@ export const useUsageLimits = () => {
     };
   };
 
-  const checkRoutineLimit = (isPremium: boolean): LimitCheck => {
+  const checkRoutineLimit = async (isPremium: boolean): Promise<LimitCheck> => {
     if (isPremium) {
       return {
         canProceed: true,
@@ -177,6 +176,9 @@ export const useUsageLimits = () => {
         isOverLimit: false
       };
     }
+
+    // Obtener datos frescos antes de verificar
+    await fetchUsage();
 
     const currentUsage = usage?.routines_created || 0;
     const limit = 5;
@@ -212,7 +214,7 @@ export const useUsageLimits = () => {
     };
   };
 
-  const checkAIChatLimit = (isPremium: boolean): LimitCheck => {
+  const checkAIChatLimit = async (isPremium: boolean): Promise<LimitCheck> => {
     if (isPremium) {
       return {
         canProceed: true,
@@ -222,16 +224,21 @@ export const useUsageLimits = () => {
       };
     }
 
+    // Obtener datos frescos de la base de datos antes de verificar límites críticos
+    console.log('🔄 [USAGE LIMITS] Fetching fresh data for AI chat limit check');
+    await fetchUsage();
+
     const currentUsage = usage?.ai_chat_messages_used || 0;
     const limit = 3;
     const isOverLimit = currentUsage >= limit;
 
-    console.log('🔍 [USAGE LIMITS] AI Chat limit check:', {
+    console.log('🔍 [USAGE LIMITS] AI Chat limit check (with fresh data):', {
       currentUsage,
       limit,
       isOverLimit,
       canProceed: !isOverLimit,
-      usage
+      usage,
+      weekStartDate: usage?.week_start_date
     });
 
     return {
