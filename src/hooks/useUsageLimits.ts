@@ -95,9 +95,9 @@ export const useUsageLimits = () => {
 
       console.log(`📈 [USAGE LIMITS] Incrementing ${type} for user:`, user.id);
 
-      // Usar función de base de datos para incrementar con el nuevo parámetro p_user_id
+      // Usar función de base de datos para incrementar con el parámetro correcto user_id
       const { data, error } = await supabase.rpc('increment_usage_counter', {
-        p_user_id: user.id,
+        user_id: user.id,
         counter_type: type,
         increment_by: 1
       });
@@ -167,7 +167,7 @@ export const useUsageLimits = () => {
     };
   };
 
-  const checkRoutineLimit = async (isPremium: boolean): Promise<LimitCheck> => {
+  const checkRoutineLimit = (isPremium: boolean): LimitCheck => {
     if (isPremium) {
       return {
         canProceed: true,
@@ -176,9 +176,6 @@ export const useUsageLimits = () => {
         isOverLimit: false
       };
     }
-
-    // Obtener datos frescos antes de verificar
-    await fetchUsage();
 
     const currentUsage = usage?.routines_created || 0;
     const limit = 5;
