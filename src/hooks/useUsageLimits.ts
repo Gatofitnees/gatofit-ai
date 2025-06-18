@@ -109,7 +109,7 @@ export const useUsageLimits = () => {
 
       console.log('✅ [USAGE LIMITS] Usage incremented successfully:', data);
 
-      // Refrescar datos locales
+      // Refrescar datos locales inmediatamente
       await fetchUsage();
 
       return true;
@@ -138,6 +138,7 @@ export const useUsageLimits = () => {
       };
     }
 
+    // Asegurar que tenemos datos actualizados
     if (!usage) {
       await fetchUsage();
     }

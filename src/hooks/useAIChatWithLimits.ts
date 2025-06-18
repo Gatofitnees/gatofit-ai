@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
@@ -37,17 +37,18 @@ export const useAIChatWithLimits = () => {
       
       if (success) {
         console.log('✅ [AI CHAT LIMITS] Contador incrementado exitosamente');
-        // Refrescar datos de uso después de incrementar
-        await fetchUsage();
+        // Enviar el mensaje inmediatamente después de incrementar
+        console.log('📤 [AI CHAT LIMITS] Enviando mensaje');
+        aiChatHook.sendMessage(message);
       } else {
         console.error('❌ [AI CHAT LIMITS] Error incrementando contador');
+        // Mostrar error al usuario
+        showLimitReachedToast('ai_chat_messages');
       }
-
-      // Enviar el mensaje
-      console.log('📤 [AI CHAT LIMITS] Enviando mensaje');
-      aiChatHook.sendMessage(message);
     } catch (error) {
       console.error('❌ [AI CHAT LIMITS] Error enviando mensaje:', error);
+      // Mostrar error al usuario
+      showLimitReachedToast('ai_chat_messages');
     }
   };
 
