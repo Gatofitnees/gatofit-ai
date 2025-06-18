@@ -1,6 +1,8 @@
 
--- Arreglar la función increment_usage_counter para resolver la ambigüedad de user_id
-CREATE OR REPLACE FUNCTION public.increment_usage_counter(user_id uuid, counter_type text, increment_by integer DEFAULT 1)
+-- Primero hacer DROP de la función existente y recrearla con parámetro correcto
+DROP FUNCTION IF EXISTS public.increment_usage_counter(uuid, text, integer);
+
+CREATE OR REPLACE FUNCTION public.increment_usage_counter(p_user_id uuid, counter_type text, increment_by integer DEFAULT 1)
  RETURNS boolean
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -11,7 +13,7 @@ BEGIN
   -- Insert or update usage record
   INSERT INTO public.usage_limits (user_id, week_start_date, routines_created, nutrition_photos_used, ai_chat_messages_used)
   VALUES (
-    increment_usage_counter.user_id, 
+    p_user_id, 
     week_start,
     CASE WHEN counter_type = 'routines' THEN increment_by ELSE 0 END,
     CASE WHEN counter_type = 'nutrition_photos' THEN increment_by ELSE 0 END,

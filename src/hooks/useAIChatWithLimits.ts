@@ -8,7 +8,7 @@ export const useAIChatWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const aiChatHook = useAIChat();
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkAIChatLimit, showLimitReachedToast, fetchUsage } = useUsageLimits();
+  const { incrementUsage, checkAIChatLimit, showLimitReachedToast } = useUsageLimits();
 
   const sendMessageWithLimitCheck = async (message: string) => {
     console.log('🔍 [AI CHAT LIMITS] Verificando límites para enviar mensaje');
