@@ -172,12 +172,12 @@ const WorkoutPage: React.FC = () => {
         </div>
         {/* Botón de nueva rutina en la derecha */}
         <Button 
-          variant="primary"
+          variant="default"
           size="sm"
-          leftIcon={<Plus className="h-4 w-4" />}
           onClick={handleCreateRoutine}
-          className="bg-blue-500 hover:bg-blue-600"
+          className="bg-blue-500 hover:bg-blue-600 text-white"
         >
+          <Plus className="h-4 w-4 mr-2" />
           Nueva Rutina
         </Button>
       </div>

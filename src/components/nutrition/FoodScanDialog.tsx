@@ -18,10 +18,9 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
   onClose,
   onImageCaptured
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { 
-    captureFromCamera, 
-    captureFromGallery, 
-    isLoading, 
+    capturePhotoWithLimitCheck,
     showPremiumModal,
     setShowPremiumModal,
     getNutritionUsageInfo
@@ -30,18 +29,58 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
   const usageInfo = getNutritionUsageInfo();
 
   const handleCameraCapture = async () => {
-    const result = await captureFromCamera();
-    if (result) {
-      onImageCaptured(result.imageUrl);
-      onClose();
+    const canCapture = await capturePhotoWithLimitCheck();
+    if (!canCapture) return;
+    
+    setIsLoading(true);
+    try {
+      // Use native camera capture
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const imageUrl = URL.createObjectURL(file);
+          onImageCaptured(imageUrl);
+          onClose();
+        }
+        setIsLoading(false);
+      };
+      
+      input.click();
+    } catch (error) {
+      console.error('Error capturing from camera:', error);
+      setIsLoading(false);
     }
   };
 
   const handleGalleryCapture = async () => {
-    const result = await captureFromGallery();
-    if (result) {
-      onImageCaptured(result.imageUrl);
-      onClose();
+    const canCapture = await capturePhotoWithLimitCheck();
+    if (!canCapture) return;
+    
+    setIsLoading(true);
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const imageUrl = URL.createObjectURL(file);
+          onImageCaptured(imageUrl);
+          onClose();
+        }
+        setIsLoading(false);
+      };
+      
+      input.click();
+    } catch (error) {
+      console.error('Error capturing from gallery:', error);
+      setIsLoading(false);
     }
   };
 
