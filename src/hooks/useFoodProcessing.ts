@@ -15,7 +15,7 @@ export interface ProcessingFood {
 export const useFoodProcessing = () => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
   const { analyzeFood } = useFoodAnalysis();
-  const { logFoodEntry } = useSecureFoodLog();
+  const { secureAddEntry } = useSecureFoodLog();
   const { incrementUsage } = useUsageLimits();
   const { isPremium } = useSubscription();
   const { toast } = useToast();
@@ -49,9 +49,9 @@ export const useFoodProcessing = () => {
       console.log('✅ [FOOD PROCESSING] Análisis completado:', foodData);
 
       // Guardar en la base de datos
-      const success = await logFoodEntry(foodData);
+      const savedEntry = await secureAddEntry(foodData);
       
-      if (success) {
+      if (savedEntry) {
         console.log('✅ [FOOD PROCESSING] Entrada guardada exitosamente');
         
         // SOLO AQUÍ incrementar el contador después del éxito completo
@@ -84,7 +84,7 @@ export const useFoodProcessing = () => {
         variant: "destructive",
       });
     }
-  }, [analyzeFood, logFoodEntry, incrementUsage, isPremium, addProcessingFood, removeProcessingFood, updateProcessingFoodError, toast]);
+  }, [analyzeFood, secureAddEntry, incrementUsage, isPremium, addProcessingFood, removeProcessingFood, updateProcessingFoodError, toast]);
 
   const retryProcessing = useCallback(async (foodId: string) => {
     const food = processingFoods.find(f => f.id === foodId);
@@ -104,10 +104,27 @@ export const useFoodProcessing = () => {
     removeProcessingFood(foodId);
   }, [removeProcessingFood]);
 
+  // Add the methods that NutritionPage expects
+  const handlePhotoTaken = useCallback(async (photoBlob: Blob) => {
+    const imageUrl = URL.createObjectURL(photoBlob);
+    await processFood(imageUrl);
+  }, [processFood]);
+
+  const handleRetryAnalysis = useCallback(async (foodId: string) => {
+    await retryProcessing(foodId);
+  }, [retryProcessing]);
+
+  const handleCancelProcessing = useCallback((foodId: string) => {
+    cancelProcessing(foodId);
+  }, [cancelProcessing]);
+
   return {
     processingFoods,
     processFood,
     retryProcessing,
     cancelProcessing,
+    handlePhotoTaken,
+    handleRetryAnalysis,
+    handleCancelProcessing,
   };
 };

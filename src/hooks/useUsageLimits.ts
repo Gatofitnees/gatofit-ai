@@ -100,7 +100,7 @@ export const useUsageLimits = () => {
 
       // Usar función de base de datos para incrementar con parámetro correcto
       const { data, error } = await supabase.rpc('increment_usage_counter', {
-        p_user_id: user.id,
+        user_id: user.id,
         counter_type: type,
         increment_by: 1
       });
