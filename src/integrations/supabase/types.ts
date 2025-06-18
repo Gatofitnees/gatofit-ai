@@ -1145,6 +1145,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: Json
       }
+      ensure_user_subscription: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       get_public_routines: {
         Args: { target_user_id: string }
         Returns: {

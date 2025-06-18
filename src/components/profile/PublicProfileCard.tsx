@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import Avatar from '@/components/Avatar';
 import RankBadge from '@/components/RankBadge';
 import { PublicProfile } from '@/hooks/usePublicProfile';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionCache } from '@/hooks/subscription/useSubscriptionCache';
 
 interface PublicProfileCardProps {
   profile: PublicProfile;
@@ -23,7 +23,7 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
   onFollowToggle,
   followLoading
 }) => {
-  const { checkUserPremiumStatus } = useSubscription();
+  const { checkUserPremiumStatus } = useSubscriptionCache();
   const [isPremiumUser, setIsPremiumUser] = useState(false);
   const displayName = profile.username || profile.full_name || 'Usuario';
   

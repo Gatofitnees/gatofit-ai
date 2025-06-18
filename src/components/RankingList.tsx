@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Avatar from './Avatar';
 import RankBadge from './RankBadge';
 import { RankingUser } from '@/hooks/useRankings';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionCache } from '@/hooks/subscription/useSubscriptionCache';
 
 interface RankingListProps {
   users: RankingUser[];
@@ -14,27 +14,31 @@ interface RankingListProps {
 
 const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => {
   const navigate = useNavigate();
-  const { checkUserPremiumStatus } = useSubscription();
+  const { checkUserPremiumStatus } = useSubscriptionCache();
   const [premiumUsers, setPremiumUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const checkPremiumStatus = async () => {
       if (!checkUserPremiumStatus || users.length === 0) return;
       
-      const premiumChecks = await Promise.all(
-        users.map(async (user) => {
-          const isPremium = await checkUserPremiumStatus(user.user_id);
-          return { userId: user.user_id, isPremium };
-        })
-      );
-      
-      const premiumUserIds = new Set(
-        premiumChecks
-          .filter(check => check.isPremium)
-          .map(check => check.userId)
-      );
-      
-      setPremiumUsers(premiumUserIds);
+      try {
+        const premiumChecks = await Promise.all(
+          users.map(async (user) => {
+            const isPremium = await checkUserPremiumStatus(user.user_id);
+            return { userId: user.user_id, isPremium };
+          })
+        );
+        
+        const premiumUserIds = new Set(
+          premiumChecks
+            .filter(check => check.isPremium)
+            .map(check => check.userId)
+        );
+        
+        setPremiumUsers(premiumUserIds);
+      } catch (error) {
+        console.error('Error checking premium status for ranking users:', error);
+      }
     };
 
     checkPremiumStatus();
