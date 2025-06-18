@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Avatar from '@/components/Avatar';
 import RankBadge from '@/components/RankBadge';
 import { PublicProfile } from '@/hooks/usePublicProfile';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface PublicProfileCardProps {
   profile: PublicProfile;
@@ -22,14 +23,19 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
   onFollowToggle,
   followLoading
 }) => {
+  const { checkUserPremiumStatus } = useSubscription();
   const displayName = profile.username || profile.full_name || 'Usuario';
+  
+  // Check if this profile belongs to a premium user
+  const isPremiumUser = checkUserPremiumStatus ? checkUserPremiumStatus(profile.id) : false;
   
   console.log('PublicProfileCard Debug:', {
     profileId: profile.id,
     username: profile.username,
     fullName: profile.full_name,
     avatarUrl: profile.avatar_url,
-    displayName
+    displayName,
+    isPremiumUser
   });
 
   return (
@@ -40,6 +46,7 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
           size="lg"
           src={profile.avatar_url || undefined}
           className="mx-auto mb-4"
+          isPremium={isPremiumUser}
         />
         
         <h2 className="text-xl font-bold mb-2">

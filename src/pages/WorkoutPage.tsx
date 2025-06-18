@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
@@ -162,12 +161,25 @@ const WorkoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
+      {/* Header con título y banner de limitaciones al lado */}
       <div className="flex items-center justify-between mb-4">
-        <WorkoutHeader title="Mis Rutinas" />
-        {/* Usage banner para usuarios free */}
-        {!isPremium && (
-          <UsageLimitsBanner type="routines" />
-        )}
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold">Mis Rutinas</h1>
+          {/* Usage banner al lado del título */}
+          {!isPremium && (
+            <UsageLimitsBanner type="routines" />
+          )}
+        </div>
+        {/* Botón de nueva rutina en la derecha */}
+        <Button 
+          variant="primary"
+          size="sm"
+          leftIcon={<Plus className="h-4 w-4" />}
+          onClick={handleCreateRoutine}
+          className="bg-blue-500 hover:bg-blue-600"
+        >
+          Nueva Rutina
+        </Button>
       </div>
       
       {/* Search and Filter */}
@@ -193,7 +205,7 @@ const WorkoutPage: React.FC = () => {
         onRoutineDeleted={handleRoutineDeleted}
       />
       
-      {/* Create Routine Button */}
+      {/* Create Routine Button flotante */}
       <div className="fixed right-4 bottom-20 z-30">
         <Button
           onClick={handleCreateRoutine}

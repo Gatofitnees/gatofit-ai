@@ -39,6 +39,10 @@ export const useUsageLimits = () => {
       
       if (data && data.length > 0) {
         setUsage(data[0]);
+      } else {
+        // Create initial usage record if it doesn't exist
+        await createInitialUsageRecord(user.id);
+        await fetchUsage();
       }
     } catch (error) {
       console.error('Error fetching usage:', error);
@@ -47,21 +51,65 @@ export const useUsageLimits = () => {
     }
   };
 
+  const createInitialUsageRecord = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('usage_limits')
+        .insert({
+          user_id: userId,
+          week_start_date: new Date().toISOString().split('T')[0],
+          routines_created: 0,
+          nutrition_photos_used: 0,
+          ai_chat_messages_used: 0
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error creating initial usage record:', error);
+    }
+  };
+
   const incrementUsage = async (type: 'routines' | 'nutrition_photos' | 'ai_chat_messages') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      const { data, error } = await supabase.rpc('increment_usage_counter', {
-        user_id: user.id,
-        counter_type: type,
-        increment_by: 1
-      });
+      // First ensure usage record exists
+      if (!usage) {
+        await createInitialUsageRecord(user.id);
+        await fetchUsage();
+      }
+
+      // Manual increment for better reliability
+      const currentUsage = usage || { routines_created: 0, nutrition_photos_used: 0, ai_chat_messages_used: 0 };
+      const fieldMap = {
+        'routines': 'routines_created',
+        'nutrition_photos': 'nutrition_photos_used', 
+        'ai_chat_messages': 'ai_chat_messages_used'
+      };
+      
+      const fieldName = fieldMap[type];
+      const newValue = (currentUsage[fieldName] || 0) + 1;
+
+      const { error } = await supabase
+        .from('usage_limits')
+        .upsert({
+          user_id: user.id,
+          week_start_date: new Date().toISOString().split('T')[0],
+          [fieldName]: newValue,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,week_start_date'
+        });
 
       if (error) throw error;
 
-      // Refetch usage after increment
-      await fetchUsage();
+      // Update local state immediately
+      setUsage(prev => prev ? {
+        ...prev,
+        [fieldName]: newValue
+      } : null);
+
       return true;
     } catch (error) {
       console.error('Error incrementing usage:', error);
@@ -74,16 +122,16 @@ export const useUsageLimits = () => {
     isPremium: boolean
   ): Promise<LimitCheck> => {
     const limits = {
-      routines: 5, // Cambiado de 4 a 5
+      routines: 5,
       nutrition_photos: 10,
-      ai_chat_messages: 3 // Cambiado de 5 a 3
+      ai_chat_messages: 3
     };
 
     if (isPremium) {
       return {
         canProceed: true,
         currentUsage: 0,
-        limit: -1, // Unlimited
+        limit: -1,
         isOverLimit: false
       };
     }
@@ -92,7 +140,13 @@ export const useUsageLimits = () => {
       await fetchUsage();
     }
 
-    const currentUsage = usage ? usage[`${type}_used`] || 0 : 0;
+    const fieldMap = {
+      'routines': 'routines_created',
+      'nutrition_photos': 'nutrition_photos_used',
+      'ai_chat_messages': 'ai_chat_messages_used'
+    };
+
+    const currentUsage = usage ? usage[fieldMap[type]] || 0 : 0;
     const limit = limits[type];
     const isOverLimit = currentUsage >= limit;
 
@@ -115,7 +169,7 @@ export const useUsageLimits = () => {
     }
 
     const currentUsage = usage?.routines_created || 0;
-    const limit = 5; // Cambiado de 4 a 5
+    const limit = 5;
     const isOverLimit = currentUsage >= limit;
 
     return {
@@ -159,7 +213,7 @@ export const useUsageLimits = () => {
     }
 
     const currentUsage = usage?.ai_chat_messages_used || 0;
-    const limit = 3; // Cambiado de 5 a 3
+    const limit = 3;
     const isOverLimit = currentUsage >= limit;
 
     return {

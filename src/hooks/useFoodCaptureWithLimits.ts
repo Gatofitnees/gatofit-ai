@@ -1,84 +1,30 @@
 
 import { useState } from 'react';
-import { useFoodCapture } from '@/hooks/useFoodCapture';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 
 export const useFoodCaptureWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const foodCaptureHook = useFoodCapture();
   const { isPremium } = useSubscription();
   const { incrementUsage, checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
 
-  const captureFromCameraWithLimitCheck = async () => {
+  const capturePhotoWithLimitCheck = async () => {
     const limitCheck = checkNutritionLimit(isPremium);
     
     if (!limitCheck.canProceed) {
       showLimitReachedToast('nutrition_photos');
       setShowPremiumModal(true);
-      return null;
+      return false;
     }
 
     try {
-      const result = await foodCaptureHook.captureFromCamera();
-      
-      if (result && !isPremium) {
-        // Increment usage counter for free users
+      if (!isPremium) {
         await incrementUsage('nutrition_photos');
       }
-      
-      return result;
+      return true;
     } catch (error) {
-      console.error('Error capturing from camera:', error);
-      return null;
-    }
-  };
-
-  const captureFromGalleryWithLimitCheck = async () => {
-    const limitCheck = checkNutritionLimit(isPremium);
-    
-    if (!limitCheck.canProceed) {
-      showLimitReachedToast('nutrition_photos');
-      setShowPremiumModal(true);
-      return null;
-    }
-
-    try {
-      const result = await foodCaptureHook.captureFromGallery();
-      
-      if (result && !isPremium) {
-        // Increment usage counter for free users
-        await incrementUsage('nutrition_photos');
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Error capturing from gallery:', error);
-      return null;
-    }
-  };
-
-  const uploadImageWithAnalysisWithLimitCheck = async (file: Blob) => {
-    const limitCheck = checkNutritionLimit(isPremium);
-    
-    if (!limitCheck.canProceed) {
-      showLimitReachedToast('nutrition_photos');
-      setShowPremiumModal(true);
-      return null;
-    }
-
-    try {
-      const result = await foodCaptureHook.uploadImageWithAnalysis(file);
-      
-      if (result && !isPremium) {
-        // Increment usage counter for free users
-        await incrementUsage('nutrition_photos');
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      return null;
+      console.error('Error in photo capture:', error);
+      return false;
     }
   };
 
@@ -93,10 +39,7 @@ export const useFoodCaptureWithLimits = () => {
   };
 
   return {
-    ...foodCaptureHook,
-    captureFromCamera: captureFromCameraWithLimitCheck,
-    captureFromGallery: captureFromGalleryWithLimitCheck,
-    uploadImageWithAnalysis: uploadImageWithAnalysisWithLimitCheck,
+    capturePhotoWithLimitCheck,
     getNutritionUsageInfo,
     showPremiumModal,
     setShowPremiumModal,

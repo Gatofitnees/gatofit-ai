@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from './Avatar';
 import RankBadge from './RankBadge';
 import { RankingUser } from '@/hooks/useRankings';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface RankingListProps {
   users: RankingUser[];
@@ -12,6 +14,7 @@ interface RankingListProps {
 
 const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => {
   const navigate = useNavigate();
+  const { checkUserPremiumStatus } = useSubscription();
 
   const handleUserClick = (userId: string) => {
     navigate(`/public-profile/${userId}`);
@@ -50,8 +53,8 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
   return (
     <div className="space-y-3">
       {users.map((user, index) => {
-        // Ensure we have a valid username to display
         const displayName = user.username || `Usuario #${user.user_id.substring(0, 8)}`;
+        const isPremiumUser = checkUserPremiumStatus ? checkUserPremiumStatus(user.user_id) : false;
         
         return (
           <div 
@@ -70,6 +73,7 @@ const RankingList: React.FC<RankingListProps> = ({ users, type, isLoading }) => 
                 name={displayName}
                 size="sm"
                 src={user.avatar_url}
+                isPremium={isPremiumUser}
               />
               
               <div>

@@ -32,23 +32,19 @@ const AIChatPage: React.FC = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      // Detectar cuando el teclado se abre/cierra en móviles
       const isKeyboardOpen = window.visualViewport && 
         window.visualViewport.height < window.innerHeight * 0.75;
       
       if (chatContentRef.current) {
         if (isKeyboardOpen && window.visualViewport) {
-          // Cuando el teclado está abierto, ajustar el contenido
           const keyboardHeight = window.innerHeight - window.visualViewport.height;
           chatContentRef.current.style.paddingBottom = `${keyboardHeight}px`;
         } else {
-          // Cuando el teclado se cierra, resetear
           chatContentRef.current.style.paddingBottom = '';
         }
       }
     };
 
-    // Escuchar cambios en el viewport para manejar el teclado virtual
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
       return () => {
@@ -58,7 +54,6 @@ const AIChatPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Auto-scroll suave para nuevos mensajes
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -88,16 +83,18 @@ const AIChatPage: React.FC = () => {
 
   return (
     <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">
-      {/* Header fijo */}
-      <div className="flex-shrink-0 z-20">
+      {/* Header fijo con banner en la esquina superior derecha */}
+      <div className="flex-shrink-0 z-20 relative">
         <AIChatHeader 
           onBack={handleBack}
           onClear={clearMessages}
           hasMessages={messages.length > 0}
         />
-        {/* Usage banner para usuarios free */}
+        {/* Usage banner en la esquina superior derecha del header */}
         {!isPremium && (
-          <UsageLimitsBanner type="ai_chat" />
+          <div className="absolute top-2 right-4">
+            <UsageLimitsBanner type="ai_chat" />
+          </div>
         )}
       </div>
 

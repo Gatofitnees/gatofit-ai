@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus } from "lucide-react";
 import Button from "../components/Button";
@@ -43,6 +42,7 @@ const NutritionPage: React.FC = () => {
   } = useFoodProcessing(addEntry);
 
   const {
+    capturePhotoWithLimitCheck,
     showPremiumModal,
     setShowPremiumModal,
     getNutritionUsageInfo
@@ -50,10 +50,15 @@ const NutritionPage: React.FC = () => {
 
   const handlePhotoTakenAndCloseCamera = async (photoBlob: Blob) => {
     setShowCamera(false);
-    await handlePhotoTaken(photoBlob);
+    
+    // Check limits before processing
+    const canCapture = await capturePhotoWithLimitCheck();
+    if (canCapture) {
+      await handlePhotoTaken(photoBlob);
+    }
   };
 
-  const handleOpenCamera = () => {
+  const handleOpenCamera = async () => {
     const usageInfo = getNutritionUsageInfo();
     
     if (!usageInfo.canCapture) {
