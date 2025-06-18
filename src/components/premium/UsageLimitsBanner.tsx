@@ -39,11 +39,25 @@ export const UsageLimitsBanner: React.FC<UsageLimitsBannerProps> = ({
   };
 
   const usageInfo = getUsageInfo();
+  const isNearLimit = usageInfo.current >= usageInfo.limit * 0.8;
+  const isAtLimit = usageInfo.current >= usageInfo.limit;
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <Crown className="h-4 w-4 text-yellow-500" />
-      <span className="text-sm text-muted-foreground">
+    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+      isAtLimit 
+        ? 'bg-red-100 text-red-700 border border-red-200' 
+        : isNearLimit 
+        ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+        : 'bg-gray-100 text-gray-600 border border-gray-200'
+    } ${className}`}>
+      <Crown className={`h-3 w-3 ${
+        isAtLimit 
+          ? 'text-red-500' 
+          : isNearLimit 
+          ? 'text-yellow-500'
+          : 'text-gray-500'
+      }`} />
+      <span className="font-medium">
         {usageInfo.current}/{usageInfo.limit}
       </span>
     </div>

@@ -76,17 +76,16 @@ export const useSubscription = () => {
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
-        .in('plan_type', ['monthly', 'yearly']) // Only fetch paid plans
+        .in('plan_type', ['monthly', 'yearly'])
         .order('price_usd');
 
       if (error) throw error;
       
-      // Filter out 'free' plans and transform data
       const transformedPlans: SubscriptionPlan[] = (data || [])
-        .filter(plan => plan.plan_type !== 'free') // Explicitly filter out free plans
+        .filter(plan => plan.plan_type !== 'free')
         .map(plan => ({
           ...plan,
-          plan_type: plan.plan_type as 'monthly' | 'yearly', // Safe type assertion after filtering
+          plan_type: plan.plan_type as 'monthly' | 'yearly',
           features: typeof plan.features === 'string' 
             ? JSON.parse(plan.features)
             : plan.features as { routines_limit: number; nutrition_photos_weekly: number; ai_chat_messages_weekly: number; }
@@ -118,7 +117,6 @@ export const useSubscription = () => {
     }
   };
 
-  // Function to check if a specific user is premium (for social features)
   const checkUserPremiumStatus = async (userId: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase
@@ -145,12 +143,10 @@ export const useSubscription = () => {
       const plan = plans.find(p => p.plan_type === planType);
       if (!plan) throw new Error('Plan no encontrado');
 
-      // If user is on free plan or no subscription exists, upgrade immediately
       if (!subscription || subscription.plan_type === 'free') {
         return await upgradeSubscription(planType, transactionId);
       }
 
-      // If user has premium plan, schedule the change
       const { data, error } = await supabase.rpc('schedule_plan_change', {
         p_user_id: user.id,
         p_new_plan_type: planType
@@ -160,7 +156,6 @@ export const useSubscription = () => {
 
       await fetchSubscriptionData();
       
-      // Check if user had a premium subscription before the change
       const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly';
       
       toast({

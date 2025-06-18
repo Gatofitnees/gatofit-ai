@@ -1,5 +1,8 @@
+
 import { useState } from 'react';
 import { useFoodCapture } from './useFoodCapture';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { useToast } from '@/hooks/use-toast';
 import { FoodLogEntry } from './useFoodLog';
 
@@ -15,10 +18,24 @@ export interface ProcessingFood {
 export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
   const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
+  const { isPremium } = useSubscription();
+  const { incrementUsage, checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
   const runAnalysis = async (blob: Blob, id: string, imageSrc: string) => {
     clearError();
+    
+    // Verificar límites antes de procesar
+    if (!isPremium) {
+      const limitCheck = checkNutritionLimit(isPremium);
+      if (!limitCheck.canProceed) {
+        showLimitReachedToast('nutrition_photos');
+        setProcessingFoods(prev => prev.filter(p => p.id !== id));
+        URL.revokeObjectURL(imageSrc);
+        return;
+      }
+    }
+
     try {
       const result = await uploadImageWithAnalysis(blob);
 
@@ -37,9 +54,25 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
           photo_url: result.imageUrl,
           meal_type: 'snack1',
         };
-        await addEntry(newEntryData);
-        setProcessingFoods(prev => prev.filter(p => p.id !== id));
-        URL.revokeObjectURL(imageSrc);
+        
+        const savedEntry = await addEntry(newEntryData);
+        
+        if (savedEntry) {
+          // Solo incrementar contador si el análisis fue exitoso y para usuarios free
+          if (!isPremium) {
+            await incrementUsage('nutrition_photos');
+          }
+          
+          setProcessingFoods(prev => prev.filter(p => p.id !== id));
+          URL.revokeObjectURL(imageSrc);
+          
+          toast({
+            title: "¡Comida analizada!",
+            description: `Se ha agregado ${analysis.name || 'tu comida'} al registro`,
+          });
+        } else {
+          throw new Error("No se pudo guardar la entrada de comida");
+        }
       } else {
         const errorMessage = foodCaptureError || "No se pudo analizar la comida. Revisa tu conexión o la imagen.";
         toast({
@@ -72,6 +105,16 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const handleRetryAnalysis = async (foodId: string) => {
     const foodToRetry = processingFoods.find(f => f.id === foodId);
     if (!foodToRetry) return;
+
+    // Verificar límites antes de reintentar
+    if (!isPremium) {
+      const limitCheck = checkNutritionLimit(isPremium);
+      if (!limitCheck.canProceed) {
+        showLimitReachedToast('nutrition_photos');
+        handleCancelProcessing(foodId);
+        return;
+      }
+    }
 
     setProcessingFoods(prev => prev.map(p => p.id === foodId ? { ...p, error: null } : p));
     await runAnalysis(foodToRetry.blob, foodToRetry.id, foodToRetry.imageSrc);

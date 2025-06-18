@@ -5,11 +5,15 @@ import { useToast } from "@/hooks/use-toast";
 import { saveRoutine, updateRoutine } from "../services/routineService";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useUsageLimits } from "@/hooks/useUsageLimits";
 import { toast as sonnerToast } from "sonner";
 
 export const useRoutineSave = (editRoutineId?: number) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
+  const { incrementUsage, checkRoutineLimit, showLimitReachedToast } = useUsageLimits();
   
   const { 
     routineName,
@@ -33,7 +37,6 @@ export const useRoutineSave = (editRoutineId?: number) => {
     editRoutineId
   );
 
-  // Validate form before saving
   const validateForm = useCallback(() => {
     if (!routineName || routineName.trim() === '') {
       toast({
@@ -56,12 +59,21 @@ export const useRoutineSave = (editRoutineId?: number) => {
     return true;
   }, [routineName, routineType, toast]);
 
-  // Start the save routine process
   const handleSaveRoutineStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
+    }
+
+    // Solo verificar límites si es una rutina nueva (no edición)
+    if (!editRoutineId) {
+      const limitCheck = checkRoutineLimit(isPremium);
+      
+      if (!limitCheck.canProceed) {
+        showLimitReachedToast('routines');
+        return;
+      }
     }
     
     if (routineExercises.length === 0) {
@@ -70,21 +82,18 @@ export const useRoutineSave = (editRoutineId?: number) => {
     }
     
     setShowSaveConfirmDialog(true);
-  }, [validateForm, routineExercises, setShowNoExercisesDialog, setShowSaveConfirmDialog]);
+  }, [validateForm, routineExercises, setShowNoExercisesDialog, setShowSaveConfirmDialog, editRoutineId, checkRoutineLimit, isPremium, showLimitReachedToast]);
 
-  // Save routine to database - improved for better reliability and feedback
   const handleSaveRoutine = useCallback(async () => {
     try {
       setIsSubmitting(true);
       
-      // Show saving notification
       sonnerToast.loading(editRoutineId ? "Actualizando rutina..." : "Guardando rutina...");
       console.log(editRoutineId ? "Actualizando rutina existente" : "Guardando nueva rutina");
 
       let savedRoutine;
       
       if (editRoutineId) {
-        // Actualizar rutina existente
         savedRoutine = await updateRoutine(
           editRoutineId,
           routineName, 
@@ -92,31 +101,31 @@ export const useRoutineSave = (editRoutineId?: number) => {
           routineExercises
         );
       } else {
-        // Guardar nueva rutina
         savedRoutine = await saveRoutine(
           routineName, 
           routineType, 
           routineExercises
         );
+
+        // Solo incrementar contador para rutinas nuevas (no ediciones) y usuarios free
+        if (savedRoutine && !isPremium) {
+          await incrementUsage('routines');
+        }
       }
       
       console.log(editRoutineId 
         ? "Rutina actualizada exitosamente:" 
         : "Rutina guardada exitosamente:", savedRoutine);
       
-      // Hide loading notification
       sonnerToast.dismiss();
       
-      // Reset form state to avoid state issues
       setRoutineName('');
       setRoutineType('');
       setRoutineExercises([]);
       clearStoredRoutine();
       
-      // Close dialog
       setShowSaveConfirmDialog(false);
       
-      // Show success toast
       toast({
         title: editRoutineId ? "¡Rutina actualizada!" : "¡Rutina creada!",
         description: editRoutineId 
@@ -125,17 +134,14 @@ export const useRoutineSave = (editRoutineId?: number) => {
         variant: "success"
       });
       
-      // Navigate immediately after successful save
       console.log("Navigating to /workout after successful save");
       navigate("/workout");
       
     } catch (error: any) {
       console.error(editRoutineId ? "Error actualizando rutina:" : "Error guardando rutina:", error);
       
-      // Hide loading notification
       sonnerToast.dismiss();
       
-      // Show error toast
       toast({
         title: editRoutineId ? "Error al actualizar" : "Error al guardar",
         description: error.message || "Ha ocurrido un error. Por favor, intente más tarde.",
@@ -143,7 +149,6 @@ export const useRoutineSave = (editRoutineId?: number) => {
       });
       
     } finally {
-      // Reset submission state
       setIsSubmitting(false);
       setShowSaveConfirmDialog(false);
     }
@@ -159,7 +164,9 @@ export const useRoutineSave = (editRoutineId?: number) => {
     setShowSaveConfirmDialog,
     setRoutineName,
     setRoutineType,
-    setRoutineExercises
+    setRoutineExercises,
+    isPremium,
+    incrementUsage
   ]);
 
   return {

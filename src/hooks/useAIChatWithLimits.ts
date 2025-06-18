@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAIChat } from '@/hooks/ai-chat';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
@@ -7,57 +7,101 @@ import { useUsageLimits } from '@/hooks/useUsageLimits';
 export const useAIChatWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const [messagesSentInSession, setMessagesSentInSession] = useState(0);
   const aiChatHook = useAIChat();
   const { isPremium } = useSubscription();
   const { incrementUsage, checkAIChatLimit, showLimitReachedToast } = useUsageLimits();
+  const sessionInitialized = useRef(false);
 
-  // Check session status on mount
+  // Inicializar sesión al montar el componente
   useEffect(() => {
     const sessionKey = `ai-chat-session-${new Date().toDateString()}`;
     const hasActiveSession = localStorage.getItem(sessionKey) === 'true';
+    const messagesCount = parseInt(localStorage.getItem(`ai-chat-messages-${new Date().toDateString()}`) || '0');
+    
     setSessionActive(hasActiveSession);
-  }, []);
+    setMessagesSentInSession(messagesCount);
+    sessionInitialized.current = true;
 
-  // Clean up session when component unmounts (user leaves chat)
-  useEffect(() => {
-    return () => {
+    // Listener para detectar cuando el usuario sale de la página/app
+    const handleBeforeUnload = () => {
       if (sessionActive) {
-        const sessionKey = `ai-chat-session-${new Date().toDateString()}`;
         localStorage.removeItem(sessionKey);
+        localStorage.removeItem(`ai-chat-messages-${new Date().toDateString()}`);
         setSessionActive(false);
+        setMessagesSentInSession(0);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && sessionActive) {
+        // Usuario cambió de pestaña o minimizó, pero no salió completamente
+        // No hacer nada aquí, mantener la sesión
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Al desmontar el componente (salir del chat), terminar sesión
+      if (sessionActive) {
+        localStorage.removeItem(sessionKey);
+        localStorage.removeItem(`ai-chat-messages-${new Date().toDateString()}`);
       }
     };
   }, [sessionActive]);
 
   const sendMessageWithLimitCheck = async (message: string) => {
+    if (!sessionInitialized.current) return;
+
     const limitCheck = checkAIChatLimit(isPremium);
     
-    // If user is free and already at limit, block
+    // Para usuarios premium, no hay límites
+    if (isPremium) {
+      aiChatHook.sendMessage(message);
+      return;
+    }
+
+    // Para usuarios free, verificar si ya alcanzaron el límite
     if (!limitCheck.canProceed) {
       showLimitReachedToast('ai_chat_messages');
       setShowPremiumModal(true);
       return;
     }
 
-    // If this is the first message of a new session for free users
-    if (!isPremium && !sessionActive) {
-      const sessionKey = `ai-chat-session-${new Date().toDateString()}`;
-      
-      // Check limit again before starting session
-      const finalCheck = checkAIChatLimit(isPremium);
-      if (!finalCheck.canProceed) {
-        showLimitReachedToast('ai_chat_messages');
-        setShowPremiumModal(true);
-        return;
-      }
-
-      // Mark session as active and increment counter
-      localStorage.setItem(sessionKey, 'true');
-      setSessionActive(true);
-      await incrementUsage('ai_chat_messages');
-    }
+    const sessionKey = `ai-chat-session-${new Date().toDateString()}`;
+    const messagesKey = `ai-chat-messages-${new Date().toDateString()}`;
 
     try {
+      // Si no hay sesión activa, iniciar una nueva
+      if (!sessionActive) {
+        // Verificar límite una vez más antes de iniciar sesión
+        const finalCheck = checkAIChatLimit(isPremium);
+        if (!finalCheck.canProceed) {
+          showLimitReachedToast('ai_chat_messages');
+          setShowPremiumModal(true);
+          return;
+        }
+
+        // Iniciar sesión y incrementar contador
+        localStorage.setItem(sessionKey, 'true');
+        localStorage.setItem(messagesKey, '1');
+        setSessionActive(true);
+        setMessagesSentInSession(1);
+        
+        await incrementUsage('ai_chat_messages');
+      } else {
+        // Sesión ya activa, solo incrementar contador local
+        const newCount = messagesSentInSession + 1;
+        localStorage.setItem(messagesKey, newCount.toString());
+        setMessagesSentInSession(newCount);
+      }
+
+      // Enviar mensaje
       aiChatHook.sendMessage(message);
     } catch (error) {
       console.error('Error sending AI message:', error);
@@ -70,7 +114,9 @@ export const useAIChatWithLimits = () => {
       current: limitCheck.currentUsage,
       limit: limitCheck.limit,
       canSend: limitCheck.canProceed,
-      isOverLimit: limitCheck.isOverLimit
+      isOverLimit: limitCheck.isOverLimit,
+      sessionActive,
+      messagesSentInSession
     };
   };
 
@@ -80,6 +126,7 @@ export const useAIChatWithLimits = () => {
     getAIChatUsageInfo,
     showPremiumModal,
     setShowPremiumModal,
-    isPremium
+    isPremium,
+    sessionActive
   };
 };
