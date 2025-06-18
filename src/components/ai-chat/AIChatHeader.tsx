@@ -3,6 +3,8 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface AIChatHeaderProps {
   onBack: () => void;
@@ -11,6 +13,8 @@ interface AIChatHeaderProps {
 }
 
 const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onBack, onClear, hasMessages }) => {
+  const { isPremium } = useSubscription();
+
   return (
     <div 
       className="flex items-center justify-between p-4 border-b border-muted/30 bg-background/95 backdrop-blur-sm sticky top-0 z-10"
@@ -39,9 +43,15 @@ const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onBack, onClear, hasMessage
             className="w-full h-full object-cover"
           />
         </div>
-        <div>
-          <h1 className="font-semibold text-lg text-foreground">Gatofit</h1>
-          <p className="text-xs text-muted-foreground">Tu asistente personal de fitness</p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h1 className="font-semibold text-lg text-foreground">Gatofit</h1>
+            <p className="text-xs text-muted-foreground">Tu asistente personal de fitness</p>
+          </div>
+          {/* Mostrar banner de límites solo para usuarios no premium */}
+          {!isPremium && (
+            <UsageLimitsBanner type="ai_chat" className="ml-2" />
+          )}
         </div>
       </div>
       {hasMessages && (

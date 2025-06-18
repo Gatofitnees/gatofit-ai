@@ -31,21 +31,29 @@ export const useUsageLimits = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      console.log('🔍 [USAGE LIMITS] Fetching usage for user:', user.id);
+
       const { data, error } = await supabase.rpc('get_user_weekly_usage', {
         user_id: user.id
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [USAGE LIMITS] Error fetching usage:', error);
+        throw error;
+      }
       
+      console.log('📊 [USAGE LIMITS] Raw usage data:', data);
+
       if (data && data.length > 0) {
         setUsage(data[0]);
+        console.log('✅ [USAGE LIMITS] Usage set:', data[0]);
       } else {
         // Create initial usage record if it doesn't exist
         await createInitialUsageRecord(user.id);
         await fetchUsage();
       }
     } catch (error) {
-      console.error('Error fetching usage:', error);
+      console.error('❌ [USAGE LIMITS] Error fetching usage:', error);
     } finally {
       setIsLoading(false);
     }
@@ -53,19 +61,30 @@ export const useUsageLimits = () => {
 
   const createInitialUsageRecord = async (userId: string) => {
     try {
+      const weekStart = new Date();
+      // Obtener lunes de esta semana
+      const dayOfWeek = weekStart.getDay();
+      const diff = weekStart.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      weekStart.setDate(diff);
+      
       const { error } = await supabase
         .from('usage_limits')
         .insert({
           user_id: userId,
-          week_start_date: new Date().toISOString().split('T')[0],
+          week_start_date: weekStart.toISOString().split('T')[0],
           routines_created: 0,
           nutrition_photos_used: 0,
           ai_chat_messages_used: 0
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [USAGE LIMITS] Error creating initial usage record:', error);
+        throw error;
+      }
+      
+      console.log('✅ [USAGE LIMITS] Initial usage record created');
     } catch (error) {
-      console.error('Error creating initial usage record:', error);
+      console.error('❌ [USAGE LIMITS] Error creating initial usage record:', error);
     }
   };
 
@@ -74,45 +93,28 @@ export const useUsageLimits = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      // First ensure usage record exists
-      if (!usage) {
-        await createInitialUsageRecord(user.id);
-        await fetchUsage();
+      console.log(`📈 [USAGE LIMITS] Incrementing ${type} for user:`, user.id);
+
+      // Usar función de base de datos para incrementar
+      const { data, error } = await supabase.rpc('increment_usage_counter', {
+        user_id: user.id,
+        counter_type: type,
+        increment_by: 1
+      });
+
+      if (error) {
+        console.error('❌ [USAGE LIMITS] Error incrementing usage:', error);
+        throw error;
       }
 
-      // Manual increment for better reliability
-      const currentUsage = usage || { routines_created: 0, nutrition_photos_used: 0, ai_chat_messages_used: 0 };
-      const fieldMap = {
-        'routines': 'routines_created',
-        'nutrition_photos': 'nutrition_photos_used', 
-        'ai_chat_messages': 'ai_chat_messages_used'
-      };
-      
-      const fieldName = fieldMap[type];
-      const newValue = (currentUsage[fieldName] || 0) + 1;
+      console.log('✅ [USAGE LIMITS] Usage incremented successfully:', data);
 
-      const { error } = await supabase
-        .from('usage_limits')
-        .upsert({
-          user_id: user.id,
-          week_start_date: new Date().toISOString().split('T')[0],
-          [fieldName]: newValue,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,week_start_date'
-        });
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setUsage(prev => prev ? {
-        ...prev,
-        [fieldName]: newValue
-      } : null);
+      // Refrescar datos locales
+      await fetchUsage();
 
       return true;
     } catch (error) {
-      console.error('Error incrementing usage:', error);
+      console.error('❌ [USAGE LIMITS] Error incrementing usage:', error);
       return false;
     }
   };
@@ -149,6 +151,13 @@ export const useUsageLimits = () => {
     const currentUsage = usage ? usage[fieldMap[type]] || 0 : 0;
     const limit = limits[type];
     const isOverLimit = currentUsage >= limit;
+
+    console.log(`🔍 [USAGE LIMITS] Check limit for ${type}:`, {
+      currentUsage,
+      limit,
+      isOverLimit,
+      canProceed: !isOverLimit
+    });
 
     return {
       canProceed: !isOverLimit,
@@ -215,6 +224,14 @@ export const useUsageLimits = () => {
     const currentUsage = usage?.ai_chat_messages_used || 0;
     const limit = 3;
     const isOverLimit = currentUsage >= limit;
+
+    console.log('🔍 [USAGE LIMITS] AI Chat limit check:', {
+      currentUsage,
+      limit,
+      isOverLimit,
+      canProceed: !isOverLimit,
+      usage
+    });
 
     return {
       canProceed: !isOverLimit,

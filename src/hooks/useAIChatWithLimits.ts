@@ -6,17 +6,9 @@ import { useUsageLimits } from '@/hooks/useUsageLimits';
 
 export const useAIChatWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [hasIncrementedToday, setHasIncrementedToday] = useState(false);
   const aiChatHook = useAIChat();
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkAIChatLimit, showLimitReachedToast } = useUsageLimits();
-
-  // Verificar si ya se incrementó hoy
-  useEffect(() => {
-    const today = new Date().toDateString();
-    const lastIncrementDate = localStorage.getItem('ai-chat-last-increment');
-    setHasIncrementedToday(lastIncrementDate === today);
-  }, []);
+  const { incrementUsage, checkAIChatLimit, showLimitReachedToast, fetchUsage } = useUsageLimits();
 
   const sendMessageWithLimitCheck = async (message: string) => {
     console.log('🔍 [AI CHAT LIMITS] Verificando límites para enviar mensaje');
@@ -40,18 +32,15 @@ export const useAIChatWithLimits = () => {
     }
 
     try {
-      console.log('🔍 [AI CHAT LIMITS] hasIncrementedToday:', hasIncrementedToday);
+      console.log('📈 [AI CHAT LIMITS] Incrementando contador de uso');
+      const success = await incrementUsage('ai_chat_messages');
       
-      // Si es el primer mensaje hoy, incrementar uso
-      if (!hasIncrementedToday) {
-        console.log('📈 [AI CHAT LIMITS] Incrementando contador de uso');
-        await incrementUsage('ai_chat_messages');
-        
-        // Marcar que ya se incrementó hoy
-        const today = new Date().toDateString();
-        localStorage.setItem('ai-chat-last-increment', today);
-        setHasIncrementedToday(true);
-        console.log('✅ [AI CHAT LIMITS] Contador incrementado y marcado para hoy');
+      if (success) {
+        console.log('✅ [AI CHAT LIMITS] Contador incrementado exitosamente');
+        // Refrescar datos de uso después de incrementar
+        await fetchUsage();
+      } else {
+        console.error('❌ [AI CHAT LIMITS] Error incrementando contador');
       }
 
       // Enviar el mensaje

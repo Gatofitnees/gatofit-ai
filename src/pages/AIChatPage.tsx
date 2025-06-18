@@ -8,7 +8,6 @@ import AIChatHeader from '@/components/ai-chat/AIChatHeader';
 import AIMessageList from '@/components/ai-chat/AIMessageList';
 import AIWelcomeScreen from '@/components/ai-chat/AIWelcomeScreen';
 import AIMessageInput from '@/components/ai-chat/AIMessageInput';
-import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
 import { PremiumModal } from '@/components/premium/PremiumModal';
 
 const AIChatPage: React.FC = () => {
@@ -83,22 +82,13 @@ const AIChatPage: React.FC = () => {
 
   return (
     <div className="h-[100dvh] bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">
-      {/* Header */}
+      {/* Header con banner de límites integrado */}
       <div className="flex-shrink-0 z-20 relative">
         <AIChatHeader 
           onBack={handleBack}
           onClear={clearMessages}
           hasMessages={messages.length > 0}
         />
-        
-        {/* Usage banner debajo del header */}
-        {!isPremium && (
-          <div className="px-4 pb-2">
-            <div className="flex justify-end">
-              <UsageLimitsBanner type="ai_chat" />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Contenido del chat scrollable */}
