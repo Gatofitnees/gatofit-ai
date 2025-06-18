@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -46,7 +47,6 @@ export const useUsageLimits = () => {
       if (data && data.length > 0) {
         setUsage(data[0]);
         console.log('✅ [USAGE LIMITS] Usage set:', data[0]);
-        console.log('📅 [USAGE LIMITS] Week start date from DB:', data[0].week_start_date);
       } else {
         // Create initial usage record if it doesn't exist
         await createInitialUsageRecord(user.id);
@@ -66,8 +66,6 @@ export const useUsageLimits = () => {
       const dayOfWeek = weekStart.getDay();
       const diff = weekStart.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       weekStart.setDate(diff);
-      
-      console.log('📅 [USAGE LIMITS] Creating initial record for week:', weekStart.toISOString().split('T')[0]);
       
       const { error } = await supabase
         .from('usage_limits')
@@ -96,9 +94,8 @@ export const useUsageLimits = () => {
       if (!user) throw new Error('Usuario no autenticado');
 
       console.log(`📈 [USAGE LIMITS] Incrementing ${type} for user:`, user.id);
-      console.log(`📊 [USAGE LIMITS] Current local usage before increment:`, usage);
 
-      // Usar función de base de datos para incrementar con parámetro correcto
+      // Usar función de base de datos para incrementar
       const { data, error } = await supabase.rpc('increment_usage_counter', {
         user_id: user.id,
         counter_type: type,
@@ -160,8 +157,7 @@ export const useUsageLimits = () => {
       currentUsage,
       limit,
       isOverLimit,
-      canProceed: !isOverLimit,
-      localUsageState: usage
+      canProceed: !isOverLimit
     });
 
     return {
@@ -186,14 +182,6 @@ export const useUsageLimits = () => {
     const limit = 5;
     const isOverLimit = currentUsage >= limit;
 
-    console.log('🔍 [USAGE LIMITS] Routine limit check:', {
-      currentUsage,
-      limit,
-      isOverLimit,
-      canProceed: !isOverLimit,
-      usage
-    });
-
     return {
       canProceed: !isOverLimit,
       currentUsage,
@@ -215,14 +203,6 @@ export const useUsageLimits = () => {
     const currentUsage = usage?.nutrition_photos_used || 0;
     const limit = 10;
     const isOverLimit = currentUsage >= limit;
-
-    console.log('🔍 [USAGE LIMITS] Nutrition limit check:', {
-      currentUsage,
-      limit,
-      isOverLimit,
-      canProceed: !isOverLimit,
-      usage
-    });
 
     return {
       canProceed: !isOverLimit,

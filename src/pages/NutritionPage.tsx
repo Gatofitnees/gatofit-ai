@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, Plus } from "lucide-react";
 import Button from "../components/Button";
@@ -24,7 +23,7 @@ const NutritionPage: React.FC = () => {
   const { isPremium } = useSubscription();
   
   const { profile } = useProfile();
-  const { entries, deleteEntry, isLoading } = useFoodLog(selectedDate.toISOString().split('T')[0]);
+  const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(selectedDate.toISOString().split('T')[0]);
   
   const { 
     isToday, 
@@ -40,7 +39,7 @@ const NutritionPage: React.FC = () => {
     handlePhotoTaken,
     handleRetryAnalysis,
     handleCancelProcessing
-  } = useFoodProcessing();
+  } = useFoodProcessing(addEntry);
 
   const {
     capturePhotoWithLimitCheck,

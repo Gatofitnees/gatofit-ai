@@ -1,153 +1,138 @@
 
-import { useState, useCallback } from 'react';
-import { useFoodAnalysis } from './useFoodAnalysis';
-import { useSecureFoodLog } from './useSecureFoodLog';
-import { useToast } from '@/components/ui/use-toast';
-import { useUsageLimits } from './useUsageLimits';
-import { useSubscription } from './useSubscription';
+import { useState } from 'react';
+import { useFoodCapture } from './useFoodCapture';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
+import { useToast } from '@/hooks/use-toast';
+import { FoodLogEntry } from './useFoodLog';
+
+type AddEntryFn = (entry: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>) => Promise<FoodLogEntry | null>;
 
 export interface ProcessingFood {
-  id: string;
-  imageSrc: string;
-  error?: string | null;
+    id: string;
+    imageSrc: string;
+    blob: Blob;
+    error?: string | null;
 }
 
-export const useFoodProcessing = () => {
+export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
-  const { analyzeFood } = useFoodAnalysis();
-  const { secureAddEntry } = useSecureFoodLog();
-  const { incrementUsage } = useUsageLimits();
+  const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
   const { isPremium } = useSubscription();
+  const { incrementUsage, checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
-  const addProcessingFood = useCallback((imageSrc: string): string => {
-    const id = Date.now().toString();
-    setProcessingFoods(prev => [...prev, { id, imageSrc }]);
-    return id;
-  }, []);
-
-  const removeProcessingFood = useCallback((id: string) => {
-    setProcessingFoods(prev => prev.filter(food => food.id !== id));
-  }, []);
-
-  const updateProcessingFoodError = useCallback((id: string, error: string) => {
-    setProcessingFoods(prev => 
-      prev.map(food => 
-        food.id === id ? { ...food, error } : food
-      )
-    );
-  }, []);
-
-  const processFood = useCallback(async (imageSrc: string) => {
-    const processingId = addProcessingFood(imageSrc);
+  const runAnalysis = async (blob: Blob, id: string, imageSrc: string) => {
+    clearError();
     
+    // Verificar límites antes de procesar
+    if (!isPremium) {
+      const limitCheck = checkNutritionLimit(isPremium);
+      if (!limitCheck.canProceed) {
+        showLimitReachedToast('nutrition_photos');
+        setProcessingFoods(prev => prev.filter(p => p.id !== id));
+        URL.revokeObjectURL(imageSrc);
+        return;
+      }
+    }
+
     try {
-      console.log('🔄 [FOOD PROCESSING] Iniciando análisis de comida');
-      
-      // Analizar la comida
-      const foodData = await analyzeFood(imageSrc);
-      console.log('✅ [FOOD PROCESSING] Análisis completado:', foodData);
+      const result = await uploadImageWithAnalysis(blob);
 
-      // Transform FoodAnalysis to FoodLogEntry format
-      const foodLogEntry = {
-        custom_food_name: foodData.name,
-        photo_url: imageSrc,
-        meal_type: 'snack1' as const, // Default meal type
-        quantity_consumed: foodData.servingSize,
-        unit_consumed: foodData.servingUnit,
-        calories_consumed: foodData.calories,
-        protein_g_consumed: foodData.protein,
-        carbs_g_consumed: foodData.carbs,
-        fat_g_consumed: foodData.fat,
-        health_score: foodData.healthScore,
-        ingredients: foodData.ingredients.map(ingredient => ({
-          name: ingredient,
-          grams: 0, // Default values since we don't have this data
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0
-        })),
-        notes: undefined
-      };
-
-      // Guardar en la base de datos
-      const savedEntry = await secureAddEntry(foodLogEntry);
-      
-      if (savedEntry) {
-        console.log('✅ [FOOD PROCESSING] Entrada guardada exitosamente');
+      if (result && result.analysisResult) {
+        const analysis = result.analysisResult;
+        const newEntryData: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> = {
+          custom_food_name: analysis.name || 'Alimento Analizado',
+          quantity_consumed: analysis.servingSize || 1,
+          unit_consumed: analysis.servingUnit || 'porción',
+          calories_consumed: analysis.calories || 0,
+          protein_g_consumed: analysis.protein || 0,
+          carbs_g_consumed: analysis.carbs || 0,
+          fat_g_consumed: analysis.fat || 0,
+          health_score: analysis.healthScore,
+          ingredients: analysis.ingredients,
+          photo_url: result.imageUrl,
+          meal_type: 'snack1',
+        };
         
-        // SOLO AQUÍ incrementar el contador después del éxito completo
-        if (!isPremium) {
-          console.log('📈 [FOOD PROCESSING] Incrementando contador de uso');
-          const incrementSuccess = await incrementUsage('nutrition_photos');
-          
-          if (!incrementSuccess) {
-            console.warn('⚠️ [FOOD PROCESSING] Error incrementando contador, pero comida ya guardada');
+        const savedEntry = await addEntry(newEntryData);
+        
+        if (savedEntry) {
+          // Solo incrementar contador DESPUÉS de que el análisis y guardado sean exitosos
+          if (!isPremium) {
+            await incrementUsage('nutrition_photos');
           }
+          
+          setProcessingFoods(prev => prev.filter(p => p.id !== id));
+          URL.revokeObjectURL(imageSrc);
+          
+          toast({
+            title: "¡Comida analizada!",
+            description: `Se ha agregado ${analysis.name || 'tu comida'} al registro`,
+          });
+        } else {
+          throw new Error("No se pudo guardar la entrada de comida");
         }
-        
-        removeProcessingFood(processingId);
-        
-        toast({
-          title: "¡Comida añadida!",
-          description: "Tu comida ha sido analizada y guardada correctamente.",
-        });
       } else {
-        throw new Error('Error guardando la entrada de comida');
+        const errorMessage = foodCaptureError || "No se pudo analizar la comida. Revisa tu conexión o la imagen.";
+        toast({
+          title: "Error de Análisis",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
       }
     } catch (error) {
-      console.error('❌ [FOOD PROCESSING] Error procesando comida:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      updateProcessingFoodError(processingId, errorMessage);
-      
+      console.error("Error processing food:", error);
+      const errorMessage = foodCaptureError || "Ocurrió un error al procesar la imagen.";
       toast({
-        title: "Error procesando comida",
-        description: "Hubo un problema al analizar tu comida. Puedes reintentar.",
+        title: "Error Inesperado",
+        description: errorMessage,
         variant: "destructive",
       });
+      setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
     }
-  }, [analyzeFood, secureAddEntry, incrementUsage, isPremium, addProcessingFood, removeProcessingFood, updateProcessingFoodError, toast]);
+  };
 
-  const retryProcessing = useCallback(async (foodId: string) => {
-    const food = processingFoods.find(f => f.id === foodId);
-    if (!food) return;
-    
-    // Limpiar error y reintentar
-    setProcessingFoods(prev => 
-      prev.map(f => 
-        f.id === foodId ? { ...f, error: null } : f
-      )
-    );
-    
-    await processFood(food.imageSrc);
-  }, [processingFoods, processFood]);
+  const handlePhotoTaken = async (photoBlob: Blob) => {
+    const tempId = Date.now().toString();
+    const imageSrc = URL.createObjectURL(photoBlob);
 
-  const cancelProcessing = useCallback((foodId: string) => {
-    removeProcessingFood(foodId);
-  }, [removeProcessingFood]);
+    setProcessingFoods(prev => [{ id: tempId, imageSrc, blob: photoBlob, error: null }, ...prev]);
+    await runAnalysis(photoBlob, tempId, imageSrc);
+  };
 
-  // Add the methods that NutritionPage expects
-  const handlePhotoTaken = useCallback(async (photoBlob: Blob) => {
-    const imageUrl = URL.createObjectURL(photoBlob);
-    await processFood(imageUrl);
-  }, [processFood]);
+  const handleRetryAnalysis = async (foodId: string) => {
+    const foodToRetry = processingFoods.find(f => f.id === foodId);
+    if (!foodToRetry) return;
 
-  const handleRetryAnalysis = useCallback(async (foodId: string) => {
-    await retryProcessing(foodId);
-  }, [retryProcessing]);
+    // Verificar límites antes de reintentar
+    if (!isPremium) {
+      const limitCheck = checkNutritionLimit(isPremium);
+      if (!limitCheck.canProceed) {
+        showLimitReachedToast('nutrition_photos');
+        handleCancelProcessing(foodId);
+        return;
+      }
+    }
 
-  const handleCancelProcessing = useCallback((foodId: string) => {
-    cancelProcessing(foodId);
-  }, [cancelProcessing]);
+    setProcessingFoods(prev => prev.map(p => p.id === foodId ? { ...p, error: null } : p));
+    await runAnalysis(foodToRetry.blob, foodToRetry.id, foodToRetry.imageSrc);
+  };
 
+  const handleCancelProcessing = (foodId: string) => {
+    const foodToRemove = processingFoods.find(f => f.id === foodId);
+    if (foodToRemove) {
+      URL.revokeObjectURL(foodToRemove.imageSrc);
+      setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
+    }
+  };
+  
   return {
     processingFoods,
-    processFood,
-    retryProcessing,
-    cancelProcessing,
     handlePhotoTaken,
     handleRetryAnalysis,
     handleCancelProcessing,
+    isCompressing
   };
 };
