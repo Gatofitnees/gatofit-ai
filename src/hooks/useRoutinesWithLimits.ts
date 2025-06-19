@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRoutines } from '@/hooks/useRoutines';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
@@ -13,7 +13,7 @@ export const useRoutinesWithLimits = () => {
   const { incrementUsage, checkRoutineLimit, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
-  const createRoutine = async (routineData: any) => {
+  const createRoutine = useCallback(async (routineData: any) => {
     const limitCheck = await checkRoutineLimit(isPremium);
     
     if (!limitCheck.canProceed) {
@@ -54,14 +54,13 @@ export const useRoutinesWithLimits = () => {
       });
       return null;
     }
-  };
+  }, [checkRoutineLimit, isPremium, showLimitReachedToast, incrementUsage, routinesHook.refetch, toast]);
 
-  const deleteRoutine = async (routineId: number) => {
+  const deleteRoutine = useCallback(async (routineId: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      // Verificar que la rutina es del usuario y no es predefinida
       const { data: routine, error: fetchError } = await supabase
         .from('routines')
         .select('user_id, is_predefined')
@@ -74,7 +73,6 @@ export const useRoutinesWithLimits = () => {
         throw new Error('No tienes permisos para eliminar esta rutina');
       }
 
-      // Eliminar la rutina
       const { error: deleteError } = await supabase
         .from('routines')
         .delete()
@@ -82,7 +80,6 @@ export const useRoutinesWithLimits = () => {
 
       if (deleteError) throw deleteError;
 
-      // Solo decrementar contador si era una rutina creada por el usuario (no predefinida) y el usuario es free
       if (!routine.is_predefined && !isPremium) {
         await decrementUsage('routines');
       }
@@ -104,9 +101,9 @@ export const useRoutinesWithLimits = () => {
       });
       return false;
     }
-  };
+  }, [isPremium, routinesHook.refetch, toast]);
 
-  const decrementUsage = async (type: 'routines') => {
+  const decrementUsage = useCallback(async (type: 'routines') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
@@ -124,9 +121,9 @@ export const useRoutinesWithLimits = () => {
       console.error('Error decrementing usage:', error);
       return false;
     }
-  };
+  }, []);
 
-  const getRoutineUsageInfo = async () => {
+  const getRoutineUsageInfo = useCallback(async () => {
     const limitCheck = await checkRoutineLimit(isPremium);
     return {
       current: limitCheck.currentUsage,
@@ -134,7 +131,7 @@ export const useRoutinesWithLimits = () => {
       canCreate: limitCheck.canProceed,
       isOverLimit: limitCheck.isOverLimit
     };
-  };
+  }, [checkRoutineLimit, isPremium]);
 
   return {
     ...routinesHook,

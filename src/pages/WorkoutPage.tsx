@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,14 @@ const WorkoutPage: React.FC = () => {
   const [routinesWithMuscles, setRoutinesWithMuscles] = useState<any[]>([]);
   const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 5, canCreate: true, isOverLimit: false });
   
+  // Función memoizada para cargar info de uso
+  const loadUsageInfo = useCallback(async () => {
+    if (!isPremium) {
+      const info = await getRoutineUsageInfo();
+      setUsageInfo(info);
+    }
+  }, [isPremium, getRoutineUsageInfo]);
+
   // Inicializar ejercicios
   useEffect(() => {
     const initialize = async () => {
@@ -53,16 +61,10 @@ const WorkoutPage: React.FC = () => {
     initialize();
   }, [toast, refetch]); 
 
-  // Load usage info on component mount and when it changes
+  // Cargar info de uso solo al montar el componente
   useEffect(() => {
-    const loadUsageInfo = async () => {
-      if (!isPremium) {
-        const info = await getRoutineUsageInfo();
-        setUsageInfo(info);
-      }
-    };
     loadUsageInfo();
-  }, [isPremium, getRoutineUsageInfo]);
+  }, [loadUsageInfo]);
 
   // Cargar rutinas con información de músculos cuando cambian las rutinas
   useEffect(() => {
@@ -144,10 +146,9 @@ const WorkoutPage: React.FC = () => {
   
   const handleCreateRoutine = async () => {
     if (!isPremium) {
-      const info = await getRoutineUsageInfo();
-      setUsageInfo(info);
+      await loadUsageInfo();
       
-      if (!info.canCreate) {
+      if (!usageInfo.canCreate) {
         setShowPremiumModal(true);
         return;
       }
@@ -158,10 +159,9 @@ const WorkoutPage: React.FC = () => {
   
   const handleRoutineDeleted = async () => {
     await refetch();
-    // Reload usage info after deletion
+    // Recargar info de uso después de eliminar
     if (!isPremium) {
-      const info = await getRoutineUsageInfo();
-      setUsageInfo(info);
+      await loadUsageInfo();
     }
   };
 
@@ -172,7 +172,6 @@ const WorkoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-      {/* Header con título y banner de limitaciones */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold">Mis Rutinas</h1>

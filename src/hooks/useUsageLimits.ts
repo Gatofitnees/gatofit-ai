@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -21,13 +21,24 @@ export const useUsageLimits = () => {
   const [usage, setUsage] = useState<UsageLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const lastFetchRef = useRef<number>(0);
+  const FETCH_COOLDOWN = 1000; // 1 segundo de cooldown entre fetches
 
-  useEffect(() => {
-    fetchUsage();
+  const shouldFetch = useCallback(() => {
+    const now = Date.now();
+    return now - lastFetchRef.current > FETCH_COOLDOWN;
   }, []);
 
-  const fetchUsage = async () => {
+  const fetchUsage = useCallback(async () => {
+    if (!shouldFetch()) {
+      console.log('🚫 [USAGE LIMITS] Skipping fetch due to cooldown');
+      return;
+    }
+
     try {
+      setIsLoading(true);
+      lastFetchRef.current = Date.now();
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -49,21 +60,20 @@ export const useUsageLimits = () => {
         console.log('✅ [USAGE LIMITS] Usage set:', data[0]);
         console.log('📅 [USAGE LIMITS] Week start date from DB:', data[0].week_start_date);
       } else {
-        // Create initial usage record if it doesn't exist
         await createInitialUsageRecord(user.id);
-        await fetchUsage();
+        // Recursive call after creating initial record
+        setTimeout(() => fetchUsage(), 100);
       }
     } catch (error) {
       console.error('❌ [USAGE LIMITS] Error fetching usage:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [shouldFetch]);
 
   const createInitialUsageRecord = async (userId: string) => {
     try {
       const weekStart = new Date();
-      // Obtener lunes de esta semana
       const dayOfWeek = weekStart.getDay();
       const diff = weekStart.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       weekStart.setDate(diff);
@@ -91,14 +101,13 @@ export const useUsageLimits = () => {
     }
   };
 
-  const incrementUsage = async (type: 'routines' | 'nutrition_photos' | 'ai_chat_messages') => {
+  const incrementUsage = useCallback(async (type: 'routines' | 'nutrition_photos' | 'ai_chat_messages') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
       console.log(`📈 [USAGE LIMITS] Incrementing ${type} for user:`, user.id);
 
-      // Usar función de base de datos para incrementar con el nuevo parámetro p_user_id
       const { data, error } = await supabase.rpc('increment_usage_counter', {
         p_user_id: user.id,
         counter_type: type,
@@ -112,7 +121,7 @@ export const useUsageLimits = () => {
 
       console.log('✅ [USAGE LIMITS] Usage incremented successfully:', data);
 
-      // Refrescar datos locales inmediatamente
+      // Refrescar datos después de incrementar
       await fetchUsage();
 
       return true;
@@ -120,12 +129,13 @@ export const useUsageLimits = () => {
       console.error('❌ [USAGE LIMITS] Error incrementing usage:', error);
       return false;
     }
-  };
+  }, [fetchUsage]);
 
-  const checkLimit = async (
+  // Función optimizada que no siempre hace fetch
+  const checkLimitWithoutFetch = useCallback((
     type: 'routines' | 'nutrition_photos' | 'ai_chat_messages',
     isPremium: boolean
-  ): Promise<LimitCheck> => {
+  ): LimitCheck => {
     const limits = {
       routines: 5,
       nutrition_photos: 10,
@@ -141,10 +151,6 @@ export const useUsageLimits = () => {
       };
     }
 
-    // Obtener datos frescos de la base de datos antes de verificar límites
-    console.log('🔄 [USAGE LIMITS] Fetching fresh data before limit check');
-    await fetchUsage();
-
     const fieldMap = {
       'routines': 'routines_created',
       'nutrition_photos': 'nutrition_photos_used',
@@ -155,13 +161,12 @@ export const useUsageLimits = () => {
     const limit = limits[type];
     const isOverLimit = currentUsage >= limit;
 
-    console.log(`🔍 [USAGE LIMITS] Check limit for ${type}:`, {
+    console.log(`🔍 [USAGE LIMITS] Check limit for ${type} (no fetch):`, {
       currentUsage,
       limit,
       isOverLimit,
       canProceed: !isOverLimit,
-      usageData: usage,
-      weekStartDate: usage?.week_start_date
+      hasUsageData: !!usage
     });
 
     return {
@@ -170,9 +175,9 @@ export const useUsageLimits = () => {
       limit,
       isOverLimit
     };
-  };
+  }, [usage]);
 
-  const checkRoutineLimit = async (isPremium: boolean): Promise<LimitCheck> => {
+  const checkRoutineLimit = useCallback(async (isPremium: boolean): Promise<LimitCheck> => {
     if (isPremium) {
       return {
         canProceed: true,
@@ -182,32 +187,17 @@ export const useUsageLimits = () => {
       };
     }
 
-    // Obtener datos frescos antes de verificar
+    // Solo hacer fetch si no tenemos datos o son muy antiguos
+    if (!usage || !shouldFetch()) {
+      return checkLimitWithoutFetch('routines', isPremium);
+    }
+
     console.log('🔄 [USAGE LIMITS] Fetching fresh data for routine limit check');
     await fetchUsage();
+    return checkLimitWithoutFetch('routines', isPremium);
+  }, [usage, shouldFetch, fetchUsage, checkLimitWithoutFetch]);
 
-    const currentUsage = usage?.routines_created || 0;
-    const limit = 5;
-    const isOverLimit = currentUsage >= limit;
-
-    console.log('🔍 [USAGE LIMITS] Routine limit check (with fresh data):', {
-      currentUsage,
-      limit,
-      isOverLimit,
-      canProceed: !isOverLimit,
-      usage,
-      weekStartDate: usage?.week_start_date
-    });
-
-    return {
-      canProceed: !isOverLimit,
-      currentUsage,
-      limit,
-      isOverLimit
-    };
-  };
-
-  const checkNutritionLimit = async (isPremium: boolean): Promise<LimitCheck> => {
+  const checkNutritionLimit = useCallback(async (isPremium: boolean): Promise<LimitCheck> => {
     if (isPremium) {
       return {
         canProceed: true,
@@ -217,32 +207,17 @@ export const useUsageLimits = () => {
       };
     }
 
-    // Obtener datos frescos antes de verificar
+    // Solo hacer fetch si no tenemos datos o son muy antiguos
+    if (!usage || !shouldFetch()) {
+      return checkLimitWithoutFetch('nutrition_photos', isPremium);
+    }
+
     console.log('🔄 [USAGE LIMITS] Fetching fresh data for nutrition limit check');
     await fetchUsage();
+    return checkLimitWithoutFetch('nutrition_photos', isPremium);
+  }, [usage, shouldFetch, fetchUsage, checkLimitWithoutFetch]);
 
-    const currentUsage = usage?.nutrition_photos_used || 0;
-    const limit = 10;
-    const isOverLimit = currentUsage >= limit;
-
-    console.log('🔍 [USAGE LIMITS] Nutrition limit check (with fresh data):', {
-      currentUsage,
-      limit,
-      isOverLimit,
-      canProceed: !isOverLimit,
-      usage,
-      weekStartDate: usage?.week_start_date
-    });
-
-    return {
-      canProceed: !isOverLimit,
-      currentUsage,
-      limit,
-      isOverLimit
-    };
-  };
-
-  const checkAIChatLimit = async (isPremium: boolean): Promise<LimitCheck> => {
+  const checkAIChatLimit = useCallback(async (isPremium: boolean): Promise<LimitCheck> => {
     if (isPremium) {
       return {
         canProceed: true,
@@ -252,32 +227,17 @@ export const useUsageLimits = () => {
       };
     }
 
-    // Obtener datos frescos de la base de datos antes de verificar límites críticos
+    // Solo hacer fetch si no tenemos datos o son muy antiguos
+    if (!usage || !shouldFetch()) {
+      return checkLimitWithoutFetch('ai_chat_messages', isPremium);
+    }
+
     console.log('🔄 [USAGE LIMITS] Fetching fresh data for AI chat limit check');
     await fetchUsage();
+    return checkLimitWithoutFetch('ai_chat_messages', isPremium);
+  }, [usage, shouldFetch, fetchUsage, checkLimitWithoutFetch]);
 
-    const currentUsage = usage?.ai_chat_messages_used || 0;
-    const limit = 3;
-    const isOverLimit = currentUsage >= limit;
-
-    console.log('🔍 [USAGE LIMITS] AI Chat limit check (with fresh data):', {
-      currentUsage,
-      limit,
-      isOverLimit,
-      canProceed: !isOverLimit,
-      usage,
-      weekStartDate: usage?.week_start_date
-    });
-
-    return {
-      canProceed: !isOverLimit,
-      currentUsage,
-      limit,
-      isOverLimit
-    };
-  };
-
-  const showLimitReachedToast = (type: 'routines' | 'nutrition_photos' | 'ai_chat_messages') => {
+  const showLimitReachedToast = useCallback((type: 'routines' | 'nutrition_photos' | 'ai_chat_messages') => {
     const messages = {
       routines: 'Has alcanzado el límite de 5 rutinas. Actualiza a Premium para crear rutinas ilimitadas.',
       nutrition_photos: 'Has usado tus 10 fotos semanales. Actualiza a Premium para fotos ilimitadas.',
@@ -289,17 +249,22 @@ export const useUsageLimits = () => {
       description: messages[type],
       variant: "destructive"
     });
-  };
+  }, [toast]);
+
+  // Fetch inicial solo una vez
+  useEffect(() => {
+    fetchUsage();
+  }, []);
 
   return {
     usage,
     isLoading,
     fetchUsage,
     incrementUsage,
-    checkLimit,
     checkRoutineLimit,
     checkNutritionLimit,
     checkAIChatLimit,
+    checkLimitWithoutFetch,
     showLimitReachedToast
   };
 };

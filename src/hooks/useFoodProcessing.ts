@@ -19,15 +19,15 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
   const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
+  const { incrementUsage, checkLimitWithoutFetch, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
   const runAnalysis = async (blob: Blob, id: string, imageSrc: string) => {
     clearError();
     
-    // Verificar límites antes de procesar
+    // Verificar límites sin hacer fetch innecesario
     if (!isPremium) {
-      const limitCheck = await checkNutritionLimit(isPremium);
+      const limitCheck = checkLimitWithoutFetch('nutrition_photos', isPremium);
       if (!limitCheck.canProceed) {
         showLimitReachedToast('nutrition_photos');
         setProcessingFoods(prev => prev.filter(p => p.id !== id));
@@ -58,7 +58,6 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
         const savedEntry = await addEntry(newEntryData);
         
         if (savedEntry) {
-          // Solo incrementar contador DESPUÉS de que el análisis y guardado sean exitosos
           if (!isPremium) {
             await incrementUsage('nutrition_photos');
           }
@@ -106,9 +105,9 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
     const foodToRetry = processingFoods.find(f => f.id === foodId);
     if (!foodToRetry) return;
 
-    // Verificar límites antes de reintentar
+    // Verificar límites sin hacer fetch innecesario
     if (!isPremium) {
-      const limitCheck = await checkNutritionLimit(isPremium);
+      const limitCheck = checkLimitWithoutFetch('nutrition_photos', isPremium);
       if (!limitCheck.canProceed) {
         showLimitReachedToast('nutrition_photos');
         handleCancelProcessing(foodId);

@@ -13,7 +13,7 @@ export const useRoutineSave = (editRoutineId?: number) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkRoutineLimit, showLimitReachedToast } = useUsageLimits();
+  const { incrementUsage, checkLimitWithoutFetch, showLimitReachedToast } = useUsageLimits();
   
   const { 
     routineName,
@@ -68,7 +68,7 @@ export const useRoutineSave = (editRoutineId?: number) => {
 
     // Solo verificar límites si es una rutina nueva (no edición)
     if (!editRoutineId) {
-      const limitCheck = await checkRoutineLimit(isPremium);
+      const limitCheck = checkLimitWithoutFetch('routines', isPremium);
       
       if (!limitCheck.canProceed) {
         showLimitReachedToast('routines');
@@ -82,7 +82,7 @@ export const useRoutineSave = (editRoutineId?: number) => {
     }
     
     setShowSaveConfirmDialog(true);
-  }, [validateForm, routineExercises, setShowNoExercisesDialog, setShowSaveConfirmDialog, editRoutineId, checkRoutineLimit, isPremium, showLimitReachedToast]);
+  }, [validateForm, routineExercises, setShowNoExercisesDialog, setShowSaveConfirmDialog, editRoutineId, checkLimitWithoutFetch, isPremium, showLimitReachedToast]);
 
   const handleSaveRoutine = useCallback(async () => {
     try {

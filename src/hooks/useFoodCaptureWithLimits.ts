@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 
@@ -8,7 +8,7 @@ export const useFoodCaptureWithLimits = () => {
   const { isPremium } = useSubscription();
   const { incrementUsage, checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
 
-  const capturePhotoWithLimitCheck = async () => {
+  const capturePhotoWithLimitCheck = useCallback(async () => {
     const limitCheck = await checkNutritionLimit(isPremium);
     
     if (!limitCheck.canProceed) {
@@ -26,9 +26,9 @@ export const useFoodCaptureWithLimits = () => {
       console.error('Error in photo capture:', error);
       return false;
     }
-  };
+  }, [checkNutritionLimit, isPremium, showLimitReachedToast, incrementUsage]);
 
-  const getNutritionUsageInfo = async () => {
+  const getNutritionUsageInfo = useCallback(async () => {
     const limitCheck = await checkNutritionLimit(isPremium);
     return {
       current: limitCheck.currentUsage,
@@ -36,7 +36,7 @@ export const useFoodCaptureWithLimits = () => {
       canCapture: limitCheck.canProceed,
       isOverLimit: limitCheck.isOverLimit
     };
-  };
+  }, [checkNutritionLimit, isPremium]);
 
   return {
     capturePhotoWithLimitCheck,

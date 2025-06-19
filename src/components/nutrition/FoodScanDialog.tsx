@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Button from '@/components/Button';
 import { Camera, Image, X } from 'lucide-react';
@@ -29,16 +29,18 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
     getNutritionUsageInfo
   } = useFoodCaptureWithLimits();
 
-  // Load usage info when dialog opens
-  useEffect(() => {
-    const loadUsageInfo = async () => {
-      if (isOpen && !isPremium) {
-        const info = await getNutritionUsageInfo();
-        setUsageInfo(info);
-      }
-    };
-    loadUsageInfo();
+  // Función memoizada para cargar info de uso
+  const loadUsageInfo = useCallback(async () => {
+    if (isOpen && !isPremium) {
+      const info = await getNutritionUsageInfo();
+      setUsageInfo(info);
+    }
   }, [isOpen, isPremium, getNutritionUsageInfo]);
+
+  // Cargar info de uso cuando se abre el diálogo
+  useEffect(() => {
+    loadUsageInfo();
+  }, [loadUsageInfo]);
 
   const handleCameraCapture = async () => {
     const canCapture = await capturePhotoWithLimitCheck();
@@ -46,7 +48,6 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
     
     setIsLoading(true);
     try {
-      // Use native camera capture
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -115,11 +116,9 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Usage Banner */}
             <UsageLimitsBanner type="nutrition" />
 
             <div className="grid grid-cols-1 gap-4">
-              {/* Camera Option */}
               <div 
                 className="neu-card p-6 cursor-pointer hover:bg-secondary/10 transition-all duration-200 active:shadow-neu-button-active"
                 onClick={handleCameraCapture}
@@ -135,7 +134,6 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
                 </div>
               </div>
 
-              {/* Gallery Option */}
               <div 
                 className="neu-card p-6 cursor-pointer hover:bg-secondary/10 transition-all duration-200 active:shadow-neu-button-active"
                 onClick={handleGalleryCapture}

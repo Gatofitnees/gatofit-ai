@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Camera, Plus } from "lucide-react";
 import Button from "../components/Button";
 import DaySelector from "../components/DaySelector";
@@ -50,38 +50,37 @@ const NutritionPage: React.FC = () => {
     getNutritionUsageInfo
   } = useFoodCaptureWithLimits();
 
-  // Load usage info on component mount and when it changes
-  useEffect(() => {
-    const loadUsageInfo = async () => {
-      if (!isPremium) {
-        const info = await getNutritionUsageInfo();
-        setUsageInfo(info);
-      }
-    };
-    loadUsageInfo();
+  // Función memoizada para cargar info de uso
+  const loadUsageInfo = useCallback(async () => {
+    if (!isPremium) {
+      const info = await getNutritionUsageInfo();
+      setUsageInfo(info);
+    }
   }, [isPremium, getNutritionUsageInfo]);
+
+  // Cargar info de uso solo al montar el componente
+  useEffect(() => {
+    loadUsageInfo();
+  }, [loadUsageInfo]);
 
   const handlePhotoTakenAndCloseCamera = async (photoBlob: Blob) => {
     setShowCamera(false);
     
-    // Check limits before processing
     const canCapture = await capturePhotoWithLimitCheck();
     if (canCapture) {
       await handlePhotoTaken(photoBlob);
-      // Reload usage info after successful capture
+      // Recargar info de uso después de captura exitosa
       if (!isPremium) {
-        const info = await getNutritionUsageInfo();
-        setUsageInfo(info);
+        await loadUsageInfo();
       }
     }
   };
 
   const handleOpenCamera = async () => {
     if (!isPremium) {
-      const info = await getNutritionUsageInfo();
-      setUsageInfo(info);
+      await loadUsageInfo();
       
-      if (!info.canCapture) {
+      if (!usageInfo.canCapture) {
         setShowPremiumModal(true);
         return;
       }
@@ -94,7 +93,6 @@ const NutritionPage: React.FC = () => {
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold">Nutrición</h1>
-        {/* Usage banner para usuarios free */}
         {!isPremium && (
           <UsageLimitsBanner type="nutrition" />
         )}
@@ -161,7 +159,6 @@ const NutritionPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Premium Modal */}
       <PremiumModal
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
