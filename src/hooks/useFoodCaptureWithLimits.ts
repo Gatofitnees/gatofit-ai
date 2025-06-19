@@ -9,7 +9,7 @@ export const useFoodCaptureWithLimits = () => {
   const { incrementUsage, checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
 
   const capturePhotoWithLimitCheck = async () => {
-    const limitCheck = checkNutritionLimit(isPremium);
+    const limitCheck = await checkNutritionLimit(isPremium);
     
     if (!limitCheck.canProceed) {
       showLimitReachedToast('nutrition_photos');
@@ -28,8 +28,8 @@ export const useFoodCaptureWithLimits = () => {
     }
   };
 
-  const getNutritionUsageInfo = () => {
-    const limitCheck = checkNutritionLimit(isPremium);
+  const getNutritionUsageInfo = async () => {
+    const limitCheck = await checkNutritionLimit(isPremium);
     return {
       current: limitCheck.currentUsage,
       limit: limitCheck.limit,

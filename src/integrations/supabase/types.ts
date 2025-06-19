@@ -1184,7 +1184,7 @@ export type Database = {
         Returns: string
       }
       increment_usage_counter: {
-        Args: { user_id: string; counter_type: string; increment_by?: number }
+        Args: { p_user_id: string; counter_type: string; increment_by?: number }
         Returns: boolean
       }
       is_user_premium: {

@@ -14,7 +14,7 @@ export const useRoutinesWithLimits = () => {
   const { toast } = useToast();
 
   const createRoutine = async (routineData: any) => {
-    const limitCheck = checkRoutineLimit(isPremium);
+    const limitCheck = await checkRoutineLimit(isPremium);
     
     if (!limitCheck.canProceed) {
       showLimitReachedToast('routines');
@@ -112,7 +112,7 @@ export const useRoutinesWithLimits = () => {
       if (!user) throw new Error('Usuario no autenticado');
 
       const { error } = await supabase.rpc('increment_usage_counter', {
-        user_id: user.id,
+        p_user_id: user.id,
         counter_type: type,
         increment_by: -1
       });
@@ -126,8 +126,8 @@ export const useRoutinesWithLimits = () => {
     }
   };
 
-  const getRoutineUsageInfo = () => {
-    const limitCheck = checkRoutineLimit(isPremium);
+  const getRoutineUsageInfo = async () => {
+    const limitCheck = await checkRoutineLimit(isPremium);
     return {
       current: limitCheck.currentUsage,
       limit: limitCheck.limit,
