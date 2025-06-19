@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Camera, Plus } from "lucide-react";
 import Button from "../components/Button";
 import DaySelector from "../components/DaySelector";
@@ -20,6 +21,7 @@ import { useFoodCaptureWithLimits } from "@/hooks/useFoodCaptureWithLimits";
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 10, canCapture: true, isOverLimit: false });
   const { isPremium } = useSubscription();
   
   const { profile } = useProfile();
@@ -48,6 +50,17 @@ const NutritionPage: React.FC = () => {
     getNutritionUsageInfo
   } = useFoodCaptureWithLimits();
 
+  // Load usage info on component mount and when it changes
+  useEffect(() => {
+    const loadUsageInfo = async () => {
+      if (!isPremium) {
+        const info = await getNutritionUsageInfo();
+        setUsageInfo(info);
+      }
+    };
+    loadUsageInfo();
+  }, [isPremium, getNutritionUsageInfo]);
+
   const handlePhotoTakenAndCloseCamera = async (photoBlob: Blob) => {
     setShowCamera(false);
     
@@ -55,21 +68,27 @@ const NutritionPage: React.FC = () => {
     const canCapture = await capturePhotoWithLimitCheck();
     if (canCapture) {
       await handlePhotoTaken(photoBlob);
+      // Reload usage info after successful capture
+      if (!isPremium) {
+        const info = await getNutritionUsageInfo();
+        setUsageInfo(info);
+      }
     }
   };
 
   const handleOpenCamera = async () => {
-    const usageInfo = getNutritionUsageInfo();
-    
-    if (!usageInfo.canCapture) {
-      setShowPremiumModal(true);
-      return;
+    if (!isPremium) {
+      const info = await getNutritionUsageInfo();
+      setUsageInfo(info);
+      
+      if (!info.canCapture) {
+        setShowPremiumModal(true);
+        return;
+      }
     }
     
     setShowCamera(true);
   };
-
-  const usageInfo = getNutritionUsageInfo();
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">

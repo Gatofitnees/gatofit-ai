@@ -27,7 +27,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
     
     // Verificar límites antes de procesar
     if (!isPremium) {
-      const limitCheck = checkNutritionLimit(isPremium);
+      const limitCheck = await checkNutritionLimit(isPremium);
       if (!limitCheck.canProceed) {
         showLimitReachedToast('nutrition_photos');
         setProcessingFoods(prev => prev.filter(p => p.id !== id));
@@ -108,7 +108,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
 
     // Verificar límites antes de reintentar
     if (!isPremium) {
-      const limitCheck = checkNutritionLimit(isPremium);
+      const limitCheck = await checkNutritionLimit(isPremium);
       if (!limitCheck.canProceed) {
         showLimitReachedToast('nutrition_photos');
         handleCancelProcessing(foodId);

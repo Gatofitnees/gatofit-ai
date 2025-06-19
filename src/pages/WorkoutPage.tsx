@@ -33,6 +33,7 @@ const WorkoutPage: React.FC = () => {
   });
   const [initializing, setInitializing] = useState(false);
   const [routinesWithMuscles, setRoutinesWithMuscles] = useState<any[]>([]);
+  const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 5, canCreate: true, isOverLimit: false });
   
   // Inicializar ejercicios
   useEffect(() => {
@@ -51,6 +52,17 @@ const WorkoutPage: React.FC = () => {
     
     initialize();
   }, [toast, refetch]); 
+
+  // Load usage info on component mount and when it changes
+  useEffect(() => {
+    const loadUsageInfo = async () => {
+      if (!isPremium) {
+        const info = await getRoutineUsageInfo();
+        setUsageInfo(info);
+      }
+    };
+    loadUsageInfo();
+  }, [isPremium, getRoutineUsageInfo]);
 
   // Cargar rutinas con información de músculos cuando cambian las rutinas
   useEffect(() => {
@@ -130,27 +142,33 @@ const WorkoutPage: React.FC = () => {
     navigate(`/workout/active/${routineId}`);
   };
   
-  const handleCreateRoutine = () => {
-    const usageInfo = getRoutineUsageInfo();
-    
-    if (!usageInfo.canCreate) {
-      setShowPremiumModal(true);
-      return;
+  const handleCreateRoutine = async () => {
+    if (!isPremium) {
+      const info = await getRoutineUsageInfo();
+      setUsageInfo(info);
+      
+      if (!info.canCreate) {
+        setShowPremiumModal(true);
+        return;
+      }
     }
     
     navigate("/workout/create");
   };
   
-  const handleRoutineDeleted = () => {
-    refetch();
+  const handleRoutineDeleted = async () => {
+    await refetch();
+    // Reload usage info after deletion
+    if (!isPremium) {
+      const info = await getRoutineUsageInfo();
+      setUsageInfo(info);
+    }
   };
 
   const handleFiltersChange = (newFilters: { types: string[], muscles: string[] }) => {
     setFilters(newFilters);
     console.log("Filters applied:", newFilters);
   };
-
-  const usageInfo = getRoutineUsageInfo();
 
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">

@@ -59,7 +59,7 @@ export const useRoutineSave = (editRoutineId?: number) => {
     return true;
   }, [routineName, routineType, toast]);
 
-  const handleSaveRoutineStart = useCallback((e: React.MouseEvent) => {
+  const handleSaveRoutineStart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -68,7 +68,7 @@ export const useRoutineSave = (editRoutineId?: number) => {
 
     // Solo verificar límites si es una rutina nueva (no edición)
     if (!editRoutineId) {
-      const limitCheck = checkRoutineLimit(isPremium);
+      const limitCheck = await checkRoutineLimit(isPremium);
       
       if (!limitCheck.canProceed) {
         showLimitReachedToast('routines');

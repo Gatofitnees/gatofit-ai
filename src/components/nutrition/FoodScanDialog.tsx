@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Button from '@/components/Button';
 import { Camera, Image, X } from 'lucide-react';
 import { useFoodCaptureWithLimits } from '@/hooks/useFoodCaptureWithLimits';
 import { PremiumModal } from '@/components/premium/PremiumModal';
 import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface FoodScanDialogProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
   onImageCaptured
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 10, canCapture: true, isOverLimit: false });
+  const { isPremium } = useSubscription();
   const { 
     capturePhotoWithLimitCheck,
     showPremiumModal,
@@ -26,7 +29,16 @@ export const FoodScanDialog: React.FC<FoodScanDialogProps> = ({
     getNutritionUsageInfo
   } = useFoodCaptureWithLimits();
 
-  const usageInfo = getNutritionUsageInfo();
+  // Load usage info when dialog opens
+  useEffect(() => {
+    const loadUsageInfo = async () => {
+      if (isOpen && !isPremium) {
+        const info = await getNutritionUsageInfo();
+        setUsageInfo(info);
+      }
+    };
+    loadUsageInfo();
+  }, [isOpen, isPremium, getNutritionUsageInfo]);
 
   const handleCameraCapture = async () => {
     const canCapture = await capturePhotoWithLimitCheck();
