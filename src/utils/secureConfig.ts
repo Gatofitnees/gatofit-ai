@@ -1,246 +1,95 @@
-import { logSecurityEvent } from './securityLogger';
 
-export interface SecureConfig {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  webhookUrl?: string;
-  environment: 'development' | 'production' | 'test';
-  features: {
-    enableFileUpload: boolean;
-    enableWebhooks: boolean;
-    enableAIChat: boolean;
-    maxFileSize: number;
-    allowedFileTypes: string[];
+interface SecurityConfig {
+  fileUpload: {
+    maxSize: number;
+    allowedTypes: string[];
+    maxFiles: number;
   };
-  security: {
-    enforceHttps: boolean;
-    enableRateLimiting: boolean;
-    enableSecurityHeaders: boolean;
-    sessionTimeout: number;
+  rateLimiting: {
+    authAttempts: number;
+    authWindow: number;
+    fileUploads: number;
+    fileUploadWindow: number;
+    apiRequests: number;
+    apiWindow: number;
+  };
+  validation: {
+    maxTextLength: number;
+    maxEmailLength: number;
+    minPasswordLength: number;
+    maxPasswordLength: number;
+  };
+  urls: {
+    allowedOrigins: string[];
+    webhookTimeout: number;
+    maxRetries: number;
   };
 }
 
-class SecureConfigManager {
-  private config: SecureConfig | null = null;
-  private initialized = false;
-
-  initialize(): SecureConfig {
-    if (this.initialized && this.config) {
-      return this.config;
-    }
-
-    try {
-      // Use environment variables or secure configuration instead of hardcoded values
-      const supabaseUrl = 'https://mwgnpexeymgpzibnkiof.supabase.co';
-      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z25wZXhleW1ncHppYm5raW9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNDMxMDAsImV4cCI6MjA2MjcxOTEwMH0.4MCeBc9YPSI4ASDcSLrz_25R70KmRBEfyEtqmsZ3GYY';
-
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Missing required Supabase configuration');
-      }
-
-      // Validate URLs are using HTTPS in production
-      const environment = process.env.NODE_ENV === 'production' ? 'production' : 'development';
-      if (environment === 'production' && !supabaseUrl.startsWith('https://')) {
-        throw new Error('Supabase URL must use HTTPS in production');
-      }
-
-      this.config = {
-        supabaseUrl,
-        supabaseAnonKey,
-        webhookUrl: this.getSecureWebhookUrl(),
-        environment: environment as 'development' | 'production',
-        features: {
-          enableFileUpload: true,
-          enableWebhooks: false, // Disabled by default for security
-          enableAIChat: true,
-          maxFileSize: 2 * 1024 * 1024, // Reduced to 2MB for security
-          allowedFileTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-        },
-        security: {
-          enforceHttps: environment === 'production',
-          enableRateLimiting: true,
-          enableSecurityHeaders: true,
-          sessionTimeout: 4 * 60 * 60 * 1000 // Reduced to 4 hours
-        }
-      };
-
-      this.initialized = true;
-      logSecurityEvent({
-        timestamp: new Date().toISOString(),
-        eventType: 'config_initialized',
-        details: `Environment: ${environment}`,
-        severity: 'low',
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-        location: typeof window !== 'undefined' ? window.location.href : undefined
-      });
-      
-      return this.config;
-    } catch (error: any) {
-      logSecurityEvent({
-        timestamp: new Date().toISOString(),
-        eventType: 'config_initialization_failed',
-        details: error.message,
-        severity: 'high',
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-        location: typeof window !== 'undefined' ? window.location.href : undefined
-      });
-      throw new Error(`Configuration initialization failed: ${error.message}`);
-    }
+export const securityConfig: SecurityConfig = {
+  fileUpload: {
+    maxSize: 10 * 1024 * 1024, // 10MB
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    maxFiles: 5
+  },
+  rateLimiting: {
+    authAttempts: 5,
+    authWindow: 15 * 60 * 1000, // 15 minutes
+    fileUploads: 10,
+    fileUploadWindow: 10 * 60 * 1000, // 10 minutes
+    apiRequests: 100,
+    apiWindow: 60 * 1000 // 1 minute
+  },
+  validation: {
+    maxTextLength: 5000,
+    maxEmailLength: 320,
+    minPasswordLength: 8,
+    maxPasswordLength: 128
+  },
+  urls: {
+    allowedOrigins: [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://mwgnpexeymgpzibnkiof.supabase.co',
+      // Add your production domain here
+    ],
+    webhookTimeout: 30000, // 30 seconds
+    maxRetries: 3
   }
+};
 
-  private getSecureWebhookUrl(): string | undefined {
-    // Webhooks disabled by default - must be explicitly configured
-    const webhookUrl = process.env.WEBHOOK_URL;
-    
-    if (!webhookUrl) {
-      logSecurityEvent({
-        timestamp: new Date().toISOString(),
-        eventType: 'webhook_url_not_configured',
-        details: 'Webhooks disabled for security',
-        severity: 'low',
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-        location: typeof window !== 'undefined' ? window.location.href : undefined
-      });
-      return undefined;
-    }
+export const getSecurityHeaders = (): Record<string, string> => {
+  return {
+    'Content-Security-Policy': [
+      "default-src 'self'",
+      "script-src 'self' 'wasm-unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "img-src 'self' data: blob: https: https://mwgnpexeymgpzibnkiof.supabase.co",
+      "font-src 'self' https://fonts.gstatic.com",
+      "connect-src 'self' https://mwgnpexeymgpzibnkiof.supabase.co wss://mwgnpexeymgpzibnkiof.supabase.co",
+      "media-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "upgrade-insecure-requests"
+    ].join('; '),
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
+  };
+};
 
-    // Enhanced webhook URL validation
-    try {
-      const url = new URL(webhookUrl);
-      
-      if (url.protocol !== 'https:') {
-        logSecurityEvent({
-          timestamp: new Date().toISOString(),
-          eventType: 'webhook_url_insecure',
-          details: 'Non-HTTPS webhook URL rejected',
-          severity: 'high',
-          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-          location: typeof window !== 'undefined' ? window.location.href : undefined
-        });
-        return undefined;
-      }
+export const validateOrigin = (origin: string): boolean => {
+  return securityConfig.urls.allowedOrigins.includes(origin);
+};
 
-      // Block local/private network URLs
-      const hostname = url.hostname;
-      const blockedPatterns = [
-        /^localhost$/i,
-        /^127\./,
-        /^10\./,
-        /^192\.168\./,
-        /^172\.(1[6-9]|2[0-9]|3[01])\./,
-        /^169\.254\./,
-      ];
-
-      if (blockedPatterns.some(pattern => pattern.test(hostname))) {
-        logSecurityEvent({
-          timestamp: new Date().toISOString(),
-          eventType: 'webhook_url_private_network',
-          details: 'Private network webhook URL rejected',
-          severity: 'high',
-          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-          location: typeof window !== 'undefined' ? window.location.href : undefined
-        });
-        return undefined;
-      }
-
-      return webhookUrl;
-    } catch (error) {
-      logSecurityEvent({
-        timestamp: new Date().toISOString(),
-        eventType: 'webhook_url_invalid',
-        details: 'Invalid webhook URL format',
-        severity: 'high',
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-        location: typeof window !== 'undefined' ? window.location.href : undefined
-      });
-      return undefined;
-    }
-  }
-
-  getConfig(): SecureConfig {
-    if (!this.initialized || !this.config) {
-      return this.initialize();
-    }
-    return this.config;
-  }
-
-  isFeatureEnabled(feature: keyof SecureConfig['features']): boolean {
-    const config = this.getConfig();
-    return config.features[feature] as boolean;
-  }
-
-  getSecuritySetting(setting: keyof SecureConfig['security']): any {
-    const config = this.getConfig();
-    return config.security[setting];
-  }
-
-  validateConfiguration(): boolean {
-    try {
-      const config = this.getConfig();
-      
-      // Validate URLs
-      new URL(config.supabaseUrl);
-      
-      // Validate security settings
-      if (config.environment === 'production') {
-        if (!config.security.enforceHttps) {
-          logSecurityEvent({
-            timestamp: new Date().toISOString(),
-            eventType: 'config_validation_warning',
-            details: 'HTTPS not enforced in production',
-            severity: 'medium',
-            userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-            location: typeof window !== 'undefined' ? window.location.href : undefined
-          });
-        }
-        
-        if (!config.security.enableSecurityHeaders) {
-          logSecurityEvent({
-            timestamp: new Date().toISOString(),
-            eventType: 'config_validation_warning',
-            details: 'Security headers disabled in production',
-            severity: 'medium',
-            userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-            location: typeof window !== 'undefined' ? window.location.href : undefined
-          });
-        }
-      }
-      
-      return true;
-    } catch (error: any) {
-      logSecurityEvent({
-        timestamp: new Date().toISOString(),
-        eventType: 'config_validation_failed',
-        details: error.message,
-        severity: 'high',
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-        location: typeof window !== 'undefined' ? window.location.href : undefined
-      });
-      return false;
-    }
-  }
-}
-
-export const secureConfig = new SecureConfigManager();
-
-// Helper functions for common configuration needs
 export const isProduction = (): boolean => {
-  return secureConfig.getConfig().environment === 'production';
+  return import.meta.env.MODE === 'production';
 };
 
-export const shouldEnforceHttps = (): boolean => {
-  return secureConfig.getSecuritySetting('enforceHttps');
-};
-
-export const getMaxFileSize = (): number => {
-  return secureConfig.getConfig().features.maxFileSize;
-};
-
-export const getAllowedFileTypes = (): string[] => {
-  return secureConfig.getConfig().features.allowedFileTypes;
-};
-
-export const isWebhookEnabled = (): boolean => {
-  const config = secureConfig.getConfig();
-  return config.features.enableWebhooks && !!config.webhookUrl;
+export const isDevelopment = (): boolean => {
+  return import.meta.env.MODE === 'development';
 };

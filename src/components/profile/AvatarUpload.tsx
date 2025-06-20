@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { Camera, Image as ImageIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { useAvatarUpload } from '@/hooks/useAvatarUpload';
+import { useSecureAvatarUpload } from '@/hooks/useSecureAvatarUpload';
 import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,7 +23,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 }) => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { uploadAvatar, uploading } = useAvatarUpload();
+  const { secureUploadAvatar, uploading } = useSecureAvatarUpload();
 
   const sizeClasses = {
     sm: 'h-16 w-16',
@@ -41,10 +41,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const newUrl = await uploadAvatar(file);
+    const newUrl = await secureUploadAvatar(file);
     if (newUrl && onAvatarUpdate) {
       onAvatarUpdate(newUrl);
     }
+
+    // Clear the input so the same file can be selected again
+    event.target.value = '';
   };
 
   const handleGalleryClick = () => {

@@ -3,10 +3,9 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { RateLimiter } from '@/utils/securityValidation';
-
-// Rate limiter for avatar uploads (max 3 uploads per 5 minutes)
-const avatarUploadLimiter = new RateLimiter(3, 300000);
+import { validateImageFile } from '@/utils/enhancedInputValidation';
+import { logSecurityEvent } from '@/utils/securityLogger';
+import { securityConfig } from '@/utils/secureConfig';
 
 export const useSecureAvatarUpload = () => {
   const { user } = useAuth();
@@ -14,35 +13,34 @@ export const useSecureAvatarUpload = () => {
   const [uploading, setUploading] = useState(false);
 
   const secureUploadAvatar = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-
-    // Rate limiting
-    if (!avatarUploadLimiter.isAllowed(user.id)) {
-      toast({
-        title: "Error",
-        description: "Demasiadas subidas de avatar. Espera unos minutos antes de intentar de nuevo.",
-        variant: "destructive"
+    if (!user) {
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'avatar_upload_unauthorized',
+        details: 'No authenticated user',
+        severity: 'high',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
       });
       return null;
     }
 
     // Enhanced file validation
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    
-    if (file.size > maxSize) {
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
       toast({
         title: "Error",
-        description: "La imagen debe ser menor a 5MB",
+        description: validation.error,
         variant: "destructive"
       });
       return null;
     }
 
-    if (!allowedTypes.includes(file.type)) {
+    // Additional security checks
+    if (file.size > securityConfig.fileUpload.maxSize) {
       toast({
         title: "Error",
-        description: "Solo se permiten archivos JPG, PNG y WebP",
+        description: `Archivo demasiado grande (máximo ${securityConfig.fileUpload.maxSize / 1024 / 1024}MB)`,
         variant: "destructive"
       });
       return null;
@@ -51,6 +49,15 @@ export const useSecureAvatarUpload = () => {
     // Check file header to prevent MIME type spoofing
     const fileHeader = await checkFileHeader(file);
     if (!fileHeader.isValid) {
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'avatar_upload_invalid_header',
+        details: 'File header validation failed',
+        severity: 'high',
+        userId: user.id,
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
       toast({
         title: "Error",
         description: "Archivo de imagen inválido",
@@ -61,24 +68,29 @@ export const useSecureAvatarUpload = () => {
 
     setUploading(true);
     try {
-      // Generate secure filename with timestamp and random suffix
+      // Generate secure filename
       const fileExt = file.name.split('.').pop()?.toLowerCase();
       const timestamp = Date.now();
       const randomSuffix = Math.random().toString(36).substring(2, 8);
       const fileName = `${user.id}/${timestamp}_${randomSuffix}.${fileExt}`;
 
-      // Delete old avatar if exists
-      const { data: oldFiles } = await supabase.storage
-        .from('avatars')
-        .list(user.id);
-
-      if (oldFiles && oldFiles.length > 0) {
-        const filesToDelete = oldFiles.map(file => `${user.id}/${file.name}`);
-        await supabase.storage
+      // Delete old avatar if exists (cleanup)
+      try {
+        const { data: oldFiles } = await supabase.storage
           .from('avatars')
-          .remove(filesToDelete);
+          .list(user.id);
+
+        if (oldFiles && oldFiles.length > 0) {
+          const filesToDelete = oldFiles.map(file => `${user.id}/${file.name}`);
+          await supabase.storage
+            .from('avatars')
+            .remove(filesToDelete);
+        }
+      } catch (error) {
+        console.warn('Could not clean up old avatars:', error);
       }
 
+      // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
@@ -100,6 +112,16 @@ export const useSecureAvatarUpload = () => {
 
       if (updateError) throw updateError;
 
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'avatar_upload_success',
+        details: `Successfully uploaded avatar: ${fileName}`,
+        severity: 'low',
+        userId: user.id,
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
+
       toast({
         title: "Éxito",
         description: "Foto de perfil actualizada"
@@ -108,6 +130,16 @@ export const useSecureAvatarUpload = () => {
       return publicUrl;
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
+      logSecurityEvent({
+        timestamp: new Date().toISOString(),
+        eventType: 'avatar_upload_error',
+        details: error.message || 'Unknown upload error',
+        severity: 'medium',
+        userId: user.id,
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        location: typeof window !== 'undefined' ? window.location.href : undefined
+      });
+      
       toast({
         title: "Error",
         description: error.message || "No se pudo subir la imagen",

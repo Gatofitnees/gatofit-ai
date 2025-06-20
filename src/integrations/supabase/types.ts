@@ -24,6 +24,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_rate_limits: {
+        Row: {
+          attempt_count: number | null
+          blocked_until: string | null
+          created_at: string | null
+          first_attempt_at: string | null
+          id: string
+          identifier: string
+          last_attempt_at: string | null
+        }
+        Insert: {
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          identifier: string
+          last_attempt_at?: string | null
+        }
+        Update: {
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          identifier?: string
+          last_attempt_at?: string | null
+        }
+        Relationships: []
+      }
       body_measurements: {
         Row: {
           abdomen_circumference_cm: number | null
@@ -1133,6 +1163,14 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      check_auth_rate_limit: {
+        Args: {
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
       clean_old_food_entries: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1169,6 +1207,10 @@ export type Database = {
           following_count: number
           total_workout_hours: number
         }[]
+      }
+      get_user_subscription_status: {
+        Args: { user_id: string }
+        Returns: string
       }
       get_user_weekly_usage: {
         Args: { user_id: string }

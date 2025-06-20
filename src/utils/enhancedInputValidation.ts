@@ -1,110 +1,175 @@
 
+import DOMPurify from 'dompurify';
+
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
+  sanitizedValue?: string;
 }
 
-export const validateSecureEmail = (email: string): ValidationResult => {
-  // Basic format check
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const validateEmail = (email: string): ValidationResult => {
+  if (!email) {
+    return { isValid: false, error: 'Email es requerido' };
+  }
+
+  if (email.length > 320) {
+    return { isValid: false, error: 'Email demasiado largo' };
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
-    return { isValid: false, error: 'Please enter a valid email address' };
+    return { isValid: false, error: 'Formato de email inválido' };
   }
 
-  // Length check
-  if (email.length > 254) {
-    return { isValid: false, error: 'Email address is too long' };
-  }
-
-  // Local part length check
-  const localPart = email.split('@')[0];
-  if (localPart.length > 64) {
-    return { isValid: false, error: 'Email local part is too long' };
-  }
-
-  // Prevent dangerous characters
-  const dangerousChars = /[<>'"&]/;
-  if (dangerousChars.test(email)) {
-    return { isValid: false, error: 'Email contains invalid characters' };
-  }
-
-  // Check for multiple @ symbols
-  if ((email.match(/@/g) || []).length !== 1) {
-    return { isValid: false, error: 'Email must contain exactly one @ symbol' };
-  }
-
-  return { isValid: true };
-};
-
-export const validateSecureUsername = (username: string): ValidationResult => {
-  // Length check
-  if (username.length < 3 || username.length > 30) {
-    return { isValid: false, error: 'Username must be between 3 and 30 characters' };
-  }
-
-  // Character validation - only alphanumeric, underscore, and hyphen
-  const usernameRegex = /^[a-zA-Z0-9_-]+$/;
-  if (!usernameRegex.test(username)) {
-    return { isValid: false, error: 'Username can only contain letters, numbers, underscores, and hyphens' };
-  }
-
-  // Must start with letter or number
-  if (!/^[a-zA-Z0-9]/.test(username)) {
-    return { isValid: false, error: 'Username must start with a letter or number' };
-  }
-
-  // Prevent reserved usernames
-  const reservedUsernames = [
-    'admin', 'administrator', 'mod', 'moderator', 'root', 'system',
-    'support', 'help', 'api', 'www', 'mail', 'email', 'user', 'users',
-    'test', 'guest', 'null', 'undefined', 'false', 'true'
+  // Check for suspicious patterns
+  const suspiciousPatterns = [
+    /[<>'"]/,  // HTML/script injection
+    /javascript:/i,  // JavaScript protocol
+    /data:/i,  // Data protocol
+    /vbscript:/i,  // VBScript protocol
   ];
 
-  if (reservedUsernames.includes(username.toLowerCase())) {
-    return { isValid: false, error: 'This username is reserved and cannot be used' };
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(email)) {
+      return { isValid: false, error: 'Email contiene caracteres no válidos' };
+    }
+  }
+
+  return { isValid: true, sanitizedValue: email.toLowerCase().trim() };
+};
+
+export const validatePassword = (password: string): ValidationResult => {
+  if (!password) {
+    return { isValid: false, error: 'Contraseña es requerida' };
+  }
+
+  if (password.length < 8) {
+    return { isValid: false, error: 'La contraseña debe tener al menos 8 caracteres' };
+  }
+
+  if (password.length > 128) {
+    return { isValid: false, error: 'La contraseña es demasiado larga' };
+  }
+
+  // Check for at least one uppercase letter
+  if (!/[A-Z]/.test(password)) {
+    return { isValid: false, error: 'La contraseña debe contener al menos una letra mayúscula' };
+  }
+
+  // Check for at least one lowercase letter
+  if (!/[a-z]/.test(password)) {
+    return { isValid: false, error: 'La contraseña debe contener al menos una letra minúscula' };
+  }
+
+  // Check for at least one number
+  if (!/[0-9]/.test(password)) {
+    return { isValid: false, error: 'La contraseña debe contener al menos un número' };
+  }
+
+  // Check for at least one special character
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return { isValid: false, error: 'La contraseña debe contener al menos un carácter especial' };
+  }
+
+  // Check for common weak passwords
+  const commonPasswords = [
+    'password', '12345678', 'qwerty123', 'password123', 
+    'admin123', 'letmein123', 'welcome123', 'changeme123'
+  ];
+
+  if (commonPasswords.includes(password.toLowerCase())) {
+    return { isValid: false, error: 'Contraseña demasiado común, elige una más segura' };
   }
 
   return { isValid: true };
 };
 
-export const sanitizeInput = (input: string, maxLength: number = 255): string => {
-  return input
-    .trim()
-    .replace(/[<>'"&]/g, '') // Remove potentially dangerous characters
-    .substring(0, maxLength);
+export const sanitizeTextInput = (input: string, maxLength: number = 1000): ValidationResult => {
+  if (!input) {
+    return { isValid: true, sanitizedValue: '' };
+  }
+
+  if (input.length > maxLength) {
+    return { isValid: false, error: `Texto demasiado largo (máximo ${maxLength} caracteres)` };
+  }
+
+  // Sanitize HTML and remove dangerous scripts
+  const sanitized = DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [],
+    KEEP_CONTENT: true
+  });
+
+  return { isValid: true, sanitizedValue: sanitized.trim() };
 };
 
-export const sanitizeTextInput = (input: string, maxLength?: number): string => {
-  return sanitizeInput(input, maxLength);
-};
+export const validateImageFile = (file: File): ValidationResult => {
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-export const validatePhoneNumber = (phone: string): ValidationResult => {
-  // Remove all non-numeric characters
-  const cleanPhone = phone.replace(/\D/g, '');
-  
-  // Check length (assuming international format)
-  if (cleanPhone.length < 10 || cleanPhone.length > 15) {
-    return { isValid: false, error: 'Phone number must be between 10 and 15 digits' };
+  if (!file) {
+    return { isValid: false, error: 'Archivo es requerido' };
+  }
+
+  if (file.size > maxSize) {
+    return { isValid: false, error: 'Archivo demasiado grande (máximo 10MB)' };
+  }
+
+  if (!allowedTypes.includes(file.type)) {
+    return { isValid: false, error: 'Tipo de archivo no permitido (solo JPG, PNG, WebP)' };
+  }
+
+  // Check file name for suspicious patterns
+  const suspiciousPatterns = [
+    /\.php$/i, /\.js$/i, /\.html$/i, /\.exe$/i, /\.bat$/i, /\.cmd$/i
+  ];
+
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(file.name)) {
+      return { isValid: false, error: 'Nombre de archivo no válido' };
+    }
   }
 
   return { isValid: true };
 };
 
-export const validateNumericInput = (
-  value: any, 
-  min: number, 
-  max: number, 
-  fieldName: string
-): ValidationResult => {
-  const numValue = Number(value);
-  
+export const validateNumericInput = (value: string, min?: number, max?: number): ValidationResult => {
+  if (!value) {
+    return { isValid: false, error: 'Valor es requerido' };
+  }
+
+  const numValue = parseFloat(value);
+
   if (isNaN(numValue)) {
-    return { isValid: false, error: `${fieldName} must be a valid number` };
+    return { isValid: false, error: 'Debe ser un número válido' };
   }
-  
-  if (numValue < min || numValue > max) {
-    return { isValid: false, error: `${fieldName} must be between ${min} and ${max}` };
+
+  if (min !== undefined && numValue < min) {
+    return { isValid: false, error: `Valor mínimo: ${min}` };
   }
-  
-  return { isValid: true };
+
+  if (max !== undefined && numValue > max) {
+    return { isValid: false, error: `Valor máximo: ${max}` };
+  }
+
+  return { isValid: true, sanitizedValue: numValue.toString() };
+};
+
+export const validateUrl = (url: string): ValidationResult => {
+  if (!url) {
+    return { isValid: true, sanitizedValue: '' };
+  }
+
+  try {
+    const urlObj = new URL(url);
+    
+    // Only allow http and https protocols
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      return { isValid: false, error: 'Solo se permiten URLs HTTP/HTTPS' };
+    }
+
+    return { isValid: true, sanitizedValue: url };
+  } catch {
+    return { isValid: false, error: 'URL no válida' };
+  }
 };
