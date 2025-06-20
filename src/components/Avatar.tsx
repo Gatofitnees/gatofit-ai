@@ -36,6 +36,12 @@ const Avatar: React.FC<AvatarProps> = ({
     lg: "w-7 h-7",
   };
 
+  const crownPositions = {
+    sm: "-top-0.5 -right-0.5",
+    md: "-top-1 -right-1",
+    lg: "-top-1.5 -right-1.5",
+  };
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -109,9 +115,9 @@ const Avatar: React.FC<AvatarProps> = ({
         )}
       </div>
       
-      {/* Premium Crown - Positioned at top-right corner, rotated 45 degrees */}
+      {/* Premium Crown - Positioned outside the avatar at top-right corner */}
       {isPremium && (
-        <div className="absolute -top-1 -right-1 z-10">
+        <div className={cn("absolute z-10", crownPositions[size])}>
           <div className="relative">
             <Crown 
               className={cn(
