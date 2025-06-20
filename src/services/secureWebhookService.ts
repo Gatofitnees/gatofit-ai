@@ -1,4 +1,5 @@
 
+
 import { validateWebhookPayload, validateWebhookResponse } from '@/utils/enhancedSecurityValidation';
 import { securityConfig, isWebhookEnabled } from '@/utils/secureConfig';
 import { webhookRateLimiter, sanitizeUserInput } from '@/utils/securityMiddleware';
@@ -160,7 +161,7 @@ export const sendSecureWebhookRequest = async (
 
     // Enhanced fetch configuration with stricter security
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced to 15 seconds
+    const timeoutId = setTimeout(() => controller.abort(), securityConfig.urls.webhookTimeout);
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -350,3 +351,4 @@ export const validateImageUrl = (url: string): boolean => {
     return false;
   }
 };
+
