@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import ProgressRing from "./ProgressRing";
 import { cn } from "@/lib/utils";
@@ -30,15 +31,9 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   const crownSizes = {
-    sm: "w-5 h-5",
-    md: "w-7 h-7",
-    lg: "w-8 h-8",
-  };
-
-  const crownPositions = {
-    sm: "top-0 right-0 transform translate-x-1 -translate-y-1",
-    md: "top-0 right-0 transform translate-x-1.5 -translate-y-1.5",
-    lg: "top-0 right-0 transform translate-x-2 -translate-y-2",
+    sm: "w-3 h-3",
+    md: "w-4 h-4",
+    lg: "w-5 h-5",
   };
 
   const initials = name
@@ -114,9 +109,9 @@ const Avatar: React.FC<AvatarProps> = ({
         )}
       </div>
       
-      {/* Premium Crown - Positioned outside the avatar at top-right corner */}
+      {/* Premium Crown - Positioned at top-right corner, rotated 45 degrees */}
       {isPremium && (
-        <div className={cn("absolute z-10", crownPositions[size])}>
+        <div className="absolute -top-1 -right-1 z-10">
           <div className="relative">
             <Crown 
               className={cn(
