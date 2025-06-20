@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Camera, Image as ImageIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
