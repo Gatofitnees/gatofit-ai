@@ -1,6 +1,6 @@
 
 import { validateWebhookPayload, validateWebhookResponse } from '@/utils/enhancedSecurityValidation';
-import { secureConfig, isWebhookEnabled } from '@/utils/secureConfig';
+import { securityConfig, isWebhookEnabled } from '@/utils/secureConfig';
 import { webhookRateLimiter, sanitizeUserInput } from '@/utils/securityMiddleware';
 import { logSecurityEvent } from '@/utils/securityLogger';
 
@@ -96,9 +96,8 @@ export const sendSecureWebhookRequest = async (
       return { success: false, error: 'Private network URLs are not allowed for security reasons' };
     }
 
-    // Get webhook URL from secure config - remove hardcoded fallback
-    const config = secureConfig.getConfig();
-    const webhookUrl = config.webhookUrl;
+    // Get webhook URL from environment variable
+    const webhookUrl = import.meta.env.VITE_WEBHOOK_URL;
     
     if (!webhookUrl) {
       logSecurityEvent({
