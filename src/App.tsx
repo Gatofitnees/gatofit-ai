@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
@@ -26,7 +25,6 @@ import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
 import WorkoutSummaryPage from "./pages/WorkoutSummaryPage";
 import { FoodEditPage } from "./pages/FoodEditPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
-import { useEffect } from 'react';
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
 
 function App() {

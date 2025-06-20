@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logSecurityEvent } from './securityLogger';
+import { securityConfig } from './secureConfig';
 
 interface WebhookPayload {
   prompt: string;
@@ -101,7 +102,7 @@ class SecureWebhookService {
 
       // Make secure request with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      const timeoutId = setTimeout(() => controller.abort(), securityConfig.urls.webhookTimeout);
 
       const response = await fetch(this.baseUrl, {
         method: 'POST',
@@ -156,26 +157,26 @@ class SecureWebhookService {
         timestamp: new Date().toISOString(),
         eventType: 'webhook_error',
         details: errorMessage,
-        severity: retryCount >= this.maxRetries ? 'high' : 'medium',
+        severity: retryCount >= securityConfig.urls.maxRetries ? 'high' : 'medium',
         userId: payload.userId,
         userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
         location: typeof window !== 'undefined' ? window.location.href : undefined
       });
 
       // Retry logic for network errors
-      if (retryCount < this.maxRetries && (
+      if (retryCount < securityConfig.urls.maxRetries && (
         error.name === 'AbortError' || 
         error.message.includes('network') ||
         error.message.includes('timeout')
       )) {
-        console.log(`Retrying webhook (attempt ${retryCount + 1}/${this.maxRetries})`);
+        console.log(`Retrying webhook (attempt ${retryCount + 1}/${securityConfig.urls.maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
         return this.sendSecureWebhook(payload, retryCount + 1);
       }
 
       return { 
         success: false, 
-        error: retryCount >= this.maxRetries ? 
+        error: retryCount >= securityConfig.urls.maxRetries ? 
           'Servicio temporalmente no disponible' : 
           'Error de conexión'
       };

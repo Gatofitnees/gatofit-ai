@@ -46,7 +46,7 @@ export const useEnhancedValidation = () => {
           break;
 
         case 'weight':
-          const weightResult = validateNumericInput(value, 20, 500, 'Weight');
+          const weightResult = validateNumericInput(value, 20, 500);
           if (!weightResult.isValid) {
             error = weightResult.error || 'Invalid weight';
             isValid = false;
@@ -54,7 +54,7 @@ export const useEnhancedValidation = () => {
           break;
 
         case 'height':
-          const heightResult = validateNumericInput(value, 50, 300, 'Height');
+          const heightResult = validateNumericInput(value, 50, 300);
           if (!heightResult.isValid) {
             error = heightResult.error || 'Invalid height';
             isValid = false;
@@ -62,7 +62,7 @@ export const useEnhancedValidation = () => {
           break;
 
         case 'bodyFat':
-          const bodyFatResult = validateNumericInput(value, 1, 50, 'Body fat percentage');
+          const bodyFatResult = validateNumericInput(value, 1, 50);
           if (!bodyFatResult.isValid) {
             error = bodyFatResult.error || 'Invalid body fat percentage';
             isValid = false;
@@ -102,7 +102,8 @@ export const useEnhancedValidation = () => {
   };
 
   const sanitizeInput = (input: string, maxLength?: number): string => {
-    return sanitizeTextInput(input, maxLength);
+    const result = sanitizeTextInput(input, maxLength);
+    return result.sanitizedValue || '';
   };
 
   const hasValidationErrors = (): boolean => {
