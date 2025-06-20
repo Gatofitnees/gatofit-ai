@@ -109,9 +109,9 @@ const Avatar: React.FC<AvatarProps> = ({
         )}
       </div>
       
-      {/* Premium Crown - Positioned at top-left corner, rotated 45 degrees */}
+      {/* Premium Crown - Positioned at top-right corner, rotated 45 degrees */}
       {isPremium && (
-        <div className="absolute -top-1 -left-1 z-10">
+        <div className="absolute -top-1 -right-1 z-10">
           <div className="relative">
             <Crown 
               className={cn(
