@@ -115,25 +115,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         return { error, data: null };
       }
 
-      // Create profile record
-      if (data.user) {
-        const { error: profileError } = await supabase.from("profiles").insert([
-          {
-            id: data.user.id,
-          },
-        ]);
-
-        if (profileError) {
-          const secureError = createSecureErrorMessage(profileError, 'database');
-          logSecurityEvent('profile_creation_failed', profileError.message, data.user.id);
-          toast({
-            title: "Error al crear perfil",
-            description: secureError,
-            variant: "destructive",
-          });
-          return { error: profileError, data: null };
-        }
-      }
+      // Profile creation is now handled automatically by database trigger
+      // No need to manually create profile here anymore
 
       toast({
         title: "Cuenta creada",

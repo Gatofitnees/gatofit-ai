@@ -80,6 +80,9 @@ export const useEnhancedAuth = () => {
         return { success: false, error: error.message };
       }
 
+      // Profile creation is now handled automatically by database trigger
+      // No need to manually create profile here anymore
+
       logAuthEvent('signup_success', undefined, 'low', email);
       return { 
         success: true, 
@@ -126,7 +129,7 @@ export const useEnhancedAuth = () => {
       if (data.user) {
         logAuthEvent('signin_success', data.user.id, 'low', email);
         
-        // Ensure user has profile and subscription
+        // Ensure user has profile and subscription (fallback in case trigger didn't work)
         await supabase.rpc('ensure_user_subscription', { p_user_id: data.user.id });
       }
 
