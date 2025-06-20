@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import ProgressRing from "./ProgressRing";
 import { cn } from "@/lib/utils";
+import { Crown } from "lucide-react";
 
 interface AvatarProps {
   src?: string;
@@ -27,6 +28,12 @@ const Avatar: React.FC<AvatarProps> = ({
     sm: "w-10 h-10 text-xs",
     md: "w-16 h-16 text-sm",
     lg: "w-20 h-20 text-base",
+  };
+
+  const crownSizes = {
+    sm: "w-3 h-3",
+    md: "w-4 h-4",
+    lg: "w-5 h-5",
   };
 
   const initials = name
@@ -101,6 +108,33 @@ const Avatar: React.FC<AvatarProps> = ({
           <span className="font-medium text-gray-200">{initials}</span>
         )}
       </div>
+      
+      {/* Premium Crown - Positioned at top-left corner, rotated 45 degrees */}
+      {isPremium && (
+        <div className="absolute -top-1 -left-1 z-10">
+          <div className="relative">
+            <Crown 
+              className={cn(
+                crownSizes[size],
+                "text-yellow-400 transform rotate-45 drop-shadow-lg"
+              )}
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
+              }}
+            />
+            {/* Subtle glow effect */}
+            <Crown 
+              className={cn(
+                crownSizes[size],
+                "absolute top-0 left-0 text-yellow-300 transform rotate-45 opacity-60"
+              )}
+              style={{
+                filter: 'blur(2px)'
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

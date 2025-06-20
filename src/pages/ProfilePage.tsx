@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Settings, Share2, User, Calendar, TrendingUp, CheckCircle, Info } from 'lucide-react';
@@ -8,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useProfileContext } from '@/contexts/ProfileContext';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/subscription';
 import ProfileStats from '@/components/profile/ProfileStats';
 import AvatarUpload from '@/components/profile/AvatarUpload';
 import BodyMeasurements from '@/components/profile/BodyMeasurements';
@@ -20,6 +20,7 @@ const ProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { profile, loading, updateProfile } = useProfileContext();
   const { stats, loading: statsLoading } = useUserStats(user?.id);
+  const { isPremium } = useSubscription();
   const { toast } = useToast();
   
   const [fullName, setFullName] = useState('');
@@ -209,6 +210,7 @@ const ProfilePage: React.FC = () => {
           currentAvatar={displayAvatar}
           userName={displayName}
           onAvatarUpdate={handleAvatarUpdate}
+          isPremium={isPremium}
         />
       </div>
 

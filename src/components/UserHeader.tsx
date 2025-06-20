@@ -8,7 +8,7 @@ import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-rea
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscription } from "@/hooks/subscription";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
