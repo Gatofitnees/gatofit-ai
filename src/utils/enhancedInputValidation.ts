@@ -38,6 +38,30 @@ export const validateEmail = (email: string): ValidationResult => {
   return { isValid: true, sanitizedValue: email.toLowerCase().trim() };
 };
 
+// Add alias for secure email validation
+export const validateSecureEmail = validateEmail;
+
+export const validateSecureUsername = (username: string): ValidationResult => {
+  if (!username) {
+    return { isValid: false, error: 'Nombre de usuario es requerido' };
+  }
+
+  if (username.length < 3) {
+    return { isValid: false, error: 'Nombre de usuario debe tener al menos 3 caracteres' };
+  }
+
+  if (username.length > 30) {
+    return { isValid: false, error: 'Nombre de usuario demasiado largo' };
+  }
+
+  // Allow only alphanumeric characters, underscores, and hyphens
+  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+    return { isValid: false, error: 'Nombre de usuario contiene caracteres no válidos' };
+  }
+
+  return { isValid: true, sanitizedValue: username.trim() };
+};
+
 export const validatePassword = (password: string): ValidationResult => {
   if (!password) {
     return { isValid: false, error: 'Contraseña es requerida' };

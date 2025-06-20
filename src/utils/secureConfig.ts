@@ -58,6 +58,13 @@ export const securityConfig: SecurityConfig = {
   }
 };
 
+// Add alias for backward compatibility
+export const secureConfig = securityConfig;
+
+export const isWebhookEnabled = (): boolean => {
+  return !!(import.meta.env.VITE_WEBHOOK_URL || import.meta.env.VITE_WEBHOOK_ENABLED !== 'false');
+};
+
 export const getSecurityHeaders = (): Record<string, string> => {
   return {
     'Content-Security-Policy': [
