@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Camera, Image as ImageIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -33,15 +32,15 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   };
 
   const crownSizes = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8'
+    sm: 'w-5 h-5',
+    md: 'w-7 h-7',
+    lg: 'w-9 h-9'
   };
 
   const crownPositions = {
-    sm: '-top-0.5 -right-0.5',
-    md: '-top-1 -right-1',
-    lg: '-top-2 -right-2'
+    sm: 'top-0 right-0 transform translate-x-1 -translate-y-1',
+    md: 'top-0 right-0 transform translate-x-1.5 -translate-y-1.5',
+    lg: 'top-0 right-0 transform translate-x-2 -translate-y-2'
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {

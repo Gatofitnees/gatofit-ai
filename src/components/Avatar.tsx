@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import ProgressRing from "./ProgressRing";
 import { cn } from "@/lib/utils";
@@ -31,15 +30,15 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   const crownSizes = {
-    sm: "w-4 h-4",
-    md: "w-6 h-6",
-    lg: "w-7 h-7",
+    sm: "w-5 h-5",
+    md: "w-7 h-7",
+    lg: "w-8 h-8",
   };
 
   const crownPositions = {
-    sm: "-top-0.5 -right-0.5",
-    md: "-top-1 -right-1",
-    lg: "-top-1.5 -right-1.5",
+    sm: "top-0 right-0 transform translate-x-1 -translate-y-1",
+    md: "top-0 right-0 transform translate-x-1.5 -translate-y-1.5",
+    lg: "top-0 right-0 transform translate-x-2 -translate-y-2",
   };
 
   const initials = name
