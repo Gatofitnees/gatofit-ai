@@ -21,19 +21,31 @@ const RankingPage: React.FC = () => {
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-6">Ranking</h1>
       
-      {/* Compact Streak Card */}
-      <Card className="mb-6 bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-200/20">
-        <CardBody className="py-4">
+      {/* Compact Streak Card with Animated Background */}
+      <Card className="mb-6 relative overflow-hidden border-orange-200/20">
+        {/* Animated GIF Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30"
+          style={{
+            backgroundImage: `url('https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/animaciones/gato%20banner.gif')`
+          }}
+        />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20" />
+        
+        {/* Content */}
+        <CardBody className="py-4 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Flame className="h-8 w-8 text-orange-500" />
-              <span className="text-3xl font-bold text-orange-500">
+              <Flame className="h-8 w-8 text-orange-500 drop-shadow-sm" />
+              <span className="text-3xl font-bold text-orange-500 drop-shadow-sm">
                 {streakLoading ? '...' : streakData?.current_streak || 0}
               </span>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium">Racha Actual</p>
-              <p className="text-xs text-muted-foreground">Días consecutivos</p>
+              <p className="text-sm font-medium drop-shadow-sm">Racha Actual</p>
+              <p className="text-xs text-muted-foreground drop-shadow-sm">Días consecutivos</p>
             </div>
           </div>
         </CardBody>
