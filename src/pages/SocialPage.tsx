@@ -11,7 +11,6 @@ import { useRankings } from '@/hooks/useRankings';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useFollowersList } from '@/hooks/useFollowersList';
 import { useAuth } from '@/contexts/AuthContext';
-import { useBatchPremiumCheck } from '@/hooks/useBatchPremiumCheck';
 
 const SocialPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,10 +21,6 @@ const SocialPage: React.FC = () => {
   const { stats } = useUserStats(user?.id);
   const { followers, following, isLoading: followersLoading } = useFollowersList(user?.id);
   const navigate = useNavigate();
-
-  // Verificar premium para usuarios del ranking
-  const rankingUserIds = rankings.map(user => user.user_id);
-  const { premiumStatuses } = useBatchPremiumCheck(rankingUserIds);
 
   console.log('🌟 SocialPage rankings:', rankings);
   console.log('📊 SocialPage rankings count:', rankings?.length || 0);
@@ -91,10 +86,10 @@ const SocialPage: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div 
-          className="cursor-pointer transition-transform duration-200 hover:scale-105"
+          className="cursor-pointer"
           onClick={handleFollowersClick}
         >
-          <Card className="hover:shadow-md transition-shadow animate-fade-in">
+          <Card className="hover:shadow-md transition-shadow">
             <CardBody className="text-center py-4">
               <div className="text-2xl font-bold">{stats?.followers_count || 0}</div>
               <div className="text-xs text-muted-foreground">Seguidores</div>
@@ -103,10 +98,10 @@ const SocialPage: React.FC = () => {
         </div>
         
         <div 
-          className="cursor-pointer transition-transform duration-200 hover:scale-105"
+          className="cursor-pointer"
           onClick={handleFollowingClick}
         >
-          <Card className="hover:shadow-md transition-shadow animate-fade-in">
+          <Card className="hover:shadow-md transition-shadow">
             <CardBody className="text-center py-4">
               <div className="text-2xl font-bold">{stats?.following_count || 0}</div>
               <div className="text-xs text-muted-foreground">Siguiendo</div>
@@ -117,7 +112,7 @@ const SocialPage: React.FC = () => {
 
       {/* Inline Followers/Following Lists */}
       {showFollowers && (
-        <div className="mb-6 animate-scale-in">
+        <div className="mb-6">
           <FollowersInlineList
             followers={followers}
             title="Seguidores"
@@ -125,7 +120,7 @@ const SocialPage: React.FC = () => {
           />
           <button 
             onClick={handleHideLists}
-            className="w-full mt-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+            className="w-full mt-2 text-sm text-muted-foreground hover:text-foreground"
           >
             Ocultar
           </button>
@@ -133,7 +128,7 @@ const SocialPage: React.FC = () => {
       )}
 
       {showFollowing && (
-        <div className="mb-6 animate-scale-in">
+        <div className="mb-6">
           <FollowersInlineList
             followers={following}
             title="Siguiendo"
@@ -141,7 +136,7 @@ const SocialPage: React.FC = () => {
           />
           <button 
             onClick={handleHideLists}
-            className="w-full mt-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+            className="w-full mt-2 text-sm text-muted-foreground hover:text-foreground"
           >
             Ocultar
           </button>
@@ -149,7 +144,7 @@ const SocialPage: React.FC = () => {
       )}
 
       {/* Top Users */}
-      <Card className="mb-6 animate-fade-in">
+      <Card className="mb-6">
         <CardBody>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-primary" />
@@ -176,36 +171,30 @@ const SocialPage: React.FC = () => {
             </p>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
-              {topUsers.map((rankingUser, index) => {
-                const isPremium = premiumStatuses[rankingUser.user_id] || false;
-                
-                return (
-                  <div 
-                    key={rankingUser.user_id} 
-                    className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-all duration-200 active:bg-muted/30 hover:scale-[1.02] animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                    onClick={() => handleUserClick(rankingUser.user_id)}
-                  >
-                    <div className="flex items-center gap-2 min-w-[32px]">
-                      <span className="text-sm font-bold text-muted-foreground">
-                        #{index + 1}
-                      </span>
-                    </div>
-                    
-                    <Avatar
-                      name={rankingUser.username}
-                      size="sm"
-                      src={rankingUser.avatar_url}
-                      isPremium={isPremium}
-                    />
-                    
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{rankingUser.username}</p>
-                      <RankBadge level={rankingUser.current_level} size="sm" showLevelWithRank={true} />
-                    </div>
+              {topUsers.map((rankingUser, index) => (
+                <div 
+                  key={rankingUser.user_id} 
+                  className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors active:bg-muted/30"
+                  onClick={() => handleUserClick(rankingUser.user_id)}
+                >
+                  <div className="flex items-center gap-2 min-w-[32px]">
+                    <span className="text-sm font-bold text-muted-foreground">
+                      #{index + 1}
+                    </span>
                   </div>
-                );
-              })}
+                  
+                  <Avatar
+                    name={rankingUser.username}
+                    size="sm"
+                    src={rankingUser.avatar_url}
+                  />
+                  
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{rankingUser.username}</p>
+                    <RankBadge level={rankingUser.current_level} size="sm" showLevelWithRank={true} />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardBody>
@@ -213,7 +202,7 @@ const SocialPage: React.FC = () => {
 
       {/* Search Results */}
       {searchQuery && (
-        <Card className="animate-scale-in">
+        <Card>
           <CardBody>
             <h3 className="font-semibold mb-4">
               Resultados de búsqueda ({filteredUsers.length})
@@ -225,34 +214,29 @@ const SocialPage: React.FC = () => {
               </p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {filteredUsers.map((rankingUser) => {
-                  const isPremium = premiumStatuses[rankingUser.user_id] || false;
-                  
-                  return (
-                    <div 
-                      key={rankingUser.user_id} 
-                      className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-all duration-200 active:bg-muted/30 hover:scale-[1.02] animate-fade-in"
-                      onClick={() => handleUserClick(rankingUser.user_id)}
-                    >
-                      <Avatar
-                        name={rankingUser.username}
-                        size="sm"
-                        src={rankingUser.avatar_url}
-                        isPremium={isPremium}
-                      />
-                      
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{rankingUser.username}</p>
-                        <div className="flex items-center gap-2">
-                          <RankBadge level={rankingUser.current_level} size="sm" showLevelWithRank={true} />
-                          <span className="text-xs text-muted-foreground">
-                            {rankingUser.current_streak} días racha
-                          </span>
-                        </div>
+                {filteredUsers.map((rankingUser) => (
+                  <div 
+                    key={rankingUser.user_id} 
+                    className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors active:bg-muted/30"
+                    onClick={() => handleUserClick(rankingUser.user_id)}
+                  >
+                    <Avatar
+                      name={rankingUser.username}
+                      size="sm"
+                      src={rankingUser.avatar_url}
+                    />
+                    
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{rankingUser.username}</p>
+                      <div className="flex items-center gap-2">
+                        <RankBadge level={rankingUser.current_level} size="sm" showLevelWithRank={true} />
+                        <span className="text-xs text-muted-foreground">
+                          {rankingUser.current_streak} días racha
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </CardBody>

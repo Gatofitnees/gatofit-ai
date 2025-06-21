@@ -7,7 +7,6 @@ import WorkoutCarousel from "./WorkoutCarousel";
 import PromoVideoCard from "./PromoVideoCard";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDynamicHeight } from "@/hooks/useDynamicHeight";
 
 interface WorkoutSummary {
   id?: number;
@@ -37,22 +36,8 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
 }) => {
   const [currentWorkoutIndex, setCurrentWorkoutIndex] = useState(0);
 
-  // Crear array de elementos del carrusel: siempre incluir la tarjeta promocional como primer elemento
-  const carouselItems = [
-    { type: 'promo' as const },
-    ...workouts.map(workout => ({ type: 'workout' as const, data: workout }))
-  ];
-
-  const {
-    currentHeight,
-    containerRef,
-    setItemRef,
-    handleSlideChange
-  } = useDynamicHeight(carouselItems.length);
-
-  const handleSlideChangeInternal = (index: number) => {
+  const handleSlideChange = (index: number) => {
     setCurrentWorkoutIndex(index);
-    handleSlideChange(index);
   };
 
   if (loading) {
@@ -159,50 +144,41 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
     </Card>
   );
 
+  // Crear array de elementos del carrusel: siempre incluir la tarjeta promocional como primer elemento
+  const carouselItems = [
+    { type: 'promo' as const },
+    ...workouts.map(workout => ({ type: 'workout' as const, data: workout }))
+  ];
+
   const totalItems = carouselItems.length;
 
   return (
     <div className="mb-5">
       <div className="space-y-3">
-        {/* Contenedor con altura dinámica */}
-        <div 
-          ref={containerRef}
-          className="transition-all duration-300 ease-in-out"
-          style={{ 
-            height: currentHeight > 0 ? `${currentHeight}px` : 'auto',
-            minHeight: currentHeight > 0 ? `${currentHeight}px` : 'auto'
-          }}
+        <WorkoutCarousel 
+          items={carouselItems}
+          onSlideChange={handleSlideChange}
         >
-          <WorkoutCarousel 
-            items={carouselItems}
-            onSlideChange={handleSlideChangeInternal}
-          >
-            {(item, index, total) => (
-              <div 
-                ref={setItemRef(index)}
-                className="animate-fade-in"
-              >
-                {item.type === 'promo' ? (
-                  <PromoVideoCard onStartWorkout={onStartWorkout} />
-                ) : (
-                  renderCompletedWorkoutCard(item.data, index - 1, total - 1)
-                )}
-              </div>
-            )}
-          </WorkoutCarousel>
-        </div>
+          {(item, index, total) => {
+            if (item.type === 'promo') {
+              return <PromoVideoCard onStartWorkout={onStartWorkout} />;
+            } else {
+              return renderCompletedWorkoutCard(item.data, index - 1, total - 1);
+            }
+          }}
+        </WorkoutCarousel>
         
         {/* Indicadores del carrusel */}
         {totalItems > 1 && (
-          <div className="flex items-center justify-center gap-1 transition-all duration-300 ease-in-out animate-fade-in">
+          <div className="flex items-center justify-center gap-1">
             {carouselItems.map((_, index) => (
               <div
                 key={index}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-all duration-300",
+                  "w-2 h-2 rounded-full transition-colors",
                   index === currentWorkoutIndex 
-                    ? "bg-primary scale-110" 
-                    : "bg-muted hover:bg-muted/70"
+                    ? "bg-primary" 
+                    : "bg-muted"
                 )}
               />
             ))}

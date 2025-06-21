@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody } from '@/components/Card';
 import Avatar from '@/components/Avatar';
-import { useBatchPremiumCheck } from '@/hooks/useBatchPremiumCheck';
 
 interface FollowerUser {
   id: string;
@@ -24,10 +23,6 @@ const FollowersInlineList: React.FC<FollowersInlineListProps> = ({
   isLoading = false
 }) => {
   const navigate = useNavigate();
-  
-  // Extraer IDs de usuarios para verificación premium
-  const userIds = followers.map(user => user.id);
-  const { premiumStatuses, isLoading: premiumLoading } = useBatchPremiumCheck(userIds);
 
   const handleUserClick = (userId: string) => {
     navigate(`/public-profile/${userId}`);
@@ -60,35 +55,25 @@ const FollowersInlineList: React.FC<FollowersInlineListProps> = ({
           </div>
         ) : (
           <div className="space-y-3">
-            {followers.map((user) => {
-              const isPremium = premiumStatuses[user.id] || false;
-              
-              return (
-                <div
-                  key={user.id}
-                  className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-all duration-200 hover:scale-[1.02] animate-fade-in"
-                  onClick={() => handleUserClick(user.id)}
-                >
-                  <Avatar
-                    name={getDisplayName(user)}
-                    size="sm"
-                    src={user.avatar_url}
-                    isPremium={isPremium}
-                  />
-                  
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      {getDisplayName(user)}
-                    </p>
-                    {isPremium && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <span className="text-xs text-yellow-500 font-medium">Premium</span>
-                      </div>
-                    )}
-                  </div>
+            {followers.map((user) => (
+              <div
+                key={user.id}
+                className="flex items-center gap-3 cursor-pointer hover:bg-muted/20 rounded-lg p-2 -m-2 transition-colors"
+                onClick={() => handleUserClick(user.id)}
+              >
+                <Avatar
+                  name={getDisplayName(user)}
+                  size="sm"
+                  src={user.avatar_url}
+                />
+                
+                <div className="flex-1">
+                  <p className="font-medium text-sm">
+                    {getDisplayName(user)}
+                  </p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </CardBody>
