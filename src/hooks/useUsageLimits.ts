@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -21,23 +21,10 @@ export const useUsageLimits = () => {
   const [usage, setUsage] = useState<UsageLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const lastFetchRef = useRef<number>(0);
-  const FETCH_COOLDOWN = 1000; // 1 segundo de cooldown entre fetches
-
-  const shouldFetch = useCallback(() => {
-    const now = Date.now();
-    return now - lastFetchRef.current > FETCH_COOLDOWN;
-  }, []);
 
   const fetchUsage = useCallback(async () => {
-    if (!shouldFetch()) {
-      console.log('🚫 [USAGE LIMITS] Skipping fetch due to cooldown');
-      return;
-    }
-
     try {
       setIsLoading(true);
-      lastFetchRef.current = Date.now();
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -58,7 +45,6 @@ export const useUsageLimits = () => {
       if (data && data.length > 0) {
         setUsage(data[0]);
         console.log('✅ [USAGE LIMITS] Usage set:', data[0]);
-        console.log('📅 [USAGE LIMITS] Week start date from DB:', data[0].week_start_date);
       } else {
         await createInitialUsageRecord(user.id);
         // Recursive call after creating initial record
@@ -69,7 +55,7 @@ export const useUsageLimits = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [shouldFetch]);
+  }, []);
 
   const createInitialUsageRecord = async (userId: string) => {
     try {
@@ -108,6 +94,24 @@ export const useUsageLimits = () => {
 
       console.log(`📈 [USAGE LIMITS] Incrementing ${type} for user:`, user.id);
 
+      // Actualizar estado local inmediatamente (optimistic update)
+      if (usage) {
+        const fieldMap = {
+          'routines': 'routines_created',
+          'nutrition_photos': 'nutrition_photos_used',
+          'ai_chat_messages': 'ai_chat_messages_used'
+        };
+
+        const updatedUsage = {
+          ...usage,
+          [fieldMap[type]]: usage[fieldMap[type]] + 1
+        };
+        
+        setUsage(updatedUsage);
+        console.log('✅ [USAGE LIMITS] Local state updated optimistically:', updatedUsage);
+      }
+
+      // Incrementar en base de datos
       const { data, error } = await supabase.rpc('increment_usage_counter', {
         p_user_id: user.id,
         counter_type: type,
@@ -116,22 +120,21 @@ export const useUsageLimits = () => {
 
       if (error) {
         console.error('❌ [USAGE LIMITS] Error incrementing usage:', error);
+        // Revertir cambio optimista si falla
+        if (usage) {
+          setUsage(usage);
+        }
         throw error;
       }
 
-      console.log('✅ [USAGE LIMITS] Usage incremented successfully:', data);
-
-      // Refrescar datos después de incrementar
-      await fetchUsage();
-
+      console.log('✅ [USAGE LIMITS] Usage incremented successfully in DB:', data);
       return true;
     } catch (error) {
       console.error('❌ [USAGE LIMITS] Error incrementing usage:', error);
       return false;
     }
-  }, [fetchUsage]);
+  }, [usage]);
 
-  // Función optimizada que no siempre hace fetch
   const checkLimitWithoutFetch = useCallback((
     type: 'routines' | 'nutrition_photos' | 'ai_chat_messages',
     isPremium: boolean
@@ -161,7 +164,7 @@ export const useUsageLimits = () => {
     const limit = limits[type];
     const isOverLimit = currentUsage >= limit;
 
-    console.log(`🔍 [USAGE LIMITS] Check limit for ${type} (no fetch):`, {
+    console.log(`🔍 [USAGE LIMITS] Check limit for ${type}:`, {
       currentUsage,
       limit,
       isOverLimit,
@@ -178,64 +181,16 @@ export const useUsageLimits = () => {
   }, [usage]);
 
   const checkRoutineLimit = useCallback(async (isPremium: boolean): Promise<LimitCheck> => {
-    if (isPremium) {
-      return {
-        canProceed: true,
-        currentUsage: 0,
-        limit: -1,
-        isOverLimit: false
-      };
-    }
-
-    // Solo hacer fetch si no tenemos datos o son muy antiguos
-    if (!usage || !shouldFetch()) {
-      return checkLimitWithoutFetch('routines', isPremium);
-    }
-
-    console.log('🔄 [USAGE LIMITS] Fetching fresh data for routine limit check');
-    await fetchUsage();
     return checkLimitWithoutFetch('routines', isPremium);
-  }, [usage, shouldFetch, fetchUsage, checkLimitWithoutFetch]);
+  }, [checkLimitWithoutFetch]);
 
   const checkNutritionLimit = useCallback(async (isPremium: boolean): Promise<LimitCheck> => {
-    if (isPremium) {
-      return {
-        canProceed: true,
-        currentUsage: 0,
-        limit: -1,
-        isOverLimit: false
-      };
-    }
-
-    // Solo hacer fetch si no tenemos datos o son muy antiguos
-    if (!usage || !shouldFetch()) {
-      return checkLimitWithoutFetch('nutrition_photos', isPremium);
-    }
-
-    console.log('🔄 [USAGE LIMITS] Fetching fresh data for nutrition limit check');
-    await fetchUsage();
     return checkLimitWithoutFetch('nutrition_photos', isPremium);
-  }, [usage, shouldFetch, fetchUsage, checkLimitWithoutFetch]);
+  }, [checkLimitWithoutFetch]);
 
   const checkAIChatLimit = useCallback(async (isPremium: boolean): Promise<LimitCheck> => {
-    if (isPremium) {
-      return {
-        canProceed: true,
-        currentUsage: 0,
-        limit: -1,
-        isOverLimit: false
-      };
-    }
-
-    // Solo hacer fetch si no tenemos datos o son muy antiguos
-    if (!usage || !shouldFetch()) {
-      return checkLimitWithoutFetch('ai_chat_messages', isPremium);
-    }
-
-    console.log('🔄 [USAGE LIMITS] Fetching fresh data for AI chat limit check');
-    await fetchUsage();
     return checkLimitWithoutFetch('ai_chat_messages', isPremium);
-  }, [usage, shouldFetch, fetchUsage, checkLimitWithoutFetch]);
+  }, [checkLimitWithoutFetch]);
 
   const showLimitReachedToast = useCallback((type: 'routines' | 'nutrition_photos' | 'ai_chat_messages') => {
     const messages = {
@@ -254,7 +209,7 @@ export const useUsageLimits = () => {
   // Fetch inicial solo una vez
   useEffect(() => {
     fetchUsage();
-  }, []);
+  }, [fetchUsage]);
 
   return {
     usage,

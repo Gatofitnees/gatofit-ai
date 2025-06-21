@@ -1,60 +1,49 @@
 
-import { useState } from 'react';
-import { useAIChat } from '@/hooks/ai-chat';
+import { useState, useCallback } from 'react';
+import { useAIChat } from '@/hooks/ai-chat/useAIChat';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 
 export const useAIChatWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const aiChatHook = useAIChat();
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkAIChatLimit, showLimitReachedToast, fetchUsage } = useUsageLimits();
+  const { 
+    incrementUsage, 
+    checkAIChatLimit, 
+    showLimitReachedToast,
+    usage 
+  } = useUsageLimits();
+  const { messages, isLoading, sendMessage: originalSendMessage, clearMessages } = useAIChat();
 
-  const sendMessageWithLimitCheck = async (message: string) => {
-    console.log('🔍 [AI CHAT LIMITS] Verificando límites para enviar mensaje');
+  const sendMessage = useCallback(async (content: string) => {
+    console.log('🤖 [AI CHAT WITH LIMITS] Attempting to send message');
     
-    // Verificar límites con datos frescos
+    // Verificar límite antes de enviar
     const limitCheck = await checkAIChatLimit(isPremium);
-    console.log('🔍 [AI CHAT LIMITS] Resultado verificación (datos frescos):', limitCheck);
     
-    // Para usuarios premium, sin límites
-    if (isPremium) {
-      console.log('✅ [AI CHAT LIMITS] Usuario premium, enviando mensaje sin restricciones');
-      aiChatHook.sendMessage(message);
-      return;
-    }
-
-    // Para usuarios gratuitos, verificar si pueden enviar mensaje
     if (!limitCheck.canProceed) {
-      console.log('❌ [AI CHAT LIMITS] Límite alcanzado, mostrando modal premium');
+      console.log('🚫 [AI CHAT WITH LIMITS] Limit reached, showing premium modal');
       showLimitReachedToast('ai_chat_messages');
       setShowPremiumModal(true);
       return;
     }
 
     try {
-      console.log('📈 [AI CHAT LIMITS] Incrementando contador de uso');
-      const success = await incrementUsage('ai_chat_messages');
-      
-      if (success) {
-        console.log('✅ [AI CHAT LIMITS] Contador incrementado exitosamente');
-        // Enviar el mensaje inmediatamente después de incrementar
-        console.log('📤 [AI CHAT LIMITS] Enviando mensaje');
-        aiChatHook.sendMessage(message);
-      } else {
-        console.error('❌ [AI CHAT LIMITS] Error incrementando contador');
-        // Mostrar error al usuario
-        showLimitReachedToast('ai_chat_messages');
+      // Incrementar uso primero si no es premium
+      if (!isPremium) {
+        console.log('📈 [AI CHAT WITH LIMITS] Incrementing AI chat usage');
+        await incrementUsage('ai_chat_messages');
       }
-    } catch (error) {
-      console.error('❌ [AI CHAT LIMITS] Error enviando mensaje:', error);
-      // Mostrar error al usuario
-      showLimitReachedToast('ai_chat_messages');
-    }
-  };
 
-  const getAIChatUsageInfo = async () => {
-    // Obtener información fresca de límites
+      // Enviar mensaje
+      await originalSendMessage(content);
+      console.log('✅ [AI CHAT WITH LIMITS] Message sent successfully');
+    } catch (error) {
+      console.error('❌ [AI CHAT WITH LIMITS] Error sending message:', error);
+    }
+  }, [checkAIChatLimit, isPremium, showLimitReachedToast, incrementUsage, originalSendMessage]);
+
+  const getAIChatUsageInfo = useCallback(async () => {
     const limitCheck = await checkAIChatLimit(isPremium);
     return {
       current: limitCheck.currentUsage,
@@ -62,14 +51,17 @@ export const useAIChatWithLimits = () => {
       canSend: limitCheck.canProceed,
       isOverLimit: limitCheck.isOverLimit
     };
-  };
+  }, [checkAIChatLimit, isPremium]);
 
   return {
-    ...aiChatHook,
-    sendMessage: sendMessageWithLimitCheck,
-    getAIChatUsageInfo,
+    messages,
+    isLoading,
+    sendMessage,
+    clearMessages,
     showPremiumModal,
     setShowPremiumModal,
-    isPremium
+    getAIChatUsageInfo,
+    isPremium,
+    usage
   };
 };
