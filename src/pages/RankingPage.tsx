@@ -25,22 +25,21 @@ const RankingPage: React.FC = () => {
       <Card className="mb-6 relative overflow-hidden border-orange-200/20">
         {/* Animated GIF Background */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-70"
+          className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: `url('https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/animaciones/gato%20banner.gif')`
           }}
         />
         
-        {/* Reduced Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10" />
-        
         {/* Content */}
         <CardBody className="py-4 relative z-10">
-          <div className="flex items-center justify-center gap-3">
-            <Flame className="h-8 w-8 text-orange-500 drop-shadow-lg filter brightness-125" />
-            <span className="text-3xl font-bold text-orange-500 drop-shadow-lg filter brightness-125">
-              {streakLoading ? '...' : streakData?.current_streak || 0}
-            </span>
+          <div className="flex flex-col items-start ml-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Flame className="h-8 w-8 text-orange-500 drop-shadow-lg filter brightness-125" />
+              <span className="text-3xl font-bold text-orange-500 drop-shadow-lg filter brightness-125">
+                {streakLoading ? '...' : streakData?.current_streak || 0}
+              </span>
+            </div>
             <span className="text-lg font-semibold text-orange-400 drop-shadow-lg filter brightness-125">
               Racha Actual
             </span>
