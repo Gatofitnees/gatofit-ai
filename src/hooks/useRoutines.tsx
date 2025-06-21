@@ -13,6 +13,7 @@ interface WorkoutRoutine {
   exercise_count?: number;
   created_at: string;
   is_predefined?: boolean;
+  source_type?: 'created' | 'downloaded';
 }
 
 export const useRoutines = () => {
@@ -51,12 +52,18 @@ export const useRoutines = () => {
       }
 
       if (data) {
-        // Transform data to include exercise count and convert types
-        const formattedData = data.map(routine => ({
-          ...routine,
-          type: routine.type ? convertRoutineTypeToUi(routine.type) : 'General',
-          exercise_count: routine.routine_exercises?.[0]?.count || 0
-        }));
+        // Transform data to include exercise count, convert types, and detect source
+        const formattedData = data.map(routine => {
+          // Detectar si es una rutina descargada basándose en el nombre
+          const isDownloaded = routine.name.includes('(Copia)');
+          
+          return {
+            ...routine,
+            type: routine.type ? convertRoutineTypeToUi(routine.type) : 'General',
+            exercise_count: routine.routine_exercises?.[0]?.count || 0,
+            source_type: isDownloaded ? 'downloaded' as const : 'created' as const
+          };
+        });
         
         console.log("Routines fetched:", formattedData.length);
         setRoutines(formattedData);

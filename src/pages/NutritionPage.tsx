@@ -17,15 +17,18 @@ import { MealsList } from "@/components/nutrition/MealsList";
 import { UsageLimitsBanner } from "@/components/premium/UsageLimitsBanner";
 import { PremiumModal } from "@/components/premium/PremiumModal";
 import { useFoodCaptureWithLimits } from "@/hooks/useFoodCaptureWithLimits";
+import { useUsageLimitsRefresh } from "@/hooks/useUsageLimitsRefresh";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 10, canCapture: true, isOverLimit: false });
+  const [refreshKey, setRefreshKey] = useState(0);
   const { isPremium } = useSubscription();
   
   const { profile } = useProfile();
   const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(selectedDate.toISOString().split('T')[0]);
+  const { refreshUsageLimits } = useUsageLimitsRefresh();
   
   const { 
     isToday, 
@@ -58,10 +61,33 @@ const NutritionPage: React.FC = () => {
     }
   }, [isPremium, getNutritionUsageInfo]);
 
+  // Función para refrescar el contador
+  const refreshCounter = useCallback(async () => {
+    if (!isPremium) {
+      await refreshUsageLimits();
+      await loadUsageInfo();
+      setRefreshKey(prev => prev + 1);
+    }
+  }, [isPremium, refreshUsageLimits, loadUsageInfo]);
+
   // Cargar info de uso al montar y cuando cambie processingFoods
   useEffect(() => {
     loadUsageInfo();
-  }, [loadUsageInfo, processingFoods.length]);
+  }, [loadUsageInfo]);
+
+  // Refrescar contador cuando se complete el procesamiento
+  useEffect(() => {
+    const previousCount = processingFoods.length;
+    
+    // Si había comidas procesándose y ahora hay menos, significa que se completó una
+    if (previousCount > 0 && processingFoods.length < previousCount) {
+      const timer = setTimeout(() => {
+        refreshCounter();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [processingFoods.length, refreshCounter]);
 
   const handlePhotoTakenAndCloseCamera = async (photoBlob: Blob) => {
     setShowCamera(false);
@@ -90,7 +116,7 @@ const NutritionPage: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold">Nutrición</h1>
         {!isPremium && (
-          <UsageLimitsBanner type="nutrition" />
+          <UsageLimitsBanner type="nutrition" refreshKey={refreshKey} />
         )}
       </div>
       

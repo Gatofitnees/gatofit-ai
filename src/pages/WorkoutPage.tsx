@@ -23,6 +23,7 @@ const WorkoutPage: React.FC = () => {
     showPremiumModal,
     setShowPremiumModal,
     getRoutineUsageInfo,
+    deleteRoutine,
     isPremium
   } = useRoutinesWithLimits();
   
@@ -209,6 +210,7 @@ const WorkoutPage: React.FC = () => {
         loading={loading && !initializing}
         onStartWorkout={handleStartWorkout}
         onRoutineDeleted={handleRoutineDeleted}
+        onDeleteRoutine={deleteRoutine}
       />
       
       <div className="fixed right-4 bottom-20 z-30">

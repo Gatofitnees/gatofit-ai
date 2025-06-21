@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { Edit, MoreVertical, PlayCircle, Trash, Share2, EyeOff } from "lucide-react";
+import { Edit, MoreVertical, PlayCircle, Trash, Share2, EyeOff, Users } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuTrigger,
@@ -9,9 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/Card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useSharedRoutines } from "@/hooks/useSharedRoutines";
-import { toast } from "sonner";
 
 interface WorkoutListItemProps {
   routine: {
@@ -22,17 +21,20 @@ interface WorkoutListItemProps {
     exercise_count?: number;
     estimated_duration_minutes?: number;
     is_predefined?: boolean;
+    source_type?: 'created' | 'downloaded';
   };
   onStartWorkout: (routineId: number) => void;
   onRoutineDeleted: () => void;
+  onDeleteRoutine?: (routineId: number) => Promise<boolean>;
 }
 
 const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
   routine,
   onStartWorkout,
-  onRoutineDeleted
+  onRoutineDeleted,
+  onDeleteRoutine
 }) => {
-  const { toast: uiToast } = useToast();
+  const { toast } = useToast();
   const { publishRoutine, unpublishRoutine, checkIfPublished, isPublishing } = useSharedRoutines();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
@@ -58,36 +60,42 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
   const timeLabel = routine.estimated_duration_minutes
     ? `${routine.estimated_duration_minutes} min`
     : "15-30 min";
+
+  const isDownloaded = routine.source_type === 'downloaded';
     
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      toast.loading("Eliminando rutina...");
       
-      // With cascade deletion configured, we only need to delete the routine
-      // The database will automatically delete related workout_logs, routine_exercises, and exercise_details
-      const { error: routineError } = await supabase
-        .from('routines')
-        .delete()
-        .eq('id', routine.id);
-        
-      if (routineError) {
-        console.error("Error deleting routine:", routineError);
-        throw routineError;
+      let success = false;
+      if (onDeleteRoutine) {
+        // Usar el método del hook que maneja créditos
+        success = await onDeleteRoutine(routine.id);
+      } else {
+        // Fallback al método anterior
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { error: routineError } = await supabase
+          .from('routines')
+          .delete()
+          .eq('id', routine.id);
+          
+        if (routineError) {
+          console.error("Error deleting routine:", routineError);
+          throw routineError;
+        }
+        success = true;
       }
       
-      toast.dismiss();
-      uiToast({
-        title: "Rutina eliminada",
-        description: "La rutina y todos sus datos asociados han sido eliminados correctamente",
-        variant: "success"
-      });
-      
-      onRoutineDeleted();
+      if (success) {
+        toast({
+          title: "Rutina eliminada",
+          description: "La rutina ha sido eliminada correctamente",
+        });
+        onRoutineDeleted();
+      }
     } catch (error: any) {
       console.error("Error deleting routine:", error);
-      toast.dismiss();
-      uiToast({
+      toast({
         title: "Error",
         description: "No se pudo eliminar la rutina. Inténtalo de nuevo.",
         variant: "destructive"
@@ -118,13 +126,20 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
         <div className="p-4">
           {/* Título y Menú */}
           <div className="flex justify-between mb-1">
-            <h3 className="font-bold text-lg truncate">
-              {routine.name}
-            </h3>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <h3 className="font-bold text-lg truncate">
+                {routine.name}
+              </h3>
+              {isDownloaded && (
+                <div className="flex items-center justify-center w-5 h-5 bg-blue-100 rounded border border-blue-200 flex-shrink-0">
+                  <Users className="h-3 w-3 text-blue-600" />
+                </div>
+              )}
+            </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <button className="p-1 rounded-full hover:bg-secondary/30">
+                <button className="p-1 rounded-full hover:bg-secondary/30 flex-shrink-0">
                   <MoreVertical className="h-5 w-5 text-gray-500" />
                 </button>
               </DropdownMenuTrigger>
@@ -134,7 +149,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                     e.stopPropagation();
                     handleEditRoutine();
                   }}
-                  disabled={routine.is_predefined || isDeleting}
+                  disabled={routine.is_predefined || isDeleting || isDownloaded}
                   className="cursor-pointer"
                 >
                   <Edit className="mr-2 h-4 w-4" />
@@ -146,7 +161,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                     e.stopPropagation();
                     handlePublishToggle();
                   }}
-                  disabled={routine.is_predefined || isPublishing}
+                  disabled={routine.is_predefined || isPublishing || isDownloaded}
                   className="cursor-pointer"
                 >
                   {isPublished ? (
@@ -184,6 +199,11 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
             {isPublished && (
               <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
                 Publicada
+              </span>
+            )}
+            {isDownloaded && (
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                Comunidad
               </span>
             )}
           </div>
