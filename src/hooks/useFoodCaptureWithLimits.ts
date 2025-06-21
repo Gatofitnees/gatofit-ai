@@ -6,7 +6,7 @@ import { useUsageLimits } from '@/hooks/useUsageLimits';
 export const useFoodCaptureWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
+  const { checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
 
   const capturePhotoWithLimitCheck = useCallback(async () => {
     console.log('📸 [FOOD CAPTURE WITH LIMITS] Attempting to capture photo');
@@ -20,20 +20,9 @@ export const useFoodCaptureWithLimits = () => {
       return false;
     }
 
-    try {
-      // Incrementar uso inmediatamente si no es premium
-      if (!isPremium) {
-        console.log('📈 [FOOD CAPTURE WITH LIMITS] Incrementing nutrition usage');
-        await incrementUsage('nutrition_photos');
-      }
-      
-      console.log('✅ [FOOD CAPTURE WITH LIMITS] Photo capture allowed');
-      return true;
-    } catch (error) {
-      console.error('❌ [FOOD CAPTURE WITH LIMITS] Error in photo capture:', error);
-      return false;
-    }
-  }, [checkNutritionLimit, isPremium, showLimitReachedToast, incrementUsage]);
+    console.log('✅ [FOOD CAPTURE WITH LIMITS] Photo capture allowed');
+    return true;
+  }, [checkNutritionLimit, isPremium, showLimitReachedToast]);
 
   const getNutritionUsageInfo = useCallback(async () => {
     const limitCheck = await checkNutritionLimit(isPremium);

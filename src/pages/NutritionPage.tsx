@@ -58,10 +58,10 @@ const NutritionPage: React.FC = () => {
     }
   }, [isPremium, getNutritionUsageInfo]);
 
-  // Cargar info de uso solo al montar el componente
+  // Cargar info de uso al montar y cuando cambie processingFoods
   useEffect(() => {
     loadUsageInfo();
-  }, [loadUsageInfo]);
+  }, [loadUsageInfo, processingFoods.length]);
 
   const handlePhotoTakenAndCloseCamera = async (photoBlob: Blob) => {
     setShowCamera(false);
@@ -69,10 +69,6 @@ const NutritionPage: React.FC = () => {
     const canCapture = await capturePhotoWithLimitCheck();
     if (canCapture) {
       await handlePhotoTaken(photoBlob);
-      // Recargar info de uso después de captura exitosa
-      if (!isPremium) {
-        await loadUsageInfo();
-      }
     }
   };
 

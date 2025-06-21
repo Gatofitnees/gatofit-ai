@@ -94,23 +94,6 @@ export const useUsageLimits = () => {
 
       console.log(`📈 [USAGE LIMITS] Incrementing ${type} for user:`, user.id);
 
-      // Actualizar estado local inmediatamente (optimistic update)
-      if (usage) {
-        const fieldMap = {
-          'routines': 'routines_created',
-          'nutrition_photos': 'nutrition_photos_used',
-          'ai_chat_messages': 'ai_chat_messages_used'
-        };
-
-        const updatedUsage = {
-          ...usage,
-          [fieldMap[type]]: usage[fieldMap[type]] + 1
-        };
-        
-        setUsage(updatedUsage);
-        console.log('✅ [USAGE LIMITS] Local state updated optimistically:', updatedUsage);
-      }
-
       // Incrementar en base de datos
       const { data, error } = await supabase.rpc('increment_usage_counter', {
         p_user_id: user.id,
@@ -120,20 +103,20 @@ export const useUsageLimits = () => {
 
       if (error) {
         console.error('❌ [USAGE LIMITS] Error incrementing usage:', error);
-        // Revertir cambio optimista si falla
-        if (usage) {
-          setUsage(usage);
-        }
         throw error;
       }
 
       console.log('✅ [USAGE LIMITS] Usage incremented successfully in DB:', data);
+      
+      // Refetch inmediato para sincronizar estado
+      await fetchUsage();
+      
       return true;
     } catch (error) {
       console.error('❌ [USAGE LIMITS] Error incrementing usage:', error);
       return false;
     }
-  }, [usage]);
+  }, [fetchUsage]);
 
   const checkLimitWithoutFetch = useCallback((
     type: 'routines' | 'nutrition_photos' | 'ai_chat_messages',

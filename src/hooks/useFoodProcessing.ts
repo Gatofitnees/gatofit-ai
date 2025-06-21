@@ -58,7 +58,9 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
         const savedEntry = await addEntry(newEntryData);
         
         if (savedEntry) {
+          // Incrementar uso solo después de éxito completo
           if (!isPremium) {
+            console.log('📈 [FOOD PROCESSING] Incrementing nutrition usage after successful analysis');
             await incrementUsage('nutrition_photos');
           }
           
