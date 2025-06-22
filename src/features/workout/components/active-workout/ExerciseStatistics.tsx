@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog, 
   DialogContent, 
@@ -28,18 +28,40 @@ export const ExerciseStatistics: React.FC<ExerciseStatisticsProps> = ({
   const { stats, loading } = useExerciseHistory({ exerciseId });
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
+  // Auto-select first date when sessions are loaded and reset when dialog opens
+  useEffect(() => {
+    if (showStatsDialog && stats.sessions.length > 0) {
+      console.log('Setting initial selected date to:', stats.sessions[0].date);
+      setSelectedDate(stats.sessions[0].date);
+    }
+  }, [stats.sessions, showStatsDialog]);
+
+  // Reset selected date when dialog closes
+  useEffect(() => {
+    if (!showStatsDialog) {
+      console.log('Dialog closed, clearing selected date');
+      setSelectedDate(null);
+    }
+  }, [showStatsDialog]);
+  
+  // Handle date selection with cleanup
+  const handleDateSelect = (date: string) => {
+    console.log('Date selected:', date);
+    console.log('Previous selected date:', selectedDate);
+    setSelectedDate(date);
+  };
+  
+  // Find the session for the selected date
   const selectedSession = selectedDate 
     ? stats.sessions.find(session => session.date === selectedDate)
-    : stats.sessions[0];
+    : null;
   
   const sessionDates = stats.sessions.map(session => session.date);
   
-  // Auto-select first date when sessions are loaded
-  React.useEffect(() => {
-    if (stats.sessions.length > 0 && !selectedDate) {
-      setSelectedDate(stats.sessions[0].date);
-    }
-  }, [stats.sessions, selectedDate]);
+  console.log('ExerciseStatistics - sessions:', stats.sessions.length);
+  console.log('ExerciseStatistics - sessionDates:', sessionDates);
+  console.log('ExerciseStatistics - selectedDate:', selectedDate);
+  console.log('ExerciseStatistics - selectedSession:', selectedSession);
 
   return (
     <Dialog open={showStatsDialog} onOpenChange={onCloseDialog}>
@@ -87,17 +109,28 @@ export const ExerciseStatistics: React.FC<ExerciseStatisticsProps> = ({
                     <DateNavigator
                       dates={sessionDates}
                       selectedDate={selectedDate}
-                      onDateSelect={setSelectedDate}
+                      onDateSelect={handleDateSelect}
                     />
                   </div>
                   
-                  {selectedSession && (
+                  {selectedSession ? (
                     <div className="bg-secondary/10 rounded-lg p-4">
+                      <div className="mb-2">
+                        <p className="text-sm text-muted-foreground">
+                          Mostrando series del {selectedSession.date}
+                        </p>
+                      </div>
                       <SessionStats
                         sets={selectedSession.sets}
                         maxWeight={selectedSession.maxWeight}
                         totalReps={selectedSession.totalReps}
                       />
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground">
+                        Selecciona una fecha para ver las series
+                      </p>
                     </div>
                   )}
                 </TabsContent>

@@ -2,7 +2,6 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface DateNavigatorProps {
   dates: string[];
@@ -17,16 +16,19 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
 }) => {
   const selectedIndex = selectedDate ? dates.indexOf(selectedDate) : -1;
   
-  // Fix: Reverse navigation logic - most recent should be on the right
   const goToPrevious = () => {
     if (selectedIndex < dates.length - 1) {
-      onDateSelect(dates[selectedIndex + 1]);
+      const newDate = dates[selectedIndex + 1];
+      console.log('Navigating to previous date:', newDate);
+      onDateSelect(newDate);
     }
   };
   
   const goToNext = () => {
     if (selectedIndex > 0) {
-      onDateSelect(dates[selectedIndex - 1]);
+      const newDate = dates[selectedIndex - 1];
+      console.log('Navigating to next date:', newDate);
+      onDateSelect(newDate);
     }
   };
   
@@ -37,6 +39,10 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
       </div>
     );
   }
+  
+  console.log('DateNavigator - dates:', dates);
+  console.log('DateNavigator - selectedDate:', selectedDate);
+  console.log('DateNavigator - selectedIndex:', selectedIndex);
   
   return (
     <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg">
