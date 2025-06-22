@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FoodLogEntry } from '@/types/foodLog';
@@ -7,7 +6,7 @@ import { createSecureErrorMessage, logSecurityEvent } from '@/utils/errorHandlin
 import { useLocalTimezone } from './useLocalTimezone';
 import { useFoodLogOperations } from './useFoodLogOperations';
 
-export { FoodLogEntry } from '@/types/foodLog';
+export type { FoodLogEntry } from '@/types/foodLog';
 
 export const useFoodLog = (selectedDate?: string) => {
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
