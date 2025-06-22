@@ -78,17 +78,17 @@ export const getFileSizeKB = (file: Blob): number => {
 };
 
 export const shouldCompressForWebhook = (file: Blob): boolean => {
-  return getFileSizeKB(file) > 1000; // Compress if larger than 1MB
+  return getFileSizeKB(file) > 500; // Comprimir si es mayor a 500KB (más agresivo)
 };
 
 export const compressForWebhook = async (file: Blob): Promise<Blob> => {
-  console.log(`Compressing image for webhook. Original size: ${getFileSizeKB(file).toFixed(2)}KB`);
+  console.log(`Compressing image for upload. Original size: ${getFileSizeKB(file).toFixed(2)}KB`);
   
   const compressed = await compressImage(file, {
     maxWidth: 1440,
     maxHeight: 1440,
     quality: 0.75,
-    maxSizeKB: 800
+    maxSizeKB: 400 // Más agresivo para ahorrar storage
   });
   
   console.log(`Image compressed. New size: ${getFileSizeKB(compressed).toFixed(2)}KB`);

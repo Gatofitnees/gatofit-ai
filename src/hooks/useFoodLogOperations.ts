@@ -7,6 +7,46 @@ import { createSecureErrorMessage, logSecurityEvent } from '@/utils/errorHandlin
 import { useLocalTimezone } from './useLocalTimezone';
 import { useFoodLogProfile } from './useFoodLogProfile';
 
+// Función para extraer el path de la imagen desde la URL
+const extractImagePathFromUrl = (imageUrl: string): string | null => {
+  try {
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split('/');
+    const bucketIndex = pathParts.findIndex(part => part === 'food-images');
+    if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
+      return pathParts.slice(bucketIndex + 1).join('/');
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting image path from URL:', error);
+    return null;
+  }
+};
+
+// Función para borrar imagen del storage
+const deleteImageFromStorage = async (imageUrl: string): Promise<void> => {
+  try {
+    const imagePath = extractImagePathFromUrl(imageUrl);
+    if (!imagePath) {
+      console.warn('Could not extract image path from URL:', imageUrl);
+      return;
+    }
+
+    console.log('Deleting image from storage:', imagePath);
+    const { error } = await supabase.storage
+      .from('food-images')
+      .remove([imagePath]);
+
+    if (error) {
+      console.error('Error deleting image from storage:', error);
+    } else {
+      console.log('Image deleted successfully from storage');
+    }
+  } catch (error) {
+    console.error('Error in deleteImageFromStorage:', error);
+  }
+};
+
 export const useFoodLogOperations = () => {
   const { getCurrentLocalDate } = useLocalTimezone();
   const { ensureUserProfile, updateUserStreak } = useFoodLogProfile();
@@ -90,13 +130,33 @@ export const useFoodLogOperations = () => {
 
   const deleteEntry = async (id: number): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      // Primero obtener la entrada para conseguir la URL de la imagen
+      const { data: entryData, error: fetchError } = await supabase
+        .from('daily_food_log_entries')
+        .select('photo_url')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching entry for deletion:', fetchError);
+        throw fetchError;
+      }
+
+      // Borrar la entrada de la base de datos
+      const { error: deleteError } = await supabase
         .from('daily_food_log_entries')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
+      // Si la entrada tenía una imagen, borrarla del storage
+      if (entryData?.photo_url) {
+        console.log('Entry has photo, deleting from storage...');
+        await deleteImageFromStorage(entryData.photo_url);
+      }
+
+      console.log('Food entry and associated image deleted successfully');
       return true;
     } catch (err) {
       logSecurityEvent('food_delete_error', 'Failed to delete food entry');

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getImageExtension } from '@/utils/imageUtils';
+import { compressForWebhook, shouldCompressForWebhook } from '@/utils/imageCompression';
 
 export interface CapturedFood {
   imageUrl: string;
@@ -13,21 +14,29 @@ export const uploadImageWithAnalysis = async (
   sendToWebhookWithResponse: (url: string, blob: Blob) => Promise<any>
 ): Promise<CapturedFood | null> => {
   try {
-    console.log('Uploading image to Supabase...', { 
-      fileSize: file.size, 
+    console.log('Starting image upload and analysis...', { 
+      originalSize: file.size, 
       fileType: file.type || 'unknown'
     });
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuario no autenticado');
 
-    // Use original file extension instead of forcing .jpg
-    const extension = getImageExtension(file);
+    // Comprimir imagen ANTES de subir a Supabase
+    let processedFile = file;
+    if (shouldCompressForWebhook(file)) {
+      console.log('Compressing image before upload...');
+      processedFile = await compressForWebhook(file);
+      console.log(`Image compressed: ${file.size} -> ${processedFile.size} bytes`);
+    }
+
+    // Usar extensión de la imagen comprimida
+    const extension = getImageExtension(processedFile);
     const fileName = `${user.id}/${Date.now()}.${extension}`;
     
     const { data, error } = await supabase.storage
       .from('food-images')
-      .upload(fileName, file);
+      .upload(fileName, processedFile);
 
     if (error) {
       console.error('Supabase upload error:', error);
@@ -40,10 +49,9 @@ export const uploadImageWithAnalysis = async (
 
     console.log('Image uploaded successfully to Supabase:', publicUrl);
 
-    // Send to webhook and get analysis result
-    const analysisResult = await sendToWebhookWithResponse(publicUrl, file);
+    // Enviar imagen comprimida al webhook
+    const analysisResult = await sendToWebhookWithResponse(publicUrl, processedFile);
 
-    // If webhook returns null (due to error), return null instead of success object
     if (!analysisResult) {
       console.log('Webhook analysis failed, returning null');
       return null;
@@ -63,20 +71,28 @@ export const uploadImageWithAnalysis = async (
 export const uploadImage = async (file: Blob): Promise<CapturedFood | null> => {
   try {
     console.log('Uploading image to Supabase...', { 
-      fileSize: file.size, 
+      originalSize: file.size, 
       fileType: file.type || 'unknown'
     });
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuario no autenticado');
 
-    // Use original file extension
-    const extension = getImageExtension(file);
+    // Comprimir imagen ANTES de subir
+    let processedFile = file;
+    if (shouldCompressForWebhook(file)) {
+      console.log('Compressing image before upload...');
+      processedFile = await compressForWebhook(file);
+      console.log(`Image compressed: ${file.size} -> ${processedFile.size} bytes`);
+    }
+
+    // Usar extensión de la imagen comprimida
+    const extension = getImageExtension(processedFile);
     const fileName = `${user.id}/${Date.now()}.${extension}`;
     
     const { data, error } = await supabase.storage
       .from('food-images')
-      .upload(fileName, file);
+      .upload(fileName, processedFile);
 
     if (error) {
       console.error('Supabase upload error:', error);
