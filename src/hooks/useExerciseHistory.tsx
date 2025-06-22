@@ -59,8 +59,11 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // First, group by workout_log_id to handle all sets for each workout session
-          const workoutLogMap = new Map<number, {
+          let globalMaxWeight = 0;
+          let globalMaxReps = 0;
+          
+          // Group by workout_log_id first to get individual workout sessions
+          const workoutSessions = new Map<number, {
             date: string;
             sets: Array<{
               set_number: number;
@@ -69,10 +72,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             }>;
           }>();
           
-          let globalMaxWeight = 0;
-          let globalMaxReps = 0;
-          
-          // Group data by workout_log_id first
+          // Process each entry to build workout sessions
           data.forEach((entry) => {
             const workoutLog = Array.isArray(entry.workout_log) 
               ? entry.workout_log[0] 
@@ -82,23 +82,26 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             
             const displayDate = new Date(workoutLog.workout_date).toLocaleDateString('es-ES');
             
-            // Initialize workout log session if it doesn't exist
-            if (!workoutLogMap.has(entry.workout_log_id)) {
-              workoutLogMap.set(entry.workout_log_id, {
+            // Initialize workout session if it doesn't exist
+            if (!workoutSessions.has(entry.workout_log_id)) {
+              workoutSessions.set(entry.workout_log_id, {
                 date: displayDate,
                 sets: []
               });
             }
             
-            const session = workoutLogMap.get(entry.workout_log_id)!;
+            const session = workoutSessions.get(entry.workout_log_id)!;
             const weight = entry.weight_kg_used || 0;
             const reps = entry.reps_completed || 0;
             
-            // Check if this set already exists in the session (prevent duplicates)
-            const setExists = session.sets.some(set => set.set_number === entry.set_number);
+            // Check if this exact set already exists (avoid duplicates)
+            const setExists = session.sets.some(set => 
+              set.set_number === entry.set_number && 
+              set.weight_kg_used === entry.weight_kg_used &&
+              set.reps_completed === entry.reps_completed
+            );
             
             if (!setExists) {
-              // Add this specific set to the session
               session.sets.push({
                 set_number: entry.set_number,
                 weight_kg_used: entry.weight_kg_used,
@@ -111,49 +114,40 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             }
           });
           
-          // Now group by date, combining multiple workout sessions on the same date
-          const dateSessionMap = new Map<string, ExerciseSession>();
+          // Convert workout sessions to date-based sessions
+          // Each workout session becomes its own date session entry
+          const dateSessions: ExerciseSession[] = [];
           
-          workoutLogMap.forEach((workoutSession) => {
-            const dateKey = workoutSession.date;
+          workoutSessions.forEach((workoutSession) => {
+            // Sort sets by set number
+            const sortedSets = workoutSession.sets.sort((a, b) => a.set_number - b.set_number);
             
-            if (!dateSessionMap.has(dateKey)) {
-              // Initialize new date session
-              dateSessionMap.set(dateKey, {
-                date: dateKey,
-                sets: [],
-                maxWeight: null,
-                totalReps: 0
-              });
-            }
+            // Calculate stats for this specific workout session
+            let maxWeight = 0;
+            let totalReps = 0;
             
-            const dateSession = dateSessionMap.get(dateKey)!;
-            
-            // Add all sets from this workout to the date session
-            workoutSession.sets.forEach(set => {
-              dateSession.sets.push(set);
-              
+            sortedSets.forEach(set => {
               const weight = set.weight_kg_used || 0;
               const reps = set.reps_completed || 0;
               
-              // Update date session stats
-              if (weight > (dateSession.maxWeight || 0)) {
-                dateSession.maxWeight = weight;
-              }
-              dateSession.totalReps += reps;
+              if (weight > maxWeight) maxWeight = weight;
+              totalReps += reps;
             });
             
-            // Sort sets by set number within the date session
-            dateSession.sets.sort((a, b) => a.set_number - b.set_number);
+            dateSessions.push({
+              date: workoutSession.date,
+              sets: sortedSets,
+              maxWeight: maxWeight || null,
+              totalReps
+            });
           });
           
-          // Convert to array and sort by date (most recent first)
-          const sessions = Array.from(dateSessionMap.values())
-            .sort((a, b) => {
-              const dateA = new Date(a.date.split('/').reverse().join('-'));
-              const dateB = new Date(b.date.split('/').reverse().join('-'));
-              return dateB.getTime() - dateA.getTime();
-            });
+          // Sort sessions by date (most recent first)
+          const sessions = dateSessions.sort((a, b) => {
+            const dateA = new Date(a.date.split('/').reverse().join('-'));
+            const dateB = new Date(b.date.split('/').reverse().join('-'));
+            return dateB.getTime() - dateA.getTime();
+          });
           
           // Create progress data for chart (chronological order)
           const progressData = sessions
