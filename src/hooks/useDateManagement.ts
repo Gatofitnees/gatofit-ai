@@ -1,22 +1,28 @@
 
 import { useMemo } from 'react';
 import { FoodLogEntry } from './useFoodLog';
+import { useLocalTimezone } from './useLocalTimezone';
 
 export const useDateManagement = (selectedDate: Date, entries: FoodLogEntry[]) => {
-  const selectedDateString = useMemo(() => selectedDate.toISOString().split('T')[0], [selectedDate]);
+  const { getCurrentLocalDate, getLocalDateString, isDateToday } = useLocalTimezone();
+  
+  const selectedDateString = useMemo(() => getLocalDateString(selectedDate), [selectedDate, getLocalDateString]);
   
   const isToday = useMemo(() => {
-    return selectedDateString === new Date().toISOString().split('T')[0];
-  }, [selectedDateString]);
+    return isDateToday(selectedDateString);
+  }, [selectedDateString, isDateToday]);
   
   const isSelectedDay = !isToday;
 
   const formatSelectedDate = useMemo(() => {
     if (isToday) return "Hoy";
     
+    // Usar fecha local para los cálculos de diferencia
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const selected = new Date(selectedDate);
+    
+    // Normalizar a medianoche en zona local
+    today.setHours(0, 0, 0, 0);
     selected.setHours(0, 0, 0, 0);
 
     const diffTime = today.getTime() - selected.getTime();

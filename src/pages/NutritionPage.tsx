@@ -18,6 +18,7 @@ import { UsageLimitsBanner } from "@/components/premium/UsageLimitsBanner";
 import { PremiumModal } from "@/components/premium/PremiumModal";
 import { useFoodCaptureWithLimits } from "@/hooks/useFoodCaptureWithLimits";
 import { useUsageLimitsRefresh } from "@/hooks/useUsageLimitsRefresh";
+import { useLocalTimezone } from "@/hooks/useLocalTimezone";
 
 const NutritionPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
@@ -25,9 +26,10 @@ const NutritionPage: React.FC = () => {
   const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 10, canCapture: true, isOverLimit: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const { isPremium } = useSubscription();
+  const { getLocalDateString } = useLocalTimezone();
   
   const { profile } = useProfile();
-  const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(selectedDate.toISOString().split('T')[0]);
+  const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(getLocalDateString(selectedDate));
   const { refreshUsageLimits } = useUsageLimitsRefresh();
   
   const { 

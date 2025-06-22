@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { sanitizeFoodName, validateCalories, validateMacronutrient } from '@/utils/validation';
 import { createSecureErrorMessage, logSecurityEvent } from '@/utils/errorHandling';
+import { useLocalTimezone } from './useLocalTimezone';
 
 export interface FoodLogEntry {
   id?: number;
@@ -54,6 +55,7 @@ export const useFoodLog = (selectedDate?: string) => {
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getCurrentLocalDate } = useLocalTimezone();
 
   const ensureUserProfile = async (userId: string) => {
     try {
@@ -97,7 +99,7 @@ export const useFoodLog = (selectedDate?: string) => {
   const fetchEntriesForDate = async (date?: string) => {
     try {
       setIsLoading(true);
-      const queryDate = date || new Date().toISOString().split('T')[0];
+      const queryDate = date || getCurrentLocalDate(); // Usar fecha local
       
       const { data, error } = await supabase
         .from('daily_food_log_entries')
@@ -187,11 +189,11 @@ export const useFoodLog = (selectedDate?: string) => {
         ...sanitizedEntry,
         user_id: user.id,
         logged_at: now.toISOString(),
-        log_date: now.toISOString().split('T')[0],
+        log_date: getCurrentLocalDate(), // Usar fecha local del usuario
         ingredients: sanitizedEntry.ingredients ? sanitizedEntry.ingredients as Json : null
       };
 
-      console.log('Inserting validated food entry');
+      console.log('Inserting validated food entry with local date:', newEntry.log_date);
 
       const { data, error } = await supabase
         .from('daily_food_log_entries')

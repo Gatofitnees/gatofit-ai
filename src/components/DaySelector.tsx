@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { format, addDays, subDays, isSameDay, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useLocalTimezone } from "@/hooks/useLocalTimezone";
 
 interface DateCardProps {
   date: Date;
@@ -65,6 +65,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   const [selectedDate, setSelectedDate] = useState(propSelectedDate || new Date());
   const [dateRange, setDateRange] = useState<Date[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { getCurrentLocalDate, getLocalDateString } = useLocalTimezone();
   
   // Update local state when prop changes
   useEffect(() => {
@@ -73,7 +74,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     }
   }, [propSelectedDate]);
   
-  // Generate range of dates (past and future dates)
+  // Generate range of dates (past and future dates) usando fecha local
   useEffect(() => {
     const today = new Date();
     const range: Date[] = [];
@@ -111,6 +112,13 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     return datesWithRecords.some(recordDate => isSameDay(recordDate, date));
   };
 
+  const isDateToday = (date: Date) => {
+    // Usar comparación con fecha local del usuario
+    const dateString = getLocalDateString(date);
+    const todayString = getCurrentLocalDate();
+    return dateString === todayString;
+  };
+
   return (
     <div className="mb-5 animate-fade-in bg-card/30 p-2 rounded-lg shadow-neu-card">
       <div 
@@ -128,7 +136,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
               isSelected={isSameDay(date, selectedDate)}
               hasRecords={checkHasRecords(date)}
               onClick={() => handleSelectDate(date)}
-              label={isToday(date) ? "Hoy" : undefined}
+              label={isDateToday(date) ? "Hoy" : undefined}
             />
           </div>
         ))}
