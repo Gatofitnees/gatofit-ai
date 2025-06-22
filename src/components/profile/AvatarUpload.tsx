@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Camera, Image as ImageIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -23,7 +24,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 }) => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { secureUploadAvatar, uploading } = useSecureAvatarUpload();
+  const { uploadAvatar, isUploading } = useSecureAvatarUpload();
 
   const sizeClasses = {
     sm: 'h-16 w-16',
@@ -41,7 +42,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const newUrl = await secureUploadAvatar(file);
+    const newUrl = await uploadAvatar(file);
     if (newUrl && onAvatarUpdate) {
       onAvatarUpdate(newUrl);
     }
@@ -72,7 +73,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           </AvatarFallback>
         </Avatar>
         
-        {uploading && (
+        {isUploading && (
           <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
           </div>
@@ -111,7 +112,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           variant="outline"
           size="sm"
           onClick={handleGalleryClick}
-          disabled={uploading}
+          disabled={isUploading}
           className="flex items-center gap-2"
         >
           <ImageIcon className="h-4 w-4" />
@@ -122,7 +123,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           variant="outline"
           size="sm"
           onClick={handleCameraClick}
-          disabled={uploading}
+          disabled={isUploading}
           className="flex items-center gap-2"
         >
           <Camera className="h-4 w-4" />
