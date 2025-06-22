@@ -59,8 +59,8 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Create a clean map for sessions grouped by date
-          const sessionMap = new Map<string, {
+          // Group by workout_log_id first, then by date
+          const workoutLogMap = new Map<number, {
             date: string;
             sets: Array<{
               set_number: number;
@@ -74,21 +74,19 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
           let globalMaxWeight = 0;
           let globalMaxReps = 0;
           
-          // Group data by workout date
+          // Group data by workout_log_id to ensure uniqueness
           data.forEach((entry) => {
             const workoutLog = Array.isArray(entry.workout_log) 
               ? entry.workout_log[0] 
               : entry.workout_log;
             
-            if (!workoutLog?.workout_date) return;
+            if (!workoutLog?.workout_date || !entry.workout_log_id) return;
             
-            // Use ISO date format for proper grouping
-            const dateKey = new Date(workoutLog.workout_date).toISOString().substring(0, 10);
             const displayDate = new Date(workoutLog.workout_date).toLocaleDateString('es-ES');
             
-            // Initialize session if it doesn't exist
-            if (!sessionMap.has(dateKey)) {
-              sessionMap.set(dateKey, {
+            // Initialize workout log session if it doesn't exist
+            if (!workoutLogMap.has(entry.workout_log_id)) {
+              workoutLogMap.set(entry.workout_log_id, {
                 date: displayDate,
                 sets: [],
                 maxWeight: null,
@@ -96,32 +94,37 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
               });
             }
             
-            const session = sessionMap.get(dateKey)!;
+            const session = workoutLogMap.get(entry.workout_log_id)!;
             const weight = entry.weight_kg_used || 0;
             const reps = entry.reps_completed || 0;
             
-            // Add this specific set to the session
-            session.sets.push({
-              set_number: entry.set_number,
-              weight_kg_used: entry.weight_kg_used,
-              reps_completed: entry.reps_completed
-            });
+            // Check if this set already exists in the session (prevent duplicates)
+            const setExists = session.sets.some(set => set.set_number === entry.set_number);
             
-            // Update session max weight if this weight is higher
-            if (weight > (session.maxWeight || 0)) {
-              session.maxWeight = weight;
+            if (!setExists) {
+              // Add this specific set to the session
+              session.sets.push({
+                set_number: entry.set_number,
+                weight_kg_used: entry.weight_kg_used,
+                reps_completed: entry.reps_completed
+              });
+              
+              // Update session max weight if this weight is higher
+              if (weight > (session.maxWeight || 0)) {
+                session.maxWeight = weight;
+              }
+              
+              // Add reps to session total
+              session.totalReps += reps;
+              
+              // Update global stats
+              if (weight > globalMaxWeight) globalMaxWeight = weight;
+              if (reps > globalMaxReps) globalMaxReps = reps;
             }
-            
-            // Add reps to session total
-            session.totalReps += reps;
-            
-            // Update global stats
-            if (weight > globalMaxWeight) globalMaxWeight = weight;
-            if (reps > globalMaxReps) globalMaxReps = reps;
           });
           
           // Convert map to array and sort sessions by date (most recent first)
-          const sessions = Array.from(sessionMap.values())
+          const sessions = Array.from(workoutLogMap.values())
             .map(session => ({
               ...session,
               // Sort sets within each session by set_number
