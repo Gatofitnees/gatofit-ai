@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import RoutinePageHeader from "@/features/workout/components/RoutinePageHeader";
 import RoutineFormContainer from "@/features/workout/components/RoutineFormContainer";
@@ -7,11 +7,15 @@ import RoutineDialogs from "@/features/workout/components/dialogs/RoutineDialogs
 import RoutineSheets from "@/features/workout/components/sheets/RoutineSheets";
 import { useCreateRoutine } from "@/features/workout/hooks/useCreateRoutine";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSkeleton } from "@/features/workout/components/active-workout/LoadingSkeleton";
 
 const CreateRoutinePage: React.FC = () => {
   const { toast } = useToast();
   const { routineId } = useParams<{ routineId?: string }>();
   const isEditing = !!routineId;
+  
+  // Estado local para controlar la carga inicial
+  const [isInitialLoading, setIsInitialLoading] = useState(isEditing);
   
   const {
     // State
@@ -57,9 +61,18 @@ const CreateRoutinePage: React.FC = () => {
   
   // Cargar datos de la rutina si estamos en modo edición
   useEffect(() => {
-    if (isEditing && routineId) {
-      loadRoutineData(parseInt(routineId));
-    }
+    const loadData = async () => {
+      if (isEditing && routineId) {
+        try {
+          await loadRoutineData(parseInt(routineId));
+        } finally {
+          // Asegurar que el loading se desactive después de cargar los datos
+          setIsInitialLoading(false);
+        }
+      }
+    };
+    
+    loadData();
   }, [isEditing, routineId, loadRoutineData]);
   
   // Add a beforeUnload event handler to warn about unsaved changes
@@ -76,13 +89,9 @@ const CreateRoutinePage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [routineName, routineType, routineExercises]);
   
-  // Mostrar loader si está cargando datos para edición
-  if (isEditing && isLoading) {
-    return (
-      <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
+  // Mostrar loader si está cargando datos para edición o en estado inicial de carga
+  if ((isEditing && isLoading) || isInitialLoading) {
+    return <LoadingSkeleton onBack={handleBackClick} />;
   }
   
   return (
