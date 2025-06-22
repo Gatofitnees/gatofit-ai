@@ -62,8 +62,8 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
           let globalMaxWeight = 0;
           let globalMaxReps = 0;
           
-          // Group by workout_log_id first to get individual workout sessions
-          const workoutSessions = new Map<number, {
+          // Create a map to group sets by date (not by workout_log_id)
+          const dateSessionsMap = new Map<string, {
             date: string;
             sets: Array<{
               set_number: number;
@@ -72,57 +72,48 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             }>;
           }>();
           
-          // Process each entry to build workout sessions
+          // Process each entry to build date-based sessions
           data.forEach((entry) => {
             const workoutLog = Array.isArray(entry.workout_log) 
               ? entry.workout_log[0] 
               : entry.workout_log;
             
-            if (!workoutLog?.workout_date || !entry.workout_log_id) return;
+            if (!workoutLog?.workout_date) return;
             
             const displayDate = new Date(workoutLog.workout_date).toLocaleDateString('es-ES');
             
-            // Initialize workout session if it doesn't exist
-            if (!workoutSessions.has(entry.workout_log_id)) {
-              workoutSessions.set(entry.workout_log_id, {
+            // Initialize date session if it doesn't exist
+            if (!dateSessionsMap.has(displayDate)) {
+              dateSessionsMap.set(displayDate, {
                 date: displayDate,
                 sets: []
               });
             }
             
-            const session = workoutSessions.get(entry.workout_log_id)!;
+            const dateSession = dateSessionsMap.get(displayDate)!;
             const weight = entry.weight_kg_used || 0;
             const reps = entry.reps_completed || 0;
             
-            // Check if this exact set already exists (avoid duplicates)
-            const setExists = session.sets.some(set => 
-              set.set_number === entry.set_number && 
-              set.weight_kg_used === entry.weight_kg_used &&
-              set.reps_completed === entry.reps_completed
-            );
+            // Add this set to the date session (no duplicate checking needed since we're grouping by date)
+            dateSession.sets.push({
+              set_number: entry.set_number,
+              weight_kg_used: entry.weight_kg_used,
+              reps_completed: entry.reps_completed
+            });
             
-            if (!setExists) {
-              session.sets.push({
-                set_number: entry.set_number,
-                weight_kg_used: entry.weight_kg_used,
-                reps_completed: entry.reps_completed
-              });
-              
-              // Update global stats
-              if (weight > globalMaxWeight) globalMaxWeight = weight;
-              if (reps > globalMaxReps) globalMaxReps = reps;
-            }
+            // Update global stats
+            if (weight > globalMaxWeight) globalMaxWeight = weight;
+            if (reps > globalMaxReps) globalMaxReps = reps;
           });
           
-          // Convert workout sessions to date-based sessions
-          // Each workout session becomes its own date session entry
+          // Convert date sessions map to ExerciseSession array
           const dateSessions: ExerciseSession[] = [];
           
-          workoutSessions.forEach((workoutSession) => {
-            // Sort sets by set number
-            const sortedSets = workoutSession.sets.sort((a, b) => a.set_number - b.set_number);
+          dateSessionsMap.forEach((dateSession) => {
+            // Sort sets by set number for consistent display
+            const sortedSets = dateSession.sets.sort((a, b) => a.set_number - b.set_number);
             
-            // Calculate stats for this specific workout session
+            // Calculate stats for this specific date (all workouts on this date combined)
             let maxWeight = 0;
             let totalReps = 0;
             
@@ -135,7 +126,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             });
             
             dateSessions.push({
-              date: workoutSession.date,
+              date: dateSession.date,
               sets: sortedSets,
               maxWeight: maxWeight || null,
               totalReps
@@ -157,6 +148,10 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
               date: session.date,
               maxWeight: session.maxWeight!
             }));
+          
+          console.log('Sessions processed:', sessions.length);
+          console.log('Date sessions map size:', dateSessionsMap.size);
+          console.log('Sessions dates:', sessions.map(s => s.date));
           
           setStats({
             maxWeight: globalMaxWeight || null,
