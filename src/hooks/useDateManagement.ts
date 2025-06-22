@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { FoodLogEntry } from './useFoodLog';
 import { useLocalTimezone } from './useLocalTimezone';
 
-export const useDateManagement = (selectedDate: Date, entries: FoodLogEntry[]) => {
+export const useDateManagement = (selectedDate: Date, entries: FoodLogEntry[], datesWithEntries: Date[] = []) => {
   const { getCurrentLocalDate, getLocalDateString, isDateToday } = useLocalTimezone();
   
   const selectedDateString = useMemo(() => getLocalDateString(selectedDate), [selectedDate, getLocalDateString]);
@@ -38,7 +38,7 @@ export const useDateManagement = (selectedDate: Date, entries: FoodLogEntry[]) =
   }, [isToday, selectedDate]);
 
   const getDatesWithEntries = (): Date[] => {
-    return entries.length > 0 ? [selectedDate] : [];
+    return datesWithEntries;
   };
 
   return {

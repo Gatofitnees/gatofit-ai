@@ -29,7 +29,7 @@ const NutritionPage: React.FC = () => {
   const { getLocalDateString } = useLocalTimezone();
   
   const { profile } = useProfile();
-  const { entries, deleteEntry, isLoading, addEntry } = useFoodLog(getLocalDateString(selectedDate));
+  const { entries, datesWithEntries, deleteEntry, isLoading, addEntry } = useFoodLog(getLocalDateString(selectedDate));
   const { refreshUsageLimits } = useUsageLimitsRefresh();
   
   const { 
@@ -37,7 +37,7 @@ const NutritionPage: React.FC = () => {
     isSelectedDay, 
     formatSelectedDate,
     getDatesWithEntries
-  } = useDateManagement(selectedDate, entries);
+  } = useDateManagement(selectedDate, entries, datesWithEntries);
   
   const { macros, calorieProgress } = useNutritionCalculations(entries, profile);
   
