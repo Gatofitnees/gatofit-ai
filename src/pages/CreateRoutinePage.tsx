@@ -14,8 +14,8 @@ const CreateRoutinePage: React.FC = () => {
   const { routineId } = useParams<{ routineId?: string }>();
   const isEditing = !!routineId;
   
-  // Estado local para controlar la carga inicial
-  const [isInitialLoading, setIsInitialLoading] = useState(isEditing);
+  // Para edición, siempre empezamos cargando. Para creación, nunca cargamos inicialmente.
+  const [isDataLoaded, setIsDataLoaded] = useState(!isEditing);
   
   const {
     // State
@@ -65,9 +65,11 @@ const CreateRoutinePage: React.FC = () => {
       if (isEditing && routineId) {
         try {
           await loadRoutineData(parseInt(routineId));
+        } catch (error) {
+          console.error("Error loading routine data:", error);
         } finally {
-          // Asegurar que el loading se desactive después de cargar los datos
-          setIsInitialLoading(false);
+          // Marcar como cargado cuando termina la carga (exitosa o con error)
+          setIsDataLoaded(true);
         }
       }
     };
@@ -89,8 +91,8 @@ const CreateRoutinePage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [routineName, routineType, routineExercises]);
   
-  // Mostrar loader si está cargando datos para edición o en estado inicial de carga
-  if ((isEditing && isLoading) || isInitialLoading) {
+  // Mostrar loading skeleton hasta que los datos estén completamente cargados
+  if (!isDataLoaded) {
     return <LoadingSkeleton onBack={handleBackClick} />;
   }
   
