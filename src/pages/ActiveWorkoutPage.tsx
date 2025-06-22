@@ -97,15 +97,12 @@ const ActiveWorkoutPage: React.FC = () => {
       )}
       
       {/* Statistics Dialog */}
-      {currentStatsExercise && (
+      {currentStatsExercise && showStatsDialog && (
         <ExerciseStatistics 
+          exerciseId={currentStatsExercise.id}
           exerciseName={currentStatsExercise.name}
-          showStatsDialog={showStatsDialog !== null}
+          showStatsDialog={true}
           onCloseDialog={() => setShowStatsDialog(null)}
-          previousData={showStatsDialog ? currentStatsExercise.sets.map(set => ({
-            weight: set.previous_weight,
-            reps: set.previous_reps
-          })) : []}
         />
       )}
 

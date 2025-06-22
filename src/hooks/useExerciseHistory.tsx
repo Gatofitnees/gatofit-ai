@@ -2,14 +2,36 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { ExerciseHistory } from "@/data/exercises/exerciseTypes";
+
+interface ExerciseSession {
+  date: string;
+  sets: {
+    set_number: number;
+    weight_kg_used: number | null;
+    reps_completed: number | null;
+  }[];
+  maxWeight: number | null;
+  totalReps: number;
+}
+
+interface ExerciseStats {
+  maxWeight: number | null;
+  maxReps: number | null;
+  sessions: ExerciseSession[];
+  progressData: { date: string; maxWeight: number }[];
+}
 
 interface UseExerciseHistoryProps {
   exerciseId?: number;
 }
 
 export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
-  const [history, setHistory] = useState<ExerciseHistory[]>([]);
+  const [stats, setStats] = useState<ExerciseStats>({
+    maxWeight: null,
+    maxReps: null,
+    sessions: [],
+    progressData: []
+  });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -20,7 +42,6 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
       try {
         setLoading(true);
         
-        // Use explicit foreign key reference to avoid ambiguity
         const { data, error } = await supabase
           .from('workout_log_exercise_details')
           .select(`
@@ -38,50 +59,76 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Transform data to match our ExerciseHistory interface
-          const formattedHistory: ExerciseHistory[] = data.map((entry) => {
-            // Handle the nested workout_log data safely
-            const workoutLog = entry.workout_log;
-            let workoutDate = new Date().toISOString();
-            let userId = '';
+          // Group by workout date
+          const sessionMap = new Map<string, ExerciseSession>();
+          let globalMaxWeight = 0;
+          let globalMaxReps = 0;
+          
+          data.forEach((entry) => {
+            const workoutLog = Array.isArray(entry.workout_log) 
+              ? entry.workout_log[0] 
+              : entry.workout_log;
             
-            // Check if workout_log exists and extract date and user_id
-            if (workoutLog !== null && workoutLog !== undefined) {
-              // If it's an array, take the first item
-              if (Array.isArray(workoutLog) && workoutLog.length > 0) {
-                const firstLog = workoutLog[0];
-                if (firstLog) {
-                  workoutDate = firstLog.workout_date || workoutDate;
-                  userId = firstLog.user_id || userId;
-                }
-              } else if (typeof workoutLog === 'object') {
-                // If it's a single object, safely access its properties
-                const singleLog = workoutLog as any;
-                workoutDate = singleLog?.workout_date || workoutDate;
-                userId = singleLog?.user_id || userId;
-              }
+            if (!workoutLog?.workout_date) return;
+            
+            const dateKey = new Date(workoutLog.workout_date).toLocaleDateString('es-ES');
+            
+            if (!sessionMap.has(dateKey)) {
+              sessionMap.set(dateKey, {
+                date: dateKey,
+                sets: [],
+                maxWeight: null,
+                totalReps: 0
+              });
             }
-              
-            return {
-              id: entry.id,
-              exercise_id: entry.exercise_id,
-              date: workoutDate,
-              weight_kg: entry.weight_kg_used || 0,
-              reps: entry.reps_completed || 0,
-              sets: entry.set_number || 1,
-              user_id: userId,
-            };
+            
+            const session = sessionMap.get(dateKey)!;
+            
+            const weight = entry.weight_kg_used || 0;
+            const reps = entry.reps_completed || 0;
+            
+            session.sets.push({
+              set_number: entry.set_number,
+              weight_kg_used: entry.weight_kg_used,
+              reps_completed: entry.reps_completed
+            });
+            
+            // Update session stats
+            if (weight > (session.maxWeight || 0)) {
+              session.maxWeight = weight;
+            }
+            session.totalReps += reps;
+            
+            // Update global stats
+            if (weight > globalMaxWeight) globalMaxWeight = weight;
+            if (reps > globalMaxReps) globalMaxReps = reps;
           });
           
-          // Sort by date (newest first)
-          formattedHistory.sort((a, b) => {
-            return new Date(b.date).getTime() - new Date(a.date).getTime();
-          });
+          const sessions = Array.from(sessionMap.values())
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           
-          setHistory(formattedHistory);
+          // Create progress data for chart
+          const progressData = sessions
+            .filter(session => session.maxWeight && session.maxWeight > 0)
+            .reverse() // Chronological order for chart
+            .map(session => ({
+              date: session.date,
+              maxWeight: session.maxWeight!
+            }));
+          
+          setStats({
+            maxWeight: globalMaxWeight || null,
+            maxReps: globalMaxReps || null,
+            sessions,
+            progressData
+          });
         } else {
-          // No history found
-          setHistory([]);
+          setStats({
+            maxWeight: null,
+            maxReps: null,
+            sessions: [],
+            progressData: []
+          });
         }
       } catch (error) {
         console.error('Error fetching exercise history:', error);
@@ -90,7 +137,12 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
           description: "No se pudo cargar el historial del ejercicio",
           variant: "destructive"
         });
-        setHistory([]);
+        setStats({
+          maxWeight: null,
+          maxReps: null,
+          sessions: [],
+          progressData: []
+        });
       } finally {
         setLoading(false);
       }
@@ -100,8 +152,8 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
   }, [exerciseId, toast]);
   
   return {
-    history,
+    stats,
     loading,
-    isEmpty: history.length === 0
+    isEmpty: stats.sessions.length === 0
   };
 };
