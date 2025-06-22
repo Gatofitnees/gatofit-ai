@@ -17,15 +17,16 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
 }) => {
   const selectedIndex = selectedDate ? dates.indexOf(selectedDate) : -1;
   
+  // Fix: Reverse navigation logic - most recent should be on the right
   const goToPrevious = () => {
-    if (selectedIndex > 0) {
-      onDateSelect(dates[selectedIndex - 1]);
+    if (selectedIndex < dates.length - 1) {
+      onDateSelect(dates[selectedIndex + 1]);
     }
   };
   
   const goToNext = () => {
-    if (selectedIndex < dates.length - 1) {
-      onDateSelect(dates[selectedIndex + 1]);
+    if (selectedIndex > 0) {
+      onDateSelect(dates[selectedIndex - 1]);
     }
   };
   
@@ -43,7 +44,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
         variant="ghost"
         size="sm"
         onClick={goToPrevious}
-        disabled={selectedIndex <= 0}
+        disabled={selectedIndex >= dates.length - 1}
         className="h-8 w-8 p-0"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -62,7 +63,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
         variant="ghost"
         size="sm"
         onClick={goToNext}
-        disabled={selectedIndex >= dates.length - 1}
+        disabled={selectedIndex <= 0}
         className="h-8 w-8 p-0"
       >
         <ChevronRight className="h-4 w-4" />

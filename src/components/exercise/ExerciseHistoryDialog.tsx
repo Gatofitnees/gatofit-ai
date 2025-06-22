@@ -17,18 +17,16 @@ const ExerciseHistoryDialog: React.FC<ExerciseHistoryDialogProps> = ({
   exerciseName,
 }) => {
   const [open, setOpen] = useState(false);
-  const { history, loading, isEmpty } = useExerciseHistory({ exerciseId });
+  const { stats, loading, isEmpty } = useExerciseHistory({ exerciseId });
 
-  // Group history by date
-  const historyByDate = history.reduce<{[key: string]: typeof history}>((acc, entry) => {
-    const dateStr = typeof entry.date === 'string' 
-      ? entry.date.substring(0, 10)  // Extract YYYY-MM-DD
-      : format(entry.date, 'yyyy-MM-dd');
+  // Group stats.sessions by date (use the new structure)
+  const historyByDate = stats.sessions.reduce<{[key: string]: typeof stats.sessions}>((acc, session) => {
+    const dateStr = session.date;
     
     if (!acc[dateStr]) {
       acc[dateStr] = [];
     }
-    acc[dateStr].push(entry);
+    acc[dateStr].push(session);
     return acc;
   }, {});
 
@@ -69,24 +67,24 @@ const ExerciseHistoryDialog: React.FC<ExerciseHistoryDialogProps> = ({
                 {Object.keys(historyByDate).sort().reverse().map((dateStr) => (
                   <div key={dateStr} className="border rounded-lg p-4">
                     <h3 className="text-sm font-medium border-b pb-2 mb-3">
-                      {format(new Date(dateStr), "EEEE, d 'de' MMMM 'de' yyyy", {locale: es})}
+                      {dateStr}
                     </h3>
                     
                     <div className="space-y-3">
-                      {historyByDate[dateStr].map((entry) => (
+                      {historyByDate[dateStr][0].sets.map((set) => (
                         <div 
-                          key={entry.id} 
+                          key={set.set_number} 
                           className="flex justify-between items-center py-1 border-b last:border-0"
                         >
                           <div className="text-sm">
-                            <span className="font-medium">Serie {entry.sets}</span>
+                            <span className="font-medium">Serie {set.set_number}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm bg-secondary/40 px-2 py-1 rounded">
-                              {entry.weight_kg} kg
+                              {set.weight_kg_used || 0} kg
                             </span>
                             <span className="text-sm bg-secondary/40 px-2 py-1 rounded">
-                              {entry.reps} reps
+                              {set.reps_completed || 0} reps
                             </span>
                           </div>
                         </div>

@@ -59,7 +59,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Group by workout date
+          // Group by workout date - Fix: Create proper date groups
           const sessionMap = new Map<string, ExerciseSession>();
           let globalMaxWeight = 0;
           let globalMaxReps = 0;
@@ -71,11 +71,13 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             
             if (!workoutLog?.workout_date) return;
             
-            const dateKey = new Date(workoutLog.workout_date).toLocaleDateString('es-ES');
+            // Fix: Use ISO date format for proper grouping
+            const dateKey = new Date(workoutLog.workout_date).toISOString().substring(0, 10);
+            const displayDate = new Date(workoutLog.workout_date).toLocaleDateString('es-ES');
             
             if (!sessionMap.has(dateKey)) {
               sessionMap.set(dateKey, {
-                date: dateKey,
+                date: displayDate,
                 sets: [],
                 maxWeight: null,
                 totalReps: 0
@@ -87,13 +89,14 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             const weight = entry.weight_kg_used || 0;
             const reps = entry.reps_completed || 0;
             
+            // Add set to this specific date's session
             session.sets.push({
               set_number: entry.set_number,
               weight_kg_used: entry.weight_kg_used,
               reps_completed: entry.reps_completed
             });
             
-            // Update session stats
+            // Update session stats for this specific date
             if (weight > (session.maxWeight || 0)) {
               session.maxWeight = weight;
             }
@@ -104,10 +107,20 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             if (reps > globalMaxReps) globalMaxReps = reps;
           });
           
-          const sessions = Array.from(sessionMap.values())
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          // Sort sets within each session by set_number
+          sessionMap.forEach(session => {
+            session.sets.sort((a, b) => a.set_number - b.set_number);
+          });
           
-          // Create progress data for chart
+          // Fix: Sort sessions chronologically (most recent first for the array)
+          const sessions = Array.from(sessionMap.values())
+            .sort((a, b) => {
+              const dateA = new Date(a.date.split('/').reverse().join('-'));
+              const dateB = new Date(b.date.split('/').reverse().join('-'));
+              return dateB.getTime() - dateA.getTime();
+            });
+          
+          // Create progress data for chart (chronological order)
           const progressData = sessions
             .filter(session => session.maxWeight && session.maxWeight > 0)
             .reverse() // Chronological order for chart
