@@ -59,7 +59,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Group by workout_log_id first, then by date
+          // First, group by workout_log_id to handle all sets for each workout session
           const workoutLogMap = new Map<number, {
             date: string;
             sets: Array<{
@@ -67,14 +67,12 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
               weight_kg_used: number | null;
               reps_completed: number | null;
             }>;
-            maxWeight: number | null;
-            totalReps: number;
           }>();
           
           let globalMaxWeight = 0;
           let globalMaxReps = 0;
           
-          // Group data by workout_log_id to ensure uniqueness
+          // Group data by workout_log_id first
           data.forEach((entry) => {
             const workoutLog = Array.isArray(entry.workout_log) 
               ? entry.workout_log[0] 
@@ -88,9 +86,7 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
             if (!workoutLogMap.has(entry.workout_log_id)) {
               workoutLogMap.set(entry.workout_log_id, {
                 date: displayDate,
-                sets: [],
-                maxWeight: null,
-                totalReps: 0
+                sets: []
               });
             }
             
@@ -109,27 +105,50 @@ export const useExerciseHistory = ({ exerciseId }: UseExerciseHistoryProps) => {
                 reps_completed: entry.reps_completed
               });
               
-              // Update session max weight if this weight is higher
-              if (weight > (session.maxWeight || 0)) {
-                session.maxWeight = weight;
-              }
-              
-              // Add reps to session total
-              session.totalReps += reps;
-              
               // Update global stats
               if (weight > globalMaxWeight) globalMaxWeight = weight;
               if (reps > globalMaxReps) globalMaxReps = reps;
             }
           });
           
-          // Convert map to array and sort sessions by date (most recent first)
-          const sessions = Array.from(workoutLogMap.values())
-            .map(session => ({
-              ...session,
-              // Sort sets within each session by set_number
-              sets: session.sets.sort((a, b) => a.set_number - b.set_number)
-            }))
+          // Now group by date, combining multiple workout sessions on the same date
+          const dateSessionMap = new Map<string, ExerciseSession>();
+          
+          workoutLogMap.forEach((workoutSession) => {
+            const dateKey = workoutSession.date;
+            
+            if (!dateSessionMap.has(dateKey)) {
+              // Initialize new date session
+              dateSessionMap.set(dateKey, {
+                date: dateKey,
+                sets: [],
+                maxWeight: null,
+                totalReps: 0
+              });
+            }
+            
+            const dateSession = dateSessionMap.get(dateKey)!;
+            
+            // Add all sets from this workout to the date session
+            workoutSession.sets.forEach(set => {
+              dateSession.sets.push(set);
+              
+              const weight = set.weight_kg_used || 0;
+              const reps = set.reps_completed || 0;
+              
+              // Update date session stats
+              if (weight > (dateSession.maxWeight || 0)) {
+                dateSession.maxWeight = weight;
+              }
+              dateSession.totalReps += reps;
+            });
+            
+            // Sort sets by set number within the date session
+            dateSession.sets.sort((a, b) => a.set_number - b.set_number);
+          });
+          
+          // Convert to array and sort by date (most recent first)
+          const sessions = Array.from(dateSessionMap.values())
             .sort((a, b) => {
               const dateA = new Date(a.date.split('/').reverse().join('-'));
               const dateB = new Date(b.date.split('/').reverse().join('-'));
