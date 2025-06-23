@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { WorkoutExercise } from "../types/workout";
+import { useLocalTimezone } from "@/hooks/useLocalTimezone";
 
 export function useSaveWorkout(
   routine: any | null, 
@@ -15,6 +16,7 @@ export function useSaveWorkout(
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const { createLocalDateAsUTC } = useLocalTimezone();
 
   const estimateCaloriesBurned = (durationMinutes: number): number => {
     const baseCaloriesPerMinute = 8;
@@ -77,6 +79,10 @@ export function useSaveWorkout(
         validSets: ex.sets.filter(isValidSet).length
       })));
       
+      // Usar la hora local del usuario para el registro
+      const localWorkoutDate = createLocalDateAsUTC(new Date());
+      console.log("Saving workout with local date:", localWorkoutDate);
+      
       // Save workout log
       const { data: workoutLog, error: workoutError } = await supabase
         .from('workout_logs')
@@ -86,7 +92,8 @@ export function useSaveWorkout(
           routine_name_snapshot: routine.name,
           duration_completed_minutes: workoutDuration,
           calories_burned_estimated: estimateCaloriesBurned(workoutDuration),
-          notes: ""
+          notes: "",
+          workout_date: localWorkoutDate // Usar fecha local en lugar de now()
         })
         .select()
         .single();

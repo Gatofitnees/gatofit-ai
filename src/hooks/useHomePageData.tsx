@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocalTimezone } from "./useLocalTimezone";
 
 interface WorkoutSummary {
   id: number;
@@ -30,6 +31,7 @@ export const useHomePageData = () => {
   const [workoutSummaries, setWorkoutSummaries] = useState<WorkoutSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
+  const { getLocalDateString, getLocalDayRange } = useLocalTimezone();
   const [macros, setMacros] = useState<MacroData>({
     calories: { 
       current: 0, 
@@ -79,7 +81,7 @@ export const useHomePageData = () => {
       if (!user) return;
       
       try {
-        const dateString = selectedDate.toISOString().split('T')[0];
+        const dateString = getLocalDateString(selectedDate);
         
         const { data: foodEntries, error } = await supabase
           .from('daily_food_log_entries')
@@ -127,9 +129,9 @@ export const useHomePageData = () => {
     };
     
     fetchDailyFoodConsumption();
-  }, [user, selectedDate]);
+  }, [user, selectedDate, getLocalDateString]);
 
-  // Load workout dates
+  // Load workout dates using local timezone
   useEffect(() => {
     const fetchWorkoutDates = async () => {
       if (!user) return;
@@ -145,7 +147,12 @@ export const useHomePageData = () => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          const dates = data.map(item => new Date(item.workout_date));
+          // Convertir las fechas del servidor a fechas locales del usuario
+          const dates = data.map(item => {
+            const serverDate = new Date(item.workout_date);
+            // Crear una nueva fecha que represente la fecha local sin conversión de zona horaria
+            return new Date(serverDate.getTime() + (serverDate.getTimezoneOffset() * 60000));
+          });
           setDatesWithWorkouts(dates);
         }
       } catch (error) {
@@ -156,18 +163,17 @@ export const useHomePageData = () => {
     fetchWorkoutDates();
   }, [user]);
 
-  // Load daily workouts
+  // Load daily workouts using local timezone range
   useEffect(() => {
     const fetchDailyWorkouts = async () => {
       if (!user) return;
       
       setLoading(true);
       try {
-        const dateString = selectedDate.toISOString().split('T')[0];
+        // Usar el rango de fechas en la zona local del usuario
+        const { startOfDay, endOfDay } = getLocalDayRange(selectedDate);
         
-        // Use date range instead of like operator
-        const startOfDay = `${dateString}T00:00:00`;
-        const endOfDay = `${dateString}T23:59:59`;
+        console.log(`Fetching workouts for local date range: ${startOfDay} to ${endOfDay}`);
         
         const { data: workoutLogs, error } = await supabase
           .from('workout_logs')
@@ -186,6 +192,8 @@ export const useHomePageData = () => {
           
         if (error) throw error;
         
+        console.log(`Found ${workoutLogs?.length || 0} workouts for the selected date`);
+        
         if (workoutLogs && workoutLogs.length > 0) {
           const workouts = workoutLogs.map(workout => {
             const exerciseNames = Array.from(
@@ -198,14 +206,11 @@ export const useHomePageData = () => {
             // Usar la duración real del entrenamiento, solo estimar si es null o 0
             let duration = workout.duration_completed_minutes;
             if (!duration || duration === 0) {
-              // Solo estimar si realmente no hay datos
               duration = Math.max(15, exerciseNames.length * 3);
             }
             
-            // Usar las calorías reales del entrenamiento, solo estimar si es null o 0
             let calories = workout.calories_burned_estimated;
             if (!calories || calories === 0) {
-              // Solo estimar si realmente no hay datos
               calories = Math.round(duration * 6);
             }
             
@@ -237,7 +242,7 @@ export const useHomePageData = () => {
     };
     
     fetchDailyWorkouts();
-  }, [user, selectedDate]);
+  }, [user, selectedDate, getLocalDayRange]);
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);

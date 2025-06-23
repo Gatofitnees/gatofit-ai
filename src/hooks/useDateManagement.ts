@@ -17,7 +17,7 @@ export const useDateManagement = (selectedDate: Date, entries: FoodLogEntry[], d
   const formatSelectedDate = useMemo(() => {
     if (isToday) return "Hoy";
     
-    // Usar fecha local para los cálculos de diferencia
+    // Usar fecha local para los cálculos de diferencia sin conversión de zona horaria
     const today = new Date();
     const selected = new Date(selectedDate);
     
