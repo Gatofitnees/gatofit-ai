@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Flame, Zap, Wheat, Droplet, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -106,11 +107,11 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden rounded-xl">
       <div 
         ref={cardRef}
         className={cn(
-          "neu-card cursor-pointer hover:bg-secondary/10 transition-all duration-200 relative",
+          "neu-card cursor-pointer hover:bg-secondary/10 transition-all duration-200 relative overflow-hidden rounded-xl",
           className
         )}
         style={{ transform: `translateX(-${swipeDistance}px)` }}
@@ -175,7 +176,7 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
       {/* Delete Button */}
       {swipeDistance > 20 && (
         <div 
-          className="absolute right-0 top-0 h-full flex items-center justify-center bg-red-500 text-white"
+          className="absolute right-0 top-0 h-full flex items-center justify-center bg-red-500 text-white rounded-r-xl"
           style={{ width: `${Math.min(swipeDistance, 80)}px` }}
         >
           <Trash2 className="h-5 w-5" />

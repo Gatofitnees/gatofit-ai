@@ -63,17 +63,17 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
   return (
     <div
       className={cn(
-        "neu-card-inset opacity-90",
+        "neu-card-inset opacity-90 overflow-hidden rounded-xl",
         !error && "animate-pulse",
         className
       )}
     >
-      <div className="flex h-28 overflow-hidden">
+      <div className="flex h-28">
         <div className="relative w-28 h-28 flex-shrink-0">
           <img
             src={imageUrl}
             alt="Procesando alimento"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-l-xl"
           />
           {!error && (
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-l-xl">
@@ -89,12 +89,12 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
             </div>
           )}
         </div>
-        <div className="flex-1 p-3 flex flex-col justify-center items-center bg-muted/20">
+        <div className="flex-1 p-3 flex flex-col justify-center items-center bg-muted/20 rounded-r-xl">
           {error ? (
             <div className="text-center w-full">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
-                <h4 className="text-sm font-semibold text-destructive">Error de análisis</h4>
+                <h4 className="text-sm font-semibold text-destructive">Comida no detectada</h4>
               </div>
               <p className="text-xs text-muted-foreground mb-3 px-2">
                 {error}
