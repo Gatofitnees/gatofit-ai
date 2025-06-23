@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -21,38 +21,49 @@ const generateUniqueUsername = async (baseUsername: string): Promise<string> => 
   let counter = 1;
   
   while (true) {
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', username)
-      .single();
+    try {
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors
 
-    if (!existingUser) {
-      return username;
+      if (!existingUser) {
+        return username;
+      }
+      
+      username = `${baseUsername}${counter}`;
+      counter++;
+    } catch (error) {
+      console.error('Error checking username uniqueness:', error);
+      // Return a fallback username if there's an error
+      return `${baseUsername}${Math.floor(Math.random() * 10000)}`;
     }
-    
-    username = `${baseUsername}${counter}`;
-    counter++;
   }
 };
 
 export const useAutoProfileSetup = (user: User | null) => {
   const { toast } = useToast();
+  const hasRunRef = useRef(false);
 
   useEffect(() => {
-    const setupUserProfile = async () => {
-      if (!user) return;
+    // Prevent multiple executions for the same user
+    if (!user || hasRunRef.current) return;
 
+    const setupUserProfile = async () => {
       try {
         console.log('AutoProfileSetup: Starting for user:', user.id);
         console.log('User metadata:', user.user_metadata);
+
+        // Mark as running
+        hasRunRef.current = true;
 
         // Check if profile already has data
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('full_name, avatar_url, username, height_cm, current_weight_kg')
           .eq('id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid errors
 
         console.log('Existing profile:', existingProfile);
 
@@ -100,9 +111,6 @@ export const useAutoProfileSetup = (user: User | null) => {
           baseUsername = `user${Math.floor(Math.random() * 10000)}`;
         }
 
-        // Generate unique username
-        const uniqueUsername = await generateUniqueUsername(baseUsername);
-
         // Prepare updates - always update missing fields
         const updates: any = {};
         
@@ -114,6 +122,8 @@ export const useAutoProfileSetup = (user: User | null) => {
           console.log('Setting avatar URL:', avatarUrl);
         }
         if (!existingProfile?.username) {
+          // Generate unique username
+          const uniqueUsername = await generateUniqueUsername(baseUsername);
           updates.username = uniqueUsername;
         }
 
@@ -159,5 +169,12 @@ export const useAutoProfileSetup = (user: User | null) => {
     };
 
     setupUserProfile();
-  }, [user, toast]);
+
+    // Cleanup function to reset the ref when user changes
+    return () => {
+      if (user?.id !== hasRunRef.current) {
+        hasRunRef.current = false;
+      }
+    };
+  }, [user?.id, toast]); // Only depend on user.id and toast
 };

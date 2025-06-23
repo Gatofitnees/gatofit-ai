@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,11 +33,12 @@ export const useHomePageData = () => {
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Date[]>([]);
   const { getLocalDateString, getLocalDayRange } = useLocalTimezone();
   
-  const [macros, setMacros] = useState<MacroData>({
+  // Stable initial macros to prevent re-renders
+  const initialMacros = useMemo(() => ({
     calories: { 
       current: 0, 
       target: profile?.initial_recommended_calories || 2000, 
-      unit: "kcal" 
+      unit: "kcal" as const
     },
     protein: { 
       current: 0, 
@@ -51,9 +52,16 @@ export const useHomePageData = () => {
       current: 0, 
       target: profile?.initial_recommended_fats_g || 65 
     }
-  });
+  }), [
+    profile?.initial_recommended_calories,
+    profile?.initial_recommended_protein_g,
+    profile?.initial_recommended_carbs_g,
+    profile?.initial_recommended_fats_g
+  ]);
 
-  // Update macro targets when profile changes
+  const [macros, setMacros] = useState<MacroData>(initialMacros);
+
+  // Update macro targets when profile changes - but only once
   useEffect(() => {
     if (profile) {
       setMacros(prev => ({
@@ -76,20 +84,28 @@ export const useHomePageData = () => {
         }
       }));
     }
-  }, [profile?.initial_recommended_calories, profile?.initial_recommended_protein_g, profile?.initial_recommended_carbs_g, profile?.initial_recommended_fats_g]);
+  }, [
+    profile?.initial_recommended_calories, 
+    profile?.initial_recommended_protein_g, 
+    profile?.initial_recommended_carbs_g, 
+    profile?.initial_recommended_fats_g
+  ]);
 
-  // Load daily food consumption
+  // Memoize the selected date string to prevent unnecessary re-calculations
+  const selectedDateString = useMemo(() => 
+    getLocalDateString(selectedDate), [selectedDate, getLocalDateString]
+  );
+
+  // Load daily food consumption - stable with proper dependencies
   const fetchDailyFoodConsumption = useCallback(async () => {
     if (!user?.id) return;
     
     try {
-      const dateString = getLocalDateString(selectedDate);
-      
       const { data: foodEntries, error } = await supabase
         .from('daily_food_log_entries')
         .select('calories_consumed, protein_g_consumed, carbs_g_consumed, fat_g_consumed')
         .eq('user_id', user.id)
-        .eq('log_date', dateString);
+        .eq('log_date', selectedDateString);
         
       if (error) throw error;
       
@@ -128,9 +144,9 @@ export const useHomePageData = () => {
     } catch (error) {
       console.error("Error loading daily food consumption:", error);
     }
-  }, [user?.id, selectedDate, getLocalDateString]);
+  }, [user?.id, selectedDateString]);
 
-  // Load workout dates using local timezone
+  // Load workout dates - stable and only runs once
   const fetchWorkoutDates = useCallback(async () => {
     if (!user?.id) return;
     
@@ -158,16 +174,17 @@ export const useHomePageData = () => {
     }
   }, [user?.id]);
 
-  // Load daily workouts using local timezone range
+  // Load daily workouts - stable with memoized day range
+  const dayRange = useMemo(() => 
+    getLocalDayRange(selectedDate), [selectedDate, getLocalDayRange]
+  );
+
   const fetchDailyWorkouts = useCallback(async () => {
     if (!user?.id) return;
     
     setLoading(true);
     try {
-      // Use local timezone date range for the user
-      const { startOfDay, endOfDay } = getLocalDayRange(selectedDate);
-      
-      console.log(`Fetching workouts for local date range: ${startOfDay} to ${endOfDay}`);
+      console.log(`Fetching workouts for local date range: ${dayRange.startOfDay} to ${dayRange.endOfDay}`);
       
       const { data: workoutLogs, error } = await supabase
         .from('workout_logs')
@@ -180,8 +197,8 @@ export const useHomePageData = () => {
           workout_log_exercise_details(exercise_name_snapshot)
         `)
         .eq('user_id', user.id)
-        .gte('workout_date', startOfDay)
-        .lte('workout_date', endOfDay)
+        .gte('workout_date', dayRange.startOfDay)
+        .lte('workout_date', dayRange.endOfDay)
         .order('workout_date', { ascending: false });
         
       if (error) throw error;
@@ -233,22 +250,28 @@ export const useHomePageData = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, selectedDate, getLocalDayRange]);
+  }, [user?.id, dayRange.startOfDay, dayRange.endOfDay]);
 
-  // Effect for loading food consumption
+  // Effect for loading food consumption - only when dependencies change
   useEffect(() => {
-    fetchDailyFoodConsumption();
-  }, [fetchDailyFoodConsumption]);
+    if (user?.id && selectedDateString) {
+      fetchDailyFoodConsumption();
+    }
+  }, [user?.id, selectedDateString]);
 
-  // Effect for loading workout dates (only once)
+  // Effect for loading workout dates - only once when user changes
   useEffect(() => {
-    fetchWorkoutDates();
-  }, [fetchWorkoutDates]);
+    if (user?.id) {
+      fetchWorkoutDates();
+    }
+  }, [user?.id]);
 
-  // Effect for loading daily workouts
+  // Effect for loading daily workouts - only when date or user changes
   useEffect(() => {
-    fetchDailyWorkouts();
-  }, [fetchDailyWorkouts]);
+    if (user?.id && dayRange.startOfDay && dayRange.endOfDay) {
+      fetchDailyWorkouts();
+    }
+  }, [user?.id, dayRange.startOfDay, dayRange.endOfDay]);
 
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedDate(date);
