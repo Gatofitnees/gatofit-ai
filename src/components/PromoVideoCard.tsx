@@ -23,7 +23,7 @@ const PromoVideoCard: React.FC<PromoVideoCardProps> = ({ onStartWorkout }) => {
         <div className="absolute inset-0 bg-black/10"></div>
       </div>
 
-      <CardBody className="relative z-10 flex flex-col justify-end bg-transparent p-4 min-h-[160px]">
+      <CardBody className="relative z-10 min-h-[140px] flex flex-col justify-end bg-transparent p-4">
         <div className="flex justify-end">
           <Button 
             variant="primary"
