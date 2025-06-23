@@ -114,6 +114,51 @@ export type Database = {
           },
         ]
       }
+      body_measurements_history: {
+        Row: {
+          abdomen_circumference_cm: number | null
+          arm_circumference_cm: number | null
+          body_fat_percentage: number | null
+          chest_circumference_cm: number | null
+          created_at: string
+          height_cm: number | null
+          id: string
+          leg_circumference_cm: number | null
+          measured_at: string
+          notes: string | null
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          abdomen_circumference_cm?: number | null
+          arm_circumference_cm?: number | null
+          body_fat_percentage?: number | null
+          chest_circumference_cm?: number | null
+          created_at?: string
+          height_cm?: number | null
+          id?: string
+          leg_circumference_cm?: number | null
+          measured_at?: string
+          notes?: string | null
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          abdomen_circumference_cm?: number | null
+          arm_circumference_cm?: number | null
+          body_fat_percentage?: number | null
+          chest_circumference_cm?: number | null
+          created_at?: string
+          height_cm?: number | null
+          id?: string
+          leg_circumference_cm?: number | null
+          measured_at?: string
+          notes?: string | null
+          user_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
       cities: {
         Row: {
           country_id: number
