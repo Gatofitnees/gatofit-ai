@@ -5,24 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart2, Copy, Pencil } from "lucide-react";
 import { SetRow } from "./SetRow";
 import { ExerciseNotesDialog } from "./ExerciseNotesDialog";
-
-interface WorkoutSet {
-  set_number: number;
-  weight: number | null;
-  reps: number | null;
-  notes: string;
-  previous_weight: number | null;
-  previous_reps: number | null;
-}
-
-interface WorkoutExercise {
-  id: number;
-  name: string;
-  sets: WorkoutSet[];
-  muscle_group_main?: string;
-  equipment_required?: string;
-  notes: string;
-}
+import { WorkoutSet, WorkoutExercise } from "../../types/workout";
 
 interface ExerciseCardProps {
   exercise: WorkoutExercise;
