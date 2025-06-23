@@ -4,6 +4,7 @@ import { useFoodCapture } from './useFoodCapture';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { FoodLogEntry } from './useFoodLog';
 
 type AddEntryFn = (entry: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>) => Promise<FoodLogEntry | null>;
@@ -12,6 +13,8 @@ export interface ProcessingFood {
     id: string;
     imageSrc: string;
     blob: Blob;
+    supabaseUrl?: string;
+    fileName?: string;
     error?: string | null;
 }
 
@@ -22,7 +25,25 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const { incrementUsage, checkLimitWithoutFetch, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
-  const runAnalysis = async (blob: Blob, id: string, imageSrc: string) => {
+  const deleteImageFromStorage = async (fileName: string) => {
+    if (!fileName) return;
+    
+    try {
+      const { error } = await supabase.storage
+        .from('food-images')
+        .remove([fileName]);
+      
+      if (error) {
+        console.warn('Failed to delete image from storage:', error);
+      } else {
+        console.log('Image deleted from storage:', fileName);
+      }
+    } catch (error) {
+      console.warn('Error deleting image from storage:', error);
+    }
+  };
+
+  const runAnalysis = async (blob: Blob, id: string, imageSrc: string, existingSupabaseUrl?: string, existingFileName?: string) => {
     clearError();
     
     // Verificar límites sin hacer fetch innecesario
@@ -37,7 +58,38 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
     }
 
     try {
-      const result = await uploadImageWithAnalysis(blob);
+      let result;
+      
+      // Si tenemos URL existente, usarla para reintento
+      if (existingSupabaseUrl && existingFileName) {
+        console.log('Using existing Supabase image for retry:', existingSupabaseUrl);
+        const { sendToWebhookWithResponse } = useFoodCapture();
+        const analysisResult = await sendToWebhookWithResponse(existingSupabaseUrl, blob);
+        
+        if (analysisResult) {
+          result = {
+            imageUrl: existingSupabaseUrl,
+            fileName: existingFileName,
+            analysisResult
+          };
+        } else {
+          result = null;
+        }
+      } else {
+        // Primera vez, subir imagen
+        result = await uploadImageWithAnalysis(blob);
+        
+        // Actualizar ProcessingFood con la URL de Supabase
+        if (result) {
+          setProcessingFoods(prev => prev.map(p => 
+            p.id === id ? { 
+              ...p, 
+              supabaseUrl: result.imageUrl, 
+              fileName: result.fileName 
+            } : p
+          ));
+        }
+      }
 
       if (result && result.analysisResult) {
         const analysis = result.analysisResult;
@@ -48,12 +100,17 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
             analysis.calories === 0 || analysis.calories < 1) {
           
           console.log('No food detected in analysis:', analysis);
-          const noFoodMessage = "No se detectó comida en la imagen. Intenta con una foto más clara del alimento.";
+          const noFoodMessage = "Intenta con una foto más clara";
           
           setProcessingFoods(prev => prev.map(p => 
             p.id === id ? { ...p, error: noFoodMessage } : p
           ));
-          return; // No guardar entrada si no se detectó comida
+          
+          // Eliminar imagen del storage si es el primer intento
+          if (!existingSupabaseUrl && result.fileName) {
+            await deleteImageFromStorage(result.fileName);
+          }
+          return;
         }
 
         const newEntryData: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> = {
@@ -79,11 +136,16 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
             await incrementUsage('nutrition_photos');
           }
           
-          // Usar setTimeout para asegurar transición suave
+          // Eliminar inmediatamente con animación
+          setProcessingFoods(prev => prev.map(p => 
+            p.id === id ? { ...p, isCompleting: true } : p
+          ));
+          
+          // Eliminar de la lista después de la animación
           setTimeout(() => {
             setProcessingFoods(prev => prev.filter(p => p.id !== id));
             URL.revokeObjectURL(imageSrc);
-          }, 500); // Pequeño delay para transición más suave
+          }, 300);
           
           toast({
             title: "¡Comida analizada!",
@@ -94,10 +156,15 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
         }
       } else {
         // Manejar caso cuando no hay resultado de análisis
-        const errorMessage = foodCaptureError || "No se detectó comida en la imagen. Intenta con una foto más clara del alimento.";
+        const errorMessage = foodCaptureError || "Intenta con una foto más clara";
         console.log('No analysis result received');
         
         setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
+        
+        // Eliminar imagen del storage si es el primer intento
+        if (!existingSupabaseUrl && result?.fileName) {
+          await deleteImageFromStorage(result.fileName);
+        }
       }
     } catch (error) {
       console.error("Error processing food:", error);
@@ -131,16 +198,34 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
 
     // Limpiar error y volver a estado de procesamiento
     setProcessingFoods(prev => prev.map(p => p.id === foodId ? { ...p, error: null } : p));
-    await runAnalysis(foodToRetry.blob, foodToRetry.id, foodToRetry.imageSrc);
+    
+    // Usar imagen existente si está disponible
+    await runAnalysis(
+      foodToRetry.blob, 
+      foodToRetry.id, 
+      foodToRetry.imageSrc,
+      foodToRetry.supabaseUrl,
+      foodToRetry.fileName
+    );
   };
 
-  const handleCancelProcessing = (foodId: string) => {
+  const handleCancelProcessing = async (foodId: string) => {
     const foodToRemove = processingFoods.find(f => f.id === foodId);
-    if (foodToRemove) {
-      URL.revokeObjectURL(foodToRemove.imageSrc);
+    if (!foodToRemove) return;
+    
+    // Eliminar imagen del storage si existe
+    if (foodToRemove.fileName) {
+      await deleteImageFromStorage(foodToRemove.fileName);
     }
     
-    // Usar setTimeout para transición más suave
+    // Limpiar URL del objeto
+    URL.revokeObjectURL(foodToRemove.imageSrc);
+    
+    // Usar animación para transición suave
+    setProcessingFoods(prev => prev.map(p => 
+      p.id === foodId ? { ...p, isCancelling: true } : p
+    ));
+    
     setTimeout(() => {
       setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
     }, 200);

@@ -10,6 +10,8 @@ interface ProcessingFoodCardProps {
   className?: string;
   error?: string | null;
   isCompressing?: boolean;
+  isCompleting?: boolean;
+  isCancelling?: boolean;
   onRetry: () => void;
   onCancel: () => void;
 }
@@ -35,13 +37,15 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
   className,
   error,
   isCompressing = false,
+  isCompleting = false,
+  isCancelling = false,
   onRetry,
   onCancel,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
-    if (error) return; // Stop interval on error
+    if (error || isCompleting || isCancelling) return; // Stop interval on error or completion
 
     const steps = isCompressing ? compressionSteps : processingSteps;
     const interval = setInterval(() => {
@@ -55,7 +59,7 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
     }, isCompressing ? 1000 : 2000); // Faster interval for compression
 
     return () => clearInterval(interval);
-  }, [error, isCompressing]);
+  }, [error, isCompressing, isCompleting, isCancelling]);
 
   const steps = isCompressing ? compressionSteps : processingSteps;
   const currentStep = steps[currentStepIndex];
@@ -63,21 +67,23 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
   return (
     <div
       className={cn(
-        "neu-card-inset overflow-hidden", // Añadido overflow-hidden para evitar esquinas blancas
-        !error && "animate-pulse",
-        error && "animate-fade-in", // Animación suave cuando aparece el error
+        "neu-card-inset overflow-hidden",
+        !error && !isCompleting && !isCancelling && "animate-pulse",
+        error && "animate-fade-in",
+        isCompleting && "animate-fade-out",
+        isCancelling && "animate-fade-out",
         className
       )}
     >
       <div className="flex h-28">
-        <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden"> {/* Añadido overflow-hidden */}
+        <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden">
           <img
             src={imageUrl}
             alt="Procesando alimento"
-            className="w-full h-full object-cover rounded-l-xl" // Mantenemos rounded-l-xl para la imagen
+            className="w-full h-full object-cover rounded-l-xl"
           />
-          {!error && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+          {!error && !isCompleting && !isCancelling && (
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-l-xl">
               <ProgressRing 
                 progress={currentStep.progress} 
                 size={50} 
@@ -96,7 +102,7 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
               <div className="flex items-center justify-center gap-2 mb-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 <h4 className="text-sm font-semibold text-destructive">
-                  {error.includes('No se detectó') ? 'No se detectó comida' : 'Error de análisis'}
+                  No se detectó comida
                 </h4>
               </div>
               <p className="text-xs text-muted-foreground mb-3 px-2">
