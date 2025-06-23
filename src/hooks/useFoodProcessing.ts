@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useFoodCapture } from './useFoodCapture';
+import { useWebhookResponse } from './useWebhookResponse';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { useToast } from '@/hooks/use-toast';
@@ -16,11 +17,14 @@ export interface ProcessingFood {
     supabaseUrl?: string;
     fileName?: string;
     error?: string | null;
+    isCompleting?: boolean;
+    isCancelling?: boolean;
 }
 
 export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
   const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
+  const { sendToWebhookWithResponse } = useWebhookResponse();
   const { isPremium } = useSubscription();
   const { incrementUsage, checkLimitWithoutFetch, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
@@ -63,7 +67,6 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
       // Si tenemos URL existente, usarla para reintento
       if (existingSupabaseUrl && existingFileName) {
         console.log('Using existing Supabase image for retry:', existingSupabaseUrl);
-        const { sendToWebhookWithResponse } = useFoodCapture();
         const analysisResult = await sendToWebhookWithResponse(existingSupabaseUrl, blob);
         
         if (analysisResult) {
@@ -136,16 +139,10 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
             await incrementUsage('nutrition_photos');
           }
           
-          // Eliminar inmediatamente con animación
+          // Marcar como completando para animación de salida
           setProcessingFoods(prev => prev.map(p => 
             p.id === id ? { ...p, isCompleting: true } : p
           ));
-          
-          // Eliminar de la lista después de la animación
-          setTimeout(() => {
-            setProcessingFoods(prev => prev.filter(p => p.id !== id));
-            URL.revokeObjectURL(imageSrc);
-          }, 300);
           
           toast({
             title: "¡Comida analizada!",
@@ -221,14 +218,15 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
     // Limpiar URL del objeto
     URL.revokeObjectURL(foodToRemove.imageSrc);
     
-    // Usar animación para transición suave
+    // Marcar como cancelando para animación
     setProcessingFoods(prev => prev.map(p => 
       p.id === foodId ? { ...p, isCancelling: true } : p
     ));
-    
-    setTimeout(() => {
-      setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
-    }, 200);
+  };
+
+  // Limpiar elementos después de animaciones
+  const handleAnimationComplete = (foodId: string) => {
+    setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
   };
   
   return {
@@ -236,6 +234,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
     handlePhotoTaken,
     handleRetryAnalysis,
     handleCancelProcessing,
+    handleAnimationComplete,
     isCompressing
   };
 };
