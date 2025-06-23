@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { WorkoutExercise } from "../types/workout";
 
@@ -25,19 +24,25 @@ export function useExerciseInputHandlers(
       if (val === '') return null;
       
       if (isWeight) {
-        // For weight, allow decimals and handle comma/dot
+        // For weight, allow trailing dots and preserve them during input
         const normalizedVal = val.replace(',', '.');
         
-        // Allow trailing dot for decimal input (e.g., "12.")
-        if (normalizedVal.endsWith('.') && normalizedVal.split('.').length === 2) {
-          const numValue = parseFloat(normalizedVal);
-          console.log(`Parsing weight with trailing dot "${val}" -> "${normalizedVal}" -> ${numValue}`);
-          return isNaN(numValue) ? null : numValue;
+        // If the value ends with a dot and it's a valid decimal start, keep it as string
+        if (normalizedVal.endsWith('.') && /^\d+\.$/.test(normalizedVal)) {
+          console.log(`Keeping trailing dot for weight input: "${val}" -> "${normalizedVal}"`);
+          return normalizedVal; // Return as string to preserve the dot
         }
         
-        const numValue = parseFloat(normalizedVal);
-        console.log(`Parsing weight "${val}" -> "${normalizedVal}" -> ${numValue}`);
-        return isNaN(numValue) ? null : Math.round(numValue * 10) / 10; // Round to 1 decimal place
+        // If it's a valid decimal number, parse it
+        if (/^\d*\.?\d*$/.test(normalizedVal) && normalizedVal !== '.') {
+          const numValue = parseFloat(normalizedVal);
+          if (!isNaN(numValue)) {
+            console.log(`Parsing weight "${val}" -> "${normalizedVal}" -> ${numValue}`);
+            return numValue;
+          }
+        }
+        
+        return null;
       } else {
         // For reps, only integers
         const numValue = parseInt(val);

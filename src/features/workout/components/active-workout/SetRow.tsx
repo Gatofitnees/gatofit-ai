@@ -4,7 +4,7 @@ import { NumericInput } from "@/components/ui/numeric-input";
 
 interface WorkoutSet {
   set_number: number;
-  weight: number | null;
+  weight: number | string | null;
   reps: number | null;
   notes: string;
   previous_weight: number | null;
@@ -39,14 +39,25 @@ export const SetRow: React.FC<SetRowProps> = ({
   };
 
   // Format weight display with proper decimal formatting
-  const formatWeightDisplay = (weight: number | null) => {
+  const formatWeightDisplay = (weight: number | string | null) => {
     if (weight === null) return '';
-    // Show decimals only if they're not zero
-    if (weight % 1 === 0) {
-      return weight.toString();
-    } else {
-      return weight.toFixed(1); // Show only 1 decimal place
+    
+    // If it's a string (like "12."), return as is to preserve trailing dots
+    if (typeof weight === 'string') {
+      return weight;
     }
+    
+    // If it's a number, format it properly
+    if (typeof weight === 'number') {
+      // Show decimals only if they're not zero
+      if (weight % 1 === 0) {
+        return weight.toString();
+      } else {
+        return weight.toFixed(1); // Show only 1 decimal place
+      }
+    }
+    
+    return '';
   };
 
   // Format previous data display
@@ -57,7 +68,9 @@ export const SetRow: React.FC<SetRowProps> = ({
     });
     
     if (set.previous_weight !== null && set.previous_reps !== null) {
-      const formattedWeight = formatWeightDisplay(set.previous_weight);
+      const formattedWeight = typeof set.previous_weight === 'number' 
+        ? (set.previous_weight % 1 === 0 ? set.previous_weight.toString() : set.previous_weight.toFixed(1))
+        : set.previous_weight;
       return `${formattedWeight}kg × ${set.previous_reps}`;
     }
     return '-';

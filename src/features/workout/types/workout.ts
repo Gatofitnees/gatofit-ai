@@ -1,7 +1,7 @@
 
 export interface WorkoutSet {
   set_number: number;
-  weight: number | null;
+  weight: number | string | null;
   reps: number | null;
   notes: string;
   previous_weight: number | null;
