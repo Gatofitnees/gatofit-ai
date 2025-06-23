@@ -119,7 +119,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/profile/settings"
+                  path="/settings"
                   element={
                     <ProtectedRoute>
                       <SettingsPage />
