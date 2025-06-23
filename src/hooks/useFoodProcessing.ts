@@ -4,6 +4,7 @@ import { useFoodCapture } from './useFoodCapture';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { useToast } from '@/hooks/use-toast';
+import { useWebhookResponse } from './useWebhookResponse';
 import { FoodLogEntry } from './useFoodLog';
 
 type AddEntryFn = (entry: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>) => Promise<FoodLogEntry | null>;
@@ -60,6 +61,7 @@ const deleteImageFromStorage = async (imageUrl: string): Promise<void> => {
 export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
   const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
+  const { sendToWebhookWithResponse } = useWebhookResponse();
   const { isPremium } = useSubscription();
   const { incrementUsage, checkLimitWithoutFetch, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
@@ -88,10 +90,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
       if (supabaseUrl) {
         // Use existing Supabase URL for retry - just send to webhook
         console.log('Using existing Supabase URL for retry:', supabaseUrl);
-        const { sendToWebhookWithResponse } = await import('./useWebhookResponse');
-        const { useWebhookResponse } = await import('./useWebhookResponse');
-        const webhookHook = useWebhookResponse();
-        const analysisResult = await webhookHook.sendToWebhookWithResponse(supabaseUrl, blob);
+        const analysisResult = await sendToWebhookWithResponse(supabaseUrl, blob);
         
         if (analysisResult) {
           result = {
@@ -109,11 +108,14 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
       if (result && result.analysisResult) {
         const analysis = result.analysisResult;
         
-        // Check if food was actually detected (must have valid name and at least some calories)
-        if (!analysis.name || analysis.name.toLowerCase().includes('no food') || 
-            analysis.name.toLowerCase().includes('not food') || 
-            (analysis.calories === 0 && analysis.protein === 0 && analysis.carbs === 0 && analysis.fat === 0)) {
-          
+        // Check if food was actually detected - improved logic
+        const hasValidName = analysis.name && 
+          !analysis.name.toLowerCase().includes('no food') && 
+          !analysis.name.toLowerCase().includes('not food') &&
+          !analysis.name.toLowerCase().includes('no se detectó') &&
+          !analysis.name.toLowerCase().includes('no detectado');
+        
+        if (!hasValidName) {
           // Delete image from storage since it's not useful
           if (finalSupabaseUrl) {
             await deleteImageFromStorage(finalSupabaseUrl);
@@ -125,7 +127,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
             description: errorMessage,
             variant: "destructive",
           });
-          setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
+          setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage, supabaseUrl: finalSupabaseUrl } : p));
           return;
         }
 
