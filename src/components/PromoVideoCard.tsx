@@ -6,9 +6,13 @@ import Button from "./Button";
 
 interface PromoVideoCardProps {
   onStartWorkout: () => void;
+  adaptToWorkoutCards?: boolean;
 }
 
-const PromoVideoCard: React.FC<PromoVideoCardProps> = ({ onStartWorkout }) => {
+const PromoVideoCard: React.FC<PromoVideoCardProps> = ({ 
+  onStartWorkout, 
+  adaptToWorkoutCards = false 
+}) => {
   return (
     <Card className="relative overflow-hidden">
       {/* GIF Background */}
@@ -23,7 +27,9 @@ const PromoVideoCard: React.FC<PromoVideoCardProps> = ({ onStartWorkout }) => {
         <div className="absolute inset-0 bg-black/10"></div>
       </div>
 
-      <CardBody className="relative z-10 min-h-[140px] flex flex-col justify-end bg-transparent p-4">
+      <CardBody className={`relative z-10 flex flex-col justify-end bg-transparent p-4 ${
+        adaptToWorkoutCards ? 'min-h-[140px]' : 'min-h-[140px]'
+      }`}>
         <div className="flex justify-end">
           <Button 
             variant="primary"

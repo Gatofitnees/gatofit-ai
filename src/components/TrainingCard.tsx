@@ -63,41 +63,41 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   const renderCompletedWorkoutCard = (workout: WorkoutSummary, index: number, total: number) => (
     <Card className="min-h-[140px]">
       <CardBody>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Title with check icon and calories badge */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Check className="h-5 w-5 text-primary" />
-              <h4 className="font-medium text-base">{workout.name}</h4>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Check className="h-5 w-5 text-primary flex-shrink-0" />
+              <h4 className="font-medium text-base truncate">{workout.name}</h4>
             </div>
             {workout.calories && workout.calories > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-sm">
+              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-sm flex-shrink-0 ml-2">
                 <Flame className="h-4 w-4" />
                 <span>{workout.calories} kcal</span>
               </div>
             )}
           </div>
           
-          {/* Stats in frames */}
-          <div className="flex items-center gap-3 text-sm">
+          {/* Stats in responsive grid */}
+          <div className="grid grid-cols-3 gap-2 text-sm">
             {workout.duration && (
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>{workout.duration}</span>
+              <div className="flex items-center gap-1 text-muted-foreground min-w-0">
+                <Clock className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{workout.duration}</span>
               </div>
             )}
             
             {workout.exerciseCount && (
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Dumbbell className="h-4 w-4" />
-                <span>{workout.exerciseCount} ejercicios</span>
+              <div className="flex items-center gap-1 text-muted-foreground min-w-0">
+                <Dumbbell className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{workout.exerciseCount} ejercicios</span>
               </div>
             )}
             
             {workout.totalSets && (
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Target className="h-4 w-4" />
-                <span>{workout.totalSets} series</span>
+              <div className="flex items-center gap-1 text-muted-foreground min-w-0">
+                <Target className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{workout.totalSets} series</span>
               </div>
             )}
           </div>
@@ -147,6 +147,9 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   ];
 
   const totalItems = carouselItems.length;
+  
+  // Determinar si hay entrenamientos completados para hacer la promo card responsiva
+  const hasCompletedWorkouts = workouts.length > 0;
 
   return (
     <div className="mb-5">
@@ -157,7 +160,12 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
         >
           {(item, index, total) => {
             if (item.type === 'promo') {
-              return <PromoVideoCard onStartWorkout={onStartWorkout} />;
+              return (
+                <PromoVideoCard 
+                  onStartWorkout={onStartWorkout} 
+                  adaptToWorkoutCards={hasCompletedWorkouts}
+                />
+              );
             } else {
               return renderCompletedWorkoutCard(item.data, index - 1, total - 1);
             }
