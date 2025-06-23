@@ -13,14 +13,14 @@ export const useGoogleAuth = () => {
     setLoading(true);
     
     try {
-      // Always use web OAuth flow for now
-      // TODO: Add native Android support when building locally
-      console.log('Using web OAuth Google Sign-In');
+      // Get the current origin dynamically
+      const currentOrigin = window.location.origin;
+      console.log('Current origin for Google auth:', currentOrigin);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding/app-transition`,
+          redirectTo: `${currentOrigin}/onboarding/app-transition`,
           queryParams: {
             prompt: 'select_account'
           }
@@ -28,17 +28,26 @@ export const useGoogleAuth = () => {
       });
       
       if (error) {
-        console.error('Web Google sign-in error:', error);
+        console.error('Google sign-in error:', error);
         throw error;
       }
       
-      console.log('Web Google Auth initiated:', data);
+      console.log('Google Auth initiated:', data);
       return { data, error: null };
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       
+      // More specific error handling for common Google auth issues
+      let errorMessage = "Error al iniciar sesión con Google";
+      
+      if (error.message?.includes('requested path is invalid')) {
+        errorMessage = "Error de configuración. Por favor, contacta al administrador.";
+      } else if (error.message?.includes('redirect')) {
+        errorMessage = "Error de redirección. Inténtalo de nuevo.";
+      }
+      
       toast({
-        title: "Error al iniciar sesión con Google",
+        title: errorMessage,
         description: error.message || "Error desconocido",
         variant: "destructive"
       });
