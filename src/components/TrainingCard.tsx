@@ -61,55 +61,62 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   }
 
   const renderCompletedWorkoutCard = (workout: WorkoutSummary, index: number, total: number) => (
-    <Card className="min-h-[140px]">
-      <CardBody className="flex flex-col justify-between h-full p-4">
+    <Card>
+      <CardHeader 
+        title="Entrenamiento Completado" 
+        icon={<Check className="h-5 w-5 text-primary" />} 
+      />
+      <CardBody>
         <div className="space-y-3">
-          {/* Title with blue check */}
-          <div className="flex items-center gap-2">
-            <Check className="h-5 w-5 text-blue-500 flex-shrink-0" />
+          <div className="flex items-center justify-between">
             <h4 className="font-medium">{workout.name}</h4>
+            {workout.calories && workout.calories > 0 && (
+              <div className="flex items-center text-sm px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                <Flame className="h-3.5 w-3.5 mr-1" />
+                <span>{workout.calories} kcal</span>
+              </div>
+            )}
           </div>
           
-          {/* Stats in elegant boxes */}
-          <div className="flex items-center gap-3 text-sm">
+          {/* Stats row */}
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
             {workout.duration && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-secondary/20 rounded-lg">
-                <Clock className="h-3.5 w-3.5 text-blue-500" />
-                <span className="text-muted-foreground">{workout.duration}</span>
+              <div className="flex items-center">
+                <Clock className="h-3.5 w-3.5 mr-1" />
+                <span>{workout.duration}</span>
               </div>
             )}
             
             {workout.exerciseCount && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-secondary/20 rounded-lg">
-                <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-muted-foreground">{workout.exerciseCount} ejercicios</span>
+              <div className="flex items-center">
+                <Dumbbell className="h-3.5 w-3.5 mr-1" />
+                <span>{workout.exerciseCount} ejercicios</span>
               </div>
             )}
             
             {workout.totalSets && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-secondary/20 rounded-lg">
-                <Target className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-muted-foreground">{workout.totalSets} series</span>
+              <div className="flex items-center">
+                <Target className="h-3.5 w-3.5 mr-1" />
+                <span>{workout.totalSets} series</span>
               </div>
             )}
           </div>
-
-          {workout.calories && workout.calories > 0 && (
-            <div className="flex items-center gap-1 text-sm">
-              <Flame className="h-3.5 w-3.5 text-orange-500" />
-              <span className="text-orange-500 font-medium">{workout.calories} kcal</span>
-            </div>
-          )}
           
-          {/* Exercises section */}
           {workout.exercises && workout.exercises.length > 0 && (
-            <div className="space-y-2">
-              <span className="text-xs text-muted-foreground">Ejercicios realizados:</span>
-              <div className="text-sm">
-                <span className="text-foreground">{workout.exercises[0]}</span>
-                {workout.exerciseCount && workout.exerciseCount > 1 && (
-                  <span className="ml-2 text-primary font-medium">
-                    +{workout.exerciseCount - 1} más
+            <div className="bg-background/40 rounded-lg p-3">
+              <span className="text-xs text-muted-foreground block mb-2">Ejercicios realizados:</span>
+              <div className="flex flex-wrap gap-1">
+                {workout.exercises.map((exercise, exerciseIndex) => (
+                  <span 
+                    key={exerciseIndex}
+                    className="text-xs px-2 py-1 bg-background/80 rounded-full border border-white/10"
+                  >
+                    {exercise}
+                  </span>
+                ))}
+                {workout.exerciseCount && workout.exerciseCount > workout.exercises.length && (
+                  <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                    +{workout.exerciseCount - workout.exercises.length} más
                   </span>
                 )}
               </div>
