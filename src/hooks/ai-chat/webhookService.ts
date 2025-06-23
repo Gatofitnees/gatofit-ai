@@ -1,6 +1,4 @@
 
-import { UserData, WebhookResponse } from './types';
-
 const WEBHOOK_URL = 'https://gaton8n.gatofit.com/webhook/5ad29227-88fb-46ab-bff9-c44cb4e1d957';
 
 export const sendToWebhook = async (message: string, userData: UserData): Promise<any> => {
@@ -42,7 +40,14 @@ export const sendToWebhook = async (message: string, userData: UserData): Promis
 
   if (!responseText || responseText.trim() === '') {
     console.error('❌ [AI CHAT ERROR] Respuesta vacía del webhook');
-    throw new Error('El webhook devolvió una respuesta vacía');
+    console.log('🔍 [AI CHAT DEBUG] Verificando si el webhook está configurado correctamente...');
+    console.log('🔍 [AI CHAT DEBUG] URL utilizada:', WEBHOOK_URL);
+    console.log('🔍 [AI CHAT DEBUG] Payload enviado:', JSON.stringify(payload, null, 2));
+    
+    // Return a placeholder response instead of throwing an error
+    return JSON.stringify({
+      text: 'El webhook externo devolvió una respuesta vacía. Por favor, verifica la configuración del webhook o inténtalo de nuevo más tarde.'
+    });
   }
 
   return responseText;

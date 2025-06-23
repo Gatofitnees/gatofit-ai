@@ -2,6 +2,20 @@
 import { ChatMessage, WebhookResponse } from './types';
 
 export const processWebhookResponse = (responseText: string): ChatMessage => {
+  console.log('🔍 [AI CHAT DEBUG] Procesando respuesta, texto recibido:', responseText);
+  console.log('🔍 [AI CHAT DEBUG] Longitud del texto:', responseText ? responseText.length : 0);
+  
+  // Handle empty response from webhook
+  if (!responseText || responseText.trim() === '') {
+    console.error('❌ [AI CHAT ERROR] Respuesta vacía del webhook');
+    return {
+      id: (Date.now() + 1).toString(),
+      type: 'ai',
+      content: 'Lo siento, el servidor no pudo procesar tu mensaje. Por favor, inténtalo de nuevo.',
+      timestamp: new Date(),
+    };
+  }
+
   let parsedResponse: WebhookResponse[] | any;
   
   try {
@@ -27,7 +41,12 @@ export const processWebhookResponse = (responseText: string): ChatMessage => {
     
     if (parsedResponse.length === 0) {
       console.error('❌ [AI CHAT ERROR] Array de respuesta vacío');
-      throw new Error('El webhook devolvió un array vacío');
+      return {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: 'El servidor devolvió una respuesta vacía. Por favor, inténtalo de nuevo.',
+        timestamp: new Date(),
+      };
     }
 
     const firstResponse = parsedResponse[0];
@@ -48,7 +67,12 @@ export const processWebhookResponse = (responseText: string): ChatMessage => {
       return aiMessage;
     } else {
       console.error('❌ [AI CHAT ERROR] Estructura de respuesta inválida - falta output');
-      throw new Error('Estructura de respuesta inválida - falta el campo output');
+      return {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: 'La respuesta del servidor tiene un formato inválido. Por favor, inténtalo de nuevo.',
+        timestamp: new Date(),
+      };
     }
   } else if (typeof parsedResponse === 'object' && parsedResponse !== null) {
     console.log('🔍 [AI CHAT DEBUG] Procesando respuesta como objeto');
@@ -80,13 +104,26 @@ export const processWebhookResponse = (responseText: string): ChatMessage => {
       
       console.log('✅ [AI CHAT SUCCESS] Mensaje AI creado desde text directo:', aiMessage);
       return aiMessage;
+    } else if (parsedResponse.message) {
+      // Try message field
+      console.log('🔍 [AI CHAT DEBUG] Campo message encontrado:', parsedResponse.message);
+      
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: parsedResponse.message,
+        timestamp: new Date(),
+      };
+      
+      console.log('✅ [AI CHAT SUCCESS] Mensaje AI creado desde message:', aiMessage);
+      return aiMessage;
     } else {
       console.error('❌ [AI CHAT ERROR] Objeto de respuesta sin campos reconocidos:', Object.keys(parsedResponse));
       // Fallback: try to use the whole object as text
       return {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: JSON.stringify(parsedResponse),
+        content: 'El servidor devolvió una respuesta en formato no reconocido. Por favor, inténtalo de nuevo.',
         timestamp: new Date(),
       };
     }
@@ -96,7 +133,7 @@ export const processWebhookResponse = (responseText: string): ChatMessage => {
     return {
       id: (Date.now() + 1).toString(),
       type: 'ai',
-      content: String(parsedResponse) || 'Lo siento, no pude procesar tu mensaje.',
+      content: 'El servidor devolvió una respuesta en formato no válido. Por favor, inténtalo de nuevo.',
       timestamp: new Date(),
     };
   }
