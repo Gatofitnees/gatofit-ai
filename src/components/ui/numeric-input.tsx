@@ -44,21 +44,27 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
         // Allow comma key to act as decimal separator on mobile
         if (e.key === ',' && !e.currentTarget.value.includes('.') && !e.currentTarget.value.includes(',')) {
           e.preventDefault();
-          // Directly update the input value and trigger onChange
+          // Directly update the input value
           const input = e.currentTarget;
           const newValue = input.value + '.';
           input.value = newValue;
           
-          // Create a proper change event
-          const changeEvent = new Event('change', { bubbles: true });
-          Object.defineProperty(changeEvent, 'target', {
-            writable: false,
-            value: input
-          });
+          // Create a synthetic change event that matches the expected structure
+          const syntheticEvent = {
+            target: input,
+            currentTarget: input,
+            nativeEvent: e.nativeEvent,
+            type: 'change',
+            isDefaultPrevented: () => false,
+            isPropagationStopped: () => false,
+            persist: () => {},
+            preventDefault: () => {},
+            stopPropagation: () => {}
+          } as React.ChangeEvent<HTMLInputElement>;
           
           // Trigger the change handler
           if (onChange) {
-            onChange(changeEvent as React.ChangeEvent<HTMLInputElement>);
+            onChange(syntheticEvent);
           }
         }
       }
@@ -75,16 +81,22 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
         const input = e.currentTarget;
         input.value = normalizedText;
         
-        // Create a proper change event
-        const changeEvent = new Event('change', { bubbles: true });
-        Object.defineProperty(changeEvent, 'target', {
-          writable: false,
-          value: input
-        });
+        // Create a synthetic change event
+        const syntheticEvent = {
+          target: input,
+          currentTarget: input,
+          nativeEvent: e.nativeEvent,
+          type: 'change',
+          isDefaultPrevented: () => false,
+          isPropagationStopped: () => false,
+          persist: () => {},
+          preventDefault: () => {},
+          stopPropagation: () => {}
+        } as React.ChangeEvent<HTMLInputElement>;
         
         // Validate and trigger change if valid
         if (onChange) {
-          onChange(changeEvent as React.ChangeEvent<HTMLInputElement>);
+          onChange(syntheticEvent);
         }
       }
     };
