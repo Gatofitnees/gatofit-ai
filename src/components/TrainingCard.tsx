@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Check, ChevronRight, Plus, Clock, Flame, Dumbbell, Target } from "lucide-react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
@@ -63,37 +64,55 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
     <Card className="min-h-[140px]">
       <CardBody className="flex flex-col justify-between h-full p-4">
         <div className="space-y-3">
-          {/* Title with blue check, time and calories */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <Check className="h-5 w-5 text-blue-500 flex-shrink-0" />
-              <h4 className="font-medium truncate">{workout.name}</h4>
-            </div>
-            <div className="flex items-center gap-3 text-sm flex-shrink-0">
-              {workout.duration && (
-                <div className="flex items-center text-muted-foreground">
-                  <Clock className="h-3.5 w-3.5 mr-1" />
-                  <span>{workout.duration}</span>
-                </div>
-              )}
-              {workout.calories && workout.calories > 0 && (
-                <div className="flex items-center text-primary">
-                  <Flame className="h-3.5 w-3.5 mr-1" />
-                  <span>{workout.calories} kcal</span>
-                </div>
-              )}
-            </div>
+          {/* Title with blue check */}
+          <div className="flex items-center gap-2">
+            <Check className="h-5 w-5 text-blue-500 flex-shrink-0" />
+            <h4 className="font-medium">{workout.name}</h4>
           </div>
           
-          {/* Single line of exercises */}
+          {/* Stats in elegant boxes */}
+          <div className="flex items-center gap-3 text-sm">
+            {workout.duration && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-secondary/20 rounded-lg">
+                <Clock className="h-3.5 w-3.5 text-blue-500" />
+                <span className="text-muted-foreground">{workout.duration}</span>
+              </div>
+            )}
+            
+            {workout.exerciseCount && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-secondary/20 rounded-lg">
+                <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">{workout.exerciseCount} ejercicios</span>
+              </div>
+            )}
+            
+            {workout.totalSets && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-secondary/20 rounded-lg">
+                <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">{workout.totalSets} series</span>
+              </div>
+            )}
+          </div>
+
+          {workout.calories && workout.calories > 0 && (
+            <div className="flex items-center gap-1 text-sm">
+              <Flame className="h-3.5 w-3.5 text-orange-500" />
+              <span className="text-orange-500 font-medium">{workout.calories} kcal</span>
+            </div>
+          )}
+          
+          {/* Exercises section */}
           {workout.exercises && workout.exercises.length > 0 && (
-            <div className="text-sm text-muted-foreground">
-              <span>{workout.exercises[0]}</span>
-              {workout.exerciseCount && workout.exerciseCount > 1 && (
-                <span className="ml-2 text-primary font-medium">
-                  +{workout.exerciseCount - 1} más
-                </span>
-              )}
+            <div className="space-y-2">
+              <span className="text-xs text-muted-foreground">Ejercicios realizados:</span>
+              <div className="text-sm">
+                <span className="text-foreground">{workout.exercises[0]}</span>
+                {workout.exerciseCount && workout.exerciseCount > 1 && (
+                  <span className="ml-2 text-primary font-medium">
+                    +{workout.exerciseCount - 1} más
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
