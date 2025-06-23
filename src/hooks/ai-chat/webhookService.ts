@@ -1,7 +1,6 @@
-
 import { UserData } from './types';
 
-const WEBHOOK_URL = 'https://gaton8n.gatofit.com/webhook/5ad29227-88fb-46ab-bff9-c44cb4e1d957';
+const WEBHOOK_URL = 'https://gaton8n.gatofit.com/webhook-test/5ad29227-88fb-46ab-bff9-c44cb4e1d957';
 
 export const sendToWebhook = async (message: string, userData: UserData): Promise<any> => {
   const payload = {
