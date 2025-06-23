@@ -10,11 +10,8 @@ interface ProcessingFoodCardProps {
   className?: string;
   error?: string | null;
   isCompressing?: boolean;
-  isCompleting?: boolean;
-  isCancelling?: boolean;
   onRetry: () => void;
   onCancel: () => void;
-  onAnimationComplete?: () => void;
 }
 
 const processingSteps = [
@@ -38,16 +35,13 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
   className,
   error,
   isCompressing = false,
-  isCompleting = false,
-  isCancelling = false,
   onRetry,
   onCancel,
-  onAnimationComplete,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
-    if (error || isCompleting || isCancelling) return; // Stop interval on error or completion
+    if (error) return; // Stop interval on error
 
     const steps = isCompressing ? compressionSteps : processingSteps;
     const interval = setInterval(() => {
@@ -61,13 +55,7 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
     }, isCompressing ? 1000 : 2000); // Faster interval for compression
 
     return () => clearInterval(interval);
-  }, [error, isCompressing, isCompleting, isCancelling]);
-
-  const handleAnimationEnd = () => {
-    if ((isCompleting || isCancelling) && onAnimationComplete) {
-      onAnimationComplete();
-    }
-  };
+  }, [error, isCompressing]);
 
   const steps = isCompressing ? compressionSteps : processingSteps;
   const currentStep = steps[currentStepIndex];
@@ -75,23 +63,19 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
   return (
     <div
       className={cn(
-        "neu-card-inset overflow-hidden transition-all duration-300",
-        !error && !isCompleting && !isCancelling && "animate-pulse",
-        error && "animate-fade-in",
-        isCompleting && "animate-fade-out",
-        isCancelling && "animate-fade-out",
+        "neu-card-inset opacity-90",
+        !error && "animate-pulse",
         className
       )}
-      onAnimationEnd={handleAnimationEnd}
     >
-      <div className="flex h-28">
-        <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden">
+      <div className="flex h-28 overflow-hidden">
+        <div className="relative w-28 h-28 flex-shrink-0">
           <img
             src={imageUrl}
             alt="Procesando alimento"
-            className="w-full h-full object-cover rounded-l-xl"
+            className="w-full h-full object-cover"
           />
-          {!error && !isCompleting && !isCancelling && (
+          {!error && (
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-l-xl">
               <ProgressRing 
                 progress={currentStep.progress} 
@@ -110,9 +94,7 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
             <div className="text-center w-full">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
-                <h4 className="text-sm font-semibold text-destructive">
-                  No se detectó comida
-                </h4>
+                <h4 className="text-sm font-semibold text-destructive">Error de análisis</h4>
               </div>
               <p className="text-xs text-muted-foreground mb-3 px-2">
                 {error}

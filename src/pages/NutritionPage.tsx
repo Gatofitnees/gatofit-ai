@@ -45,8 +45,7 @@ const NutritionPage: React.FC = () => {
     processingFoods,
     handlePhotoTaken,
     handleRetryAnalysis,
-    handleCancelProcessing,
-    handleAnimationComplete
+    handleCancelProcessing
   } = useFoodProcessing(addEntry);
 
   const {
@@ -159,7 +158,6 @@ const NutritionPage: React.FC = () => {
           deleteEntry={deleteEntry}
           handleRetryAnalysis={handleRetryAnalysis}
           handleCancelProcessing={handleCancelProcessing}
-          handleAnimationComplete={handleAnimationComplete}
         />
       </div>
       

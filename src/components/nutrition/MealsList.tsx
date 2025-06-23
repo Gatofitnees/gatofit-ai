@@ -16,7 +16,6 @@ interface MealsListProps {
   deleteEntry: (entryId: number) => Promise<boolean>;
   handleRetryAnalysis: (foodId: string) => Promise<void>;
   handleCancelProcessing: (foodId: string) => void;
-  handleAnimationComplete: (foodId: string) => void;
 }
 
 export const MealsList: React.FC<MealsListProps> = ({
@@ -28,7 +27,6 @@ export const MealsList: React.FC<MealsListProps> = ({
   deleteEntry,
   handleRetryAnalysis,
   handleCancelProcessing,
-  handleAnimationComplete,
 }) => {
   const navigate = useNavigate();
 
@@ -60,33 +58,28 @@ export const MealsList: React.FC<MealsListProps> = ({
   return (
     <div className="space-y-3">
       {processingFoods.map((food) => (
-        <div key={food.id} className="animate-fade-in">
-          <ProcessingFoodCard 
-            imageUrl={food.imageSrc} 
-            error={food.error}
-            isCompleting={food.isCompleting}
-            isCancelling={food.isCancelling}
-            onRetry={() => handleRetryAnalysis(food.id)}
-            onCancel={() => handleCancelProcessing(food.id)}
-            onAnimationComplete={() => handleAnimationComplete(food.id)}
-          />
-        </div>
+        <ProcessingFoodCard 
+          key={food.id} 
+          imageUrl={food.imageSrc} 
+          error={food.error}
+          onRetry={() => handleRetryAnalysis(food.id)}
+          onCancel={() => handleCancelProcessing(food.id)}
+        />
       ))}
       
       {entries.map((entry) => (
-        <div key={entry.id} className="animate-fade-in">
-          <FoodPreviewCard
-            imageUrl={entry.photo_url || "/placeholder.svg"}
-            name={entry.custom_food_name}
-            calories={entry.calories_consumed}
-            protein={entry.protein_g_consumed}
-            carbs={entry.carbs_g_consumed}
-            fat={entry.fat_g_consumed}
-            loggedAt={entry.logged_at}
-            onClick={() => handleEditEntry(entry)}
-            onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
-          />
-        </div>
+        <FoodPreviewCard
+          key={entry.id}
+          imageUrl={entry.photo_url || "/placeholder.svg"}
+          name={entry.custom_food_name}
+          calories={entry.calories_consumed}
+          protein={entry.protein_g_consumed}
+          carbs={entry.carbs_g_consumed}
+          fat={entry.fat_g_consumed}
+          loggedAt={entry.logged_at}
+          onClick={() => handleEditEntry(entry)}
+          onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
+        />
       ))}
 
       {!hasContent && (
