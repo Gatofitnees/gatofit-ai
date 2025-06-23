@@ -61,8 +61,8 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   }
 
   const renderCompletedWorkoutCard = (workout: WorkoutSummary, index: number, total: number) => (
-    <Card className="min-h-[140px]">
-      <CardBody>
+    <Card className="min-h-[140px] flex flex-col">
+      <CardBody className="flex-1">
         <div className="space-y-3">
           {/* Title with check icon and calories badge */}
           <div className="flex items-center justify-between">
@@ -154,23 +154,27 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   return (
     <div className="mb-5">
       <div className="space-y-3">
-        <WorkoutCarousel 
-          items={carouselItems}
-          onSlideChange={handleSlideChange}
-        >
-          {(item, index, total) => {
-            if (item.type === 'promo') {
-              return (
-                <PromoVideoCard 
-                  onStartWorkout={onStartWorkout} 
-                  adaptToWorkoutCards={hasCompletedWorkouts}
-                />
-              );
-            } else {
-              return renderCompletedWorkoutCard(item.data, index - 1, total - 1);
-            }
-          }}
-        </WorkoutCarousel>
+        <div className={hasCompletedWorkouts ? 'min-h-[140px]' : ''}>
+          <WorkoutCarousel 
+            items={carouselItems}
+            onSlideChange={handleSlideChange}
+          >
+            {(item, index, total) => {
+              if (item.type === 'promo') {
+                return (
+                  <div className={hasCompletedWorkouts ? 'h-full' : ''}>
+                    <PromoVideoCard 
+                      onStartWorkout={onStartWorkout} 
+                      adaptToWorkoutCards={hasCompletedWorkouts}
+                    />
+                  </div>
+                );
+              } else {
+                return renderCompletedWorkoutCard(item.data, index - 1, total - 1);
+              }
+            }}
+          </WorkoutCarousel>
+        </div>
         
         {/* Indicadores del carrusel */}
         {totalItems > 1 && (
