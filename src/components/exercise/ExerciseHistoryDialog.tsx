@@ -19,7 +19,7 @@ const ExerciseHistoryDialog: React.FC<ExerciseHistoryDialogProps> = ({
   const [open, setOpen] = useState(false);
   const { stats, loading, isEmpty } = useExerciseHistory({ exerciseId });
 
-  // Group stats.sessions by date (use the new structure)
+  // Group stats.sessions by date (use the new structure with workouts)
   const historyByDate = stats.sessions.reduce<{[key: string]: typeof stats.sessions}>((acc, session) => {
     const dateStr = session.date;
     
@@ -70,22 +70,31 @@ const ExerciseHistoryDialog: React.FC<ExerciseHistoryDialogProps> = ({
                       {dateStr}
                     </h3>
                     
-                    <div className="space-y-3">
-                      {historyByDate[dateStr][0].sets.map((set) => (
-                        <div 
-                          key={set.set_number} 
-                          className="flex justify-between items-center py-1 border-b last:border-0"
-                        >
-                          <div className="text-sm">
-                            <span className="font-medium">Serie {set.set_number}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm bg-secondary/40 px-2 py-1 rounded">
-                              {set.weight_kg_used || 0} kg
-                            </span>
-                            <span className="text-sm bg-secondary/40 px-2 py-1 rounded">
-                              {set.reps_completed || 0} reps
-                            </span>
+                    <div className="space-y-4">
+                      {historyByDate[dateStr][0].workouts.map((workout) => (
+                        <div key={workout.workout_log_id} className="space-y-2">
+                          <h4 className="text-xs font-medium text-muted-foreground">
+                            Entrenamiento {workout.workout_number}
+                          </h4>
+                          <div className="space-y-1">
+                            {workout.sets.map((set) => (
+                              <div 
+                                key={set.set_number} 
+                                className="flex justify-between items-center py-1 border-b last:border-0"
+                              >
+                                <div className="text-sm">
+                                  <span className="font-medium">Serie {set.set_number}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm bg-secondary/40 px-2 py-1 rounded">
+                                    {set.weight_kg_used || 0} kg
+                                  </span>
+                                  <span className="text-sm bg-secondary/40 px-2 py-1 rounded">
+                                    {set.reps_completed || 0} reps
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
