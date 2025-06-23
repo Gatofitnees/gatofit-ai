@@ -44,16 +44,22 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
         // Allow comma key to act as decimal separator on mobile
         if (e.key === ',' && !e.currentTarget.value.includes('.') && !e.currentTarget.value.includes(',')) {
           e.preventDefault();
-          const newEvent = {
-            ...e,
-            target: {
-              ...e.target,
-              value: e.currentTarget.value + '.'
-            }
-          } as React.ChangeEvent<HTMLInputElement>;
+          // Directly update the input value and trigger onChange
+          const input = e.currentTarget;
+          const newValue = input.value + '.';
+          input.value = newValue;
           
-          e.currentTarget.value = e.currentTarget.value + '.';
-          onChange?.(newEvent);
+          // Create a proper change event
+          const changeEvent = new Event('change', { bubbles: true });
+          Object.defineProperty(changeEvent, 'target', {
+            writable: false,
+            value: input
+          });
+          
+          // Trigger the change handler
+          if (onChange) {
+            onChange(changeEvent as React.ChangeEvent<HTMLInputElement>);
+          }
         }
       }
     };
@@ -65,13 +71,21 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
         const pastedText = e.clipboardData.getData('text');
         const normalizedText = pastedText.replace(',', '.');
         
-        const fakeEvent = {
-          target: {
-            value: normalizedText
-          }
-        } as React.ChangeEvent<HTMLInputElement>;
+        // Update input value directly
+        const input = e.currentTarget;
+        input.value = normalizedText;
         
-        handleChange(fakeEvent);
+        // Create a proper change event
+        const changeEvent = new Event('change', { bubbles: true });
+        Object.defineProperty(changeEvent, 'target', {
+          writable: false,
+          value: input
+        });
+        
+        // Validate and trigger change if valid
+        if (onChange) {
+          onChange(changeEvent as React.ChangeEvent<HTMLInputElement>);
+        }
       }
     };
 
