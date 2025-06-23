@@ -41,6 +41,21 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
 
       if (result && result.analysisResult) {
         const analysis = result.analysisResult;
+        
+        // Verificar si realmente se detectó comida válida
+        if (!analysis.name || analysis.name.toLowerCase().includes('no food') || 
+            analysis.name.toLowerCase().includes('no se detectó') ||
+            analysis.calories === 0 || analysis.calories < 1) {
+          
+          console.log('No food detected in analysis:', analysis);
+          const noFoodMessage = "No se detectó comida en la imagen. Intenta con una foto más clara del alimento.";
+          
+          setProcessingFoods(prev => prev.map(p => 
+            p.id === id ? { ...p, error: noFoodMessage } : p
+          ));
+          return; // No guardar entrada si no se detectó comida
+        }
+
         const newEntryData: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> = {
           custom_food_name: analysis.name || 'Alimento Analizado',
           quantity_consumed: analysis.servingSize || 1,
@@ -64,8 +79,11 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
             await incrementUsage('nutrition_photos');
           }
           
-          setProcessingFoods(prev => prev.filter(p => p.id !== id));
-          URL.revokeObjectURL(imageSrc);
+          // Usar setTimeout para asegurar transición suave
+          setTimeout(() => {
+            setProcessingFoods(prev => prev.filter(p => p.id !== id));
+            URL.revokeObjectURL(imageSrc);
+          }, 500); // Pequeño delay para transición más suave
           
           toast({
             title: "¡Comida analizada!",
@@ -75,22 +93,16 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
           throw new Error("No se pudo guardar la entrada de comida");
         }
       } else {
-        const errorMessage = foodCaptureError || "No se pudo analizar la comida. Revisa tu conexión o la imagen.";
-        toast({
-          title: "Error de Análisis",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        // Manejar caso cuando no hay resultado de análisis
+        const errorMessage = foodCaptureError || "No se detectó comida en la imagen. Intenta con una foto más clara del alimento.";
+        console.log('No analysis result received');
+        
         setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
       }
     } catch (error) {
       console.error("Error processing food:", error);
       const errorMessage = foodCaptureError || "Ocurrió un error al procesar la imagen.";
-      toast({
-        title: "Error Inesperado",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      
       setProcessingFoods(prev => prev.map(p => p.id === id ? { ...p, error: errorMessage } : p));
     }
   };
@@ -117,6 +129,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
       }
     }
 
+    // Limpiar error y volver a estado de procesamiento
     setProcessingFoods(prev => prev.map(p => p.id === foodId ? { ...p, error: null } : p));
     await runAnalysis(foodToRetry.blob, foodToRetry.id, foodToRetry.imageSrc);
   };
@@ -125,8 +138,12 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
     const foodToRemove = processingFoods.find(f => f.id === foodId);
     if (foodToRemove) {
       URL.revokeObjectURL(foodToRemove.imageSrc);
-      setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
     }
+    
+    // Usar setTimeout para transición más suave
+    setTimeout(() => {
+      setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
+    }, 200);
   };
   
   return {

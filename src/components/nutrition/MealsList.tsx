@@ -58,28 +58,30 @@ export const MealsList: React.FC<MealsListProps> = ({
   return (
     <div className="space-y-3">
       {processingFoods.map((food) => (
-        <ProcessingFoodCard 
-          key={food.id} 
-          imageUrl={food.imageSrc} 
-          error={food.error}
-          onRetry={() => handleRetryAnalysis(food.id)}
-          onCancel={() => handleCancelProcessing(food.id)}
-        />
+        <div key={food.id} className="animate-fade-in">
+          <ProcessingFoodCard 
+            imageUrl={food.imageSrc} 
+            error={food.error}
+            onRetry={() => handleRetryAnalysis(food.id)}
+            onCancel={() => handleCancelProcessing(food.id)}
+          />
+        </div>
       ))}
       
       {entries.map((entry) => (
-        <FoodPreviewCard
-          key={entry.id}
-          imageUrl={entry.photo_url || "/placeholder.svg"}
-          name={entry.custom_food_name}
-          calories={entry.calories_consumed}
-          protein={entry.protein_g_consumed}
-          carbs={entry.carbs_g_consumed}
-          fat={entry.fat_g_consumed}
-          loggedAt={entry.logged_at}
-          onClick={() => handleEditEntry(entry)}
-          onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
-        />
+        <div key={entry.id} className="animate-fade-in">
+          <FoodPreviewCard
+            imageUrl={entry.photo_url || "/placeholder.svg"}
+            name={entry.custom_food_name}
+            calories={entry.calories_consumed}
+            protein={entry.protein_g_consumed}
+            carbs={entry.carbs_g_consumed}
+            fat={entry.fat_g_consumed}
+            loggedAt={entry.logged_at}
+            onClick={() => handleEditEntry(entry)}
+            onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
+          />
+        </div>
       ))}
 
       {!hasContent && (
