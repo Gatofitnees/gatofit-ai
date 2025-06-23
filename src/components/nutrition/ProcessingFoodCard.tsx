@@ -14,6 +14,7 @@ interface ProcessingFoodCardProps {
   isCancelling?: boolean;
   onRetry: () => void;
   onCancel: () => void;
+  onAnimationComplete?: () => void;
 }
 
 const processingSteps = [
@@ -41,6 +42,7 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
   isCancelling = false,
   onRetry,
   onCancel,
+  onAnimationComplete,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
@@ -61,19 +63,26 @@ export const ProcessingFoodCard: React.FC<ProcessingFoodCardProps> = ({
     return () => clearInterval(interval);
   }, [error, isCompressing, isCompleting, isCancelling]);
 
+  const handleAnimationEnd = () => {
+    if ((isCompleting || isCancelling) && onAnimationComplete) {
+      onAnimationComplete();
+    }
+  };
+
   const steps = isCompressing ? compressionSteps : processingSteps;
   const currentStep = steps[currentStepIndex];
 
   return (
     <div
       className={cn(
-        "neu-card-inset overflow-hidden",
+        "neu-card-inset overflow-hidden transition-all duration-300",
         !error && !isCompleting && !isCancelling && "animate-pulse",
         error && "animate-fade-in",
         isCompleting && "animate-fade-out",
         isCancelling && "animate-fade-out",
         className
       )}
+      onAnimationEnd={handleAnimationEnd}
     >
       <div className="flex h-28">
         <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden">

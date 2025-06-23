@@ -97,12 +97,15 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
       if (result && result.analysisResult) {
         const analysis = result.analysisResult;
         
-        // Verificar si realmente se detectó comida válida
-        if (!analysis.name || analysis.name.toLowerCase().includes('no food') || 
-            analysis.name.toLowerCase().includes('no se detectó') ||
-            analysis.calories === 0 || analysis.calories < 1) {
-          
-          console.log('No food detected in analysis:', analysis);
+        // Verificar si realmente se detectó comida válida - LÓGICA CORREGIDA
+        const hasValidName = analysis.name && 
+                           !analysis.name.toLowerCase().includes('no food') && 
+                           !analysis.name.toLowerCase().includes('no se detectó') &&
+                           analysis.name.trim().length > 0;
+        
+        // Un alimento es válido si tiene nombre válido, aunque tenga 0 calorías
+        if (!hasValidName) {
+          console.log('No valid food name detected in analysis:', analysis);
           const noFoodMessage = "Intenta con una foto más clara";
           
           setProcessingFoods(prev => prev.map(p => 
@@ -120,7 +123,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
           custom_food_name: analysis.name || 'Alimento Analizado',
           quantity_consumed: analysis.servingSize || 1,
           unit_consumed: analysis.servingUnit || 'porción',
-          calories_consumed: analysis.calories || 0,
+          calories_consumed: Math.max(analysis.calories || 0, 1), // Asegurar al menos 1 caloría
           protein_g_consumed: analysis.protein || 0,
           carbs_g_consumed: analysis.carbs || 0,
           fat_g_consumed: analysis.fat || 0,
@@ -215,9 +218,6 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
       await deleteImageFromStorage(foodToRemove.fileName);
     }
     
-    // Limpiar URL del objeto
-    URL.revokeObjectURL(foodToRemove.imageSrc);
-    
     // Marcar como cancelando para animación
     setProcessingFoods(prev => prev.map(p => 
       p.id === foodId ? { ...p, isCancelling: true } : p
@@ -226,6 +226,10 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
 
   // Limpiar elementos después de animaciones
   const handleAnimationComplete = (foodId: string) => {
+    const foodToRemove = processingFoods.find(f => f.id === foodId);
+    if (foodToRemove) {
+      URL.revokeObjectURL(foodToRemove.imageSrc);
+    }
     setProcessingFoods(prev => prev.filter(p => p.id !== foodId));
   };
   

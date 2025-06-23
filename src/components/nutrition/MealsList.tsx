@@ -16,6 +16,7 @@ interface MealsListProps {
   deleteEntry: (entryId: number) => Promise<boolean>;
   handleRetryAnalysis: (foodId: string) => Promise<void>;
   handleCancelProcessing: (foodId: string) => void;
+  handleAnimationComplete: (foodId: string) => void;
 }
 
 export const MealsList: React.FC<MealsListProps> = ({
@@ -27,6 +28,7 @@ export const MealsList: React.FC<MealsListProps> = ({
   deleteEntry,
   handleRetryAnalysis,
   handleCancelProcessing,
+  handleAnimationComplete,
 }) => {
   const navigate = useNavigate();
 
@@ -62,10 +64,11 @@ export const MealsList: React.FC<MealsListProps> = ({
           <ProcessingFoodCard 
             imageUrl={food.imageSrc} 
             error={food.error}
-            isCompleting={(food as any).isCompleting}
-            isCancelling={(food as any).isCancelling}
+            isCompleting={food.isCompleting}
+            isCancelling={food.isCancelling}
             onRetry={() => handleRetryAnalysis(food.id)}
             onCancel={() => handleCancelProcessing(food.id)}
+            onAnimationComplete={() => handleAnimationComplete(food.id)}
           />
         </div>
       ))}
