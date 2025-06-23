@@ -25,11 +25,19 @@ export function useExerciseInputHandlers(
       if (val === '') return null;
       
       if (isWeight) {
-        // For weight, allow multiple decimal places and handle comma/dot
+        // For weight, allow decimals and handle comma/dot
         const normalizedVal = val.replace(',', '.');
+        
+        // Allow trailing dot for decimal input (e.g., "12.")
+        if (normalizedVal.endsWith('.') && normalizedVal.split('.').length === 2) {
+          const numValue = parseFloat(normalizedVal);
+          console.log(`Parsing weight with trailing dot "${val}" -> "${normalizedVal}" -> ${numValue}`);
+          return isNaN(numValue) ? null : numValue;
+        }
+        
         const numValue = parseFloat(normalizedVal);
         console.log(`Parsing weight "${val}" -> "${normalizedVal}" -> ${numValue}`);
-        return isNaN(numValue) ? null : Math.round(numValue * 100) / 100; // Round to 2 decimals
+        return isNaN(numValue) ? null : Math.round(numValue * 10) / 10; // Round to 1 decimal place
       } else {
         // For reps, only integers
         const numValue = parseInt(val);
