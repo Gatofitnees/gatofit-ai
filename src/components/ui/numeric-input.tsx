@@ -16,13 +16,8 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
         // Replace comma with dot for consistency
         value = value.replace(',', '.');
         
-        // Create regex pattern based on maxDecimals
-        const decimalPattern = maxDecimals === 1 
-          ? /^(\d+)?([.]?\d{0,1})?$/ // For 1 decimal: 34.5
-          : new RegExp(`^(\\d+)?([.]?\\d{0,${maxDecimals}})?$`); // For multiple decimals
-        
-        // Allow empty string or valid decimal pattern
-        if (value === '' || decimalPattern.test(value)) {
+        // Allow empty string, numbers, and decimal patterns
+        if (value === '' || /^\d*\.?\d*$/.test(value)) {
           // Prevent multiple dots
           const dotCount = (value.match(/\./g) || []).length;
           if (dotCount <= 1) {
@@ -41,7 +36,7 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (allowDecimals) {
-        // Allow comma key to act as decimal separator on mobile
+        // Allow comma key to act as decimal separator
         if (e.key === ',' && !e.currentTarget.value.includes('.') && !e.currentTarget.value.includes(',')) {
           e.preventDefault();
           // Directly update the input value
@@ -49,7 +44,7 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
           const newValue = input.value + '.';
           input.value = newValue;
           
-          // Create a synthetic change event that matches the expected structure
+          // Create a synthetic change event
           const syntheticEvent = {
             target: input,
             currentTarget: input,
@@ -83,32 +78,34 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
         const pastedText = e.clipboardData.getData('text');
         const normalizedText = pastedText.replace(',', '.');
         
-        // Update input value directly
-        const input = e.currentTarget;
-        input.value = normalizedText;
-        
-        // Create a synthetic change event
-        const syntheticEvent = {
-          target: input,
-          currentTarget: input,
-          nativeEvent: e.nativeEvent,
-          type: 'change',
-          bubbles: true,
-          cancelable: true,
-          defaultPrevented: false,
-          eventPhase: 2,
-          timeStamp: Date.now(),
-          isTrusted: true,
-          isDefaultPrevented: () => false,
-          isPropagationStopped: () => false,
-          persist: () => {},
-          preventDefault: () => {},
-          stopPropagation: () => {}
-        } as React.ChangeEvent<HTMLInputElement>;
-        
-        // Validate and trigger change if valid
-        if (onChange) {
-          onChange(syntheticEvent);
+        // Validate the pasted text
+        if (/^\d*\.?\d*$/.test(normalizedText)) {
+          const input = e.currentTarget;
+          input.value = normalizedText;
+          
+          // Create a synthetic change event
+          const syntheticEvent = {
+            target: input,
+            currentTarget: input,
+            nativeEvent: e.nativeEvent,
+            type: 'change',
+            bubbles: true,
+            cancelable: true,
+            defaultPrevented: false,
+            eventPhase: 2,
+            timeStamp: Date.now(),
+            isTrusted: true,
+            isDefaultPrevented: () => false,
+            isPropagationStopped: () => false,
+            persist: () => {},
+            preventDefault: () => {},
+            stopPropagation: () => {}
+          } as React.ChangeEvent<HTMLInputElement>;
+          
+          // Trigger change if valid
+          if (onChange) {
+            onChange(syntheticEvent);
+          }
         }
       }
     };
