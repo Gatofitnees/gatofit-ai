@@ -45,6 +45,7 @@ const generateUniqueUsername = async (baseUsername: string): Promise<string> => 
 export const useAutoProfileSetup = (user: User | null) => {
   const { toast } = useToast();
   const hasRunRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Prevent multiple executions for the same user
@@ -57,6 +58,7 @@ export const useAutoProfileSetup = (user: User | null) => {
 
         // Mark as running
         hasRunRef.current = true;
+        currentUserIdRef.current = user.id;
 
         // Check if profile already has data
         const { data: existingProfile } = await supabase
@@ -172,8 +174,9 @@ export const useAutoProfileSetup = (user: User | null) => {
 
     // Cleanup function to reset the ref when user changes
     return () => {
-      if (user?.id !== hasRunRef.current) {
+      if (user?.id !== currentUserIdRef.current) {
         hasRunRef.current = false;
+        currentUserIdRef.current = null;
       }
     };
   }, [user?.id, toast]); // Only depend on user.id and toast
