@@ -61,12 +61,12 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   }
 
   const renderCompletedWorkoutCard = (workout: WorkoutSummary, index: number, total: number) => (
-    <Card>
+    <Card className="h-full">
       <CardHeader 
         title="Entrenamiento Completado" 
         icon={<Check className="h-5 w-5 text-primary" />} 
       />
-      <CardBody>
+      <CardBody className="flex-1">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-medium">{workout.name}</h4>
@@ -124,7 +124,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
           )}
         </div>
       </CardBody>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between mt-auto">
         <Button 
           variant="outline"
           size="sm"
@@ -175,9 +175,9 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
               <div
                 key={index}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-colors",
+                  "w-2 h-2 rounded-full transition-all duration-300",
                   index === currentWorkoutIndex 
-                    ? "bg-primary" 
+                    ? "bg-primary scale-110" 
                     : "bg-muted"
                 )}
               />
