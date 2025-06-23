@@ -16,7 +16,7 @@ export function usePreviousData(exerciseDetails: any[]) {
       try {
         const exerciseIds = exerciseDetails.map(ex => ex.id);
         
-        // Get the most recent workout log for each exercise (including additional sets)
+        // Get the most recent workout log for each exercise (including ALL sets)
         const { data: workoutLogDetails, error } = await supabase
           .from('workout_log_exercise_details')
           .select(`
@@ -29,7 +29,8 @@ export function usePreviousData(exerciseDetails: any[]) {
             workout_log:workout_logs(workout_date)
           `)
           .in('exercise_id', exerciseIds)
-          .order('workout_log_id', { ascending: false });
+          .order('workout_log_id', { ascending: false })
+          .order('set_number', { ascending: true });
           
         if (error) throw error;
         
@@ -48,7 +49,7 @@ export function usePreviousData(exerciseDetails: any[]) {
             }
           });
           
-          // Now collect ALL sets from the most recent workout for each exercise
+          // Collect ALL sets from the most recent workout for each exercise
           workoutLogDetails.forEach(detail => {
             // Only include sets from the most recent workout for this exercise
             if (detail.workout_log_id === latestWorkoutByExercise[detail.exercise_id]) {
@@ -56,7 +57,8 @@ export function usePreviousData(exerciseDetails: any[]) {
                 exerciseHistory[detail.exercise_id] = [];
               }
               
-              // Ensure we have enough slots in the array for this set number
+              // Asegurar que tenemos suficiente espacio en el array para este set_number
+              // Llenar con datos vacíos si es necesario hasta llegar al set_number actual
               while (exerciseHistory[detail.exercise_id].length < detail.set_number) {
                 exerciseHistory[detail.exercise_id].push({
                   weight: null,
@@ -64,8 +66,9 @@ export function usePreviousData(exerciseDetails: any[]) {
                 });
               }
               
-              // Set the data for this specific set (1-indexed to 0-indexed)
-              exerciseHistory[detail.exercise_id][detail.set_number - 1] = {
+              // Establecer los datos para esta serie específica (1-indexed to 0-indexed)
+              const setIndex = detail.set_number - 1;
+              exerciseHistory[detail.exercise_id][setIndex] = {
                 weight: detail.weight_kg_used,
                 reps: detail.reps_completed
               };
@@ -77,8 +80,17 @@ export function usePreviousData(exerciseDetails: any[]) {
             }
           });
           
+          // Verificar que tenemos todas las series, incluyendo las adicionales
+          Object.keys(exerciseHistory).forEach(exerciseIdStr => {
+            const exerciseId = parseInt(exerciseIdStr);
+            const sets = exerciseHistory[exerciseId];
+            
+            console.log(`Exercise ${exerciseId} - Previous sets loaded:`, sets.length);
+            console.log(`Exercise ${exerciseId} - Set details:`, sets);
+          });
+          
           console.log("Previous data loaded with ALL sets (including additional):", Object.keys(exerciseHistory).length, "exercises");
-          console.log("Previous data details:", exerciseHistory);
+          console.log("Complete previous data structure:", exerciseHistory);
           
           setPreviousData(exerciseHistory);
           setExerciseNotesMap(notesMap);

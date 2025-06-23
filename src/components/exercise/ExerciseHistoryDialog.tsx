@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useExerciseHistory } from "@/hooks/useExerciseHistory";
@@ -74,7 +73,7 @@ const ExerciseHistoryDialog: React.FC<ExerciseHistoryDialogProps> = ({
                       {historyByDate[dateStr][0].workouts.map((workout) => (
                         <div key={workout.workout_log_id} className="space-y-2">
                           <h4 className="text-xs font-medium text-muted-foreground">
-                            Entrenamiento {workout.workout_number}
+                            Entreno {workout.workout_number}
                           </h4>
                           <div className="space-y-1">
                             {workout.sets.map((set) => (
