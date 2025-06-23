@@ -28,7 +28,7 @@ const PromoVideoCard: React.FC<PromoVideoCardProps> = ({
       </div>
 
       <CardBody className={`relative z-10 flex flex-col justify-end bg-transparent p-4 ${
-        adaptToWorkoutCards ? 'h-full' : 'min-h-[140px]'
+        adaptToWorkoutCards ? 'min-h-[140px]' : 'min-h-[140px]'
       }`}>
         <div className="flex justify-end">
           <Button 
