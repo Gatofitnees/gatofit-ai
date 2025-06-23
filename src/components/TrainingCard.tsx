@@ -61,62 +61,57 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   }
 
   const renderCompletedWorkoutCard = (workout: WorkoutSummary, index: number, total: number) => (
-    <Card>
-      <CardHeader 
-        title="Entrenamiento Completado" 
-        icon={<Check className="h-5 w-5 text-primary" />} 
-      />
+    <Card className="min-h-[140px]">
       <CardBody>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="font-medium">{workout.name}</h4>
-            {workout.calories && workout.calories > 0 && (
-              <div className="flex items-center text-sm px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                <Flame className="h-3.5 w-3.5 mr-1" />
-                <span>{workout.calories} kcal</span>
-              </div>
-            )}
+        <div className="space-y-4">
+          {/* Title with check icon */}
+          <div className="flex items-center gap-2">
+            <Check className="h-5 w-5 text-primary" />
+            <h4 className="font-medium text-base">{workout.name}</h4>
           </div>
           
           {/* Stats row */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            {workout.calories && workout.calories > 0 && (
+              <div className="flex items-center gap-1">
+                <Flame className="h-4 w-4 text-primary" />
+                <span>{workout.calories} kcal</span>
+              </div>
+            )}
+            
             {workout.duration && (
-              <div className="flex items-center">
-                <Clock className="h-3.5 w-3.5 mr-1" />
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
                 <span>{workout.duration}</span>
               </div>
             )}
             
             {workout.exerciseCount && (
-              <div className="flex items-center">
-                <Dumbbell className="h-3.5 w-3.5 mr-1" />
+              <div className="flex items-center gap-1">
+                <Dumbbell className="h-4 w-4" />
                 <span>{workout.exerciseCount} ejercicios</span>
               </div>
             )}
             
             {workout.totalSets && (
-              <div className="flex items-center">
-                <Target className="h-3.5 w-3.5 mr-1" />
+              <div className="flex items-center gap-1">
+                <Target className="h-4 w-4" />
                 <span>{workout.totalSets} series</span>
               </div>
             )}
           </div>
           
+          {/* Single row of exercises */}
           {workout.exercises && workout.exercises.length > 0 && (
-            <div className="bg-background/40 rounded-lg p-3">
+            <div>
               <span className="text-xs text-muted-foreground block mb-2">Ejercicios realizados:</span>
-              <div className="flex flex-wrap gap-1">
-                {workout.exercises.map((exercise, exerciseIndex) => (
-                  <span 
-                    key={exerciseIndex}
-                    className="text-xs px-2 py-1 bg-background/80 rounded-full border border-white/10"
-                  >
-                    {exercise}
-                  </span>
-                ))}
-                {workout.exerciseCount && workout.exerciseCount > workout.exercises.length && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs px-2 py-1 bg-secondary/40 rounded-full border border-white/10">
+                  {workout.exercises[0]}
+                </span>
+                {workout.exercises.length > 1 && (
                   <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-                    +{workout.exerciseCount - workout.exercises.length} más
+                    +{workout.exercises.length - 1} más
                   </span>
                 )}
               </div>
