@@ -27,28 +27,39 @@ export const ExerciseStatistics: React.FC<ExerciseStatisticsProps> = ({
 }) => {
   const { stats, loading } = useExerciseHistory({ exerciseId });
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [isChangingDate, setIsChangingDate] = useState(false);
   
   // Auto-select first date when sessions are loaded and reset when dialog opens
   useEffect(() => {
-    if (showStatsDialog && stats.sessions.length > 0) {
+    if (showStatsDialog && stats.sessions.length > 0 && !selectedDate) {
       console.log('Setting initial selected date to:', stats.sessions[0].date);
       setSelectedDate(stats.sessions[0].date);
     }
-  }, [stats.sessions, showStatsDialog]);
+  }, [stats.sessions, showStatsDialog, selectedDate]);
 
   // Reset selected date when dialog closes
   useEffect(() => {
     if (!showStatsDialog) {
       console.log('Dialog closed, clearing selected date');
       setSelectedDate(null);
+      setIsChangingDate(false);
     }
   }, [showStatsDialog]);
   
-  // Handle date selection with cleanup
+  // Handle date selection with cleanup and loading state
   const handleDateSelect = (date: string) => {
     console.log('Date selected:', date);
     console.log('Previous selected date:', selectedDate);
-    setSelectedDate(date);
+    
+    // Clear current data and show loading
+    setIsChangingDate(true);
+    setSelectedDate(null);
+    
+    // Set new date after a brief delay to show loading state
+    setTimeout(() => {
+      setSelectedDate(date);
+      setIsChangingDate(false);
+    }, 150);
   };
   
   // Find the session for the selected date
@@ -65,7 +76,7 @@ export const ExerciseStatistics: React.FC<ExerciseStatisticsProps> = ({
 
   return (
     <Dialog open={showStatsDialog} onOpenChange={onCloseDialog}>
-      <DialogContent className="bg-background border border-white/5 sm:max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-background border border-white/5 rounded-lg sm:max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Estadísticas: {exerciseName}</DialogTitle>
         </DialogHeader>
@@ -78,7 +89,7 @@ export const ExerciseStatistics: React.FC<ExerciseStatisticsProps> = ({
         ) : (
           <div className="py-4 space-y-6">
             {/* Best Marks */}
-            <div className="bg-secondary/20 rounded-lg p-4">
+            <div className="bg-secondary/20 rounded-lg border border-white/10 p-4">
               <h4 className="font-medium mb-3">Mejores marcas</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
@@ -113,18 +124,18 @@ export const ExerciseStatistics: React.FC<ExerciseStatisticsProps> = ({
                     />
                   </div>
                   
-                  {selectedSession ? (
-                    <div className="bg-secondary/10 rounded-lg p-4">
-                      <div className="mb-2">
+                  {isChangingDate ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : selectedSession ? (
+                    <div className="bg-secondary/10 rounded-lg border border-white/10 p-4">
+                      <div className="mb-3">
                         <p className="text-sm text-muted-foreground">
-                          Mostrando series del {selectedSession.date}
+                          Entrenamientos del {selectedSession.date}
                         </p>
                       </div>
-                      <SessionStats
-                        sets={selectedSession.sets}
-                        maxWeight={selectedSession.maxWeight}
-                        totalReps={selectedSession.totalReps}
-                      />
+                      <SessionStats session={selectedSession} />
                     </div>
                   ) : (
                     <div className="text-center py-4">

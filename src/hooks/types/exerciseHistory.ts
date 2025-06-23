@@ -1,6 +1,7 @@
 
-export interface ExerciseSession {
-  date: string;
+export interface WorkoutSession {
+  workout_log_id: number;
+  workout_number: number; // 1, 2, 3, etc. for same day
   sets: {
     set_number: number;
     weight_kg_used: number | null;
@@ -8,6 +9,13 @@ export interface ExerciseSession {
   }[];
   maxWeight: number | null;
   totalReps: number;
+}
+
+export interface ExerciseSession {
+  date: string;
+  workouts: WorkoutSession[];
+  dailyMaxWeight: number | null;
+  dailyTotalReps: number;
 }
 
 export interface ExerciseStats {

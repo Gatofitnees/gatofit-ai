@@ -1,5 +1,5 @@
 
-import { ExerciseSession, ExerciseStats } from "../types/exerciseHistory";
+import { ExerciseSession, ExerciseStats, WorkoutSession } from "../types/exerciseHistory";
 
 interface RawExerciseData {
   id: number;
@@ -30,8 +30,8 @@ export const processExerciseData = (data: RawExerciseData[]): ExerciseStats => {
   let globalMaxWeight = 0;
   let globalMaxReps = 0;
   
-  // Group by unique date - each date should have ONE session only
-  const sessionsByDate = new Map<string, ExerciseSession>();
+  // Group by date and then by workout_log_id
+  const sessionsByDate = new Map<string, Map<number, WorkoutSession>>();
   
   data.forEach((entry) => {
     const workoutLog = Array.isArray(entry.workout_log) 
@@ -48,27 +48,34 @@ export const processExerciseData = (data: RawExerciseData[]): ExerciseStats => {
     if (weight > globalMaxWeight) globalMaxWeight = weight;
     if (reps > globalMaxReps) globalMaxReps = reps;
     
-    // If session exists for this date, add the set
-    if (sessionsByDate.has(displayDate)) {
-      const existingSession = sessionsByDate.get(displayDate)!;
+    // Initialize date if not exists
+    if (!sessionsByDate.has(displayDate)) {
+      sessionsByDate.set(displayDate, new Map<number, WorkoutSession>());
+    }
+    
+    const workoutsForDate = sessionsByDate.get(displayDate)!;
+    
+    // If workout exists for this workout_log_id, add the set
+    if (workoutsForDate.has(entry.workout_log_id)) {
+      const existingWorkout = workoutsForDate.get(entry.workout_log_id)!;
       
-      // Add set to existing session
-      existingSession.sets.push({
+      existingWorkout.sets.push({
         set_number: entry.set_number,
         weight_kg_used: entry.weight_kg_used,
         reps_completed: entry.reps_completed
       });
       
-      // Update session statistics
-      if (weight > (existingSession.maxWeight || 0)) {
-        existingSession.maxWeight = weight;
+      // Update workout statistics
+      if (weight > (existingWorkout.maxWeight || 0)) {
+        existingWorkout.maxWeight = weight;
       }
-      existingSession.totalReps += reps;
+      existingWorkout.totalReps += reps;
       
     } else {
-      // Create new session for this date
-      sessionsByDate.set(displayDate, {
-        date: displayDate,
+      // Create new workout for this workout_log_id
+      workoutsForDate.set(entry.workout_log_id, {
+        workout_log_id: entry.workout_log_id,
+        workout_number: workoutsForDate.size + 1,
         sets: [{
           set_number: entry.set_number,
           weight_kg_used: entry.weight_kg_used,
@@ -80,11 +87,31 @@ export const processExerciseData = (data: RawExerciseData[]): ExerciseStats => {
     }
   });
   
-  // Convert Map to array and sort sets within each session
-  const sessions = Array.from(sessionsByDate.values()).map(session => ({
-    ...session,
-    sets: session.sets.sort((a, b) => a.set_number - b.set_number)
-  }));
+  // Convert Maps to ExerciseSession array
+  const sessions = Array.from(sessionsByDate.entries()).map(([date, workoutsMap]) => {
+    const workouts = Array.from(workoutsMap.values()).map(workout => ({
+      ...workout,
+      sets: workout.sets.sort((a, b) => a.set_number - b.set_number)
+    }));
+    
+    // Sort workouts by workout_log_id to maintain consistent order
+    workouts.sort((a, b) => a.workout_log_id - b.workout_log_id);
+    
+    // Assign sequential workout numbers
+    workouts.forEach((workout, index) => {
+      workout.workout_number = index + 1;
+    });
+    
+    const dailyMaxWeight = Math.max(...workouts.map(w => w.maxWeight || 0)) || null;
+    const dailyTotalReps = workouts.reduce((sum, w) => sum + w.totalReps, 0);
+    
+    return {
+      date,
+      workouts,
+      dailyMaxWeight,
+      dailyTotalReps
+    };
+  });
   
   // Sort sessions by date (most recent first)
   const sortedSessions = sessions.sort((a, b) => {
@@ -95,11 +122,11 @@ export const processExerciseData = (data: RawExerciseData[]): ExerciseStats => {
   
   // Create progress data for chart (chronological order)
   const progressData = sortedSessions
-    .filter(session => session.maxWeight && session.maxWeight > 0)
+    .filter(session => session.dailyMaxWeight && session.dailyMaxWeight > 0)
     .reverse() // Chronological order for the chart
     .map(session => ({
       date: session.date,
-      maxWeight: session.maxWeight!
+      maxWeight: session.dailyMaxWeight!
     }));
   
   return {
