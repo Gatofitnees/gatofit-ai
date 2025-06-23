@@ -9,6 +9,9 @@ import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import BodyMeasurementsPage from "./pages/BodyMeasurementsPage";
 import UserInformationPage from "./pages/UserInformationPage";
+import ProgressPage from "./pages/ProgressPage";
+import CalendarPage from "./pages/CalendarPage";
+import SettingsPage from "./pages/SettingsPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import AIChatPage from "./pages/AIChatPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
@@ -96,6 +99,30 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <UserInformationPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/progress"
+                  element={
+                    <ProtectedRoute>
+                      <ProgressPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/calendar"
+                  element={
+                    <ProtectedRoute>
+                      <CalendarPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/settings"
+                  element={
+                    <ProtectedRoute>
+                      <SettingsPage />
                     </ProtectedRoute>
                   }
                 />
