@@ -15,14 +15,14 @@ export interface RankingUser {
   following_count?: number;
 }
 
-export type RankingType = 'streak' | 'experience' | 'level';
+export type RankingType = 'streak' | 'experience';
 
 export const useRankings = (limit?: number) => {
   const [rankings, setRankings] = useState<RankingUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRankings = async (type: RankingType = 'level', customLimit?: number) => {
+  const fetchRankings = async (type: RankingType = 'streak', customLimit?: number) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -127,12 +127,6 @@ export const useRankings = (limit?: number) => {
       const sortedData = transformedData.sort((a, b) => {
         if (type === 'streak') {
           return b.current_streak - a.current_streak;
-        } else if (type === 'level') {
-          // Sort by level first, then by experience as tiebreaker
-          if (b.current_level !== a.current_level) {
-            return b.current_level - a.current_level;
-          }
-          return b.total_experience - a.total_experience;
         } else {
           return b.total_experience - a.total_experience;
         }
