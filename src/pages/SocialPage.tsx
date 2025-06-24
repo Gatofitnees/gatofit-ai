@@ -16,11 +16,16 @@ const SocialPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const { rankings, isLoading, error } = useRankings(100); // Límite de 100 usuarios
+  const { rankings, isLoading, error, fetchRankings } = useRankings(100); // Límite de 100 usuarios
   const { user } = useAuth();
   const { stats } = useUserStats(user?.id);
   const { followers, following, isLoading: followersLoading } = useFollowersList(user?.id);
   const navigate = useNavigate();
+
+  // Use level ranking by default in social page
+  React.useEffect(() => {
+    fetchRankings('level');
+  }, []);
 
   console.log('🌟 SocialPage rankings:', rankings);
   console.log('📊 SocialPage rankings count:', rankings?.length || 0);
@@ -148,7 +153,7 @@ const SocialPage: React.FC = () => {
         <CardBody>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Top Usuarios</h3>
+            <h3 className="font-semibold">Top Usuarios por Nivel</h3>
             <span className="text-xs text-muted-foreground">({Math.min(rankings.length, 100)})</span>
           </div>
           
@@ -192,6 +197,15 @@ const SocialPage: React.FC = () => {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{rankingUser.username}</p>
                     <RankBadge level={rankingUser.current_level} size="sm" showLevelWithRank={true} />
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-primary">
+                      Nivel {rankingUser.current_level}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {rankingUser.total_experience} XP
+                    </div>
                   </div>
                 </div>
               ))}
