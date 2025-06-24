@@ -59,7 +59,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-background border border-border max-w-sm mx-auto rounded-2xl p-0 overflow-hidden shadow-neu-card animate-scale-in">
+      <DialogContent className="bg-background border border-border max-w-sm mx-auto rounded-2xl p-0 overflow-visible shadow-neu-card animate-scale-in">
         {/* Header */}
         <DialogHeader className="relative flex flex-row items-center justify-between p-6 pb-4">
           <div className="flex items-center gap-3">
@@ -78,35 +78,38 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             {featureInfo.description}
           </p>
 
-          {/* Price Card */}
+          {/* Price Card with Badge */}
           {yearlyPlan && (
-            <div className="relative bg-secondary/70 rounded-2xl p-6 border border-border overflow-hidden shadow-neu-button">
-              {/* Floating badge */}
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+            <div className="relative pt-4">
+              {/* Floating badge - positioned above with proper spacing */}
+              <div className="flex justify-center mb-2">
                 <div className="bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-full shadow-neu-button animate-pulse">
                   <Star className="inline h-3 w-3 mr-1" />
                   AHORRA 61%
                 </div>
               </div>
 
-              <div className="relative text-center mt-2">
-                <div className="mb-2">
-                  <span className="text-sm text-muted-foreground line-through">${yearlyPlan.price_usd}/año</span>
-                </div>
-                
-                {/* Main price */}
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-5xl font-black text-primary animate-pulse">
-                    $2.50
-                  </span>
-                  <div className="text-lg text-muted-foreground font-medium">
-                    /mes
+              {/* Price Card */}
+              <div className="relative bg-secondary/70 rounded-2xl p-6 border border-border shadow-neu-button">
+                <div className="text-center">
+                  <div className="mb-2">
+                    <span className="text-sm text-muted-foreground line-through">${yearlyPlan.price_usd}/año</span>
                   </div>
+                  
+                  {/* Main price */}
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-5xl font-black text-primary animate-pulse">
+                      $2.50
+                    </span>
+                    <div className="text-lg text-muted-foreground font-medium">
+                      /mes
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-primary font-semibold">
+                    Solo pagando anualmente
+                  </p>
                 </div>
-                
-                <p className="text-sm text-primary font-semibold">
-                  Solo pagando anualmente
-                </p>
               </div>
             </div>
           )}
