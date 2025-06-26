@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Dumbbell, Utensils, Star, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dumbbell, Utensils, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CalendarDay {
@@ -95,97 +95,93 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     onDaySelect(dateStr);
   };
 
-  const getActivityBadge = (day: CalendarDay) => {
+  const getActivityIndicator = (day: CalendarDay) => {
     if (!day.isCurrentMonth) return null;
     
+    const hasActivity = day.hasWorkout || day.hasNutrition;
+    if (!hasActivity) return null;
+
     if (day.hasWorkout && day.hasNutrition) {
       return (
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-          <Trophy className="h-2.5 w-2.5 text-white" />
-        </div>
+        <div className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full opacity-80"></div>
       );
     } else if (day.hasWorkout) {
       return (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-          <Dumbbell className="h-2 w-2 text-white" />
-        </div>
+        <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-green-500 rounded-full opacity-70"></div>
       );
     } else if (day.hasNutrition) {
       return (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-          <Utensils className="h-2 w-2 text-white" />
-        </div>
+        <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-500 rounded-full opacity-70"></div>
       );
     }
     return null;
   };
 
   const getDayClassName = (day: CalendarDay) => {
-    const baseClasses = "relative p-3 text-sm rounded-xl transition-all duration-300 hover:scale-105 transform";
+    const baseClasses = "relative p-2 text-sm rounded-lg transition-all duration-200 hover:scale-105";
     
     if (!day.isCurrentMonth) {
-      return `${baseClasses} text-muted-foreground/50 opacity-40`;
+      return `${baseClasses} text-muted-foreground/40 opacity-50`;
     }
     
     if (day.isToday) {
-      return `${baseClasses} bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-glow animate-gatofit-pulse font-bold`;
+      return `${baseClasses} bg-primary text-primary-foreground font-semibold shadow-neu-button`;
     }
     
     if (selectedDate === day.date) {
-      return `${baseClasses} bg-gradient-to-br from-secondary to-secondary/80 text-foreground shadow-neu-button-active font-medium border-2 border-primary/30`;
+      return `${baseClasses} bg-secondary text-foreground font-medium shadow-neu-button-active border border-primary/20`;
     }
     
     if (day.hasWorkout || day.hasNutrition) {
-      return `${baseClasses} bg-gradient-to-br from-secondary/60 to-secondary/40 text-foreground hover:bg-secondary/80 shadow-neu-card font-medium`;
+      return `${baseClasses} bg-secondary/50 text-foreground hover:bg-secondary/70 font-medium`;
     }
     
-    return `${baseClasses} text-foreground hover:bg-secondary/30 shadow-neu-button hover:shadow-neu-card`;
+    return `${baseClasses} text-foreground hover:bg-secondary/30`;
   };
 
   return (
-    <div className="bg-gradient-to-br from-card to-card/80 rounded-2xl border border-border/50 p-6 shadow-neu-card backdrop-blur-sm">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-card rounded-2xl border border-border/50 p-4 shadow-neu-card">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigateMonth('prev')}
-          className="h-10 w-10 p-0 rounded-xl hover:bg-secondary/20 transition-all duration-300 hover:scale-110 shadow-neu-button hover:shadow-neu-button-active group"
+          className="h-8 w-8 p-0 rounded-lg hover:bg-secondary/50 transition-colors"
         >
-          <ChevronLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
         
         <div className="text-center">
-          <h2 className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <h2 className="text-base font-semibold text-foreground">
             {currentDate.toLocaleDateString('es-ES', { 
               month: 'long', 
               year: 'numeric' 
             })}
           </h2>
-          <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-1"></div>
         </div>
         
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigateMonth('next')}
-          className="h-10 w-10 p-0 rounded-xl hover:bg-secondary/20 transition-all duration-300 hover:scale-110 shadow-neu-button hover:shadow-neu-button-active group"
+          className="h-8 w-8 p-0 rounded-lg hover:bg-secondary/50 transition-colors"
         >
-          <ChevronRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Enhanced Week Days */}
-      <div className="grid grid-cols-7 gap-2 mb-4">
-        {weekDays.map((day, index) => (
-          <div key={day} className="text-center text-xs font-semibold text-muted-foreground p-2 animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+      {/* Week Days */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {weekDays.map((day) => (
+          <div key={day} className="text-center text-xs font-medium text-muted-foreground p-2">
             {day}
           </div>
         ))}
       </div>
 
-      {/* Enhanced Calendar Grid */}
-      <div className="grid grid-cols-7 gap-2">
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-1">
         {calendarDays.map((day, index) => {
           const dayNumber = new Date(day.date).getDate();
           
@@ -194,30 +190,29 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               key={index}
               onClick={() => handleDayClick(day.date)}
               className={getDayClassName(day)}
-              style={{ animationDelay: `${index * 0.02}s` }}
             >
               <span className="relative z-10">{dayNumber}</span>
-              {getActivityBadge(day)}
+              {getActivityIndicator(day)}
             </button>
           );
         })}
       </div>
 
-      {/* Enhanced Legend */}
-      <div className="flex items-center justify-center gap-4 mt-6 animate-fade-in">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:scale-105 transition-all duration-300 shadow-neu-card">
-          <Dumbbell className="h-3 w-3 text-green-500" />
-          <span className="text-xs font-medium text-green-700 dark:text-green-400">Entrenamiento</span>
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-4 mt-4 text-xs">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 bg-green-500 rounded-full opacity-70"></div>
+          <span className="text-muted-foreground">Entrenamiento</span>
         </div>
         
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:scale-105 transition-all duration-300 shadow-neu-card">
-          <Utensils className="h-3 w-3 text-blue-500" />
-          <span className="text-xs font-medium text-blue-700 dark:text-blue-400">Nutrición</span>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 bg-blue-500 rounded-full opacity-70"></div>
+          <span className="text-muted-foreground">Nutrición</span>
         </div>
         
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-yellow-500/20 to-orange-500/20 hover:scale-105 transition-all duration-300 shadow-neu-card">
-          <Trophy className="h-3 w-3 text-yellow-500 animate-pulse" />
-          <span className="text-xs font-medium text-yellow-700 dark:text-yellow-400">Completo</span>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 bg-primary rounded-full opacity-80"></div>
+          <span className="text-muted-foreground">Completo</span>
         </div>
       </div>
     </div>
