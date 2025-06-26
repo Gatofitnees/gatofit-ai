@@ -103,15 +103,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
     if (day.hasWorkout && day.hasNutrition) {
       return (
-        <div className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full opacity-80"></div>
+        <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-500 rounded-full opacity-80 shadow-sm"></div>
       );
     } else if (day.hasWorkout) {
       return (
-        <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-green-500 rounded-full opacity-70"></div>
+        <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-green-500 rounded-full opacity-70 shadow-sm"></div>
       );
     } else if (day.hasNutrition) {
       return (
-        <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-500 rounded-full opacity-70"></div>
+        <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-500 rounded-full opacity-70 shadow-sm"></div>
       );
     }
     return null;
@@ -147,7 +147,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => navigateMonth('prev')}
-          className="h-8 w-8 p-0 rounded-lg hover:bg-secondary/50 transition-colors"
+          className="h-8 w-8 p-0 rounded-lg hover:bg-secondary/50 transition-all duration-200 hover:shadow-neu-button"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -165,7 +165,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => navigateMonth('next')}
-          className="h-8 w-8 p-0 rounded-lg hover:bg-secondary/50 transition-colors"
+          className="h-8 w-8 p-0 rounded-lg hover:bg-secondary/50 transition-all duration-200 hover:shadow-neu-button"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -201,17 +201,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 mt-4 text-xs">
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 bg-green-500 rounded-full opacity-70"></div>
+          <div className="w-2 h-2 bg-green-500 rounded-full opacity-70 shadow-sm"></div>
           <span className="text-muted-foreground">Entrenamiento</span>
         </div>
         
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 bg-blue-500 rounded-full opacity-70"></div>
+          <div className="w-2 h-2 bg-blue-500 rounded-full opacity-70 shadow-sm"></div>
           <span className="text-muted-foreground">Nutrición</span>
         </div>
         
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 bg-primary rounded-full opacity-80"></div>
+          <div className="w-2 h-2 bg-yellow-500 rounded-full opacity-80 shadow-sm"></div>
           <span className="text-muted-foreground">Completo</span>
         </div>
       </div>
