@@ -6,11 +6,16 @@ import { Card, CardBody } from "@/components/Card";
 interface MediaUploadProps {
   mediaPreview: string | null;
   mediaFile: File | null;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileChange: (file: File | null) => void;
   onRemoveMedia: () => void;
 }
 
 const MediaUpload: React.FC<MediaUploadProps> = ({ mediaPreview, mediaFile, onFileChange, onRemoveMedia }) => {
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    onFileChange(file);
+  };
+
   return (
     <Card>
       <CardBody>
@@ -49,7 +54,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ mediaPreview, mediaFile, onFi
               type="file"
               className="hidden"
               accept="image/jpeg,image/png,video/mp4"
-              onChange={onFileChange}
+              onChange={handleFileInputChange}
             />
           </label>
         )}
