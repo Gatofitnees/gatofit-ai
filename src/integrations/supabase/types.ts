@@ -24,6 +24,53 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_users: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          last_login_at: string | null
+          role: Database["public"]["Enums"]["admin_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          last_login_at?: string | null
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          last_login_at?: string | null
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auth_rate_limits: {
         Row: {
           attempt_count: number | null
@@ -1232,6 +1279,14 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      get_admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_admin_role: {
+        Args: { user_id?: string }
+        Returns: Database["public"]["Enums"]["admin_role"]
+      }
       get_public_routines: {
         Args: { target_user_id: string }
         Returns: {
@@ -1242,6 +1297,18 @@ export type Database = {
           estimated_duration_minutes: number
           exercise_count: number
           created_at: string
+        }[]
+      }
+      get_user_details: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_user_growth_by_month: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month: string
+          total_users: number
+          new_users: number
         }[]
       }
       get_user_stats: {
@@ -1266,12 +1333,40 @@ export type Database = {
           week_start_date: string
         }[]
       }
+      get_users_with_filters: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_subscription_type?: string
+          p_activity_level?: string
+          p_order_by?: string
+          p_order_direction?: string
+        }
+        Returns: {
+          id: string
+          full_name: string
+          username: string
+          avatar_url: string
+          created_at: string
+          subscription_type: string
+          subscription_status: string
+          total_workouts: number
+          last_activity: string
+          current_streak: number
+          is_active: boolean
+        }[]
+      }
       get_week_start: {
         Args: { input_date?: string }
         Returns: string
       }
       increment_usage_counter: {
         Args: { p_user_id: string; counter_type: string; increment_by?: number }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { user_id?: string }
         Returns: boolean
       }
       is_user_premium: {
@@ -1299,6 +1394,7 @@ export type Database = {
       }
     }
     Enums: {
+      admin_role: "super_admin" | "moderator" | "content_manager"
       difficulty_level: "beginner" | "intermediate" | "advanced"
       gender_type: "male" | "female" | "other" | "prefer_not_to_say"
       goal_type:
@@ -1433,6 +1529,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_role: ["super_admin", "moderator", "content_manager"],
       difficulty_level: ["beginner", "intermediate", "advanced"],
       gender_type: ["male", "female", "other", "prefer_not_to_say"],
       goal_type: [
