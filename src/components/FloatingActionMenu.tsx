@@ -42,7 +42,7 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
               onCreateProgram();
               setIsOpen(false);
             }}
-            className="flex items-center justify-center w-12 h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
           >
             <Calendar className="h-6 w-6" />
           </button>

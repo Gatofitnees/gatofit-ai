@@ -196,7 +196,7 @@ const EditWeeklyProgramPage: React.FC = () => {
           </Button>
           <Button
             onClick={handleSave}
-            className="flex-1 bg-purple-500 hover:bg-purple-600"
+            className="flex-1 bg-blue-500 hover:bg-blue-600"
             disabled={saving || !name.trim()}
           >
             {saving ? (

@@ -9,6 +9,7 @@ import WeeklyProgramCalendar from "@/components/weekly-program/WeeklyProgramCale
 import RoutineSelector from "@/components/weekly-program/RoutineSelector";
 import { useWeeklyPrograms } from "@/hooks/useWeeklyPrograms";
 import { useWeeklyProgramRoutines } from "@/hooks/useWeeklyProgramRoutines";
+import { useRoutines } from "@/hooks/useRoutines";
 
 // Local type for temporary routines before saving
 interface LocalWeeklyProgramRoutine {
@@ -16,6 +17,8 @@ interface LocalWeeklyProgramRoutine {
   routine_id: number;
   day_of_week: number;
   order_in_day: number;
+  program_id: string;
+  created_at: string;
   routine?: {
     id: number;
     name: string;
@@ -27,6 +30,7 @@ interface LocalWeeklyProgramRoutine {
 const CreateWeeklyProgramPage: React.FC = () => {
   const navigate = useNavigate();
   const { createProgram } = useWeeklyPrograms();
+  const { routines: userRoutines } = useRoutines();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
@@ -36,8 +40,6 @@ const CreateWeeklyProgramPage: React.FC = () => {
   // Local state for managing routines before saving
   const [localRoutines, setLocalRoutines] = useState<LocalWeeklyProgramRoutine[]>([]);
 
-  const { routines: userRoutines } = useWeeklyProgramRoutines();
-
   const handleAddRoutine = (dayOfWeek: number) => {
     setSelectedDay(dayOfWeek);
     setShowRoutineSelector(true);
@@ -46,18 +48,22 @@ const CreateWeeklyProgramPage: React.FC = () => {
   const handleSelectRoutine = async (routineId: number) => {
     if (selectedDay === null) return;
 
-    // Find routine details from user routines (we'll need to get this from somewhere)
-    // For now, create a placeholder routine entry
+    // Find routine details from user routines
+    const selectedRoutine = userRoutines.find(r => r.id === routineId);
+    if (!selectedRoutine) return;
+
     const newRoutine: LocalWeeklyProgramRoutine = {
       id: `temp-${Date.now()}`,
       routine_id: routineId,
       day_of_week: selectedDay,
       order_in_day: localRoutines.filter(r => r.day_of_week === selectedDay).length,
+      program_id: "temp",
+      created_at: new Date().toISOString(),
       routine: {
-        id: routineId,
-        name: `Rutina ${routineId}`, // This should come from actual routine data
-        type: 'General',
-        estimated_duration_minutes: 60
+        id: selectedRoutine.id,
+        name: selectedRoutine.name,
+        type: selectedRoutine.type,
+        estimated_duration_minutes: selectedRoutine.estimated_duration_minutes
       }
     };
 
@@ -79,8 +85,14 @@ const CreateWeeklyProgramPage: React.FC = () => {
     try {
       const program = await createProgram(name.trim(), description.trim() || undefined);
       if (program) {
-        // Here we would save the routines to the program
-        // For now, just navigate back
+        // Save all the routines to the program using the real useWeeklyProgramRoutines hook
+        const { addRoutineToProgram } = useWeeklyProgramRoutines(program.id);
+        
+        // Save each routine
+        for (const routine of localRoutines) {
+          await addRoutineToProgram(routine.routine_id, routine.day_of_week, routine.order_in_day);
+        }
+        
         navigate("/workout/programs");
       }
     } catch (error) {
@@ -152,7 +164,7 @@ const CreateWeeklyProgramPage: React.FC = () => {
           </div>
           
           <WeeklyProgramCalendar
-            routines={localRoutines as any} // Type assertion for compatibility
+            routines={localRoutines}
             onAddRoutine={handleAddRoutine}
             onRemoveRoutine={handleRemoveRoutine}
           />
@@ -170,7 +182,7 @@ const CreateWeeklyProgramPage: React.FC = () => {
           </Button>
           <Button
             onClick={handleSave}
-            className="flex-1 bg-purple-500 hover:bg-purple-600"
+            className="flex-1 bg-blue-500 hover:bg-blue-600"
             disabled={saving || !name.trim()}
           >
             {saving ? (

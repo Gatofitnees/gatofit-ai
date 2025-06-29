@@ -5,6 +5,7 @@ import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import Button from "./Button";
 import WorkoutCarousel from "./WorkoutCarousel";
 import PromoVideoCard from "./PromoVideoCard";
+import ProgrammedWorkoutButton from "./ProgrammedWorkoutButton";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,7 +23,7 @@ interface WorkoutSummary {
 interface TrainingCardProps {
   completed?: boolean;
   workouts?: WorkoutSummary[];
-  onStartWorkout: () => void;
+  onStartWorkout: (routineId?: number) => void;
   onViewDetails?: (workoutId?: number) => void;
   loading?: boolean;
 }
@@ -38,6 +39,14 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
 
   const handleSlideChange = (index: number) => {
     setCurrentWorkoutIndex(index);
+  };
+
+  const handleStartWorkout = () => {
+    onStartWorkout();
+  };
+
+  const handleProgrammedWorkoutStart = (routineId: number) => {
+    onStartWorkout(routineId);
   };
 
   if (loading) {
@@ -129,13 +138,16 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
         >
           Ver Detalles
         </Button>
-        <Button 
-          variant="primary"
-          size="sm"
-          onClick={onStartWorkout}
-        >
-          Otro Entrenamiento
-        </Button>
+        <div className="flex items-center gap-2">
+          <ProgrammedWorkoutButton onStartWorkout={handleProgrammedWorkoutStart} />
+          <Button 
+            variant="primary"
+            size="sm"
+            onClick={handleStartWorkout}
+          >
+            Otro Entrenamiento
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
@@ -161,10 +173,16 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
           {(item, index, total) => {
             if (item.type === 'promo') {
               return (
-                <PromoVideoCard 
-                  onStartWorkout={onStartWorkout} 
-                  adaptToWorkoutCards={hasCompletedWorkouts}
-                />
+                <div className="relative">
+                  <PromoVideoCard 
+                    onStartWorkout={handleStartWorkout} 
+                    adaptToWorkoutCards={hasCompletedWorkouts}
+                  />
+                  {/* Positioned ProgrammedWorkoutButton on promo card */}
+                  <div className="absolute bottom-4 left-4">
+                    <ProgrammedWorkoutButton onStartWorkout={handleProgrammedWorkoutStart} />
+                  </div>
+                </div>
               );
             } else {
               return renderCompletedWorkoutCard(item.data, index - 1, total - 1);

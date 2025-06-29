@@ -58,7 +58,7 @@ const WeeklyProgramsPage: React.FC = () => {
           variant="default"
           size="sm"
           onClick={handleCreateProgram}
-          className="bg-purple-500 hover:bg-purple-600 text-white"
+          className="bg-blue-500 hover:bg-blue-600 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nueva
@@ -75,7 +75,7 @@ const WeeklyProgramsPage: React.FC = () => {
           </p>
           <Button
             onClick={handleCreateProgram}
-            className="bg-purple-500 hover:bg-purple-600 text-white"
+            className="bg-blue-500 hover:bg-blue-600 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
             Crear Programación
@@ -152,7 +152,7 @@ const WeeklyProgramsPage: React.FC = () => {
         <Button
           onClick={handleCreateProgram}
           size="icon"
-          className="h-14 w-14 rounded-full shadow-lg bg-purple-500 hover:bg-purple-600 text-white"
+          className="h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 text-white"
         >
           <Plus className="h-6 w-6" />
         </Button>
