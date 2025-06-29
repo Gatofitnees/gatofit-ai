@@ -58,28 +58,20 @@ const WeeklyProgramCalendar: React.FC<WeeklyProgramCalendarProps> = ({
 
           return (
             <Card key={day.id} className="overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-base">{day.name}</h3>
-                    {totalDuration > 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        {formatDuration(totalDuration)} total
-                      </p>
-                    )}
-                  </div>
-                  {!readOnly && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onAddRoutine(day.id)}
-                      className="h-8 w-8 p-0 rounded-full"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
+              <CardHeader 
+                title={day.name}
+                subtitle={totalDuration > 0 ? `${formatDuration(totalDuration)} total` : undefined}
+                action={!readOnly ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onAddRoutine(day.id)}
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                ) : undefined}
+              />
               
               <CardBody className="pt-0">
                 {dayRoutines.length === 0 ? (

@@ -85,30 +85,23 @@ const WeeklyProgramsPage: React.FC = () => {
         <div className="space-y-3">
           {programs.map((program) => (
             <Card key={program.id} className="overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-base">{program.name}</h3>
-                      {program.is_active && (
-                        <span className="text-xs px-2 py-1 bg-green-500/20 text-green-600 rounded-full font-medium">
-                          Activa
-                        </span>
-                      )}
-                    </div>
-                    {program.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {program.description}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Creada el {new Date(program.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
+              <CardHeader
+                title={program.name}
+                subtitle={program.description}
+                action={
+                  program.is_active ? (
+                    <span className="text-xs px-2 py-1 bg-green-500/20 text-green-600 rounded-full font-medium">
+                      Activa
+                    </span>
+                  ) : undefined
+                }
+              />
               
               <CardBody className="pt-0">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Creada el {new Date(program.created_at).toLocaleDateString()}
+                </p>
+                
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"

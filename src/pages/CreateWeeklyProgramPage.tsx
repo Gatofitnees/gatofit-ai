@@ -10,6 +10,20 @@ import RoutineSelector from "@/components/weekly-program/RoutineSelector";
 import { useWeeklyPrograms } from "@/hooks/useWeeklyPrograms";
 import { useWeeklyProgramRoutines } from "@/hooks/useWeeklyProgramRoutines";
 
+// Local type for temporary routines before saving
+interface LocalWeeklyProgramRoutine {
+  id: string;
+  routine_id: number;
+  day_of_week: number;
+  order_in_day: number;
+  routine?: {
+    id: number;
+    name: string;
+    type?: string;
+    estimated_duration_minutes?: number;
+  };
+}
+
 const CreateWeeklyProgramPage: React.FC = () => {
   const navigate = useNavigate();
   const { createProgram } = useWeeklyPrograms();
@@ -20,18 +34,7 @@ const CreateWeeklyProgramPage: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   
   // Local state for managing routines before saving
-  const [localRoutines, setLocalRoutines] = useState<Array<{
-    id: string;
-    routine_id: number;
-    day_of_week: number;
-    order_in_day: number;
-    routine?: {
-      id: number;
-      name: string;
-      type?: string;
-      estimated_duration_minutes?: number;
-    };
-  }>>([]);
+  const [localRoutines, setLocalRoutines] = useState<LocalWeeklyProgramRoutine[]>([]);
 
   const { routines: userRoutines } = useWeeklyProgramRoutines();
 
@@ -45,7 +48,7 @@ const CreateWeeklyProgramPage: React.FC = () => {
 
     // Find routine details from user routines (we'll need to get this from somewhere)
     // For now, create a placeholder routine entry
-    const newRoutine = {
+    const newRoutine: LocalWeeklyProgramRoutine = {
       id: `temp-${Date.now()}`,
       routine_id: routineId,
       day_of_week: selectedDay,
@@ -149,7 +152,7 @@ const CreateWeeklyProgramPage: React.FC = () => {
           </div>
           
           <WeeklyProgramCalendar
-            routines={localRoutines}
+            routines={localRoutines as any} // Type assertion for compatibility
             onAddRoutine={handleAddRoutine}
             onRemoveRoutine={handleRemoveRoutine}
           />
