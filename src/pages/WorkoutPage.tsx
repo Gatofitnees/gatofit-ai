@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import WorkoutHeader from "@/components/workout/WorkoutHeader";
 import WorkoutSearchFilter from "@/components/workout/WorkoutSearchFilter";
 import WorkoutList from "@/components/workout/WorkoutList";
+import FloatingActionMenu from "@/components/FloatingActionMenu";
 import { useRoutinesWithLimits } from "@/hooks/useRoutinesWithLimits";
 import { syncExercisesToDatabase } from "@/features/workout/services/exerciseSyncService";
 import { useNavigate } from "react-router-dom";
@@ -157,10 +155,13 @@ const WorkoutPage: React.FC = () => {
     
     navigate("/workout/create");
   };
+
+  const handleCreateProgram = () => {
+    navigate("/workout/programs");
+  };
   
   const handleRoutineDeleted = async () => {
     await refetch();
-    // Recargar info de uso después de eliminar
     if (!isPremium) {
       await loadUsageInfo();
     }
@@ -180,15 +181,6 @@ const WorkoutPage: React.FC = () => {
             <UsageLimitsBanner type="routines" />
           )}
         </div>
-        <Button 
-          variant="default"
-          size="sm"
-          onClick={handleCreateRoutine}
-          className="bg-blue-500 hover:bg-blue-600 text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Rutina
-        </Button>
       </div>
       
       <WorkoutSearchFilter 
@@ -213,15 +205,10 @@ const WorkoutPage: React.FC = () => {
         onDeleteRoutine={deleteRoutine}
       />
       
-      <div className="fixed right-4 bottom-20 z-30">
-        <Button
-          onClick={handleCreateRoutine}
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 text-white"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </div>
+      <FloatingActionMenu
+        onCreateRoutine={handleCreateRoutine}
+        onCreateProgram={handleCreateProgram}
+      />
 
       <PremiumModal
         isOpen={showPremiumModal}

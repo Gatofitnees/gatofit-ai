@@ -15,6 +15,10 @@ import SettingsPage from "./pages/SettingsPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import AIChatPage from "./pages/AIChatPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
+import WeeklyProgramsPage from "./pages/WeeklyProgramsPage";
+import CreateWeeklyProgramPage from "./pages/CreateWeeklyProgramPage";
+import ViewWeeklyProgramPage from "./pages/ViewWeeklyProgramPage";
+import EditWeeklyProgramPage from "./pages/EditWeeklyProgramPage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
@@ -140,6 +144,38 @@ function App() {
                     <ProtectedRoute>
                       <WorkoutPage />
                       <NavBar />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/workout/programs"
+                  element={
+                    <ProtectedRoute>
+                      <WeeklyProgramsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/workout/programs/create"
+                  element={
+                    <ProtectedRoute>
+                      <CreateWeeklyProgramPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/workout/programs/view/:programId"
+                  element={
+                    <ProtectedRoute>
+                      <ViewWeeklyProgramPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/workout/programs/edit/:programId"
+                  element={
+                    <ProtectedRoute>
+                      <EditWeeklyProgramPage />
                     </ProtectedRoute>
                   }
                 />

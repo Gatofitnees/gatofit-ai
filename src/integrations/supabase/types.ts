@@ -1114,6 +1114,78 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_program_routines: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          order_in_day: number
+          program_id: string
+          routine_id: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          order_in_day?: number
+          program_id: string
+          routine_id: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          order_in_day?: number
+          program_id?: string
+          routine_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_program_routines_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_program_routines_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_programs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       workout_log_exercise_details: {
         Row: {
           duration_seconds_completed: number | null
