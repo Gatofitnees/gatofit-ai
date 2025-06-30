@@ -26,6 +26,7 @@ interface TrainingCardProps {
   onStartWorkout: (routineId?: number) => void;
   onViewDetails?: (workoutId?: number) => void;
   loading?: boolean;
+  showProgramModal?: boolean;
 }
 
 const TrainingCard: React.FC<TrainingCardProps> = ({
@@ -33,7 +34,8 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   workouts = [],
   onStartWorkout,
   onViewDetails,
-  loading = false
+  loading = false,
+  showProgramModal = false
 }) => {
   const [currentWorkoutIndex, setCurrentWorkoutIndex] = useState(0);
 
@@ -138,8 +140,12 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
         >
           Ver Detalles
         </Button>
+        {/* Solo mostrar los botones de acción en las cards completadas */}
         <div className="flex items-center gap-2">
-          <ProgrammedWorkoutButton onStartWorkout={handleProgrammedWorkoutStart} />
+          <ProgrammedWorkoutButton 
+            onStartWorkout={handleProgrammedWorkoutStart}
+            showModal={showProgramModal}
+          />
           <Button 
             variant="primary"
             size="sm"
@@ -178,9 +184,12 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
                     onStartWorkout={handleStartWorkout} 
                     adaptToWorkoutCards={hasCompletedWorkouts}
                   />
-                  {/* Positioned buttons on promo card */}
+                  {/* Botones posicionados en promo card - Solo el principal y programación */}
                   <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                    <ProgrammedWorkoutButton onStartWorkout={handleProgrammedWorkoutStart} />
+                    <ProgrammedWorkoutButton 
+                      onStartWorkout={handleProgrammedWorkoutStart}
+                      showModal={showProgramModal}
+                    />
                     <Button 
                       variant="primary"
                       size="sm"

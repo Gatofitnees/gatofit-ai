@@ -23,8 +23,14 @@ const HomePage: React.FC = () => {
     handleDateSelect
   } = useHomePageData();
 
-  const handleStartWorkout = () => {
-    navigate("/workout");
+  const handleStartWorkout = (routineId?: number) => {
+    if (routineId) {
+      // Si se proporciona un routineId, iniciar esa rutina específica
+      navigate(`/workout/active/${routineId}`);
+    } else {
+      // Si no, ir a la página de selección de rutinas
+      navigate("/workout");
+    }
   };
 
   const handleViewWorkoutDetails = (workoutId?: number) => {
@@ -61,6 +67,7 @@ const HomePage: React.FC = () => {
         workouts={workoutSummaries}
         onStartWorkout={handleStartWorkout}
         onViewDetails={handleViewWorkoutDetails}
+        showProgramModal={true}
       />
       
       <MacrosCard 
