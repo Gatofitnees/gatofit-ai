@@ -68,6 +68,7 @@ const HomePage: React.FC = () => {
         onStartWorkout={handleStartWorkout}
         onViewDetails={handleViewWorkoutDetails}
         showProgramModal={true}
+        selectedDate={selectedDate}
       />
       
       <MacrosCard 
