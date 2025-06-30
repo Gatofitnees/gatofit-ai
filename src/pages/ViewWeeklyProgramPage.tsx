@@ -26,6 +26,10 @@ const ViewWeeklyProgramPage: React.FC = () => {
     }
   };
 
+  const handleBack = () => {
+    navigate("/workout/programs");
+  };
+
   if (!program) {
     return (
       <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
@@ -63,7 +67,7 @@ const ViewWeeklyProgramPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

@@ -95,6 +95,30 @@ export const useWeeklyPrograms = () => {
     }
   };
 
+  const addRoutineToProgram = async (programId: string, routineId: number, dayOfWeek: number, orderInDay: number = 0) => {
+    try {
+      const { error } = await supabase
+        .from('weekly_program_routines')
+        .insert({
+          program_id: programId,
+          routine_id: routineId,
+          day_of_week: dayOfWeek,
+          order_in_day: orderInDay
+        });
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      console.error("Error adding routine to program:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar la rutina a la programación",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   const updateProgram = async (programId: string, updates: Partial<WeeklyProgram>) => {
     try {
       const { error } = await supabase
@@ -183,6 +207,34 @@ export const useWeeklyPrograms = () => {
     }
   };
 
+  const pauseProgram = async (programId: string) => {
+    try {
+      const { error } = await supabase
+        .from('weekly_programs')
+        .update({ is_active: false })
+        .eq('id', programId);
+
+      if (error) throw error;
+
+      await fetchPrograms();
+      
+      toast({
+        title: "Programación pausada",
+        description: "La programación ha sido pausada correctamente",
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error pausing program:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo pausar la programación",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchPrograms();
   }, [fetchPrograms]);
@@ -192,8 +244,10 @@ export const useWeeklyPrograms = () => {
     loading,
     fetchPrograms,
     createProgram,
+    addRoutineToProgram,
     updateProgram,
     deleteProgram,
-    setActiveProgram
+    setActiveProgram,
+    pauseProgram
   };
 };

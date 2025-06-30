@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Calendar, Play, Edit3, Trash2, Settings } from "lucide-react";
+import { Plus, Calendar, Play, Edit3, Trash2, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { useWeeklyPrograms } from "@/hooks/useWeeklyPrograms";
@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const WeeklyProgramsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { programs, loading, deleteProgram, setActiveProgram } = useWeeklyPrograms();
+  const { programs, loading, deleteProgram, setActiveProgram, pauseProgram } = useWeeklyPrograms();
 
   const handleCreateProgram = () => {
     navigate("/workout/programs/create");
@@ -31,6 +31,10 @@ const WeeklyProgramsPage: React.FC = () => {
 
   const handleActivateProgram = async (programId: string) => {
     await setActiveProgram(programId);
+  };
+
+  const handlePauseProgram = async (programId: string) => {
+    await pauseProgram(programId);
   };
 
   if (loading) {
@@ -121,7 +125,16 @@ const WeeklyProgramsPage: React.FC = () => {
                     <Edit3 className="h-4 w-4" />
                   </Button>
                   
-                  {!program.is_active && (
+                  {program.is_active ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePauseProgram(program.id)}
+                      className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                    >
+                      <Pause className="h-4 w-4" />
+                    </Button>
+                  ) : (
                     <Button
                       variant="outline"
                       size="sm"

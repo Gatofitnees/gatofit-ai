@@ -42,6 +42,7 @@ const EditWeeklyProgramPage: React.FC = () => {
     const success = await addRoutineToProgram(routineId, selectedDay);
     if (success) {
       setSelectedDay(null);
+      setShowRoutineSelector(false);
     }
   };
 
@@ -63,7 +64,7 @@ const EditWeeklyProgramPage: React.FC = () => {
       });
       
       if (success) {
-        navigate(`/workout/programs/view/${programId}`);
+        navigate("/workout/programs");
       }
     } catch (error) {
       console.error("Error updating program:", error);
@@ -84,7 +85,7 @@ const EditWeeklyProgramPage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate(-1);
+    navigate("/workout/programs");
   };
 
   if (!program) {

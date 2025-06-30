@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Dumbbell, Calendar, ChevronDown } from "lucide-react";
+import { Weight, Calendar, ChevronDown, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { useActiveProgramForToday } from "@/hooks/useActiveProgramForToday";
@@ -43,7 +43,7 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
         size="icon"
         className="w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-neu-button"
       >
-        <Dumbbell className="h-5 w-5" />
+        <Weight className="h-5 w-5" />
       </Button>
 
       {/* Dropdown for multiple routines */}

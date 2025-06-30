@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import WeeklyProgramCalendar from "@/components/weekly-program/WeeklyProgramCalendar";
 import RoutineSelector from "@/components/weekly-program/RoutineSelector";
 import { useWeeklyPrograms } from "@/hooks/useWeeklyPrograms";
-import { useWeeklyProgramRoutines } from "@/hooks/useWeeklyProgramRoutines";
 import { useRoutines } from "@/hooks/useRoutines";
 
 // Local type for temporary routines before saving
@@ -29,7 +28,7 @@ interface LocalWeeklyProgramRoutine {
 
 const CreateWeeklyProgramPage: React.FC = () => {
   const navigate = useNavigate();
-  const { createProgram } = useWeeklyPrograms();
+  const { createProgram, addRoutineToProgram } = useWeeklyPrograms();
   const { routines: userRoutines } = useRoutines();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -69,6 +68,7 @@ const CreateWeeklyProgramPage: React.FC = () => {
 
     setLocalRoutines(prev => [...prev, newRoutine]);
     setSelectedDay(null);
+    setShowRoutineSelector(false);
   };
 
   const handleRemoveRoutine = (routineId: string) => {
@@ -83,27 +83,29 @@ const CreateWeeklyProgramPage: React.FC = () => {
 
     setSaving(true);
     try {
+      // First create the program
       const program = await createProgram(name.trim(), description.trim() || undefined);
-      if (program) {
-        // Save all the routines to the program using the real useWeeklyProgramRoutines hook
-        const { addRoutineToProgram } = useWeeklyProgramRoutines(program.id);
-        
-        // Save each routine
-        for (const routine of localRoutines) {
-          await addRoutineToProgram(routine.routine_id, routine.day_of_week, routine.order_in_day);
-        }
-        
-        navigate("/workout/programs");
+      if (!program) {
+        throw new Error("Failed to create program");
       }
+
+      // Then save all the routines to the program
+      for (const routine of localRoutines) {
+        await addRoutineToProgram(program.id, routine.routine_id, routine.day_of_week, routine.order_in_day);
+      }
+      
+      // Navigate back to programs page
+      navigate("/workout/programs");
     } catch (error) {
       console.error("Error saving program:", error);
+      alert("Error al guardar la programación. Inténtalo de nuevo.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleCancel = () => {
-    navigate(-1);
+    navigate("/workout/programs");
   };
 
   return (

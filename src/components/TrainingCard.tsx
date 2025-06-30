@@ -178,9 +178,16 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
                     onStartWorkout={handleStartWorkout} 
                     adaptToWorkoutCards={hasCompletedWorkouts}
                   />
-                  {/* Positioned ProgrammedWorkoutButton on promo card */}
-                  <div className="absolute bottom-4 left-4">
+                  {/* Positioned buttons on promo card */}
+                  <div className="absolute bottom-4 right-4 flex items-center gap-2">
                     <ProgrammedWorkoutButton onStartWorkout={handleProgrammedWorkoutStart} />
+                    <Button 
+                      variant="primary"
+                      size="sm"
+                      onClick={handleStartWorkout}
+                    >
+                      Iniciar
+                    </Button>
                   </div>
                 </div>
               );
