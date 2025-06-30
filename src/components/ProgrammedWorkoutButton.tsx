@@ -1,34 +1,26 @@
 
 import React, { useState } from "react";
-import { Calendar, Check } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useActiveProgramForSelectedDate } from "@/hooks/useActiveProgramForSelectedDate";
+import { useActiveProgramForToday } from "@/hooks/useActiveProgramForToday";
 import ProgrammedRoutinesModal from "./ProgrammedRoutinesModal";
 
 interface ProgrammedWorkoutButtonProps {
   onStartWorkout: (routineId: number) => void;
   showModal?: boolean;
-  selectedDate?: Date;
 }
 
 const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
   onStartWorkout,
-  showModal = false,
-  selectedDate = new Date()
+  showModal = false
 }) => {
-  const { activeProgram, dayRoutines, loading, hasCompletedWorkout } = useActiveProgramForSelectedDate(selectedDate);
+  const { activeProgram, todayRoutines, loading } = useActiveProgramForToday();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Don't show if no active program or no routines for selected day
-  if (loading || !activeProgram || dayRoutines.length === 0) {
+  // Don't show if no active program or no routines for today
+  if (loading || !activeProgram || todayRoutines.length === 0) {
     return null;
   }
-
-  const isToday = selectedDate.toDateString() === new Date().toDateString();
-  const buttonIcon = hasCompletedWorkout ? <Check className="h-5 w-5" /> : <Calendar className="h-5 w-5" />;
-  const buttonClass = hasCompletedWorkout 
-    ? "w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-neu-button border-2 border-green-500"
-    : "w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-neu-button";
 
   const handleButtonClick = () => {
     if (showModal) {
@@ -36,8 +28,8 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
       setIsModalOpen(true);
     } else {
       // En otros lugares, funcionalidad original
-      if (dayRoutines.length === 1 && isToday) {
-        onStartWorkout(dayRoutines[0].routine_id);
+      if (todayRoutines.length === 1) {
+        onStartWorkout(todayRoutines[0].routine_id);
       } else {
         setIsModalOpen(true);
       }
@@ -53,9 +45,9 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
       <Button
         onClick={handleButtonClick}
         size="icon"
-        className={buttonClass}
+        className="w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-neu-button"
       >
-        {buttonIcon}
+        <Calendar className="h-5 w-5" />
       </Button>
 
       {/* Modal for programmed routines */}
@@ -63,10 +55,8 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         activeProgram={activeProgram}
-        dayRoutines={dayRoutines}
+        todayRoutines={todayRoutines}
         onStartRoutine={handleStartRoutine}
-        selectedDate={selectedDate}
-        isToday={isToday}
       />
     </>
   );
