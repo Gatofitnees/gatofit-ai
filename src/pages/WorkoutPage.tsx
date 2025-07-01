@@ -34,7 +34,6 @@ const WorkoutPage: React.FC = () => {
   const [initializing, setInitializing] = useState(false);
   const [routinesWithMuscles, setRoutinesWithMuscles] = useState<any[]>([]);
   const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 5, canCreate: true, isOverLimit: false });
-  const [showGatofitPrograms, setShowGatofitPrograms] = useState(false);
   
   // Función memoizada para cargar info de uso
   const loadUsageInfo = useCallback(async () => {
@@ -162,10 +161,6 @@ const WorkoutPage: React.FC = () => {
     navigate("/workout/programs");
   };
 
-  const handleOpenGatofitPrograms = () => {
-    setShowGatofitPrograms(true);
-  };
-  
   const handleRoutineDeleted = async () => {
     await refetch();
     if (!isPremium) {
@@ -214,7 +209,6 @@ const WorkoutPage: React.FC = () => {
       <FloatingActionMenu
         onCreateRoutine={handleCreateRoutine}
         onCreateProgram={handleCreateProgram}
-        onOpenGatofitPrograms={handleOpenGatofitPrograms}
       />
 
       <PremiumModal
@@ -223,11 +217,6 @@ const WorkoutPage: React.FC = () => {
         feature="routines"
         currentUsage={usageInfo.current}
         limit={usageInfo.limit}
-      />
-
-      <GatofitProgramsModal
-        isOpen={showGatofitPrograms}
-        onClose={() => setShowGatofitPrograms(false)}
       />
     </div>
   );

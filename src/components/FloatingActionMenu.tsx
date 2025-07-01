@@ -1,23 +1,28 @@
 
 import React, { useState } from "react";
 import { Plus, Calendar, Dumbbell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface FloatingActionMenuProps {
   onCreateRoutine: () => void;
   onCreateProgram: () => void;
-  onOpenGatofitPrograms: () => void;
 }
 
 const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({ 
   onCreateRoutine, 
-  onCreateProgram,
-  onOpenGatofitPrograms
+  onCreateProgram
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleOpenGatofitPrograms = () => {
+    navigate("/workout/gatofit-programs");
+    setIsOpen(false);
   };
 
   return (
@@ -40,16 +45,18 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
           )}
         >
           <button
-            onClick={() => {
-              onOpenGatofitPrograms();
-              setIsOpen(false);
+            onClick={handleOpenGatofitPrograms}
+            className="relative flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110 overflow-hidden"
+            style={{
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.1)'
             }}
-            className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
           >
+            {/* Galactic aura effect */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
             <img 
               src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" 
               alt="Gatofit Logo" 
-              className="w-8 h-8 object-contain"
+              className="w-10 h-10 object-cover rounded-full relative z-10"
             />
           </button>
           <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">

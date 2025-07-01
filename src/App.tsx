@@ -19,6 +19,7 @@ import WeeklyProgramsPage from "./pages/WeeklyProgramsPage";
 import CreateWeeklyProgramPage from "./pages/CreateWeeklyProgramPage";
 import ViewWeeklyProgramPage from "./pages/ViewWeeklyProgramPage";
 import EditWeeklyProgramPage from "./pages/EditWeeklyProgramPage";
+import GatofitProgramsPage from "./pages/GatofitProgramsPage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
@@ -47,24 +48,31 @@ function App() {
           <div className="bg-background text-foreground min-h-screen">
             <RoutineProvider>
               <Routes>
-                <Route path="/onboarding/*" element={<OnboardingFlow />} />
-                <Route
-                  path="/"
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<OnboardingFlow />} />
+                <Route 
+                  path="/home" 
                   element={
                     <ProtectedRoute>
                       <HomePage />
-                      <NavBar />
                     </ProtectedRoute>
-                  }
+                  } 
                 />
-                <Route
-                  path="/home"
+                <Route 
+                  path="/workout" 
                   element={
                     <ProtectedRoute>
-                      <HomePage />
-                      <NavBar />
+                      <WorkoutPage />
                     </ProtectedRoute>
-                  }
+                  } 
+                />
+                <Route 
+                  path="/workout/gatofit-programs" 
+                  element={
+                    <ProtectedRoute>
+                      <GatofitProgramsPage />
+                    </ProtectedRoute>
+                  } 
                 />
                 <Route
                   path="/ai-chat"
@@ -135,15 +143,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <PublicProfilePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/workout"
-                  element={
-                    <ProtectedRoute>
-                      <WorkoutPage />
-                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
@@ -240,7 +239,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <NutritionPage />
-                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
@@ -249,7 +247,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <RankingPage />
-                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
@@ -258,7 +255,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <SocialPage />
-                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
