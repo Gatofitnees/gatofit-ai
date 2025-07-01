@@ -109,13 +109,16 @@ const GatofitProgramsModal: React.FC<GatofitProgramsModalProps> = ({
                 <X className="h-4 w-4" />
               </Button>
             }
-          >
+          />
+          
+          {/* Custom styled title */}
+          <div className="px-4 -mt-2 mb-4">
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold text-xl" style={{
               textShadow: '0 0 15px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.4)'
             }}>
               Programas Gatofit
             </span>
-          </CardHeader>
+          </div>
           
           <CardBody className="pt-0 max-h-[70vh] overflow-y-auto">
             <div className="grid gap-6">
