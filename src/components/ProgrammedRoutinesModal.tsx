@@ -77,7 +77,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Background overlay */}
       <div 
         className="fixed inset-0 bg-black/50"
@@ -85,8 +85,8 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
       />
       
       {/* Modal content */}
-      <div className="relative z-10 w-full max-w-md mx-4">
-        <Card className="shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="shadow-xl max-h-[85vh] overflow-y-auto">
           <CardHeader
             title="Rutinas Programadas"
             subtitle={formatDate(selectedDate)}

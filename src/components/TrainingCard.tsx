@@ -196,7 +196,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
                     />
                     <Button 
                       variant="primary"
-                      size="lg"
+                      size="md"
                       onClick={handleStartWorkout}
                       leftIcon={<Plus className="h-4 w-4" />}
                     >
