@@ -102,20 +102,20 @@ const GatofitProgramsModal: React.FC<GatofitProgramsModalProps> = ({
       <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden">
         <Card className="shadow-xl">
           <CardHeader
-            title={
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold text-xl" style={{
-                textShadow: '0 0 15px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.4)'
-              }}>
-                Programas Gatofit
-              </span>
-            }
+            title=""
             subtitle="Programas diseñados por expertos para maximizar tus resultados"
             action={
               <Button variant="ghost" size="sm" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
             }
-          />
+          >
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold text-xl" style={{
+              textShadow: '0 0 15px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.4)'
+            }}>
+              Programas Gatofit
+            </span>
+          </CardHeader>
           
           <CardBody className="pt-0 max-h-[70vh] overflow-y-auto">
             <div className="grid gap-6">
