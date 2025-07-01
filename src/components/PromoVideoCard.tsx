@@ -1,8 +1,6 @@
 
 import React from "react";
-import { Plus } from "lucide-react";
 import { Card, CardBody } from "./Card";
-import Button from "./Button";
 
 interface PromoVideoCardProps {
   onStartWorkout: () => void;
@@ -30,16 +28,7 @@ const PromoVideoCard: React.FC<PromoVideoCardProps> = ({
       <CardBody className={`relative z-10 flex flex-col justify-end bg-transparent p-4 ${
         adaptToWorkoutCards ? 'min-h-[140px]' : 'min-h-[140px]'
       }`}>
-        <div className="flex justify-end">
-          <Button 
-            variant="primary"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={onStartWorkout}
-            className="shadow-lg"
-          >
-            Iniciar
-          </Button>
-        </div>
+        {/* Removed the button from here - it will be added as overlay in TrainingCard */}
       </CardBody>
     </Card>
   );
