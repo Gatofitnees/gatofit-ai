@@ -28,7 +28,8 @@ const PromoVideoCard: React.FC<PromoVideoCardProps> = ({
       <CardBody className={`relative z-10 flex flex-col justify-end bg-transparent p-4 ${
         adaptToWorkoutCards ? 'min-h-[140px]' : 'min-h-[140px]'
       }`}>
-        {/* Removed the button from here - it will be added as overlay in TrainingCard */}
+        {/* Empty content but satisfies the children requirement */}
+        <div></div>
       </CardBody>
     </Card>
   );
