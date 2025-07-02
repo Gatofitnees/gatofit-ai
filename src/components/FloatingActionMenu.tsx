@@ -44,13 +44,31 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
               onOpenGatofitPrograms();
               setIsOpen(false);
             }}
-            className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            className="relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-200 hover:scale-110 overflow-hidden group"
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(139, 92, 246, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)'
+            }}
           >
-            <img 
-              src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" 
-              alt="Gatofit Logo" 
-              className="w-8 h-8 object-contain"
-            />
+            {/* Galactic aura border */}
+            <div 
+              className="absolute inset-0 rounded-full opacity-75 animate-pulse"
+              style={{
+                background: 'conic-gradient(from 0deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6)',
+                padding: '2px'
+              }}
+            >
+              <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600" />
+            </div>
+            
+            {/* Inner content with full circular image */}
+            <div className="relative z-10 w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
+              <img 
+                src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" 
+                alt="Gatofit Logo" 
+                className="w-8 h-8 object-cover rounded-full"
+              />
+            </div>
           </button>
           <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold drop-shadow-sm" style={{

@@ -19,6 +19,7 @@ import WeeklyProgramsPage from "./pages/WeeklyProgramsPage";
 import CreateWeeklyProgramPage from "./pages/CreateWeeklyProgramPage";
 import ViewWeeklyProgramPage from "./pages/ViewWeeklyProgramPage";
 import EditWeeklyProgramPage from "./pages/EditWeeklyProgramPage";
+import GatofitProgramsPage from "./pages/GatofitProgramsPage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
@@ -176,6 +177,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <EditWeeklyProgramPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/gatofit-programs"
+                  element={
+                    <ProtectedRoute>
+                      <GatofitProgramsPage />
                     </ProtectedRoute>
                   }
                 />
