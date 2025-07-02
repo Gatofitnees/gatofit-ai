@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import WorkoutHeader from "@/components/workout/WorkoutHeader";
 import WorkoutSearchFilter from "@/components/workout/WorkoutSearchFilter";
 import WorkoutList from "@/components/workout/WorkoutList";
 import FloatingActionMenu from "@/components/FloatingActionMenu";
-import GatofitProgramsModal from "@/components/GatofitProgramsModal";
 import { useRoutinesWithLimits } from "@/hooks/useRoutinesWithLimits";
 import { syncExercisesToDatabase } from "@/features/workout/services/exerciseSyncService";
 import { useNavigate } from "react-router-dom";
