@@ -1,7 +1,5 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
 import NutritionPage from "./pages/NutritionPage";
@@ -21,7 +19,6 @@ import WeeklyProgramsPage from "./pages/WeeklyProgramsPage";
 import CreateWeeklyProgramPage from "./pages/CreateWeeklyProgramPage";
 import ViewWeeklyProgramPage from "./pages/ViewWeeklyProgramPage";
 import EditWeeklyProgramPage from "./pages/EditWeeklyProgramPage";
-import GatofitProgramsPage from "./pages/GatofitProgramsPage";
 import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
@@ -50,31 +47,24 @@ function App() {
           <div className="bg-background text-foreground min-h-screen">
             <RoutineProvider>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<OnboardingFlow />} />
-                <Route 
-                  path="/home" 
+                <Route path="/onboarding/*" element={<OnboardingFlow />} />
+                <Route
+                  path="/"
                   element={
                     <ProtectedRoute>
                       <HomePage />
+                      <NavBar />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                <Route 
-                  path="/workout" 
+                <Route
+                  path="/home"
                   element={
                     <ProtectedRoute>
-                      <WorkoutPage />
+                      <HomePage />
+                      <NavBar />
                     </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/workout/gatofit-programs" 
-                  element={
-                    <ProtectedRoute>
-                      <GatofitProgramsPage />
-                    </ProtectedRoute>
-                  } 
+                  }
                 />
                 <Route
                   path="/ai-chat"
@@ -145,6 +135,15 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <PublicProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/workout"
+                  element={
+                    <ProtectedRoute>
+                      <WorkoutPage />
+                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
@@ -241,6 +240,7 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <NutritionPage />
+                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
@@ -249,6 +249,7 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <RankingPage />
+                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
@@ -257,6 +258,7 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <SocialPage />
+                      <NavBar />
                     </ProtectedRoute>
                   }
                 />
