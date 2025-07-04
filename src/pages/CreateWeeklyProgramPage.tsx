@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useWeeklyPrograms } from "@/hooks/useWeeklyPrograms";
 import { useToast } from "@/hooks/use-toast";
+import { useWeeklyProgramRoutines } from "@/hooks/useWeeklyProgramRoutines";
 import WeeklyProgramCalendar from "@/components/weekly-program/WeeklyProgramCalendar";
 
 const CreateWeeklyProgramPage: React.FC = () => {
@@ -24,6 +25,8 @@ const CreateWeeklyProgramPage: React.FC = () => {
   const [totalWeeks, setTotalWeeks] = useState(1);
   const [createdProgramId, setCreatedProgramId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const { routines, addRoutineToProgram, removeRoutineFromProgram } = useWeeklyProgramRoutines(createdProgramId || undefined);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -61,6 +64,15 @@ const CreateWeeklyProgramPage: React.FC = () => {
 
   const handleFinish = () => {
     navigate('/workout/programs');
+  };
+
+  const handleAddRoutine = (dayOfWeek: number) => {
+    // Navigate to routine selection page
+    navigate(`/workout/programs/select-routine?programId=${createdProgramId}&dayOfWeek=${dayOfWeek}`);
+  };
+
+  const handleRemoveRoutine = async (programRoutineId: string) => {
+    await removeRoutineFromProgram(programRoutineId);
   };
 
   return (
@@ -187,8 +199,10 @@ const CreateWeeklyProgramPage: React.FC = () => {
 
           {/* Quick Calendar Preview */}
           <WeeklyProgramCalendar 
-            programId={createdProgramId}
-            readonly={true}
+            routines={routines}
+            onAddRoutine={handleAddRoutine}
+            onRemoveRoutine={handleRemoveRoutine}
+            readOnly={true}
           />
         </div>
       )}

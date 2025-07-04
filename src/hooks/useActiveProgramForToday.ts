@@ -37,7 +37,10 @@ export const useActiveProgramForToday = () => {
         return;
       }
 
-      const program = programs[0];
+      const program = {
+        ...programs[0],
+        program_type: (programs[0].program_type || 'simple') as 'simple' | 'advanced'
+      };
       setActiveProgram(program);
 
       // Get today's day of week (0 = Sunday, 1 = Monday, etc.)

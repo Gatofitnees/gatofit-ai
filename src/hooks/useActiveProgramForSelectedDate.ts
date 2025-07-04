@@ -40,7 +40,10 @@ export const useActiveProgramForSelectedDate = (selectedDate: Date) => {
         return;
       }
 
-      const program = programs[0];
+      const program = {
+        ...programs[0],
+        program_type: (programs[0].program_type || 'simple') as 'simple' | 'advanced'
+      };
       setActiveProgram(program);
 
       // Get day of week for selected date (0 = Sunday, 1 = Monday, etc.)

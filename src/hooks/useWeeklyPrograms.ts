@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -55,7 +54,13 @@ export const useWeeklyPrograms = () => {
 
       if (error) throw error;
       
-      setPrograms(data || []);
+      // Cast program_type to ensure type safety
+      const typedPrograms = (data || []).map(program => ({
+        ...program,
+        program_type: (program.program_type || 'simple') as 'simple' | 'advanced'
+      }));
+      
+      setPrograms(typedPrograms);
     } catch (error: any) {
       console.error("Error fetching weekly programs:", error);
       toast({
@@ -95,7 +100,10 @@ export const useWeeklyPrograms = () => {
       if (error) throw error;
 
       await fetchPrograms();
-      return data;
+      return {
+        ...data,
+        program_type: data.program_type as 'simple' | 'advanced'
+      };
     } catch (error: any) {
       console.error("Error creating program:", error);
       toast({
