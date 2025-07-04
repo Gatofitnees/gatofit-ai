@@ -9,6 +9,10 @@ export interface WeeklyProgram {
   name: string;
   description?: string;
   is_active: boolean;
+  program_type: 'simple' | 'advanced';
+  start_date?: string;
+  current_week: number;
+  total_weeks: number;
   created_at: string;
   updated_at: string;
 }
@@ -64,7 +68,12 @@ export const useWeeklyPrograms = () => {
     }
   }, [toast]);
 
-  const createProgram = async (name: string, description?: string) => {
+  const createProgram = async (
+    name: string, 
+    description?: string, 
+    programType: 'simple' | 'advanced' = 'simple',
+    totalWeeks: number = 1
+  ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
@@ -75,7 +84,10 @@ export const useWeeklyPrograms = () => {
           name,
           description,
           user_id: user.id,
-          is_active: false
+          is_active: false,
+          program_type: programType,
+          total_weeks: totalWeeks,
+          current_week: 1
         })
         .select()
         .single();
@@ -169,7 +181,7 @@ export const useWeeklyPrograms = () => {
     }
   };
 
-  const setActiveProgram = async (programId: string) => {
+  const setActiveProgram = async (programId: string, startDate?: Date) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
@@ -181,9 +193,15 @@ export const useWeeklyPrograms = () => {
         .eq('user_id', user.id);
 
       // Then activate the selected program
+      const updateData: any = { is_active: true };
+      if (startDate) {
+        updateData.start_date = startDate.toISOString().split('T')[0];
+        updateData.current_week = 1;
+      }
+
       const { error } = await supabase
         .from('weekly_programs')
-        .update({ is_active: true })
+        .update(updateData)
         .eq('id', programId);
 
       if (error) throw error;
@@ -235,6 +253,20 @@ export const useWeeklyPrograms = () => {
     }
   };
 
+  // Helper function to get the current week for a program
+  const getCurrentWeekForProgram = (program: WeeklyProgram): number => {
+    if (program.program_type === 'simple' || !program.start_date) {
+      return 1;
+    }
+
+    const startDate = new Date(program.start_date);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - startDate.getTime());
+    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+    
+    return Math.min(diffWeeks + 1, program.total_weeks);
+  };
+
   useEffect(() => {
     fetchPrograms();
   }, [fetchPrograms]);
@@ -248,6 +280,7 @@ export const useWeeklyPrograms = () => {
     updateProgram,
     deleteProgram,
     setActiveProgram,
-    pauseProgram
+    pauseProgram,
+    getCurrentWeekForProgram
   };
 };

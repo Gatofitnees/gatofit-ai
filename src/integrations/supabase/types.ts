@@ -71,6 +71,86 @@ export type Database = {
           },
         ]
       }
+      advanced_program_week_routines: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          order_in_day: number
+          program_id: string
+          routine_id: number
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          order_in_day?: number
+          program_id: string
+          routine_id: number
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          order_in_day?: number
+          program_id?: string
+          routine_id?: number
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advanced_program_week_routines_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advanced_program_week_routines_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advanced_program_weeks: {
+        Row: {
+          created_at: string
+          id: string
+          program_id: string
+          week_description: string | null
+          week_name: string | null
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          program_id: string
+          week_description?: string | null
+          week_name?: string | null
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          program_id?: string
+          week_description?: string | null
+          week_name?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advanced_program_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auth_rate_limits: {
         Row: {
           attempt_count: number | null
@@ -472,6 +552,152 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      gatofit_program_exercises: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          exercise_id: number
+          id: string
+          notes: string | null
+          order_in_day: number
+          program_id: string
+          reps_max: number | null
+          reps_min: number | null
+          rest_seconds: number | null
+          sets: number | null
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          exercise_id: number
+          id?: string
+          notes?: string | null
+          order_in_day?: number
+          program_id: string
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          exercise_id?: number
+          id?: string
+          notes?: string | null
+          order_in_day?: number
+          program_id?: string
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gatofit_program_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gatofit_program_exercises_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "gatofit_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gatofit_program_weeks: {
+        Row: {
+          created_at: string
+          focus_areas: string[] | null
+          id: string
+          program_id: string
+          week_description: string | null
+          week_name: string | null
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          focus_areas?: string[] | null
+          id?: string
+          program_id: string
+          week_description?: string | null
+          week_name?: string | null
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          focus_areas?: string[] | null
+          id?: string
+          program_id?: string
+          week_description?: string | null
+          week_name?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gatofit_program_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "gatofit_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gatofit_programs: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          created_by_admin: string | null
+          description: string | null
+          difficulty_level: string
+          duration_weeks: number
+          estimated_sessions_per_week: number | null
+          id: string
+          is_active: boolean
+          name: string
+          program_type: string
+          target_audience: string | null
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty_level: string
+          duration_weeks?: number
+          estimated_sessions_per_week?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          program_type?: string
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty_level?: string
+          duration_weeks?: number
+          estimated_sessions_per_week?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          program_type?: string
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       obstacle_types: {
         Row: {
@@ -966,6 +1192,59 @@ export type Database = {
           },
         ]
       }
+      user_gatofit_program_progress: {
+        Row: {
+          completed_at: string | null
+          completion_percentage: number | null
+          created_at: string
+          current_day: number
+          current_week: number
+          id: string
+          is_active: boolean
+          last_workout_date: string | null
+          program_id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string
+          current_day?: number
+          current_week?: number
+          id?: string
+          is_active?: boolean
+          last_workout_date?: string | null
+          program_id: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string
+          current_day?: number
+          current_week?: number
+          id?: string
+          is_active?: boolean
+          last_workout_date?: string | null
+          program_id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gatofit_program_progress_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "gatofit_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_obstacles: {
         Row: {
           created_at: string
@@ -1159,28 +1438,40 @@ export type Database = {
       weekly_programs: {
         Row: {
           created_at: string
+          current_week: number | null
           description: string | null
           id: string
           is_active: boolean
           name: string
+          program_type: string | null
+          start_date: string | null
+          total_weeks: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          current_week?: number | null
           description?: string | null
           id?: string
           is_active?: boolean
           name: string
+          program_type?: string | null
+          start_date?: string | null
+          total_weeks?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          current_week?: number | null
           description?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          program_type?: string | null
+          start_date?: string | null
+          total_weeks?: number | null
           updated_at?: string
           user_id?: string
         }

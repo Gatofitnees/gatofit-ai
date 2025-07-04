@@ -1,184 +1,286 @@
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Calendar, Play, Edit3, Trash2, Pause, ArrowLeft } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowLeft, Plus, Calendar, Zap, Dumbbell, Play, Pause, Edit, Trash2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader } from "@/components/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { useWeeklyPrograms } from "@/hooks/useWeeklyPrograms";
-import { cn } from "@/lib/utils";
+import { useGatofitPrograms } from "@/hooks/useGatofitPrograms";
+import ProgramTypeSelector from "@/components/weekly-program/ProgramTypeSelector";
+import ProgramStartCalendar from "@/components/weekly-program/ProgramStartCalendar";
+import AdvancedProgramBuilder from "@/components/weekly-program/AdvancedProgramBuilder";
 
 const WeeklyProgramsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { programs, loading, deleteProgram, setActiveProgram, pauseProgram } = useWeeklyPrograms();
+  const { 
+    programs, 
+    loading, 
+    setActiveProgram, 
+    pauseProgram, 
+    deleteProgram,
+    getCurrentWeekForProgram 
+  } = useWeeklyPrograms();
+  const { userProgress: gatofitProgress } = useGatofitPrograms();
+  
+  const [selectedType, setSelectedType] = useState<'simple' | 'advanced'>('simple');
+  const [showStartCalendar, setShowStartCalendar] = useState<string | null>(null);
+  const [showAdvancedBuilder, setShowAdvancedBuilder] = useState<string | null>(null);
+
+  // Filter programs by type
+  const simplePrograms = programs.filter(p => p.program_type === 'simple');
+  const advancedPrograms = programs.filter(p => p.program_type === 'advanced');
+  const currentPrograms = selectedType === 'simple' ? simplePrograms : advancedPrograms;
 
   const handleCreateProgram = () => {
-    navigate("/workout/programs/create");
+    navigate(`/workout/programs/create?type=${selectedType}`);
   };
 
-  const handleViewProgram = (programId: string) => {
-    navigate(`/workout/programs/view/${programId}`);
-  };
-
-  const handleEditProgram = (programId: string) => {
-    navigate(`/workout/programs/edit/${programId}`);
-  };
-
-  const handleDeleteProgram = async (programId: string, programName: string) => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar la programación "${programName}"?`)) {
-      await deleteProgram(programId);
-    }
-  };
-
-  const handleActivateProgram = async (programId: string) => {
-    await setActiveProgram(programId);
+  const handleStartProgram = async (programId: string, startDate?: Date) => {
+    await setActiveProgram(programId, startDate);
+    setShowStartCalendar(null);
   };
 
   const handlePauseProgram = async (programId: string) => {
     await pauseProgram(programId);
   };
 
-  const handleBack = () => {
-    navigate("/workout");
+  const handleDeleteProgram = async (programId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar esta programación?')) {
+      await deleteProgram(programId);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
-        <div className="text-center py-8">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Cargando programaciones...</p>
-        </div>
-      </div>
-    );
-  }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short'
+    });
+  };
 
   return (
-    <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
+    <div className="min-h-screen pt-6 pb-24 px-4 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold">Mis Programaciones</h1>
-            <p className="text-sm text-muted-foreground">
-              Organiza tus rutinas semanalmente
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center gap-4 mb-6">
         <Button
-          variant="default"
+          variant="ghost"
           size="sm"
-          onClick={handleCreateProgram}
-          className="bg-blue-500 hover:bg-blue-600 text-white"
+          onClick={() => navigate(-1)}
+          className="p-2"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva
+          <ArrowLeft className="h-5 w-5" />
         </Button>
+        
+        <div>
+          <h1 className="text-2xl font-bold">Mis Programaciones</h1>
+          <p className="text-muted-foreground text-sm">
+            Organiza tus entrenamientos semanales
+          </p>
+        </div>
       </div>
 
-      {/* Programs List */}
-      {programs.length === 0 ? (
-        <div className="text-center py-12">
-          <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Sin programaciones</h3>
-          <p className="text-sm text-muted-foreground mb-6">
-            Crea tu primera programación semanal para organizar tus entrenamientos
-          </p>
-          <Button
-            onClick={handleCreateProgram}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Crear Programación
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {programs.map((program) => (
-            <Card key={program.id} className="overflow-hidden">
-              <CardHeader
-                title={program.name}
-                subtitle={program.description}
-                action={
-                  program.is_active ? (
-                    <span className="text-xs px-2 py-1 bg-green-500/20 text-green-600 rounded-full font-medium">
-                      Activa
-                    </span>
-                  ) : undefined
-                }
-              />
-              
-              <CardBody className="pt-0">
-                <p className="text-xs text-muted-foreground mb-3">
-                  Creada el {new Date(program.created_at).toLocaleDateString()}
-                </p>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
+      {/* Program Type Selector */}
+      <ProgramTypeSelector 
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+      />
+
+      {/* Active Gatofit Programs */}
+      {gatofitProgress.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                🌟 Programas Gatofit Activos
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3">
+              {gatofitProgress.map((progress) => (
+                <div key={progress.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">{progress.program?.name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Semana {progress.current_week} • {progress.completion_percentage}% completado
+                    </p>
+                  </div>
+                  <Button 
                     size="sm"
-                    onClick={() => handleViewProgram(program.id)}
-                    className="flex-1"
+                    onClick={() => navigate('/gatofit-programs')}
                   >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Ver
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditProgram(program.id)}
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </Button>
-                  
-                  {program.is_active ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePauseProgram(program.id)}
-                      className="text-orange-600 border-orange-600 hover:bg-orange-50"
-                    >
-                      <Pause className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleActivateProgram(program.id)}
-                      className="text-green-600 border-green-600 hover:bg-green-50"
-                    >
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteProgram(program.id, program.name)}
-                    className="text-red-500 border-red-500 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
+                    Ver Detalles
                   </Button>
                 </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Floating Action Button */}
-      <div className="fixed right-4 bottom-20 z-30">
-        <Button
-          onClick={handleCreateProgram}
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 text-white"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
+      {/* Program List */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Cargando programaciones...</p>
+          </div>
+        ) : currentPrograms.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <div className="mb-4">
+                {selectedType === 'simple' ? (
+                  <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground" />
+                ) : (
+                  <Zap className="h-12 w-12 mx-auto text-muted-foreground" />
+                )}
+              </div>
+              <h3 className="text-lg font-medium mb-2">
+                No tienes programaciones {selectedType === 'simple' ? 'simples' : 'avanzadas'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {selectedType === 'simple' 
+                  ? 'Crea tu primera programación semanal' 
+                  : 'Crea tu primera programación con múltiples semanas'
+                }
+              </p>
+              <Button onClick={handleCreateProgram}>
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Programación {selectedType === 'simple' ? 'Simple' : 'Avanzada'}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {currentPrograms.map((program) => (
+              <Card key={program.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-medium">{program.name}</h3>
+                        {program.is_active && (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                            Activa
+                          </span>
+                        )}
+                        {program.program_type === 'advanced' && (
+                          <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                            Avanzada
+                          </span>
+                        )}
+                      </div>
+                      
+                      {program.description && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {program.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>Creada {formatDate(program.created_at)}</span>
+                        {program.program_type === 'advanced' && (
+                          <span>{program.total_weeks} semanas</span>
+                        )}
+                        {program.is_active && program.start_date && (
+                          <span>
+                            Inicio: {formatDate(program.start_date)}
+                            {program.program_type === 'advanced' && (
+                              <span className="ml-2">
+                                (Semana {getCurrentWeekForProgram(program)})
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {program.program_type === 'advanced' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAdvancedBuilder(program.id)}
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/workout/programs/edit/${program.id}`)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      
+                      {program.is_active ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePauseProgram(program.id)}
+                        >
+                          <Pause className="h-4 w-4 mr-1" />
+                          Pausar
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (program.program_type === 'advanced') {
+                              setShowStartCalendar(program.id);
+                            } else {
+                              handleStartProgram(program.id);
+                            }
+                          }}
+                        >
+                          <Play className="h-4 w-4 mr-1" />
+                          Iniciar
+                        </Button>
+                      )}
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteProgram(program.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {/* Create Button */}
+            <Button 
+              onClick={handleCreateProgram}
+              className="w-full"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Crear Nueva Programación {selectedType === 'simple' ? 'Simple' : 'Avanzada'}
+            </Button>
+          </>
+        )}
       </div>
+
+      {/* Start Calendar Modal */}
+      {showStartCalendar && (
+        <ProgramStartCalendar
+          isOpen={!!showStartCalendar}
+          onClose={() => setShowStartCalendar(null)}
+          onStartProgram={(startDate) => handleStartProgram(showStartCalendar, startDate)}
+          programName={programs.find(p => p.id === showStartCalendar)?.name || ""}
+        />
+      )}
+
+      {/* Advanced Program Builder Modal */}
+      {showAdvancedBuilder && (
+        <AdvancedProgramBuilder
+          programId={showAdvancedBuilder}
+          onClose={() => setShowAdvancedBuilder(null)}
+        />
+      )}
     </div>
   );
 };
