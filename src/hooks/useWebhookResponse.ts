@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { validateImageFile, sanitizeFoodName } from '@/utils/validation';
 import { sanitizeWebhookData, createSecureFormData } from '@/utils/securityHelpers';
@@ -96,7 +97,7 @@ export const useWebhookResponse = () => {
     try {
       const formData = createSecureFormData(processedBlob, imageUrl);
       
-      const response = await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
+      const response = await fetch('https://gatopaneln8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
         method: 'POST',
         body: formData,
       });
@@ -215,7 +216,7 @@ export const useWebhookResponse = () => {
       // Fallback with no-cors
       try {
         const fallbackFormData = createSecureFormData(processedBlob, imageUrl);
-        await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
+        await fetch('https://gatopaneln8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
           method: 'POST',
           mode: 'no-cors',
           body: fallbackFormData,

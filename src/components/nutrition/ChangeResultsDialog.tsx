@@ -125,7 +125,7 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
         console.log('Enviando datos al webhook:', payload);
 
         // Enviar al webhook y esperar respuesta
-        const response = await fetch('https://gaton8n.gatofit.com/webhook/4a08cf38-9d1c-43a4-a5cc-6e554a0b6f71', {
+        const response = await fetch('https://gatopaneln8n.gatofit.com/webhook/4a08cf38-9d1c-43a4-a5cc-6e554a0b6f71', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
