@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Calendar, Clock, Target, User, CheckCircle, Circle } from "lucide-react";
+import { ArrowLeft, Play, Calendar, Clock, Target, User, CheckCircle, Circle, ChevronLeft, ChevronRight, Dumbbell, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,18 @@ const GatofitProgramDetailPage: React.FC = () => {
   const { program, weeks, exercises, loading } = useGatofitProgramDetail(programId);
   const { userProgress, startProgram } = useGatofitPrograms();
   const [showStartCalendar, setShowStartCalendar] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState(1);
 
   const userInProgram = userProgress.find(p => p.program_id === programId && p.is_active);
+  
+  // Set initial selected week to current user week or first week
+  React.useEffect(() => {
+    if (userInProgram && userInProgram.current_week) {
+      setSelectedWeek(userInProgram.current_week);
+    } else if (weeks.length > 0) {
+      setSelectedWeek(weeks[0].week_number);
+    }
+  }, [userInProgram, weeks]);
 
   const handleStartProgram = async (startDate?: Date) => {
     if (programId) {
@@ -244,84 +254,151 @@ const GatofitProgramDetailPage: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="weekly" className="space-y-6">
-          {weeks.map((week) => (
-            <Card key={week.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">
-                      {week.week_name || `Semana ${week.week_number}`}
-                    </h3>
-                    {week.week_description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {week.week_description}
-                      </p>
-                    )}
-                  </div>
-                  {userInProgram && (
-                    <div className="flex items-center gap-2">
-                      {userInProgram.current_week > week.week_number ? (
-                        <Badge variant="secondary" className="bg-green-500/20 text-green-700">
-                          Completada
-                        </Badge>
-                      ) : userInProgram.current_week === week.week_number ? (
-                        <Badge variant="default">
-                          Semana Actual
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          Próximamente
-                        </Badge>
-                      )}
-                    </div>
+        <TabsContent value="weekly" className="space-y-4">
+          {/* Week Navigator */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedWeek(Math.max(1, selectedWeek - 1))}
+                  disabled={selectedWeek <= 1 || weeks.length === 0}
+                  className="flex items-center gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold">
+                    {weeks.find(w => w.week_number === selectedWeek)?.week_name || `Semana ${selectedWeek}`}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedWeek} de {program?.duration_weeks || weeks.length}
+                  </p>
+                  {weeks.find(w => w.week_number === selectedWeek)?.week_description && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {weeks.find(w => w.week_number === selectedWeek)?.week_description}
+                    </p>
                   )}
                 </div>
-              </CardHeader>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedWeek(Math.min(program?.duration_weeks || weeks.length, selectedWeek + 1))}
+                  disabled={selectedWeek >= (program?.duration_weeks || weeks.length)}
+                  className="flex items-center gap-2"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
               
-              <CardContent>
-                <div className="grid grid-cols-7 gap-2">
-                  {DAYS_OF_WEEK.map((day) => {
-                    const dayExercises = getExercisesForWeekAndDay(week.week_number, day.id);
-                    
-                    return (
-                      <div key={day.id} className="text-center">
-                        <div className="text-xs font-medium text-muted-foreground mb-2">
-                          {day.short}
-                        </div>
-                        
-                        <div className="space-y-1">
-                          {dayExercises.length > 0 ? (
-                            <div className="bg-primary/10 border border-primary/20 rounded-lg p-2 min-h-[60px]">
-                              <div className="text-xs text-primary font-medium">
-                                {dayExercises.length} ejercicio{dayExercises.length !== 1 ? 's' : ''}
-                              </div>
-                              {dayExercises.slice(0, 2).map((exercise) => (
-                                <div key={exercise.id} className="text-xs text-muted-foreground truncate">
-                                  {exercise.exercise?.name}
-                                </div>
-                              ))}
-                              {dayExercises.length > 2 && (
-                                <div className="text-xs text-muted-foreground">
-                                  +{dayExercises.length - 2} más
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="bg-secondary/30 border border-secondary/50 rounded-lg p-2 min-h-[60px] flex items-center justify-center">
-                              <div className="text-xs text-muted-foreground">
-                                Descanso
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+              {userInProgram && (
+                <div className="flex justify-center mt-3">
+                  {userInProgram.current_week > selectedWeek ? (
+                    <Badge variant="secondary" className="bg-green-500/20 text-green-700">
+                      Semana Completada
+                    </Badge>
+                  ) : userInProgram.current_week === selectedWeek ? (
+                    <Badge variant="default">
+                      Semana Actual
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline">
+                      Próximamente
+                    </Badge>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Week Content - Vertical Layout */}
+          <div className="space-y-3">
+            {DAYS_OF_WEEK.map((day) => {
+              const dayExercises = getExercisesForWeekAndDay(selectedWeek, day.id);
+              
+              return (
+                <Card key={day.id} className="overflow-hidden">
+                  <div className="flex">
+                    {/* Day Label */}
+                    <div className="bg-primary/10 p-4 border-r flex flex-col items-center justify-center min-w-[80px]">
+                      <div className="text-sm font-medium text-primary">{day.short}</div>
+                      <div className="text-xs text-muted-foreground text-center">{day.name}</div>
+                    </div>
+                    
+                    {/* Day Content */}
+                    <div className="flex-1 p-4">
+                      {dayExercises.length > 0 ? (
+                        <div className="space-y-3">
+                          {dayExercises.map((exercise, index) => (
+                            <div key={exercise.id} className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg">
+                              <div className="flex-shrink-0 w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                                <span className="text-sm font-medium text-primary">{index + 1}</span>
+                              </div>
+                              
+                              <div className="flex-1">
+                                <div className="flex items-start gap-2">
+                                  <Dumbbell className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-sm text-foreground">
+                                      {exercise.exercise?.name || 'Ejercicio'}
+                                    </h4>
+                                    
+                                    <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                                      {exercise.sets && (
+                                        <span>{exercise.sets} serie{exercise.sets !== 1 ? 's' : ''}</span>
+                                      )}
+                                      {exercise.reps_min && exercise.reps_max && (
+                                        <span>
+                                          {exercise.reps_min === exercise.reps_max 
+                                            ? `${exercise.reps_min} reps` 
+                                            : `${exercise.reps_min}-${exercise.reps_max} reps`
+                                          }
+                                        </span>
+                                      )}
+                                      {exercise.rest_seconds && (
+                                        <span className="flex items-center gap-1">
+                                          <Timer className="h-3 w-3" />
+                                          {exercise.rest_seconds}s descanso
+                                        </span>
+                                      )}
+                                      {exercise.exercise?.equipment_required && (
+                                        <span className="text-primary">
+                                          {exercise.exercise.equipment_required}
+                                        </span>
+                                      )}
+                                    </div>
+                                    
+                                    {exercise.notes && (
+                                      <p className="text-xs text-muted-foreground mt-1 italic">
+                                        {exercise.notes}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center p-8 text-center">
+                          <div>
+                            <Circle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground font-medium">Día de Descanso</p>
+                            <p className="text-xs text-muted-foreground">No hay ejercicios programados</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </TabsContent>
       </Tabs>
 
