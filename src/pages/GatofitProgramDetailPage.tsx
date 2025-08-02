@@ -11,7 +11,7 @@ import ProgramStartCalendar from "@/components/weekly-program/ProgramStartCalend
 const GatofitProgramDetailPage: React.FC = () => {
   const { programId } = useParams<{ programId: string }>();
   const navigate = useNavigate();
-  const { program, weeks, exercises, loading } = useGatofitProgramDetail(programId);
+  const { program, weeks, exercises, routines, loading } = useGatofitProgramDetail(programId);
   const { userProgress, startProgram } = useGatofitPrograms();
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
@@ -47,9 +47,12 @@ const GatofitProgramDetailPage: React.FC = () => {
     }
   };
 
-  const getExercisesForWeekAndDay = (weekNumber: number, dayOfWeek: number) => {
-    return exercises.filter(ex => ex.week_number === weekNumber && ex.day_of_week === dayOfWeek)
-      .sort((a, b) => a.order_in_day - b.order_in_day);
+  const getActivitiesForWeekAndDay = (weekNumber: number, dayOfWeek: number) => {
+    const dayExercises = exercises.filter(ex => ex.week_number === weekNumber && ex.day_of_week === dayOfWeek);
+    const dayRoutines = routines.filter(r => r.week_number === weekNumber && r.day_of_week === dayOfWeek);
+    
+    // Combine and sort by order_in_day
+    return [...dayExercises, ...dayRoutines].sort((a, b) => a.order_in_day - b.order_in_day);
   };
 
   const DAYS_OF_WEEK = [
@@ -319,7 +322,7 @@ const GatofitProgramDetailPage: React.FC = () => {
           {/* Week Content - Vertical Layout */}
           <div className="space-y-3">
             {DAYS_OF_WEEK.map((day) => {
-              const dayExercises = getExercisesForWeekAndDay(selectedWeek, day.id);
+              const dayActivities = getActivitiesForWeekAndDay(selectedWeek, day.id);
               
               return (
                 <Card key={day.id} className="overflow-hidden">
@@ -332,55 +335,94 @@ const GatofitProgramDetailPage: React.FC = () => {
                     
                     {/* Day Content */}
                     <div className="flex-1 p-4">
-                      {dayExercises.length > 0 ? (
+                      {dayActivities.length > 0 ? (
                         <div className="space-y-3">
-                          {dayExercises.map((exercise, index) => (
-                            <div key={exercise.id} className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg">
+                          {dayActivities.map((activity, index) => (
+                            <div key={activity.id} className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg">
                               <div className="flex-shrink-0 w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                                 <span className="text-sm font-medium text-primary">{index + 1}</span>
                               </div>
                               
-                              <div className="flex-1">
-                                <div className="flex items-start gap-2">
-                                  <Dumbbell className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1">
-                                    <h4 className="font-medium text-sm text-foreground">
-                                      {exercise.exercise?.name || 'Ejercicio'}
-                                    </h4>
-                                    
-                                    <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                                      {exercise.sets && (
-                                        <span>{exercise.sets} serie{exercise.sets !== 1 ? 's' : ''}</span>
-                                      )}
-                                      {exercise.reps_min && exercise.reps_max && (
-                                        <span>
-                                          {exercise.reps_min === exercise.reps_max 
-                                            ? `${exercise.reps_min} reps` 
-                                            : `${exercise.reps_min}-${exercise.reps_max} reps`
-                                          }
-                                        </span>
-                                      )}
-                                      {exercise.rest_seconds && (
-                                        <span className="flex items-center gap-1">
-                                          <Timer className="h-3 w-3" />
-                                          {exercise.rest_seconds}s descanso
-                                        </span>
-                                      )}
-                                      {exercise.exercise?.equipment_required && (
-                                        <span className="text-primary">
-                                          {exercise.exercise.equipment_required}
-                                        </span>
-                                      )}
-                                    </div>
-                                    
-                                    {exercise.notes && (
-                                      <p className="text-xs text-muted-foreground mt-1 italic">
-                                        {exercise.notes}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
+                               <div className="flex-1">
+                                 {'exercise_id' in activity ? (
+                                   // Individual Exercise
+                                   <div className="flex items-start gap-2">
+                                     <Dumbbell className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                     <div className="flex-1">
+                                       <h4 className="font-medium text-sm text-foreground">
+                                         {(activity as any).exercise?.name || 'Ejercicio'}
+                                       </h4>
+                                       
+                                       <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                                         {(activity as any).sets && (
+                                           <span>{(activity as any).sets} serie{(activity as any).sets !== 1 ? 's' : ''}</span>
+                                         )}
+                                         {(activity as any).reps_min && (activity as any).reps_max && (
+                                           <span>
+                                             {(activity as any).reps_min === (activity as any).reps_max 
+                                               ? `${(activity as any).reps_min} reps` 
+                                               : `${(activity as any).reps_min}-${(activity as any).reps_max} reps`
+                                             }
+                                           </span>
+                                         )}
+                                         {(activity as any).rest_seconds && (
+                                           <span className="flex items-center gap-1">
+                                             <Timer className="h-3 w-3" />
+                                             {(activity as any).rest_seconds}s descanso
+                                           </span>
+                                         )}
+                                         {(activity as any).exercise?.equipment_required && (
+                                           <span className="text-primary">
+                                             {(activity as any).exercise.equipment_required}
+                                           </span>
+                                         )}
+                                       </div>
+                                       
+                                       {activity.notes && (
+                                         <p className="text-xs text-muted-foreground mt-1 italic">
+                                           {activity.notes}
+                                         </p>
+                                       )}
+                                     </div>
+                                   </div>
+                                 ) : (
+                                   // Complete Routine  
+                                   <div className="flex items-start gap-2">
+                                     <Badge variant="default" className="text-xs mt-0.5">
+                                       Rutina
+                                     </Badge>
+                                     <div className="flex-1">
+                                       <h4 className="font-medium text-sm text-foreground">
+                                         {(activity as any).routine?.name || 'Rutina'}
+                                       </h4>
+                                       
+                                       <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                                         {(activity as any).routine?.type && (
+                                           <span>Tipo: {(activity as any).routine.type}</span>
+                                         )}
+                                         {(activity as any).routine?.estimated_duration_minutes && (
+                                           <span className="flex items-center gap-1">
+                                             <Timer className="h-3 w-3" />
+                                             {(activity as any).routine.estimated_duration_minutes} min
+                                           </span>
+                                         )}
+                                       </div>
+                                       
+                                       {(activity as any).routine?.description && (
+                                         <p className="text-xs text-muted-foreground mt-1">
+                                           {(activity as any).routine.description}
+                                         </p>
+                                       )}
+                                       
+                                       {activity.notes && (
+                                         <p className="text-xs text-muted-foreground mt-1 italic border-t border-border/30 pt-1">
+                                           Nota: {activity.notes}
+                                         </p>
+                                       )}
+                                     </div>
+                                   </div>
+                                 )}
+                               </div>
                             </div>
                           ))}
                         </div>

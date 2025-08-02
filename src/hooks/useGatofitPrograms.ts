@@ -49,6 +49,24 @@ export interface GatofitProgramExercise {
   };
 }
 
+export interface GatofitProgramRoutine {
+  id: string;
+  program_id: string;
+  week_number: number;
+  day_of_week: number;
+  routine_id: number;
+  notes?: string;
+  order_in_day: number;
+  created_at: string;
+  routine?: {
+    id: number;
+    name: string;
+    type?: string;
+    estimated_duration_minutes?: number;
+    description?: string;
+  };
+}
+
 export interface UserGatofitProgress {
   id: string;
   user_id: string;
@@ -232,6 +250,7 @@ export const useGatofitProgramDetail = (programId?: string) => {
   const [program, setProgram] = useState<GatofitProgram | null>(null);
   const [weeks, setWeeks] = useState<GatofitProgramWeek[]>([]);
   const [exercises, setExercises] = useState<GatofitProgramExercise[]>([]);
+  const [routines, setRoutines] = useState<GatofitProgramRoutine[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchProgramDetail = useCallback(async () => {
@@ -280,6 +299,83 @@ export const useGatofitProgramDetail = (programId?: string) => {
       if (exercisesError) throw exercisesError;
       setExercises(exercisesData || []);
 
+      // Fetch routines - Manual query since table is not in types
+      try {
+        const routinesQuery = `
+          SELECT 
+            gpr.*,
+            r.name as routine_name,
+            r.type as routine_type,
+            r.estimated_duration_minutes,
+            r.description as routine_description
+          FROM gatofit_program_routines gpr
+          LEFT JOIN routines r ON gpr.routine_id = r.id
+          WHERE gpr.program_id = $1
+          ORDER BY gpr.week_number, gpr.day_of_week, gpr.order_in_day
+        `;
+        
+        const { data: routinesRawData, error: routinesRawError } = await supabase
+          .rpc('execute_raw_sql' as any, { 
+            query: routinesQuery,
+            params: [programId]
+          });
+
+        if (routinesRawError) {
+          console.warn('Error fetching routines with function, trying direct approach:', routinesRawError);
+          // Fallback: fetch basic routines data and routine details separately
+          const { data: basicRoutines } = await supabase
+            .from('gatofit_program_routines' as any)
+            .select('*')
+            .eq('program_id', programId)
+            .order('week_number')
+            .order('day_of_week')
+            .order('order_in_day');
+
+          if (basicRoutines && basicRoutines.length > 0) {
+            // Get routine details for each routine
+            const routineIds = [...new Set(basicRoutines.map((r: any) => r.routine_id))];
+            const { data: routineDetails } = await supabase
+              .from('routines')
+              .select('id, name, type, estimated_duration_minutes, description')
+              .in('id', routineIds);
+
+            // Combine the data
+            const combinedRoutines = basicRoutines.map((programRoutine: any) => ({
+              ...programRoutine,
+              routine: routineDetails?.find((r: any) => r.id === programRoutine.routine_id)
+            }));
+            
+            setRoutines(combinedRoutines);
+          } else {
+            setRoutines([]);
+          }
+        } else {
+          // Transform the raw data to match our interface
+          const transformedRoutines = routinesRawData?.map((item: any) => ({
+            id: item.id,
+            program_id: item.program_id,
+            week_number: item.week_number,
+            day_of_week: item.day_of_week,
+            routine_id: item.routine_id,
+            notes: item.notes,
+            order_in_day: item.order_in_day,
+            created_at: item.created_at,
+            routine: {
+              id: item.routine_id,
+              name: item.routine_name,
+              type: item.routine_type,
+              estimated_duration_minutes: item.estimated_duration_minutes,
+              description: item.routine_description
+            }
+          })) || [];
+          
+          setRoutines(transformedRoutines);
+        }
+      } catch (routineError) {
+        console.error('Error in routine fetching:', routineError);
+        setRoutines([]);
+      }
+
     } catch (error: any) {
       console.error("Error fetching program detail:", error);
       toast({
@@ -300,6 +396,7 @@ export const useGatofitProgramDetail = (programId?: string) => {
     program,
     weeks,
     exercises,
+    routines,
     loading,
     fetchProgramDetail
   };
