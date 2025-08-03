@@ -51,6 +51,11 @@ const GatofitProgramDetailPage: React.FC = () => {
     const dayExercises = exercises.filter(ex => ex.week_number === weekNumber && ex.day_of_week === dayOfWeek);
     const dayRoutines = routines.filter(r => r.week_number === weekNumber && r.day_of_week === dayOfWeek);
     
+    // Debug logs
+    console.log(`Buscando actividades para semana ${weekNumber}, día ${dayOfWeek}`);
+    console.log('Ejercicios encontrados:', dayExercises);
+    console.log('Rutinas encontradas:', dayRoutines);
+    
     // Combine and sort by order_in_day
     return [...dayExercises, ...dayRoutines].sort((a, b) => a.order_in_day - b.order_in_day);
   };
