@@ -61,13 +61,13 @@ const GatofitProgramDetailPage: React.FC = () => {
   };
 
   const DAYS_OF_WEEK = [
-    { id: 1, name: 'Lunes', short: 'L' },
-    { id: 2, name: 'Martes', short: 'M' },
-    { id: 3, name: 'Miércoles', short: 'X' },
-    { id: 4, name: 'Jueves', short: 'J' },
-    { id: 5, name: 'Viernes', short: 'V' },
-    { id: 6, name: 'Sábado', short: 'S' },
-    { id: 0, name: 'Domingo', short: 'D' }
+    { id: 0, name: 'Lunes', short: 'L' },
+    { id: 1, name: 'Martes', short: 'M' },
+    { id: 2, name: 'Miércoles', short: 'X' },
+    { id: 3, name: 'Jueves', short: 'J' },
+    { id: 4, name: 'Viernes', short: 'V' },
+    { id: 5, name: 'Sábado', short: 'S' },
+    { id: 6, name: 'Domingo', short: 'D' }
   ];
 
   if (loading) {
