@@ -4,16 +4,18 @@ import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle } from "lucide
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { WeeklyProgram, WeeklyProgramRoutine } from "@/hooks/useWeeklyPrograms";
+import { GatofitProgram } from "@/hooks/useGatofitPrograms";
 
 interface ProgrammedRoutinesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activeProgram: WeeklyProgram | null;
-  todayRoutines: WeeklyProgramRoutine[];
+  activeProgram: WeeklyProgram | GatofitProgram | null;
+  todayRoutines: any[];
   onStartRoutine: (routineId: number) => void;
   isCurrentDay: boolean;
   isCompleted: boolean;
   selectedDate: Date;
+  programType?: 'weekly' | 'gatofit';
 }
 
 const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
@@ -24,7 +26,8 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   onStartRoutine,
   isCurrentDay,
   isCompleted,
-  selectedDate
+  selectedDate,
+  programType = 'weekly'
 }) => {
   if (!isOpen || !activeProgram || todayRoutines.length === 0) {
     return null;
@@ -53,7 +56,8 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
     if (!isCurrentDay) {
       return "Puedes ver las rutinas programadas pero solo iniciar las del día actual";
     }
-    return "Rutinas programadas para hoy";
+    const programTypeName = programType === 'gatofit' ? 'Programa Gatofit' : 'Rutinas programadas';
+    return `${programTypeName} para hoy`;
   };
 
   const getMessageIcon = () => {

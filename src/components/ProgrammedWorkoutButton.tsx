@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Calendar, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useActiveProgramForSelectedDate } from "@/hooks/useActiveProgramForSelectedDate";
+import { useActiveProgramUnified } from "@/hooks/useActiveProgramUnified";
 import ProgrammedRoutinesModal from "./ProgrammedRoutinesModal";
 import { cn } from "@/lib/utils";
 
@@ -17,11 +17,11 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
   showModal = false,
   selectedDate
 }) => {
-  const { activeProgram, todayRoutines, loading, isCompletedForSelectedDate, isCurrentDay } = useActiveProgramForSelectedDate(selectedDate);
+  const { activeProgram, loading, isCompletedForSelectedDate, isCurrentDay } = useActiveProgramUnified(selectedDate);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Don't show if no active program or no routines for selected day
-  if (loading || !activeProgram || todayRoutines.length === 0) {
+  if (loading || !activeProgram || !activeProgram.routines || activeProgram.routines.length === 0) {
     return null;
   }
 
@@ -31,8 +31,8 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
       setIsModalOpen(true);
     } else {
       // En otros lugares, funcionalidad original
-      if (todayRoutines.length === 1 && isCurrentDay) {
-        onStartWorkout(todayRoutines[0].routine_id);
+      if (activeProgram.routines.length === 1 && isCurrentDay) {
+        onStartWorkout(activeProgram.routines[0].routine_id);
       } else {
         setIsModalOpen(true);
       }
@@ -71,12 +71,13 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
       <ProgrammedRoutinesModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        activeProgram={activeProgram}
-        todayRoutines={todayRoutines}
+        activeProgram={activeProgram.program}
+        todayRoutines={activeProgram.routines}
         onStartRoutine={handleStartRoutine}
         isCurrentDay={isCurrentDay}
         isCompleted={isCompletedForSelectedDate}
         selectedDate={selectedDate}
+        programType={activeProgram.type}
       />
     </>
   );
