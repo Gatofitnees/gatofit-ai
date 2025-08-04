@@ -60,7 +60,7 @@ const GatofitProgramsPage: React.FC = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/workout')}
           className="p-2"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -87,17 +87,17 @@ const GatofitProgramsPage: React.FC = () => {
           </h2>
           <div className="grid gap-4">
             {userProgress.map((progress) => (
-              <Card key={progress.id} className="border-blue-200 bg-blue-50/50">
+              <Card key={progress.id} className="border-primary/20 bg-card">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-blue-900">{progress.program?.name}</h3>
-                      <p className="text-sm text-blue-600">
+                      <h3 className="font-medium text-foreground">{progress.program?.name}</h3>
+                      <p className="text-sm text-primary">
                         Semana {progress.current_week} de {progress.program?.duration_weeks} • 
                         {Math.round(progress.completion_percentage)}% completado
                       </p>
                       {progress.last_workout_date && (
-                        <p className="text-xs text-blue-500">
+                        <p className="text-xs text-muted-foreground">
                           Último entrenamiento: {new Date(progress.last_workout_date).toLocaleDateString('es-ES')}
                         </p>
                       )}
@@ -107,7 +107,7 @@ const GatofitProgramsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleViewDetails(progress.program_id)}
-                        className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                        className="border-primary/30 text-primary hover:bg-primary/10"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Ver
@@ -116,7 +116,7 @@ const GatofitProgramsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handlePauseProgram(progress.id)}
-                        className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                        className="border-orange-500/30 text-orange-600 hover:bg-orange-500/10"
                       >
                         <Pause className="h-4 w-4 mr-1" />
                         Pausar

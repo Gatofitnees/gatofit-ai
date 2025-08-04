@@ -62,11 +62,11 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
             </div>
             
             {/* Inner content with full circular image */}
-            <div className="relative z-10 w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
+            <div className="relative z-10 w-10 h-10 rounded-full overflow-hidden bg-white">
               <img 
                 src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" 
                 alt="Gatofit Logo" 
-                className="w-8 h-8 object-cover rounded-full"
+                className="w-full h-full object-cover"
               />
             </div>
           </button>
