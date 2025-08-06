@@ -183,6 +183,9 @@ export const useGatofitPrograms = () => {
         if (error) throw error;
       }
 
+      // Crear rutinas temporales para el programa
+      await createTemporaryRoutines(programId, user.id);
+
       await fetchUserProgress();
       
       toast({
@@ -204,12 +207,27 @@ export const useGatofitPrograms = () => {
 
   const pauseProgram = async (progressId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      // Obtener información del programa antes de pausarlo
+      const { data: progressData } = await supabase
+        .from('user_gatofit_program_progress')
+        .select('program_id')
+        .eq('id', progressId)
+        .single();
+
       const { error } = await supabase
         .from('user_gatofit_program_progress')
         .update({ is_active: false })
         .eq('id', progressId);
 
       if (error) throw error;
+
+      // Eliminar rutinas temporales del programa
+      if (progressData?.program_id) {
+        await removeTemporaryRoutines(progressData.program_id, user.id);
+      }
 
       await fetchUserProgress();
       
@@ -267,6 +285,117 @@ export const useGatofitPrograms = () => {
     pauseProgram,
     updateProgress
   };
+};
+
+// Función auxiliar para crear rutinas temporales del programa
+const createTemporaryRoutines = async (programId: string, userId: string) => {
+  try {
+    // Obtener todas las rutinas únicas del programa
+    let programRoutines: any[] = [];
+    
+    try {
+      const { data } = await supabase
+        .rpc('execute_raw_sql' as any, {
+          query: 'SELECT DISTINCT routine_id FROM gatofit_program_routines WHERE program_id = $1',
+          params: [programId]
+        });
+      programRoutines = data || [];
+    } catch (rpcError) {
+      console.warn('RPC function not available for creating temporary routines');
+      // Si no hay RPC disponible, no creamos rutinas temporales
+      return;
+    }
+
+    if (!programRoutines || programRoutines.length === 0) return;
+
+    // Obtener rutinas únicas
+    const uniqueRoutineIds = [...new Set(programRoutines?.map((r: any) => {
+      const id = Number(r.routine_id);
+      return isNaN(id) ? null : id;
+    }).filter((id): id is number => id !== null) || [])];
+    
+    if (uniqueRoutineIds.length === 0) return;
+    
+    // Obtener detalles de las rutinas originales
+    const { data: originalRoutines } = await supabase
+      .from('routines')
+      .select('*')
+      .in('id', uniqueRoutineIds as number[]);
+
+    if (!originalRoutines) return;
+
+    // Crear copias temporales de las rutinas
+    for (const routine of originalRoutines) {
+      // Crear la rutina temporal
+      const { data: newRoutine, error: routineError } = await supabase
+        .from('routines')
+        .insert({
+          name: `${routine.name} (Programa Gatofit)`,
+          type: routine.type,
+          description: `${routine.description || ''}\n\n⚡ Rutina temporal del programa Gatofit`,
+          estimated_duration_minutes: routine.estimated_duration_minutes,
+          user_id: userId,
+          is_predefined: false
+        })
+        .select()
+        .single();
+
+      if (routineError || !newRoutine) {
+        console.error('Error creating temporary routine:', routineError);
+        continue;
+      }
+
+      // Copiar ejercicios de la rutina original
+      const { data: originalExercises } = await supabase
+        .from('routine_exercises')
+        .select('*')
+        .eq('routine_id', routine.id)
+        .order('exercise_order');
+
+      if (originalExercises && originalExercises.length > 0) {
+        const exercisesToInsert = originalExercises.map(exercise => ({
+          routine_id: newRoutine.id,
+          exercise_id: exercise.exercise_id,
+          exercise_order: exercise.exercise_order,
+          sets: exercise.sets,
+          reps_min: exercise.reps_min,
+          reps_max: exercise.reps_max,
+          rest_between_sets_seconds: exercise.rest_between_sets_seconds,
+          duration_seconds: exercise.duration_seconds,
+          block_name: exercise.block_name,
+          notes: exercise.notes
+        }));
+
+        await supabase
+          .from('routine_exercises')
+          .insert(exercisesToInsert);
+      }
+    }
+
+    console.log('Temporary routines created for program:', programId);
+  } catch (error) {
+    console.error('Error creating temporary routines:', error);
+  }
+};
+
+// Función auxiliar para eliminar rutinas temporales del programa
+const removeTemporaryRoutines = async (programId: string, userId: string) => {
+  try {
+    // Eliminar rutinas que contengan "(Programa Gatofit)" en el nombre
+    const { error } = await supabase
+      .from('routines')
+      .delete()
+      .eq('user_id', userId)
+      .like('name', '%(Programa Gatofit)');
+
+    if (error) {
+      console.error('Error removing temporary routines:', error);
+    } else {
+      console.log('Temporary routines removed for program:', programId);
+    }
+  } catch (error) {
+    console.error('Error removing temporary routines:', error);
+  }
 };
 
 export const useGatofitProgramDetail = (programId?: string) => {

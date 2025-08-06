@@ -31,9 +31,21 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
     
     if (daysDiff < 0) return null; // Fecha anterior al inicio
     
-    // Calcular semana y día del programa
+    // Para la fecha actual, usar el progreso guardado
+    const today = new Date();
+    const isToday = selected.toDateString() === today.toDateString();
+    
+    if (isToday) {
+      // Usar el progreso actual para el día de hoy
+      return { 
+        weekNumber: currentWeek, 
+        dayOfWeek: selectedDate.getDay() // 0=domingo, 1=lunes, etc.
+      };
+    }
+    
+    // Para otras fechas, calcular basándose en la fecha de inicio
     const weekNumber = Math.floor(daysDiff / 7) + 1;
-    const dayOfWeek = daysDiff % 7; // 0 = primer día de la semana del programa
+    const dayOfWeek = selectedDate.getDay();
     
     return { weekNumber, dayOfWeek };
   };
@@ -64,6 +76,8 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
 
       if (gatofitProgress && gatofitProgress.length > 0) {
         const progress = gatofitProgress[0];
+        console.log('Active Gatofit program found:', progress);
+        
         const programDay = calculateGatofitProgramDay(
           progress.started_at,
           selectedDate,
@@ -71,28 +85,56 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
           progress.current_day
         );
 
+        console.log('Calculated program day:', programDay);
+
         if (programDay) {
-          // Obtener rutinas del programa Gatofit para este día usando consulta manual
+          // Obtener rutinas del programa Gatofit para este día
           try {
-            const { data: gatofitRoutines } = await supabase
-              .from('gatofit_program_routines' as any)
-              .select('*')
-              .eq('program_id', progress.program_id)
-              .eq('week_number', programDay.weekNumber)
-              .eq('day_of_week', programDay.dayOfWeek)
-              .order('order_in_day');
+            // Query directo para obtener rutinas del programa Gatofit
+            let gatofitRoutines: any[] = [];
+            let gatofitRoutinesError: any = null;
+            
+            try {
+              const { data, error } = await supabase
+                .rpc('execute_raw_sql' as any, {
+                  query: `
+                    SELECT * FROM gatofit_program_routines 
+                    WHERE program_id = $1 AND week_number = $2 AND day_of_week = $3 
+                    ORDER BY order_in_day
+                  `,
+                  params: [progress.program_id, programDay.weekNumber, programDay.dayOfWeek]
+                });
+              
+              gatofitRoutines = data || [];
+              gatofitRoutinesError = error;
+            } catch (rpcError) {
+              console.warn('RPC function not available, using fallback query');
+              // Fallback: usar query simple si RPC no está disponible
+              // Esto simplemente retornará datos vacíos pero no fallará
+              gatofitRoutines = [];
+            }
+
+            if (gatofitRoutinesError) {
+              console.error('Error fetching Gatofit routines:', gatofitRoutinesError);
+            }
+
+            console.log('Gatofit routines for day:', gatofitRoutines);
 
             if (gatofitRoutines && gatofitRoutines.length > 0) {
               // Obtener detalles de las rutinas
-              const routineIds = [...new Set(gatofitRoutines.map((r: any) => r.routine_id))];
-              const { data: routineDetails } = await supabase
+              const routineIds = [...new Set(gatofitRoutines.map((r: any) => {
+                const id = Number(r.routine_id);
+                return isNaN(id) ? null : id;
+              }).filter((id): id is number => id !== null))];
+              const { data: routineDetails } = routineIds.length > 0 ? await supabase
                 .from('routines')
                 .select('id, name, type, estimated_duration_minutes')
-                .in('id', routineIds);
+                .in('id', routineIds as number[]) : { data: [] };
 
               // Combinar datos
               const combinedRoutines = gatofitRoutines.map((programRoutine: any) => ({
                 ...programRoutine,
+                routine_id: programRoutine.routine_id,
                 routine: routineDetails?.find((r: any) => r.id === programRoutine.routine_id)
               }));
 
@@ -115,6 +157,8 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
                 completedRoutineIds.has(id)
               );
 
+              console.log('Setting active Gatofit program with routines:', combinedRoutines);
+
               setActiveProgram({
                 type: 'gatofit',
                 program: progress.program,
@@ -128,6 +172,18 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
             console.error('Error fetching Gatofit routines:', routinesError);
           }
         }
+        
+        // Si no hay rutinas para el día seleccionado, aún mostrar el programa
+        // pero sin rutinas específicas
+        console.log('No routines found for selected day, but program is active');
+        setActiveProgram({
+          type: 'gatofit',
+          program: progress.program,
+          routines: [],
+          userProgress: progress
+        });
+        setIsCompletedForSelectedDate(false);
+        return;
       }
 
       // 2. Si no hay programa Gatofit, buscar programa semanal

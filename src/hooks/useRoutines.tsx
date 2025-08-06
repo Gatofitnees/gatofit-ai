@@ -13,7 +13,7 @@ interface WorkoutRoutine {
   exercise_count?: number;
   created_at: string;
   is_predefined?: boolean;
-  source_type?: 'created' | 'downloaded';
+  source_type?: 'created' | 'downloaded' | 'gatofit_program';
 }
 
 export const useRoutines = () => {
@@ -54,14 +54,22 @@ export const useRoutines = () => {
       if (data) {
         // Transform data to include exercise count, convert types, and detect source
         const formattedData = data.map(routine => {
-          // Detectar si es una rutina descargada basándose en el nombre
+          // Detectar si es una rutina descargada o temporal de programa
           const isDownloaded = routine.name.includes('(Copia)');
+          const isFromGatofitProgram = routine.name.includes('(Programa Gatofit)');
+          
+          let sourceType: 'created' | 'downloaded' | 'gatofit_program' = 'created';
+          if (isFromGatofitProgram) {
+            sourceType = 'gatofit_program';
+          } else if (isDownloaded) {
+            sourceType = 'downloaded';
+          }
           
           return {
             ...routine,
             type: routine.type ? convertRoutineTypeToUi(routine.type) : 'General',
             exercise_count: routine.routine_exercises?.[0]?.count || 0,
-            source_type: isDownloaded ? 'downloaded' as const : 'created' as const
+            source_type: sourceType
           };
         });
         
