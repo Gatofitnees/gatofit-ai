@@ -144,20 +144,44 @@ export const useGatofitPrograms = () => {
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Iniciar nuevo programa
-      const { error } = await supabase
+      // Verificar si ya existe un registro para este programa
+      const { data: existingProgress } = await supabase
         .from('user_gatofit_program_progress')
-        .insert({
-          user_id: user.id,
-          program_id: programId,
-          started_at: startDate?.toISOString() || new Date().toISOString(),
-          current_week: 1,
-          current_day: 0,
-          is_active: true,
-          completion_percentage: 0
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('program_id', programId)
+        .single();
 
-      if (error) throw error;
+      if (existingProgress) {
+        // Reactivar programa existente
+        const { error } = await supabase
+          .from('user_gatofit_program_progress')
+          .update({
+            is_active: true,
+            started_at: startDate?.toISOString() || new Date().toISOString(),
+            current_week: 1,
+            current_day: 0,
+            completion_percentage: 0
+          })
+          .eq('id', existingProgress.id);
+
+        if (error) throw error;
+      } else {
+        // Crear nuevo registro
+        const { error } = await supabase
+          .from('user_gatofit_program_progress')
+          .insert({
+            user_id: user.id,
+            program_id: programId,
+            started_at: startDate?.toISOString() || new Date().toISOString(),
+            current_week: 1,
+            current_day: 0,
+            is_active: true,
+            completion_percentage: 0
+          });
+
+        if (error) throw error;
+      }
 
       await fetchUserProgress();
       
