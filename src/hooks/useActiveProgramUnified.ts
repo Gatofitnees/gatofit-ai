@@ -37,22 +37,20 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
     
     if (isToday) {
       // Usar el progreso actual para el día de hoy
-      // Convertir de sistema Sunday=0 a Monday=0 para la base de datos
+      // La base de datos usa 0=domingo, 1=lunes, 2=martes, etc.
       const jsDay = selectedDate.getDay(); // 0=domingo, 1=lunes, etc.
-      const dbDay = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 6=domingo
       
       return { 
         weekNumber: currentWeek, 
-        dayOfWeek: dbDay
+        dayOfWeek: jsDay // Usar el día JS directamente ya que coincide con la BD
       };
     }
     
     // Para otras fechas, calcular basándose en la fecha de inicio
     const weekNumber = Math.floor(daysDiff / 7) + 1;
-    const jsDay = selectedDate.getDay();
-    const dbDay = jsDay === 0 ? 6 : jsDay - 1; // Convertir a sistema Monday=0
+    const jsDay = selectedDate.getDay(); // 0=domingo, 1=lunes, etc.
     
-    return { weekNumber, dayOfWeek: dbDay };
+    return { weekNumber, dayOfWeek: jsDay };
   };
 
   const fetchActiveProgramForSelectedDate = useCallback(async () => {
@@ -101,42 +99,32 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
               day: programDay.dayOfWeek 
             });
             
-            // Query directo para obtener rutinas del programa Gatofit usando RPC como fallback
-            let gatofitRoutines: any[] = [];
-            let gatofitRoutinesError: any = null;
+            // Query directo para obtener rutinas del programa Gatofit usando SQL raw
+            console.log('Fetching routines with params:', { 
+              programId: progress.program_id, 
+              week: programDay.weekNumber, 
+              day: programDay.dayOfWeek 
+            });
             
-            try {
-              // Intentar query directo primero
-              const { data, error } = await supabase.rpc('execute_raw_sql' as any, {
-                query: `
-                  SELECT gpr.*, r.id as routine_id, r.name, r.type, r.estimated_duration_minutes, r.description
-                  FROM gatofit_program_routines gpr
-                  LEFT JOIN routines r ON gpr.routine_id = r.id
-                  WHERE gpr.program_id = $1 AND gpr.week_number = $2 AND gpr.day_of_week = $3
-                  ORDER BY gpr.order_in_day
-                `,
-                params: [progress.program_id, programDay.weekNumber, programDay.dayOfWeek]
-              });
+            // Usar query raw SQL ya que la tabla no está en los tipos generados
+            const { data: rawData, error: gatofitRoutinesError } = await supabase
+              .from('gatofit_program_routines' as any)
+              .select(`
+                *,
+                routine:routine_id (
+                  id,
+                  name,
+                  type,
+                  estimated_duration_minutes,
+                  description
+                )
+              `)
+              .eq('program_id', progress.program_id)
+              .eq('week_number', programDay.weekNumber)
+              .eq('day_of_week', programDay.dayOfWeek)
+              .order('order_in_day');
               
-              if (error) throw error;
-              
-              // Transform the data to match expected structure
-              gatofitRoutines = data?.map((item: any) => ({
-                ...item,
-                routine: {
-                  id: item.routine_id,
-                  name: item.name,
-                  type: item.type,
-                  estimated_duration_minutes: item.estimated_duration_minutes,
-                  description: item.description
-                }
-              })) || [];
-              
-            } catch (rpcError) {
-              console.warn('RPC function not available, routines will not be shown for this day');
-              gatofitRoutines = [];
-              gatofitRoutinesError = rpcError;
-            }
+            const gatofitRoutines = rawData || [];
 
             if (gatofitRoutinesError) {
               console.error('Error fetching Gatofit routines:', gatofitRoutinesError);
