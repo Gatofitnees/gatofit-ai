@@ -21,7 +21,7 @@ interface WorkoutListItemProps {
     exercise_count?: number;
     estimated_duration_minutes?: number;
     is_predefined?: boolean;
-    source_type?: 'created' | 'downloaded';
+    source_type?: 'created' | 'downloaded' | 'gatofit_program';
   };
   onStartWorkout: (routineId: number) => void;
   onRoutineDeleted: () => void;
@@ -62,6 +62,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
     : "15-30 min";
 
   const isDownloaded = routine.source_type === 'downloaded';
+  const isFromGatofitProgram = routine.source_type === 'gatofit_program';
     
   const handleDelete = async () => {
     try {
@@ -135,6 +136,11 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                   <Users className="h-3 w-3 text-blue-600" />
                 </div>
               )}
+              {isFromGatofitProgram && (
+                <div className="flex items-center justify-center w-5 h-5 bg-purple-100 rounded border border-purple-200 flex-shrink-0">
+                  <span className="text-purple-600 text-xs font-bold">G</span>
+                </div>
+              )}
             </div>
             
             <DropdownMenu>
@@ -149,7 +155,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                     e.stopPropagation();
                     handleEditRoutine();
                   }}
-                  disabled={routine.is_predefined || isDeleting || isDownloaded}
+                  disabled={routine.is_predefined || isDeleting || isDownloaded || isFromGatofitProgram}
                   className="cursor-pointer"
                 >
                   <Edit className="mr-2 h-4 w-4" />
@@ -161,7 +167,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                     e.stopPropagation();
                     handlePublishToggle();
                   }}
-                  disabled={routine.is_predefined || isPublishing || isDownloaded}
+                  disabled={routine.is_predefined || isPublishing || isDownloaded || isFromGatofitProgram}
                   className="cursor-pointer"
                 >
                   {isPublished ? (
@@ -183,7 +189,7 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
                     e.stopPropagation();
                     handleDelete();
                   }}
-                  disabled={routine.is_predefined || isDeleting}
+                  disabled={routine.is_predefined || isDeleting || isFromGatofitProgram}
                   className="text-destructive cursor-pointer focus:text-destructive"
                 >
                   <Trash className="mr-2 h-4 w-4" />
@@ -204,6 +210,11 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
             {isDownloaded && (
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                 Comunidad
+              </span>
+            )}
+            {isFromGatofitProgram && (
+              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                Gatofit
               </span>
             )}
           </div>

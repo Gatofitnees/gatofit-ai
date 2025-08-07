@@ -290,31 +290,44 @@ export const useGatofitPrograms = () => {
 // Función auxiliar para crear rutinas temporales del programa
 const createTemporaryRoutines = async (programId: string, userId: string) => {
   try {
-    // Obtener todas las rutinas únicas del programa
+    // Obtener todas las rutinas únicas del programa usando RPC como fallback
     let programRoutines: any[] = [];
+    let routinesError: any = null;
     
     try {
-      const { data } = await supabase
-        .rpc('execute_raw_sql' as any, {
-          query: 'SELECT DISTINCT routine_id FROM gatofit_program_routines WHERE program_id = $1',
-          params: [programId]
-        });
+      const { data, error } = await supabase.rpc('execute_raw_sql' as any, {
+        query: 'SELECT DISTINCT routine_id FROM gatofit_program_routines WHERE program_id = $1',
+        params: [programId]
+      });
       programRoutines = data || [];
+      routinesError = error;
     } catch (rpcError) {
       console.warn('RPC function not available for creating temporary routines');
-      // Si no hay RPC disponible, no creamos rutinas temporales
       return;
     }
 
-    if (!programRoutines || programRoutines.length === 0) return;
+    if (routinesError) {
+      console.error('Error fetching program routines:', routinesError);
+      return;
+    }
+
+    if (!programRoutines || programRoutines.length === 0) {
+      console.log('No routines found for program:', programId);
+      return;
+    }
 
     // Obtener rutinas únicas
-    const uniqueRoutineIds = [...new Set(programRoutines?.map((r: any) => {
+    const uniqueRoutineIds = [...new Set(programRoutines.map((r: any) => {
       const id = Number(r.routine_id);
       return isNaN(id) ? null : id;
-    }).filter((id): id is number => id !== null) || [])];
+    }).filter((id): id is number => id !== null))];
     
-    if (uniqueRoutineIds.length === 0) return;
+    if (uniqueRoutineIds.length === 0) {
+      console.log('No valid routine IDs found');
+      return;
+    }
+
+    console.log('Creating temporary routines for IDs:', uniqueRoutineIds);
     
     // Obtener detalles de las rutinas originales
     const { data: originalRoutines } = await supabase

@@ -29,7 +29,56 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   selectedDate,
   programType = 'weekly'
 }) => {
-  if (!isOpen || !activeProgram || todayRoutines.length === 0) {
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  if (!isOpen || !activeProgram) {
+    return null;
+  }
+
+  // Para programas Gatofit sin rutinas, mostrar mensaje informativo
+  if (todayRoutines.length === 0 && programType === 'gatofit') {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 bg-black/50"
+          onClick={onClose}
+        />
+        
+        <div className="relative z-10 w-full max-w-md">
+          <Card className="shadow-xl">
+            <CardHeader
+              title="Programa Gatofit"
+              subtitle={formatDate(selectedDate)}
+              action={
+                <Button variant="ghost" size="sm" onClick={onClose}>
+                  <X className="h-4 w-4" />
+                </Button>
+              }
+            />
+            
+            <CardBody className="pt-0 space-y-4">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 text-blue-900">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium">{activeProgram.name}</p>
+                  <p className="text-xs">No hay rutinas programadas para este día</p>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (todayRoutines.length === 0) {
     return null;
   }
 
@@ -40,14 +89,6 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
 
   const getDayMessage = () => {
     if (isCompleted) {

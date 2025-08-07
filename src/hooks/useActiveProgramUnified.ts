@@ -37,17 +37,22 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
     
     if (isToday) {
       // Usar el progreso actual para el día de hoy
+      // Convertir de sistema Sunday=0 a Monday=0 para la base de datos
+      const jsDay = selectedDate.getDay(); // 0=domingo, 1=lunes, etc.
+      const dbDay = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 6=domingo
+      
       return { 
         weekNumber: currentWeek, 
-        dayOfWeek: selectedDate.getDay() // 0=domingo, 1=lunes, etc.
+        dayOfWeek: dbDay
       };
     }
     
     // Para otras fechas, calcular basándose en la fecha de inicio
     const weekNumber = Math.floor(daysDiff / 7) + 1;
-    const dayOfWeek = selectedDate.getDay();
+    const jsDay = selectedDate.getDay();
+    const dbDay = jsDay === 0 ? 6 : jsDay - 1; // Convertir a sistema Monday=0
     
-    return { weekNumber, dayOfWeek };
+    return { weekNumber, dayOfWeek: dbDay };
   };
 
   const fetchActiveProgramForSelectedDate = useCallback(async () => {
@@ -90,28 +95,47 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         if (programDay) {
           // Obtener rutinas del programa Gatofit para este día
           try {
-            // Query directo para obtener rutinas del programa Gatofit
+            console.log('Fetching routines for:', { 
+              programId: progress.program_id, 
+              week: programDay.weekNumber, 
+              day: programDay.dayOfWeek 
+            });
+            
+            // Query directo para obtener rutinas del programa Gatofit usando RPC como fallback
             let gatofitRoutines: any[] = [];
             let gatofitRoutinesError: any = null;
             
             try {
-              const { data, error } = await supabase
-                .rpc('execute_raw_sql' as any, {
-                  query: `
-                    SELECT * FROM gatofit_program_routines 
-                    WHERE program_id = $1 AND week_number = $2 AND day_of_week = $3 
-                    ORDER BY order_in_day
-                  `,
-                  params: [progress.program_id, programDay.weekNumber, programDay.dayOfWeek]
-                });
+              // Intentar query directo primero
+              const { data, error } = await supabase.rpc('execute_raw_sql' as any, {
+                query: `
+                  SELECT gpr.*, r.id as routine_id, r.name, r.type, r.estimated_duration_minutes, r.description
+                  FROM gatofit_program_routines gpr
+                  LEFT JOIN routines r ON gpr.routine_id = r.id
+                  WHERE gpr.program_id = $1 AND gpr.week_number = $2 AND gpr.day_of_week = $3
+                  ORDER BY gpr.order_in_day
+                `,
+                params: [progress.program_id, programDay.weekNumber, programDay.dayOfWeek]
+              });
               
-              gatofitRoutines = data || [];
-              gatofitRoutinesError = error;
+              if (error) throw error;
+              
+              // Transform the data to match expected structure
+              gatofitRoutines = data?.map((item: any) => ({
+                ...item,
+                routine: {
+                  id: item.routine_id,
+                  name: item.name,
+                  type: item.type,
+                  estimated_duration_minutes: item.estimated_duration_minutes,
+                  description: item.description
+                }
+              })) || [];
+              
             } catch (rpcError) {
-              console.warn('RPC function not available, using fallback query');
-              // Fallback: usar query simple si RPC no está disponible
-              // Esto simplemente retornará datos vacíos pero no fallará
+              console.warn('RPC function not available, routines will not be shown for this day');
               gatofitRoutines = [];
+              gatofitRoutinesError = rpcError;
             }
 
             if (gatofitRoutinesError) {
@@ -121,22 +145,8 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
             console.log('Gatofit routines for day:', gatofitRoutines);
 
             if (gatofitRoutines && gatofitRoutines.length > 0) {
-              // Obtener detalles de las rutinas
-              const routineIds = [...new Set(gatofitRoutines.map((r: any) => {
-                const id = Number(r.routine_id);
-                return isNaN(id) ? null : id;
-              }).filter((id): id is number => id !== null))];
-              const { data: routineDetails } = routineIds.length > 0 ? await supabase
-                .from('routines')
-                .select('id, name, type, estimated_duration_minutes')
-                .in('id', routineIds as number[]) : { data: [] };
-
-              // Combinar datos
-              const combinedRoutines = gatofitRoutines.map((programRoutine: any) => ({
-                ...programRoutine,
-                routine_id: programRoutine.routine_id,
-                routine: routineDetails?.find((r: any) => r.id === programRoutine.routine_id)
-              }));
+              // Los datos ya incluyen los detalles de la rutina por el join
+              const combinedRoutines = gatofitRoutines;
 
               // Verificar si las rutinas ya están completadas
               const selectedDateString = selectedDate.toISOString().split('T')[0];
