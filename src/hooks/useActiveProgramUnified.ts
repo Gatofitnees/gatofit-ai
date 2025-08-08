@@ -106,39 +106,45 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
               day: programDay.dayOfWeek 
             });
             
-            // Usar query raw SQL ya que la tabla no está en los tipos generados
-            const { data: rawData, error: gatofitRoutinesError } = await supabase
+            // 1) Obtener las rutinas base del programa para ese día
+            const { data: programRoutines, error: gatofitRoutinesError } = await supabase
               .from('gatofit_program_routines' as any)
-              .select(`
-                *,
-                routine:routine_id (
-                  id,
-                  name,
-                  type,
-                  estimated_duration_minutes,
-                  description
-                )
-              `)
+              .select('*')
               .eq('program_id', progress.program_id)
               .eq('week_number', programDay.weekNumber)
               .eq('day_of_week', programDay.dayOfWeek)
               .order('order_in_day');
-              
-            const gatofitRoutines = rawData || [];
 
             if (gatofitRoutinesError) {
               console.error('Error fetching Gatofit routines:', gatofitRoutinesError);
             }
 
-            console.log('Gatofit routines for day:', gatofitRoutines);
+            console.log('Gatofit routines for day (raw):', programRoutines);
 
-            if (gatofitRoutines && gatofitRoutines.length > 0) {
-              // Los datos ya incluyen los detalles de la rutina por el join
-              const combinedRoutines = gatofitRoutines;
+            if (programRoutines && programRoutines.length > 0) {
+              // 2) Cargar detalles de las rutinas desde la tabla routines
+              const routineIds = Array.from(new Set(programRoutines.map((r: any) => r.routine_id)));
+
+              const { data: routineDetails, error: routinesDetailsError } = await supabase
+                .from('routines')
+                .select('id, name, type, estimated_duration_minutes, description')
+                .in('id', routineIds);
+
+              if (routinesDetailsError) {
+                console.error('Error fetching routine details:', routinesDetailsError);
+              }
+
+              const routineMap = new Map<number, any>(
+                (routineDetails || []).map((rd: any) => [rd.id, rd])
+              );
+
+              const combinedRoutines = programRoutines.map((r: any) => ({
+                ...r,
+                routine: routineMap.get(r.routine_id) || null,
+              }));
 
               // Verificar si las rutinas ya están completadas
               const selectedDateString = selectedDate.toISOString().split('T')[0];
-              
               const { data: workoutLogs, error: workoutError } = await supabase
                 .from('workout_logs')
                 .select('routine_id')
@@ -150,12 +156,9 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
 
               const completedRoutineIds = new Set(workoutLogs?.map(log => log.routine_id) || []);
               const programmedRoutineIds = combinedRoutines.map((r: any) => r.routine_id);
-              
-              const hasCompletedProgrammedRoutine = programmedRoutineIds.some(id => 
-                completedRoutineIds.has(id)
-              );
+              const hasCompletedProgrammedRoutine = programmedRoutineIds.some(id => completedRoutineIds.has(id));
 
-              console.log('Setting active Gatofit program with routines:', combinedRoutines);
+              console.log('Setting active Gatofit program with routines (enriched):', combinedRoutines);
 
               setActiveProgram({
                 type: 'gatofit',
