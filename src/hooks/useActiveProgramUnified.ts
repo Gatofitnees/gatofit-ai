@@ -56,6 +56,7 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
   const fetchActiveProgramForSelectedDate = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('Fetching active program for date:', selectedDate.toDateString());
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -129,6 +130,8 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
                 .from('routines')
                 .select('id, name, type, estimated_duration_minutes, description')
                 .in('id', routineIds);
+
+              console.log('Routine details fetched:', routineDetails);
 
               if (routinesDetailsError) {
                 console.error('Error fetching routine details:', routinesDetailsError);

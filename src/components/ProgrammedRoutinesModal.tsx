@@ -161,7 +161,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-base">
-                      {programRoutine.routine?.name || 'Rutina'}
+                      {programRoutine.routine?.name || `Rutina ID: ${programRoutine.routine_id}`}
                     </h4>
                     <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-1 rounded-full">
                       #{index + 1}
