@@ -1,5 +1,6 @@
 
 import React from "react";
+import { createPortal } from "react-dom";
 import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
@@ -42,53 +43,13 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
     return null;
   }
 
-  // Para programas Gatofit sin rutinas, mostrar mensaje informativo
-  if (todayRoutines.length === 0 && programType === 'gatofit') {
-    return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div 
-          className="fixed inset-0 bg-black/50"
-          onClick={onClose}
-        />
-        
-        <div className="relative z-10 w-full max-w-md">
-          <Card className="shadow-xl">
-            <CardHeader
-              title="Programa Gatofit"
-              subtitle={formatDate(selectedDate)}
-              action={
-                <Button variant="ghost" size="sm" onClick={onClose}>
-                  <X className="h-4 w-4" />
-                </Button>
-              }
-            />
-            
-            <CardBody className="pt-0 space-y-4">
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 text-blue-900">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium">{activeProgram.name}</p>
-                  <p className="text-xs">No hay rutinas programadas para este día</p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (todayRoutines.length === 0) {
-    return null;
-  }
-
+  // Helper functions
   const handleStartRoutine = (routineId: number) => {
     if (isCurrentDay) {
       onStartRoutine(routineId);
       onClose();
     }
   };
-
 
   const getDayMessage = () => {
     if (isCompleted) {
@@ -121,8 +82,8 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
     return "bg-blue-50 text-blue-900";
   };
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       {/* Background overlay */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm"
@@ -131,7 +92,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
       
       {/* Modal content */}
       <div className="relative z-10 w-full max-w-md animate-scale-in">
-        <Card className="shadow-2xl max-h-[calc(100vh-4rem)] overflow-y-auto border-0">
+        <Card className="shadow-2xl max-h-[calc(100vh-4rem)] overflow-y-auto border-0 bg-background">
           <CardHeader
             title="Rutinas Programadas"
             subtitle={formatDate(selectedDate)}
@@ -200,6 +161,49 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
       </div>
     </div>
   );
+
+  // Para programas Gatofit sin rutinas, mostrar mensaje informativo
+  if (todayRoutines.length === 0 && programType === 'gatofit') {
+    const emptyModalContent = (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        
+        <div className="relative z-10 w-full max-w-md animate-scale-in">
+          <Card className="shadow-2xl bg-background">
+            <CardHeader
+              title="Programa Gatofit"
+              subtitle={formatDate(selectedDate)}
+              action={
+                <Button variant="ghost" size="sm" onClick={onClose}>
+                  <X className="h-4 w-4" />
+                </Button>
+              }
+            />
+            
+            <CardBody className="pt-0 space-y-4">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 text-blue-900">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium">{activeProgram.name}</p>
+                  <p className="text-xs">No hay rutinas programadas para este día</p>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      </div>
+    );
+    return createPortal(emptyModalContent, document.body);
+  }
+
+  if (todayRoutines.length === 0) {
+    return null;
+  }
+
+  return createPortal(modalContent, document.body);
 };
 
 export default ProgrammedRoutinesModal;
