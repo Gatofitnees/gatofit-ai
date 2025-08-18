@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatAIText } from '@/utils/textFormatter';
 import { ChatMessage } from '@/hooks/ai-chat';
+import DOMPurify from 'dompurify';
 
 interface AIMessageListProps {
   messages: ChatMessage[];
@@ -34,7 +35,12 @@ const AIMessageList: React.FC<AIMessageListProps> = ({ messages, isLoading, onBu
               {message.type === 'ai' ? (
                 <div 
                   className="whitespace-pre-wrap leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: formatAIText(message.content) }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: DOMPurify.sanitize(formatAIText(message.content), {
+                      ALLOWED_TAGS: ['strong', 'em', 'u', 'br', 'p', 'ul', 'ol', 'li'],
+                      ALLOWED_ATTR: []
+                    })
+                  }}
                 />
               ) : (
                 <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
