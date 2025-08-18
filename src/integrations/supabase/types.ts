@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1665,13 +1665,13 @@ export type Database = {
       }
       calculate_macro_recommendations: {
         Args: {
-          user_weight_kg: number
-          user_height_cm: number
           user_age: number
           user_gender: string
           user_goal: string
-          user_trainings_per_week: number
+          user_height_cm: number
           user_target_pace: string
+          user_trainings_per_week: number
+          user_weight_kg: number
         }
         Returns: Json
       }
@@ -1718,13 +1718,13 @@ export type Database = {
       get_public_routines: {
         Args: { target_user_id: string }
         Returns: {
+          created_at: string
+          estimated_duration_minutes: number
+          exercise_count: number
+          routine_description: string
           routine_id: number
           routine_name: string
           routine_type: string
-          routine_description: string
-          estimated_duration_minutes: number
-          exercise_count: number
-          created_at: string
         }[]
       }
       get_user_details: {
@@ -1735,17 +1735,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           month: string
-          total_users: number
           new_users: number
+          total_users: number
         }[]
       }
       get_user_stats: {
         Args: { target_user_id: string }
         Returns: {
-          total_workouts: number
           followers_count: number
           following_count: number
           total_workout_hours: number
+          total_workouts: number
         }[]
       }
       get_user_subscription_status: {
@@ -1755,34 +1755,34 @@ export type Database = {
       get_user_weekly_usage: {
         Args: { user_id: string }
         Returns: {
-          routines_created: number
-          nutrition_photos_used: number
           ai_chat_messages_used: number
+          nutrition_photos_used: number
+          routines_created: number
           week_start_date: string
         }[]
       }
       get_users_with_filters: {
         Args: {
+          p_activity_level?: string
           p_limit?: number
           p_offset?: number
-          p_search?: string
-          p_subscription_type?: string
-          p_activity_level?: string
           p_order_by?: string
           p_order_direction?: string
+          p_search?: string
+          p_subscription_type?: string
         }
         Returns: {
-          id: string
-          full_name: string
-          username: string
           avatar_url: string
           created_at: string
-          subscription_type: string
-          subscription_status: string
-          total_workouts: number
-          last_activity: string
           current_streak: number
+          full_name: string
+          id: string
           is_active: boolean
+          last_activity: string
+          subscription_status: string
+          subscription_type: string
+          total_workouts: number
+          username: string
         }[]
       }
       get_week_start: {
@@ -1790,7 +1790,7 @@ export type Database = {
         Returns: string
       }
       increment_usage_counter: {
-        Args: { p_user_id: string; counter_type: string; increment_by?: number }
+        Args: { counter_type: string; increment_by?: number; p_user_id: string }
         Returns: boolean
       }
       is_admin: {
@@ -1819,8 +1819,8 @@ export type Database = {
       }
       schedule_plan_change: {
         Args: {
-          p_user_id: string
           p_new_plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          p_user_id: string
         }
         Returns: Json
       }
