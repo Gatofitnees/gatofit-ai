@@ -29,7 +29,18 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
     // Calcular días transcurridos desde el inicio
     const daysDiff = Math.floor((selected.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysDiff < 0) return null; // Fecha anterior al inicio
+    console.log('🔢 Day calculation:', {
+      startDate,
+      selectedDate: selectedDate.toDateString(),
+      daysDiff,
+      currentWeek,
+      currentDay
+    });
+    
+    if (daysDiff < 0) {
+      console.log('❌ Selected date is before program start');
+      return null; // Fecha anterior al inicio
+    }
     
     // Para la fecha actual, usar el progreso guardado
     const today = new Date();
@@ -37,20 +48,36 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
     
     if (isToday) {
       // Usar el progreso actual para el día de hoy
-      // La base de datos usa 0=domingo, 1=lunes, 2=martes, etc.
+      // Convertir JS day (0=domingo) a Monday-first (0=lunes)
       const jsDay = selectedDate.getDay(); // 0=domingo, 1=lunes, etc.
+      const mondayFirstDay = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 1=martes, ..., 6=domingo
+      
+      console.log('📅 Today calculation:', {
+        jsDay,
+        mondayFirstDay,
+        currentWeek,
+        currentDay
+      });
       
       return { 
         weekNumber: currentWeek, 
-        dayOfWeek: jsDay // Usar el día JS directamente ya que coincide con la BD
+        dayOfWeek: mondayFirstDay
       };
     }
     
     // Para otras fechas, calcular basándose en la fecha de inicio
     const weekNumber = Math.floor(daysDiff / 7) + 1;
     const jsDay = selectedDate.getDay(); // 0=domingo, 1=lunes, etc.
+    const mondayFirstDay = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 1=martes, ..., 6=domingo
     
-    return { weekNumber, dayOfWeek: jsDay };
+    console.log('📅 Other date calculation:', {
+      weekNumber,
+      jsDay,
+      mondayFirstDay,
+      daysDiff
+    });
+    
+    return { weekNumber, dayOfWeek: mondayFirstDay };
   };
 
   const fetchActiveProgramForSelectedDate = useCallback(async () => {
@@ -211,8 +238,15 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         program_type: (weeklyPrograms[0].program_type || 'simple') as 'simple' | 'advanced'
       };
 
-      // Obtener día de la semana para fecha seleccionada (0 = domingo, 1 = lunes, etc.)
-      const dayOfWeek = selectedDate.getDay();
+      // Obtener día de la semana para fecha seleccionada (convertir a Monday-first: 0 = lunes)
+      const jsDay = selectedDate.getDay(); // 0=domingo, 1=lunes, etc.
+      const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 1=martes, ..., 6=domingo
+      
+      console.log('📅 Weekly program day calculation:', {
+        selectedDate: selectedDate.toDateString(),
+        jsDay,
+        dayOfWeek: dayOfWeek
+      });
 
       // Obtener rutinas para el día seleccionado
       const { data: weeklyRoutines, error: weeklyRoutinesError } = await supabase
