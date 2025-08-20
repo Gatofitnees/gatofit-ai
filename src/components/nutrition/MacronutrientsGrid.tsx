@@ -22,7 +22,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
         onClick={() => onMacroEdit('protein_g')}
       >
-        <FlatIcon name="sr-drumstick" className="text-blue-400 mx-auto mb-2" size={20} />
+        <FlatIcon name="sr-chicken-leg" className="text-blue-400 mx-auto mb-2" size={20} />
         <div className="text-lg font-bold">{protein}g</div>
         <div className="text-xs text-muted-foreground">Proteína</div>
       </div>

@@ -12,6 +12,8 @@ export const FlatIcon: React.FC<FlatIconProps> = ({
   className,
   size = 16 
 }) => {
+  console.log('FlatIcon rendering with name:', name);
+  
   return (
     <i 
       className={cn(`fi fi-${name}`, className)}

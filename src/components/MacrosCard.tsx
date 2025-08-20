@@ -2,9 +2,10 @@
 import React from "react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import MacroRing from "./MacroRing";
-import { Flame, Zap, Wheat, Droplet, Plus, Loader2 } from "lucide-react";
+import { Flame, Wheat, Droplet, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Button from "./Button";
+import { FlatIcon } from "./ui/FlatIcon";
 import { useProfileContext } from "@/contexts/ProfileContext";
 
 interface MacroData {
@@ -95,7 +96,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
                   target={macros.protein.target}
                   color="protein"
                   size="sm"
-                  icon={<Zap className="h-4 w-4 text-blue-400" />}
+                  icon={<FlatIcon name="sr-chicken-leg" className="text-blue-400" size={16} />}
                 />
               </div>
             </div>

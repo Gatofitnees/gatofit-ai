@@ -38,7 +38,7 @@ const MacroProgress: React.FC<MacroProgressProps> = ({
       case "calories":
         return <Flame className="h-4 w-4 text-orange-400" />;
       case "protein":
-        return <FlatIcon name="sr-drumstick" className="text-blue-400" size={16} />;
+        return <FlatIcon name="sr-chicken-leg" className="text-blue-400" size={16} />;
       case "carbs":
         return <Wheat className="h-4 w-4 text-green-400" />;
       case "fat":
