@@ -2,7 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import MacroRing from "./MacroRing";
-import { Flame, Zap, Wheat, Droplet } from "lucide-react";
+import { Flame, Zap, Wheat, Droplet, Drumstick } from "lucide-react";
 
 interface MacroProgressProps {
   label: string;
@@ -37,7 +37,7 @@ const MacroProgress: React.FC<MacroProgressProps> = ({
       case "calories":
         return <Flame className="h-4 w-4 text-orange-400" />;
       case "protein":
-        return <Zap className="h-4 w-4 text-blue-400" />;
+        return <Drumstick className="h-4 w-4 text-blue-400" />;
       case "carbs":
         return <Wheat className="h-4 w-4 text-green-400" />;
       case "fat":
