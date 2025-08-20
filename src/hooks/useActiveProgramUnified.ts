@@ -4,9 +4,23 @@ import { useToast } from "@/hooks/use-toast";
 import { WeeklyProgram, WeeklyProgramRoutine } from "./useWeeklyPrograms";
 import { GatofitProgram, UserGatofitProgress } from "./useGatofitPrograms";
 
+export interface AdminProgram {
+  id: string;
+  name: string;
+  description?: string;
+  difficulty_level: string;
+  duration_weeks: number;
+  estimated_sessions_per_week?: number;
+  program_type: string;
+  target_audience?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UnifiedProgramData {
-  type: 'weekly' | 'gatofit';
-  program: WeeklyProgram | GatofitProgram;
+  type: 'weekly' | 'gatofit' | 'admin';
+  program: WeeklyProgram | GatofitProgram | AdminProgram;
   routines: any[]; // Simplified to avoid type complexity
   userProgress?: UserGatofitProgress;
 }
@@ -92,7 +106,98 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         return;
       }
 
-      // 1. Verificar programa Gatofit activo primero
+      // 1. Verificar programa Admin activo primero (máxima prioridad)
+      const { data: userAssignedPrograms, error: adminError } = await supabase
+        .from('user_assigned_programs')
+        .select(`
+          *,
+          program:program_id (*)
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1);
+
+      if (adminError) throw adminError;
+
+      if (userAssignedPrograms && userAssignedPrograms.length > 0) {
+        const assignment = userAssignedPrograms[0];
+        console.log('Active Admin program found:', assignment);
+        
+        // Obtener día de la semana para fecha seleccionada (convertir a Monday-first: 0 = lunes)
+        const jsDay = selectedDate.getDay(); // 0=domingo, 1=lunes, etc.
+        const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 1=martes, ..., 6=domingo
+        
+        // Calcular semana del programa (simplificado)
+        const startDate = new Date(assignment.assigned_at);
+        const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const weekNumber = Math.max(1, Math.floor(daysDiff / 7) + 1);
+        
+        console.log('Admin program day calculation:', {
+          selectedDate: selectedDate.toDateString(),
+          jsDay,
+          dayOfWeek,
+          weekNumber
+        });
+
+        // Obtener rutinas del programa admin para este día
+        const { data: adminRoutines, error: adminRoutinesError } = await supabase
+          .from('admin_program_routines')
+          .select(`
+            *,
+            routine:routine_id (
+              id,
+              name,
+              type,
+              estimated_duration_minutes,
+              description
+            )
+          `)
+          .eq('program_id', assignment.program_id)
+          .eq('week_number', weekNumber)
+          .eq('day_of_week', dayOfWeek)
+          .order('order_in_day');
+
+        if (adminRoutinesError) throw adminRoutinesError;
+
+        if (adminRoutines && adminRoutines.length > 0) {
+          // Verificar si las rutinas ya están completadas
+          const selectedDateString = selectedDate.toISOString().split('T')[0];
+          const { data: workoutLogs, error: workoutError } = await supabase
+            .from('workout_logs')
+            .select('routine_id')
+            .eq('user_id', user.id)
+            .gte('workout_date', `${selectedDateString}T00:00:00.000Z`)
+            .lte('workout_date', `${selectedDateString}T23:59:59.999Z`);
+
+          if (workoutError) throw workoutError;
+
+          const completedRoutineIds = new Set(workoutLogs?.map(log => log.routine_id) || []);
+          const programmedRoutineIds = adminRoutines.map(r => r.routine_id);
+          const hasCompletedProgrammedRoutine = programmedRoutineIds.some(id => completedRoutineIds.has(id));
+
+          console.log('Setting active Admin program with routines:', adminRoutines);
+
+          setActiveProgram({
+            type: 'admin',
+            program: assignment.program,
+            routines: adminRoutines
+          });
+          setIsCompletedForSelectedDate(hasCompletedProgrammedRoutine);
+          return;
+        }
+        
+        // Si no hay rutinas para el día seleccionado, aún mostrar el programa
+        console.log('No admin routines found for selected day, but program is active');
+        setActiveProgram({
+          type: 'admin',
+          program: assignment.program,
+          routines: []
+        });
+        setIsCompletedForSelectedDate(false);
+        return;
+      }
+
+      // 2. Verificar programa Gatofit activo
       const { data: gatofitProgress, error: gatofitError } = await supabase
         .from('user_gatofit_program_progress')
         .select(`
@@ -217,7 +322,7 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         return;
       }
 
-      // 2. Si no hay programa Gatofit, buscar programa semanal
+      // 3. Si no hay programa Gatofit, buscar programa semanal
       const { data: weeklyPrograms, error: weeklyProgramError } = await supabase
         .from('weekly_programs')
         .select('*')

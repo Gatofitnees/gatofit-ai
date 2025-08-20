@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { WeeklyProgram, WeeklyProgramRoutine } from "@/hooks/useWeeklyPrograms";
 import { GatofitProgram } from "@/hooks/useGatofitPrograms";
+import { AdminProgram } from "@/hooks/useActiveProgramUnified";
 
 interface ProgrammedRoutinesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activeProgram: WeeklyProgram | GatofitProgram | null;
+  activeProgram: WeeklyProgram | GatofitProgram | AdminProgram | null;
   todayRoutines: any[];
   onStartRoutine: (routineId: number) => void;
   isCurrentDay: boolean;
   isCompleted: boolean;
   selectedDate: Date;
-  programType?: 'weekly' | 'gatofit';
+  programType?: 'weekly' | 'gatofit' | 'admin';
 }
 
 const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
@@ -58,7 +59,9 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
     if (!isCurrentDay) {
       return "Puedes ver las rutinas programadas pero solo iniciar las del día actual";
     }
-    const programTypeName = programType === 'gatofit' ? 'Programa Gatofit' : 'Rutinas programadas';
+    let programTypeName = 'Rutinas programadas';
+    if (programType === 'gatofit') programTypeName = 'Programa Gatofit';
+    if (programType === 'admin') programTypeName = 'Programa Asignado';
     return `${programTypeName} para hoy`;
   };
 
@@ -106,7 +109,11 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
           <CardBody className="pt-0 space-y-4">
             {/* Program info */}
             <div className={`flex items-center gap-2 p-3 rounded-lg ${getMessageColor()}`}>
-              {getMessageIcon()}
+              {programType === 'admin' ? (
+                <i className="fi fi-sr-apple-dumbbell text-lg text-current" />
+              ) : (
+                getMessageIcon()
+              )}
               <div>
                 <p className="text-sm font-medium">{activeProgram.name}</p>
                 <p className="text-xs">{getDayMessage()}</p>
@@ -162,8 +169,8 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
     </div>
   );
 
-  // Para programas Gatofit sin rutinas, mostrar mensaje informativo
-  if (todayRoutines.length === 0 && programType === 'gatofit') {
+  // Para programas Gatofit y Admin sin rutinas, mostrar mensaje informativo
+  if (todayRoutines.length === 0 && (programType === 'gatofit' || programType === 'admin')) {
     const emptyModalContent = (
       <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         <div 
@@ -174,7 +181,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         <div className="relative z-10 w-full max-w-md animate-scale-in">
           <Card className="shadow-2xl bg-background">
             <CardHeader
-              title="Programa Gatofit"
+              title={programType === 'admin' ? "Programa Asignado" : "Programa Gatofit"}
               subtitle={formatDate(selectedDate)}
               action={
                 <Button variant="ghost" size="sm" onClick={onClose}>
@@ -185,7 +192,11 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
             
             <CardBody className="pt-0 space-y-4">
               <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 text-blue-900">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
+                {programType === 'admin' ? (
+                  <i className="fi fi-sr-apple-dumbbell text-lg text-blue-600" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                )}
                 <div>
                   <p className="text-sm font-medium">{activeProgram.name}</p>
                   <p className="text-xs">No hay rutinas programadas para este día</p>
