@@ -79,7 +79,7 @@ const MacroRing: React.FC<MacroRingProps> = ({
       {/* Center content - only icon */}
       <div className="absolute inset-0 flex items-center justify-center">
         {icon && (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center translate-y-[1px]">
             {icon}
           </div>
         )}
