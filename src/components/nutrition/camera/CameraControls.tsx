@@ -72,15 +72,13 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             <Button
               variant="primary"
               onClick={onCapturePhoto}
-              className="h-20 w-20 rounded-full p-0 bg-white shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 hover:scale-105 transition-all duration-200 border-4 border-white/90 flex items-center justify-center"
+              className="h-20 w-20 rounded-full p-0 bg-white shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 hover:scale-105 transition-all duration-200 border-4 border-white/90"
               disabled={isProcessing || isLoading || !!cameraError || showNoFoodDialog}
             >
               {isProcessing || isLoading ? (
                 <Loader className="h-8 w-8 text-gray-800 animate-spin" />
               ) : (
-                <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white rounded-full"></div>
-                </div>
+                <Camera className="h-8 w-8 text-gray-800" />
               )}
             </Button>
 
