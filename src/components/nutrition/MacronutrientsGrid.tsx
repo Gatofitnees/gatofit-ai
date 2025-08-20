@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Zap, Wheat, Droplet, Beef } from 'lucide-react';
+import { Zap, Wheat, Droplet } from 'lucide-react';
+import { FlatIcon } from '../ui/FlatIcon';
 
 interface MacronutrientsGridProps {
   protein: number;
@@ -21,7 +22,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
         onClick={() => onMacroEdit('protein_g')}
       >
-        <Beef className="h-5 w-5 text-blue-400 mx-auto mb-2" />
+        <FlatIcon name="sr-drumstick" className="text-blue-400 mx-auto mb-2" size={20} />
         <div className="text-lg font-bold">{protein}g</div>
         <div className="text-xs text-muted-foreground">Proteína</div>
       </div>
