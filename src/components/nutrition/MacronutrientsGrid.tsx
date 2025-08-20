@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Zap, Wheat, Droplet } from 'lucide-react';
 import { FlatIcon } from '../ui/FlatIcon';
 
 interface MacronutrientsGridProps {
@@ -22,7 +21,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
         onClick={() => onMacroEdit('protein_g')}
       >
-        <FlatIcon name="sr-chicken-leg" className="text-blue-400 mx-auto mb-2" size={20} />
+        <FlatIcon name="sr-drumstick" className="mx-auto mb-2" style={{ color: '#dd6969' }} size={20} />
         <div className="text-lg font-bold">{protein}g</div>
         <div className="text-xs text-muted-foreground">Proteína</div>
       </div>
@@ -31,7 +30,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
         onClick={() => onMacroEdit('carbs_g')}
       >
-        <Wheat className="h-5 w-5 text-green-400 mx-auto mb-2" />
+        <FlatIcon name="br-wheat" className="mx-auto mb-2" style={{ color: '#EB9F6D' }} size={20} />
         <div className="text-lg font-bold">{carbs}g</div>
         <div className="text-xs text-muted-foreground">Carbos</div>
       </div>
@@ -40,7 +39,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         className="neu-card p-4 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
         onClick={() => onMacroEdit('fat_g')}
       >
-        <Droplet className="h-5 w-5 text-yellow-400 mx-auto mb-2" />
+        <FlatIcon name="sr-avocado" className="text-yellow-400 mx-auto mb-2" size={20} />
         <div className="text-lg font-bold">{fat}g</div>
         <div className="text-xs text-muted-foreground">Grasas</div>
       </div>

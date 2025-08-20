@@ -78,7 +78,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
                   target={macros.calories.target}
                   color="primary"
                   size="md"
-                  icon={<Flame className="h-6 w-6 text-orange-400" />}
+                  icon={<FlatIcon name="ss-flame" className="text-orange-400" size={24} />}
                 />
               </div>
             </div>
@@ -96,7 +96,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
                   target={macros.protein.target}
                   color="protein"
                   size="sm"
-                  icon={<FlatIcon name="sr-chicken-leg" className="text-blue-400" size={16} />}
+                  icon={<FlatIcon name="sr-drumstick" style={{ color: '#dd6969' }} size={16} />}
                 />
               </div>
             </div>
@@ -111,7 +111,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
                   target={macros.carbs.target}
                   color="carbs"
                   size="sm"
-                  icon={<Wheat className="h-4 w-4 text-green-400" />}
+                  icon={<FlatIcon name="br-wheat" style={{ color: '#EB9F6D' }} size={16} />}
                 />
               </div>
             </div>
@@ -126,7 +126,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
                   target={macros.fats.target}
                   color="fat"
                   size="sm"
-                  icon={<Droplet className="h-4 w-4 text-yellow-400" />}
+                  icon={<FlatIcon name="sr-avocado" className="text-yellow-400" size={16} />}
                 />
               </div>
             </div>
