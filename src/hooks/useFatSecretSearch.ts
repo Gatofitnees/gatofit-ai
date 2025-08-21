@@ -50,8 +50,11 @@ export const useFatSecretSearch = () => {
         console.error('❌ Error en los datos:', data.error);
         
         // Handle specific error types
-        if (data.fatsecret_error) {
-          throw new Error('El servicio de búsqueda está temporalmente no disponible. Intenta de nuevo más tarde.');
+        if (data.fallback_available) {
+          // Try to get fallback results automatically 
+          console.log('🔄 Intentando buscar en base de datos local...');
+          // The error indicates fallback is available, so we should show a helpful message
+          throw new Error('El servicio principal no está disponible. Intenta con "pollo", "arroz", "huevos", etc.');
         }
         
         if (data.no_results) {

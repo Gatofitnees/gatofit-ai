@@ -46,12 +46,21 @@ const FoodSearchResults: React.FC<FoodSearchResultsProps> = ({
       <Alert variant="destructive" className="mb-4">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          {error.includes('Missing credentials') ? 
-            'Error de configuración de la API. Por favor, intenta de nuevo más tarde.' :
-            error.includes('Edge function returned a non-2xx status') ?
-            'Error de conexión. Verifica tu conexión a internet e intenta de nuevo.' :
-            `Error al buscar alimentos: ${error}`
-          }
+          <div className="space-y-2">
+            <div>{error}</div>
+            {error.includes('servicio principal no está disponible') && (
+              <div className="mt-2 text-sm">
+                <p className="font-medium mb-1">Alimentos disponibles:</p>
+                <div className="flex flex-wrap gap-1">
+                  {['pollo', 'arroz', 'huevos', 'salmón', 'plátano', 'avena'].map((food) => (
+                    <span key={food} className="bg-background/50 px-2 py-1 rounded text-xs">
+                      {food}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </AlertDescription>
       </Alert>
     );

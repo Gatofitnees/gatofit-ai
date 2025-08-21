@@ -98,12 +98,12 @@ serve(async (req) => {
       }
       
       return new Response(JSON.stringify({ 
-        error: "Search service temporarily unavailable",
-        details: `FatSecret API Error ${searchData.error.code}: ${searchData.error.message}`,
-        fatsecret_error: true
+        error: "El servicio de búsqueda no está disponible temporalmente",
+        details: "Intenta de nuevo más tarde o usa términos más comunes como 'pollo', 'arroz', 'huevos'",
+        fallback_available: true
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 503,
+        status: 200, // Changed to 200 to avoid frontend errors
       });
     }
 
@@ -159,7 +159,7 @@ async function tryAlternativeSearch(query: string, corsHeaders: any) {
     no_results: true
   }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
-    status: 404,
+    status: 200, // Changed to 200 to avoid frontend errors
   });
 }
 
