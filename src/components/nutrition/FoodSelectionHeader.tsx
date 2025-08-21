@@ -33,35 +33,15 @@ const FoodSelectionHeader: React.FC<FoodSelectionHeaderProps> = ({
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClear}
-          disabled={isSaving}
-        >
-          <X className="w-4 h-4 mr-1" />
-          Limpiar
-        </Button>
-        <Button
-          onClick={onSave}
-          size="sm"
-          disabled={isSaving}
-          className="min-w-[100px]"
-        >
-          {isSaving ? (
-            <div className="flex items-center">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-              Guardando...
-            </div>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-1" />
-              Guardar
-            </>
-          )}
-        </Button>
-      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onClear}
+        disabled={isSaving}
+      >
+        <X className="w-4 h-4 mr-1" />
+        Limpiar
+      </Button>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,11 +33,9 @@ const FoodSearchPage: React.FC = () => {
   const { saveFoods, isSaving } = useFoodSaving();
 
   useEffect(() => {
-    if (debouncedQuery.trim() || selectedCategories.length > 0) {
-      // For now, search with first category only (can be enhanced later)
-      const categoryId = selectedCategories.length > 0 ? selectedCategories[0] : null;
-      searchFoods(debouncedQuery, categoryId);
-    }
+    // Always search - if no query/filters, it will load default foods
+    const categoryId = selectedCategories.length > 0 ? selectedCategories[0] : null;
+    searchFoods(debouncedQuery, categoryId);
   }, [debouncedQuery, selectedCategories, searchFoods]);
 
   const handleSave = async (customName?: string) => {
@@ -73,15 +71,37 @@ const FoodSearchPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-xl font-semibold">Buscar Alimentos</h1>
+          {selectedFoods.length > 0 && (
+            <Button
+              onClick={handleSaveClick}
+              size="sm"
+              disabled={isSaving}
+              className="ml-auto"
+            >
+              {isSaving ? (
+                <div className="flex items-center">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  Guardando...
+                </div>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-1" />
+                  Guardar ({selectedFoods.length})
+                </>
+              )}
+            </Button>
+          )}
         </div>
         
         {/* Selection Header */}
-        <FoodSelectionHeader
-          selectedCount={selectedFoods.length}
-          onSave={handleSaveClick}
-          onClear={clearSelection}
-          isSaving={isSaving}
-        />
+        {selectedFoods.length > 0 && (
+          <FoodSelectionHeader
+            selectedCount={selectedFoods.length}
+            onSave={handleSaveClick}
+            onClear={clearSelection}
+            isSaving={isSaving}
+          />
+        )}
         
         {/* Search Input */}
         <div className="px-4 pb-4">

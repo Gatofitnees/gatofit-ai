@@ -81,7 +81,9 @@ const FoodSearchItem: React.FC<FoodSearchItemProps> = ({
           <Input
             type="number"
             value={quantity}
-            onChange={(e) => onQuantityChange(Number(e.target.value) || 100)}
+            onChange={(e) => onQuantityChange(Number(e.target.value) || 0)}
+            onFocus={(e) => e.target.select()}
+            placeholder="100"
             min="1"
             max="2000"
             step="1"

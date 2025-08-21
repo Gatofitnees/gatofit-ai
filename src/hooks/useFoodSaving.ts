@@ -50,6 +50,14 @@ export const useFoodSaving = () => {
           carbs_g_consumed: food.nutrition.carbs * multiplier,
           fat_g_consumed: food.nutrition.fat * multiplier,
           meal_type: 'lunch',
+          ingredients: [{
+            name: food.name,
+            grams: quantity,
+            calories: food.nutrition.calories * multiplier,
+            protein: food.nutrition.protein * multiplier,
+            carbs: food.nutrition.carbs * multiplier,
+            fat: food.nutrition.fat * multiplier
+          }],
           notes: food.description,
         });
 
@@ -68,6 +76,7 @@ export const useFoodSaving = () => {
         let totalFat = 0;
         let totalQuantity = 0;
         
+        const ingredients: any[] = [];
         const ingredientsList: string[] = [];
 
         for (const food of foods) {
@@ -82,6 +91,14 @@ export const useFoodSaving = () => {
           }
           
           totalQuantity += quantity;
+          ingredients.push({
+            name: food.name,
+            grams: quantity,
+            calories: food.nutrition.calories * multiplier,
+            protein: food.nutrition.protein * multiplier,
+            carbs: food.nutrition.carbs * multiplier,
+            fat: food.nutrition.fat * multiplier
+          });
           ingredientsList.push(`${food.name} (${quantity}g)${food.brand ? ` - ${food.brand}` : ''}`);
         }
 
@@ -94,6 +111,7 @@ export const useFoodSaving = () => {
           carbs_g_consumed: totalCarbs,
           fat_g_consumed: totalFat,
           meal_type: 'lunch',
+          ingredients: ingredients,
           notes: `Comida compuesta: ${ingredientsList.join(', ')}`,
         });
 
