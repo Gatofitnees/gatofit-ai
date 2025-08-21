@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardHeader, CardBody, CardFooter } from "./Card";
 import MacroRing from "./MacroRing";
-import { Flame, Wheat, Droplet, Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Button from "./Button";
 import { FlatIcon } from "./ui/FlatIcon";
@@ -78,7 +78,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
                   target={macros.calories.target}
                   color="primary"
                   size="md"
-                  icon={<FlatIcon name="sr-flame" className="text-orange-400" size={24} />}
+                  icon={<FlatIcon name="ss-flame" className="text-orange-400" size={24} />}
                 />
               </div>
             </div>

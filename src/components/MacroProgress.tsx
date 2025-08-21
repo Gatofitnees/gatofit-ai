@@ -2,7 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import MacroRing from "./MacroRing";
-import { Flame, Zap, Wheat, Droplet } from "lucide-react";
+
 import { FlatIcon } from "./ui/FlatIcon";
 
 interface MacroProgressProps {
@@ -36,7 +36,7 @@ const MacroProgress: React.FC<MacroProgressProps> = ({
   const getIcon = () => {
     switch (icon) {
       case "calories":
-        return <FlatIcon name="sr-flame" className="text-orange-400" size={16} />;
+        return <FlatIcon name="ss-flame" className="text-orange-400" size={16} />;
       case "protein":
         return <FlatIcon name="sr-drumstick" style={{ color: '#dd6969' }} size={16} />;
       case "carbs":

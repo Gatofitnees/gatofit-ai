@@ -1,6 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { Flame, Zap, Wheat, Droplet, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import { FlatIcon } from '@/components/ui/FlatIcon';
 import { cn } from '@/lib/utils';
 
 interface FoodPreviewCardProps {
@@ -148,24 +149,24 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
             
             {/* Calories - Main Line */}
             <div className="flex items-center gap-2 mb-1">
-              <Flame className="h-4 w-4 text-orange-400 flex-shrink-0" />
+              <FlatIcon name="ss-flame" size={16} style={{ color: '#fb923c' }} className="flex-shrink-0" />
               <span className="text-lg font-bold">{calories} kcal</span>
             </div>
             
             {/* Macronutrients */}
             <div className="flex gap-3 text-xs">
               <div className="flex items-center gap-1.5">
-                <Zap className="h-3 w-3 text-blue-400 flex-shrink-0" />
+                <FlatIcon name="sr-drumstick" size={12} style={{ color: '#dd6969' }} className="flex-shrink-0" />
                 <span className="font-medium">{protein}g</span>
               </div>
               
               <div className="flex items-center gap-1.5">
-                <Wheat className="h-3 w-3 text-green-400 flex-shrink-0" />
+                <FlatIcon name="sr-wheat" size={12} style={{ color: '#EB9F6D' }} className="flex-shrink-0" />
                 <span className="font-medium">{carbs}g</span>
               </div>
               
               <div className="flex items-center gap-1.5">
-                <Droplet className="h-3 w-3 text-yellow-400 flex-shrink-0" />
+                <FlatIcon name="sr-avocado" size={12} style={{ color: '#6C95DC' }} className="flex-shrink-0" />
                 <span className="font-medium">{fat}g</span>
               </div>
             </div>

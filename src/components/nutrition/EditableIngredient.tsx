@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Flame, Zap, Wheat, Droplet } from 'lucide-react';
+import { FlatIcon } from '@/components/ui/FlatIcon';
 import { Input } from '@/components/ui/input';
 
 interface EditableIngredientProps {
@@ -115,7 +115,7 @@ export const EditableIngredient: React.FC<EditableIngredientProps> = ({
         <div className="flex flex-col gap-2">
           {/* Fila superior: Calorías */}
           <div className="flex items-center gap-2">
-            <Flame className="h-3 w-3 text-orange-400" />
+            <FlatIcon name="ss-flame" size={12} style={{ color: '#fb923c' }} />
             {editingField === 'calories' ? (
               <Input
                 value={tempValue}
@@ -139,7 +139,7 @@ export const EditableIngredient: React.FC<EditableIngredientProps> = ({
           {/* Fila inferior: Macros */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <Zap className="h-3 w-3 text-blue-400" />
+              <FlatIcon name="sr-drumstick" size={12} style={{ color: '#dd6969' }} />
               {editingField === 'protein' ? (
                 <Input
                   value={tempValue}
@@ -160,7 +160,7 @@ export const EditableIngredient: React.FC<EditableIngredientProps> = ({
             </div>
 
             <div className="flex items-center gap-1">
-              <Wheat className="h-3 w-3 text-green-400" />
+              <FlatIcon name="sr-wheat" size={12} style={{ color: '#EB9F6D' }} />
               {editingField === 'carbs' ? (
                 <Input
                   value={tempValue}
@@ -181,7 +181,7 @@ export const EditableIngredient: React.FC<EditableIngredientProps> = ({
             </div>
 
             <div className="flex items-center gap-1">
-              <Droplet className="h-3 w-3 text-yellow-400" />
+              <FlatIcon name="sr-avocado" size={12} style={{ color: '#6C95DC' }} />
               {editingField === 'fat' ? (
                 <Input
                   value={tempValue}
