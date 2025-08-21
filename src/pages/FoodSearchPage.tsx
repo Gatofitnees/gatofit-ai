@@ -1,25 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Search, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useDebounce } from '@/hooks/useDebounce';
-import FoodSearchResults from '@/components/nutrition/FoodSearchResults';
-import FoodCategoryFilter from '@/components/nutrition/FoodCategoryFilter';
-import { useFatSecretSearch } from '@/hooks/useFatSecretSearch';
+import { useFoodSearch } from '@/hooks/useFoodSearch';
+import { useFoodSelection } from '@/hooks/useFoodSelection';
+import { useFoodSaving } from '@/hooks/useFoodSaving';
+import FoodSearchItem from '@/components/nutrition/FoodSearchItem';
+import FilterSlidePanel from '@/components/nutrition/FilterSlidePanel';
+import FoodSelectionHeader from '@/components/nutrition/FoodSelectionHeader';
+import SaveFoodModal from '@/components/nutrition/SaveFoodModal';
 
 const FoodSearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  
   const debouncedQuery = useDebounce(searchQuery, 500);
-  const { searchFoods, results, isLoading, error, isUsingFallback } = useFatSecretSearch();
+  const { searchFoods, results, isLoading, error } = useFoodSearch();
+  const {
+    selectedFoods,
+    quantities,
+    toggleFoodSelection,
+    updateQuantity,
+    clearSelection,
+    isSelected,
+    getQuantity,
+  } = useFoodSelection();
+  const { saveFoods, isSaving } = useFoodSaving();
 
   useEffect(() => {
-    if (debouncedQuery.trim() || selectedCategory !== null) {
-      searchFoods(debouncedQuery, selectedCategory);
+    if (debouncedQuery.trim() || selectedCategories.length > 0) {
+      // For now, search with first category only (can be enhanced later)
+      const categoryId = selectedCategories.length > 0 ? selectedCategories[0] : null;
+      searchFoods(debouncedQuery, categoryId);
     }
-  }, [debouncedQuery, selectedCategory, searchFoods]);
+  }, [debouncedQuery, selectedCategories, searchFoods]);
+
+  const handleSave = async (customName?: string) => {
+    const success = await saveFoods(selectedFoods, quantities, customName);
+    if (success) {
+      clearSelection();
+      setShowSaveModal(false);
+      navigate('/nutrition');
+    }
+  };
+
+  const handleSaveClick = () => {
+    if (selectedFoods.length === 1) {
+      // Auto-save single food
+      handleSave();
+    } else {
+      // Show modal for multiple foods
+      setShowSaveModal(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,52 +72,99 @@ const FoodSearchPage: React.FC = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-semibold">Buscar Comidas</h1>
+          <h1 className="text-xl font-semibold">Buscar Alimentos</h1>
         </div>
         
+        {/* Selection Header */}
+        <FoodSelectionHeader
+          selectedCount={selectedFoods.length}
+          onSave={handleSaveClick}
+          onClear={clearSelection}
+          isSaving={isSaving}
+        />
+        
         {/* Search Input */}
-        <div className="px-4 pb-4 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Buscar alimentos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-              autoFocus
-            />
+        <div className="px-4 pb-4">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Buscar alimentos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                autoFocus
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsFilterPanelOpen(true)}
+              className={selectedCategories.length > 0 ? "border-primary text-primary" : ""}
+            >
+              <Filter className="w-4 h-4" />
+            </Button>
           </div>
-          
-          <FoodCategoryFilter
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4">
-        {!searchQuery.trim() && selectedCategory === null ? (
+        {isLoading ? (
+          <div className="space-y-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="text-red-500 mb-2">Error</div>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        ) : results.length === 0 && (searchQuery.trim() || selectedCategories.length > 0) ? (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground mb-2">
-              Busca alimentos
+              No se encontraron alimentos
             </h3>
             <p className="text-sm text-muted-foreground">
-              Escribe el nombre de un alimento o selecciona una categoría
+              Intenta con otros términos de búsqueda
             </p>
           </div>
         ) : (
-          <FoodSearchResults
-            results={results}
-            isLoading={isLoading}
-            error={error}
-            query={searchQuery}
-            isUsingFallback={isUsingFallback}
-          />
+          <div className="space-y-3">
+            {results.map((food) => (
+              <FoodSearchItem
+                key={food.id}
+                food={food}
+                isSelected={isSelected(food.id)}
+                quantity={getQuantity(food.id)}
+                onToggleSelect={() => toggleFoodSelection(food)}
+                onQuantityChange={(quantity) => updateQuantity(food.id, quantity)}
+              />
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Filter Panel */}
+      <FilterSlidePanel
+        isOpen={isFilterPanelOpen}
+        onClose={() => setIsFilterPanelOpen(false)}
+        selectedCategories={selectedCategories}
+        onCategoriesChange={setSelectedCategories}
+      />
+
+      {/* Save Modal */}
+      <SaveFoodModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSave}
+        foods={selectedFoods}
+        quantities={quantities}
+        isSaving={isSaving}
+      />
     </div>
   );
 };

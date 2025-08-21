@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import PortionSelector from './PortionSelector';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import NutrientIcon from './NutrientIcon';
 import FoodCategoryBadge from './FoodCategoryBadge';
+import { cn } from '@/lib/utils';
 
 interface FoodSearchItemProps {
   food: {
@@ -24,101 +25,101 @@ interface FoodSearchItemProps {
       serving_size: string;
     };
   };
+  isSelected: boolean;
+  quantity: number;
+  onToggleSelect: () => void;
+  onQuantityChange: (quantity: number) => void;
 }
 
-const FoodSearchItem: React.FC<FoodSearchItemProps> = ({ food }) => {
-  const [showPortionSelector, setShowPortionSelector] = useState(false);
-
-  const handleAddFood = () => {
-    setShowPortionSelector(true);
-  };
-
-  if (showPortionSelector) {
-    return (
-      <PortionSelector
-        food={food}
-        onCancel={() => setShowPortionSelector(false)}
-        onConfirm={() => {
-          setShowPortionSelector(false);
-          // This will be handled in PortionSelector
-        }}
-      />
-    );
-  }
+const FoodSearchItem: React.FC<FoodSearchItemProps> = ({ 
+  food, 
+  isSelected, 
+  quantity, 
+  onToggleSelect, 
+  onQuantityChange 
+}) => {
+  const multiplier = quantity / 100;
 
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0 space-y-3">
-          {/* Header with name and category */}
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-base leading-tight text-foreground">
-                {food.name}
-              </h3>
-              {food.brand && (
-                <span className="text-xs text-muted-foreground shrink-0 font-medium">
-                  {food.brand}
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              {food.category && (
-                <FoodCategoryBadge
-                  category={food.category}
-                  subcategory={food.subcategory}
-                  icon={food.categoryIcon}
-                  color={food.categoryColor}
-                />
-              )}
-            </div>
-          </div>
-          
-          {/* Nutrition information */}
-          {food.nutrition && (
-            <div className="grid grid-cols-2 gap-3">
-              <NutrientIcon
-                type="calories"
-                value={food.nutrition.calories}
-                unit="kcal"
-              />
-              <NutrientIcon
-                type="protein"
-                value={food.nutrition.protein}
-              />
-              <NutrientIcon
-                type="carbs"
-                value={food.nutrition.carbs}
-              />
-              <NutrientIcon
-                type="fat"
-                value={food.nutrition.fat}
-              />
-            </div>
-          )}
-          
-          {/* Description */}
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {food.description}
-          </p>
-          
-          {/* Serving size */}
-          {food.nutrition?.serving_size && (
-            <p className="text-xs text-muted-foreground font-medium">
-              Por {food.nutrition.serving_size}
+    <Card className={cn(
+      "p-4 space-y-3 cursor-pointer transition-colors",
+      isSelected ? "bg-primary/5 border-primary" : "hover:bg-muted/50"
+    )}>
+      {/* Header with checkbox and name */}
+      <div className="flex items-start gap-3">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={onToggleSelect}
+          className="mt-1 shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-sm leading-tight line-clamp-2">
+            {food.name}
+          </h3>
+          {food.brand && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {food.brand}
             </p>
           )}
         </div>
-
-        <Button
-          size="sm"
-          onClick={handleAddFood}
-          className="shrink-0 h-9 w-9 p-0"
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
       </div>
+
+      {/* Category badge */}
+      {food.category && (
+        <FoodCategoryBadge
+          category={food.category}
+          subcategory={food.subcategory}
+          icon={food.categoryIcon}
+          color={food.categoryColor}
+        />
+      )}
+
+      {/* Quantity selector (only when selected) */}
+      {isSelected && (
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground">Cantidad:</label>
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => onQuantityChange(Number(e.target.value) || 100)}
+            min="1"
+            max="2000"
+            step="1"
+            className="w-20 h-8 text-xs"
+          />
+          <Badge variant="outline" className="text-xs">gramos</Badge>
+        </div>
+      )}
+
+      {/* Nutrition info */}
+      {food.nutrition && (
+        <div className="grid grid-cols-2 gap-2">
+          <NutrientIcon 
+            type="calories" 
+            value={food.nutrition.calories * multiplier} 
+            unit="kcal"
+          />
+          <NutrientIcon 
+            type="protein" 
+            value={food.nutrition.protein * multiplier} 
+          />
+          <NutrientIcon 
+            type="carbs" 
+            value={food.nutrition.carbs * multiplier} 
+          />
+          <NutrientIcon 
+            type="fat" 
+            value={food.nutrition.fat * multiplier} 
+          />
+        </div>
+      )}
+
+      {/* Description */}
+      {food.description && (
+        <p className="text-xs text-muted-foreground line-clamp-2">
+          {food.description}
+        </p>
+      )}
     </Card>
   );
 };

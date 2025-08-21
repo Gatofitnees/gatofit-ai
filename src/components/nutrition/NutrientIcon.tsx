@@ -19,36 +19,36 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
     switch (type) {
       case 'calories':
         return {
-          icon: 'flame',
-          color: 'text-orange-500',
+          icon: 'sr-flame',
+          color: '#f97316', // orange-500
           bgColor: 'bg-orange-50',
           unit: 'kcal'
         };
       case 'protein':
         return {
-          icon: 'dumbbell',
-          color: 'text-red-500',
+          icon: 'sr-drumstick',
+          color: '#dd6969', // matching MacroProgress
           bgColor: 'bg-red-50',
           unit: 'g'
         };
       case 'carbs':
         return {
-          icon: 'wheat',
-          color: 'text-amber-500',
+          icon: 'sr-wheat',
+          color: '#EB9F6D', // matching MacroProgress  
           bgColor: 'bg-amber-50',
           unit: 'g'
         };
       case 'fat':
         return {
-          icon: 'droplet',
-          color: 'text-blue-500',
+          icon: 'sr-avocado',
+          color: '#6C95DC', // matching MacroProgress
           bgColor: 'bg-blue-50',
           unit: 'g'
         };
       default:
         return {
-          icon: 'circle',
-          color: 'text-gray-500',
+          icon: 'sr-circle',
+          color: '#6b7280', // gray-500
           bgColor: 'bg-gray-50',
           unit: 'g'
         };
@@ -66,7 +66,7 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
         <FlatIcon 
           name={config.icon} 
           size={12} 
-          className={config.color} 
+          style={{ color: config.color }}
         />
       </div>
       <div className="flex flex-col">
