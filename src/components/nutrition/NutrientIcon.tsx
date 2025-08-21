@@ -20,7 +20,7 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
       case 'calories':
         return {
           icon: 'ss-flame',
-          color: '#F9FAFB',
+          color: '#2094f3',
           bgColor: 'bg-secondary/30',
           unit: 'kcal'
         };
