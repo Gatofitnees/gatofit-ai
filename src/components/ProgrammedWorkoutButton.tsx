@@ -39,10 +39,10 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
     return null;
   }
 
-  // Para programas Gatofit y Admin, mostrar el botón incluso si no hay rutinas para el día
+  // Para programas Gatofit, mostrar el botón incluso si no hay rutinas para el día
   // para que el usuario sepa que tiene un programa activo
-  if (activeProgram.type === 'gatofit' || activeProgram.type === 'admin') {
-    // Si es un programa Gatofit o Admin activo, siempre mostrar el botón
+  if (activeProgram.type === 'gatofit') {
+    // Si es un programa Gatofit activo, siempre mostrar el botón
     // Solo ocultar si no hay rutinas Y no es el día actual
     if (!activeProgram.routines || activeProgram.routines.length === 0) {
       if (!isCurrentDay) {
@@ -77,11 +77,6 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
   const getButtonIcon = () => {
     if (isCompletedForSelectedDate) {
       return <Check className="h-5 w-5" />;
-    }
-    
-    // Usar icono específico para admin programs
-    if (activeProgram?.type === 'admin') {
-      return <i className="fi fi-sr-apple-dumbbell text-lg" />;
     }
     
     return <Calendar className="h-5 w-5" />;
