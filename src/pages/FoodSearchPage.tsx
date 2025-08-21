@@ -11,7 +11,7 @@ const FoodSearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedQuery = useDebounce(searchQuery, 500);
-  const { searchFoods, results, isLoading, error } = useFatSecretSearch();
+  const { searchFoods, results, isLoading, error, isUsingFallback } = useFatSecretSearch();
 
   useEffect(() => {
     if (debouncedQuery.trim()) {
@@ -69,6 +69,7 @@ const FoodSearchPage: React.FC = () => {
             isLoading={isLoading}
             error={error}
             query={searchQuery}
+            isUsingFallback={isUsingFallback}
           />
         )}
       </div>

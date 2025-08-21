@@ -22,13 +22,15 @@ interface FoodSearchResultsProps {
   isLoading: boolean;
   error: string | null;
   query: string;
+  isUsingFallback?: boolean;
 }
 
 const FoodSearchResults: React.FC<FoodSearchResultsProps> = ({
   results,
   isLoading,
   error,
-  query
+  query,
+  isUsingFallback = false
 }) => {
   if (isLoading) {
     return (
@@ -71,8 +73,18 @@ const FoodSearchResults: React.FC<FoodSearchResultsProps> = ({
 
   return (
     <div className="space-y-2">
+      {isUsingFallback && (
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Mostrando resultados de la base de datos local. La búsqueda completa no está disponible temporalmente.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <p className="text-sm text-muted-foreground mb-4">
         {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+        {isUsingFallback && ' (base de datos local)'}
       </p>
       
       {results.map((food) => (
