@@ -29,6 +29,197 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_program_exercises: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          exercise_id: number
+          id: string
+          notes: string | null
+          order_in_day: number
+          program_id: string
+          reps_max: number | null
+          reps_min: number | null
+          rest_seconds: number | null
+          sets: number | null
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          exercise_id: number
+          id?: string
+          notes?: string | null
+          order_in_day?: number
+          program_id: string
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          exercise_id?: number
+          id?: string
+          notes?: string | null
+          order_in_day?: number
+          program_id?: string
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_program_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_program_exercises_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_program_routines: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          notes: string | null
+          order_in_day: number
+          program_id: string
+          routine_id: number
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          notes?: string | null
+          order_in_day?: number
+          program_id: string
+          routine_id: number
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          notes?: string | null
+          order_in_day?: number
+          program_id?: string
+          routine_id?: number
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_program_routines_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_program_routines_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_program_weeks: {
+        Row: {
+          created_at: string
+          focus_areas: string[] | null
+          id: string
+          program_id: string
+          week_description: string | null
+          week_name: string | null
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          focus_areas?: string[] | null
+          id?: string
+          program_id: string
+          week_description?: string | null
+          week_name?: string | null
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          focus_areas?: string[] | null
+          id?: string
+          program_id?: string
+          week_description?: string | null
+          week_name?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_program_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_programs: {
+        Row: {
+          created_at: string
+          created_by_admin: string | null
+          description: string | null
+          difficulty_level: string
+          duration_weeks: number
+          estimated_sessions_per_week: number | null
+          id: string
+          is_active: boolean
+          name: string
+          program_type: string
+          target_audience: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty_level: string
+          duration_weeks?: number
+          estimated_sessions_per_week?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          program_type?: string
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty_level?: string
+          duration_weeks?: number
+          estimated_sessions_per_week?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          program_type?: string
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           avatar_url: string | null
@@ -1150,6 +1341,68 @@ export type Database = {
           },
         ]
       }
+      user_assigned_programs: {
+        Row: {
+          assigned_at: string
+          assigned_by_admin: string | null
+          completed_at: string | null
+          completion_percentage: number | null
+          created_at: string
+          current_day: number
+          current_week: number
+          id: string
+          is_active: boolean
+          last_activity_date: string | null
+          notes: string | null
+          program_id: string
+          started_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by_admin?: string | null
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string
+          current_day?: number
+          current_week?: number
+          id?: string
+          is_active?: boolean
+          last_activity_date?: string | null
+          notes?: string | null
+          program_id: string
+          started_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by_admin?: string | null
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string
+          current_day?: number
+          current_week?: number
+          id?: string
+          is_active?: boolean
+          last_activity_date?: string | null
+          notes?: string | null
+          program_id?: string
+          started_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_assigned_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_daily_macro_targets: {
         Row: {
           calories_target: number
@@ -1727,6 +1980,10 @@ export type Database = {
           routine_type: string
         }[]
       }
+      get_user_activity_calendar: {
+        Args: { p_month?: number; p_user_id: string; p_year?: number }
+        Returns: Json
+      }
       get_user_details: {
         Args: { p_user_id: string }
         Returns: Json
@@ -1738,6 +1995,10 @@ export type Database = {
           new_users: number
           total_users: number
         }[]
+      }
+      get_user_nutrition_details: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: Json
       }
       get_user_stats: {
         Args: { target_user_id: string }
@@ -1760,6 +2021,10 @@ export type Database = {
           routines_created: number
           week_start_date: string
         }[]
+      }
+      get_user_weight_evolution: {
+        Args: { p_days_back?: number; p_user_id: string }
+        Returns: Json
       }
       get_users_with_filters: {
         Args: {
@@ -1788,6 +2053,10 @@ export type Database = {
       get_week_start: {
         Args: { input_date?: string }
         Returns: string
+      }
+      get_workout_session_details: {
+        Args: { p_workout_log_id: number }
+        Returns: Json
       }
       increment_usage_counter: {
         Args: { counter_type: string; increment_by?: number; p_user_id: string }
