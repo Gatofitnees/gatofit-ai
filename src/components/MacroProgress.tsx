@@ -28,9 +28,9 @@ const MacroProgress: React.FC<MacroProgressProps> = ({
 
   const colorClasses = {
     primary: "bg-primary",
-    protein: "bg-blue-400", 
-    carbs: "bg-green-400",
-    fat: "bg-yellow-400"
+    protein: "bg-[#dd6969]", 
+    carbs: "bg-[#EB9F6D]",
+    fat: "bg-[#6C95DC]"
   };
 
   const getIcon = () => {

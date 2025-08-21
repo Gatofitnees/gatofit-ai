@@ -25,7 +25,7 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick }) => {
     <>
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary rounded-full shadow-lg flex items-center justify-center z-50"
+        className="fixed bottom-24 right-6 w-14 h-14 bg-primary rounded-full shadow-lg flex items-center justify-center z-50"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
@@ -47,37 +47,43 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 z-40"
+            className="fixed inset-0 backdrop-blur-sm z-40"
             onClick={() => setIsOpen(false)}
           >
-            <div className="fixed bottom-24 right-6 flex flex-col gap-3">
-              <motion.button
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0, rotate: -180 }}
+            <div className="fixed bottom-36 right-6 flex flex-col gap-3">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
                 transition={{ delay: 0.1 }}
-                onClick={handleSearchFood}
-                className="flex items-center gap-3 bg-card rounded-full shadow-lg px-4 py-3 min-w-[160px]"
               >
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Search className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-foreground font-medium">Buscar comida</span>
-              </motion.button>
+                <button
+                  onClick={handleSearchFood}
+                  className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                >
+                  <Search className="w-6 h-6" />
+                </button>
+                <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                  Buscar comida
+                </span>
+              </motion.div>
 
-              <motion.button
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0, rotate: -180 }}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
                 transition={{ delay: 0.05 }}
-                onClick={handleCameraClick}
-                className="flex items-center gap-3 bg-card rounded-full shadow-lg px-4 py-3 min-w-[160px]"
               >
-                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-foreground font-medium">Escanear</span>
-              </motion.button>
+                <button
+                  onClick={handleCameraClick}
+                  className="flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                >
+                  <Camera className="w-6 h-6" />
+                </button>
+                <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                  Escanear
+                </span>
+              </motion.div>
             </div>
           </motion.div>
         )}
