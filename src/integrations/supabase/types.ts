@@ -689,12 +689,38 @@ export type Database = {
           },
         ]
       }
+      food_categories: {
+        Row: {
+          color_class: string | null
+          created_at: string | null
+          icon_name: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          color_class?: string | null
+          created_at?: string | null
+          icon_name?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          color_class?: string | null
+          created_at?: string | null
+          icon_name?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       food_items: {
         Row: {
           barcode: string | null
           brand_name: string | null
           calories_per_serving: number
           carbs_g_per_serving: number
+          category_id: number | null
+          description: string | null
           fat_g_per_serving: number
           id: number
           is_verified_by_admin: boolean
@@ -702,6 +728,7 @@ export type Database = {
           protein_g_per_serving: number
           serving_size_grams: number | null
           serving_size_unit: string | null
+          subcategory: string | null
           user_contributed_id: string | null
         }
         Insert: {
@@ -709,6 +736,8 @@ export type Database = {
           brand_name?: string | null
           calories_per_serving: number
           carbs_g_per_serving: number
+          category_id?: number | null
+          description?: string | null
           fat_g_per_serving: number
           id?: number
           is_verified_by_admin?: boolean
@@ -716,6 +745,7 @@ export type Database = {
           protein_g_per_serving: number
           serving_size_grams?: number | null
           serving_size_unit?: string | null
+          subcategory?: string | null
           user_contributed_id?: string | null
         }
         Update: {
@@ -723,6 +753,8 @@ export type Database = {
           brand_name?: string | null
           calories_per_serving?: number
           carbs_g_per_serving?: number
+          category_id?: number | null
+          description?: string | null
           fat_g_per_serving?: number
           id?: number
           is_verified_by_admin?: boolean
@@ -730,9 +762,17 @@ export type Database = {
           protein_g_per_serving?: number
           serving_size_grams?: number | null
           serving_size_unit?: string | null
+          subcategory?: string | null
           user_contributed_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "food_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "food_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "food_items_user_contributed_id_fkey"
             columns: ["user_contributed_id"]
@@ -746,6 +786,38 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_rankings"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      food_search_synonyms: {
+        Row: {
+          category_id: number | null
+          created_at: string | null
+          id: number
+          search_term: string
+          target_foods: string[]
+        }
+        Insert: {
+          category_id?: number | null
+          created_at?: string | null
+          id?: number
+          search_term: string
+          target_foods: string[]
+        }
+        Update: {
+          category_id?: number | null
+          created_at?: string | null
+          id?: number
+          search_term?: string
+          target_foods?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_search_synonyms_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "food_categories"
+            referencedColumns: ["id"]
           },
         ]
       }

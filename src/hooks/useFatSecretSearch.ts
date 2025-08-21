@@ -6,6 +6,10 @@ interface FoodSearchResult {
   name: string;
   description: string;
   brand?: string;
+  category?: string;
+  subcategory?: string;
+  categoryIcon?: string;
+  categoryColor?: string;
   nutrition?: {
     calories: number;
     fat: number;
@@ -21,8 +25,8 @@ export const useFatSecretSearch = () => {
   const [error, setError] = useState<string | null>(null);
   const [isUsingFallback, setIsUsingFallback] = useState(false);
 
-  const searchFoods = useCallback(async (query: string) => {
-    if (!query.trim()) {
+  const searchFoods = useCallback(async (query: string, categoryId?: number | null) => {
+    if (!query.trim() && !categoryId) {
       setResults([]);
       setIsUsingFallback(false);
       return;
@@ -36,7 +40,10 @@ export const useFatSecretSearch = () => {
       console.log('🔍 Iniciando búsqueda de alimentos:', query);
       
       const { data, error: functionError } = await supabase.functions.invoke('fatsecret-search', {
-        body: { searchQuery: query }
+        body: { 
+          searchQuery: query,
+          categoryId: categoryId 
+        }
       });
 
       console.log('📡 Respuesta de la función:', { data, functionError });

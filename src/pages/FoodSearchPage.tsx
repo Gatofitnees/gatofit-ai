@@ -5,19 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useDebounce } from '@/hooks/useDebounce';
 import FoodSearchResults from '@/components/nutrition/FoodSearchResults';
+import FoodCategoryFilter from '@/components/nutrition/FoodCategoryFilter';
 import { useFatSecretSearch } from '@/hooks/useFatSecretSearch';
 
 const FoodSearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const debouncedQuery = useDebounce(searchQuery, 500);
   const { searchFoods, results, isLoading, error, isUsingFallback } = useFatSecretSearch();
 
   useEffect(() => {
-    if (debouncedQuery.trim()) {
-      searchFoods(debouncedQuery);
+    if (debouncedQuery.trim() || selectedCategory !== null) {
+      searchFoods(debouncedQuery, selectedCategory);
     }
-  }, [debouncedQuery, searchFoods]);
+  }, [debouncedQuery, selectedCategory, searchFoods]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,7 +38,7 @@ const FoodSearchPage: React.FC = () => {
         </div>
         
         {/* Search Input */}
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -48,19 +50,24 @@ const FoodSearchPage: React.FC = () => {
               autoFocus
             />
           </div>
+          
+          <FoodCategoryFilter
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4">
-        {!searchQuery.trim() ? (
+        {!searchQuery.trim() && selectedCategory === null ? (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground mb-2">
               Busca alimentos
             </h3>
             <p className="text-sm text-muted-foreground">
-              Escribe el nombre de un alimento para encontrar información nutricional
+              Escribe el nombre de un alimento o selecciona una categoría
             </p>
           </div>
         ) : (

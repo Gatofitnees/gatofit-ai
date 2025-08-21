@@ -16,14 +16,16 @@ serve(async (req) => {
   }
 
   let searchQuery = "";
+  let categoryId = null;
   
   try {
     const requestBody = await req.json();
     searchQuery = requestBody.searchQuery || "";
+    categoryId = requestBody.categoryId || null;
     
-    if (!searchQuery) {
-      console.log("🔄 Using fallback database - no search query provided");
-      return await tryAlternativeSearch("", corsHeaders);
+    if (!searchQuery && !categoryId) {
+      console.log("🔄 Using fallback database - no search query or category provided");
+      return await tryAlternativeSearch("", null, corsHeaders);
     }
 
     const clientId = Deno.env.get("FATSECRET_CLIENT_ID");
@@ -38,7 +40,7 @@ serve(async (req) => {
     if (!clientId || !clientSecret) {
       console.error("Missing FatSecret credentials - ClientID:", !!clientId, "ClientSecret:", !!clientSecret);
       console.log("🔄 Using fallback database due to missing credentials");
-      return await tryAlternativeSearch(searchQuery, corsHeaders);
+      return await tryAlternativeSearch(searchQuery, categoryId, corsHeaders);
     }
 
     console.log("Searching for:", searchQuery);
@@ -56,7 +58,7 @@ serve(async (req) => {
     if (!tokenResponse.ok) {
       console.error("Failed to get OAuth token:", await tokenResponse.text());
       console.log("🔄 Using fallback database due to OAuth failure");
-      return await tryAlternativeSearch(searchQuery, corsHeaders);
+      return await tryAlternativeSearch(searchQuery, categoryId, corsHeaders);
     }
 
     const tokenData = await tokenResponse.json();
@@ -74,7 +76,7 @@ serve(async (req) => {
     if (!searchResponse.ok) {
       console.error("Search request failed:", await searchResponse.text());
       console.log("🔄 Using fallback database due to search failure");
-      return await tryAlternativeSearch(searchQuery, corsHeaders);
+      return await tryAlternativeSearch(searchQuery, categoryId, corsHeaders);
     }
 
     const searchData = await searchResponse.json();
@@ -86,7 +88,7 @@ serve(async (req) => {
       
       if (searchData.error.code === 21) {
         // IP blocking error - try alternative approach
-        return await tryAlternativeSearch(searchQuery, corsHeaders);
+        return await tryAlternativeSearch(searchQuery, categoryId, corsHeaders);
       }
       
       return new Response(JSON.stringify({ 
@@ -120,12 +122,12 @@ serve(async (req) => {
   } catch (error) {
     console.error("Unexpected error:", error);
     console.log("🔄 Using fallback database due to unexpected error");
-    return await tryAlternativeSearch(searchQuery || "", corsHeaders);
+    return await tryAlternativeSearch(searchQuery || "", categoryId, corsHeaders);
   }
 });
 
 // Alternative search using Supabase database when FatSecret is blocked
-async function tryAlternativeSearch(query: string, corsHeaders: any) {
+async function tryAlternativeSearch(query: string, categoryId: number | null, corsHeaders: any) {
   console.log("Trying alternative search for:", query);
   
   // Initialize Supabase client
@@ -147,7 +149,7 @@ async function tryAlternativeSearch(query: string, corsHeaders: any) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   
   // Search in Supabase database
-  const databaseResults = await searchFoodsInDatabase(query, supabase);
+  const databaseResults = await searchFoodsInDatabase(query, supabase, categoryId);
   
   if (databaseResults.length > 0) {
     console.log("Found", databaseResults.length, "foods in database");
@@ -172,18 +174,55 @@ async function tryAlternativeSearch(query: string, corsHeaders: any) {
 }
 
 // Function to search foods in the database
-async function searchFoodsInDatabase(query: string, supabase: any) {
+async function searchFoodsInDatabase(query: string, supabase: any, categoryId?: number | null) {
   try {
-    console.log('Searching in database for:', query);
+    console.log('Searching in database for:', query, 'Category:', categoryId);
     
-    // Search in food_items table using fuzzy matching
-    const { data, error } = await supabase
+    // Build query with category support and synonyms
+    let queryBuilder = supabase
       .from('food_items')
-      .select('*')
-      .or(`name.ilike.%${query}%,brand_name.ilike.%${query}%`)
-      .eq('is_verified_by_admin', true)
-      .is('user_contributed_id', null)
-      .limit(10);
+      .select(`
+        *,
+        food_categories(name, icon_name, color_class)
+      `)
+      .eq('is_verified_by_admin', true);
+
+    // If category filter is applied
+    if (categoryId) {
+      queryBuilder = queryBuilder.eq('category_id', categoryId);
+    }
+
+    // If there's a search query
+    if (query && query.trim()) {
+      // First, check for synonyms
+      const { data: synonyms } = await supabase
+        .from('food_search_synonyms')
+        .select('target_foods')
+        .ilike('search_term', `%${query}%`);
+
+      let searchTerms = [query];
+      if (synonyms && synonyms.length > 0) {
+        // Add synonym targets to search terms
+        synonyms.forEach((synonym: any) => {
+          searchTerms = [...searchTerms, ...synonym.target_foods];
+        });
+      }
+
+      // Search for foods using all search terms
+      let orConditions: string[] = [];
+      searchTerms.forEach(term => {
+        orConditions.push(`name.ilike.%${term}%`);
+        orConditions.push(`brand_name.ilike.%${term}%`);
+        orConditions.push(`description.ilike.%${term}%`);
+        orConditions.push(`subcategory.ilike.%${term}%`);
+      });
+
+      queryBuilder = queryBuilder.or(orConditions.join(','));
+    }
+
+    const { data, error } = await queryBuilder
+      .order('name')
+      .limit(20);
 
     if (error) {
       console.error('Database search error:', error);
@@ -199,15 +238,18 @@ async function searchFoodsInDatabase(query: string, supabase: any) {
     const transformedResults = data.map((item: any) => ({
       id: `db-${item.id}`,
       name: item.name,
-      description: `Per ${item.serving_size_grams}${item.serving_size_unit} - Calories: ${item.calories_per_serving}kcal | Fat: ${item.fat_g_per_serving}g | Carbs: ${item.carbs_g_per_serving}g | Protein: ${item.protein_g_per_serving}g`,
+      description: item.description || `${item.name}${item.brand_name ? ` - ${item.brand_name}` : ''}`,
       brand: item.brand_name || null,
+      category: item.food_categories?.name,
+      subcategory: item.subcategory,
+      categoryIcon: item.food_categories?.icon_name,
+      categoryColor: item.food_categories?.color_class,
       nutrition: {
-        calories_per_serving: item.calories_per_serving,
-        protein_g_per_serving: item.protein_g_per_serving,
-        carbohydrate_g_per_serving: item.carbs_g_per_serving,
-        fat_g_per_serving: item.fat_g_per_serving,
-        serving_size_grams: item.serving_size_grams || 100,
-        serving_size_unit: item.serving_size_unit || 'g'
+        calories: item.calories_per_serving,
+        protein: item.protein_g_per_serving,
+        carbs: item.carbs_g_per_serving,
+        fat: item.fat_g_per_serving,
+        serving_size: `${item.serving_size_grams || 100}${item.serving_size_unit || 'g'}`
       }
     }));
 
