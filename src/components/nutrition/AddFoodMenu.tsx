@@ -50,41 +50,41 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick }) => {
             className="fixed inset-0 backdrop-blur-sm z-40"
             onClick={() => setIsOpen(false)}
           >
-            <div className="fixed bottom-36 right-6 flex flex-col gap-3">
+            <div className="fixed bottom-40 right-6 flex flex-col-reverse gap-4">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ delay: 0.1 }}
-                className="relative"
+                initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: 20 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
+                className="flex items-center gap-3"
               >
-                <button
-                  onClick={handleSearchFood}
-                  className="flex items-center justify-center w-12 h-12 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                >
-                  <Search className="w-5 h-5" />
-                </button>
-                <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                <span className="bg-background/95 backdrop-blur-sm px-3 py-2 rounded-full text-sm text-foreground whitespace-nowrap shadow-lg border border-border/50 font-medium">
                   Buscar comida
                 </span>
+                <button
+                  onClick={handleSearchFood}
+                  className="flex items-center justify-center w-14 h-14 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-xl transition-all duration-300 hover:scale-110 active:scale-95"
+                >
+                  <Search className="w-6 h-6" />
+                </button>
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ delay: 0.05 }}
-                className="relative"
+                initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: 20 }}
+                transition={{ delay: 0.05, type: "spring", stiffness: 300 }}
+                className="flex items-center gap-3"
               >
-                <button
-                  onClick={handleCameraClick}
-                  className="flex items-center justify-center w-12 h-12 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                >
-                  <Camera className="w-5 h-5" />
-                </button>
-                <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                <span className="bg-background/95 backdrop-blur-sm px-3 py-2 rounded-full text-sm text-foreground whitespace-nowrap shadow-lg border border-border/50 font-medium">
                   Escanear
                 </span>
+                <button
+                  onClick={handleCameraClick}
+                  className="flex items-center justify-center w-14 h-14 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-xl transition-all duration-300 hover:scale-110 active:scale-95"
+                >
+                  <Camera className="w-6 h-6" />
+                </button>
               </motion.div>
             </div>
           </motion.div>
