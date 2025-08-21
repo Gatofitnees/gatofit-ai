@@ -33,9 +33,9 @@ const MacroRing: React.FC<MacroRingProps> = ({
   
   const colorClasses = {
     primary: "text-primary",
-    protein: "text-blue-400", 
-    carbs: "text-green-400",
-    fat: "text-yellow-400"
+    protein: "text-[#dd6969]", 
+    carbs: "text-[#EB9F6D]",
+    fat: "text-[#6C95DC]"
   };
   
   const strokeWidth = size === 'sm' ? 3 : 4;
