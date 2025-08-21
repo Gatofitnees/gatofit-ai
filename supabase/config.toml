@@ -16,3 +16,6 @@ port = 54322
 [functions]
 [functions.create_user_profile]
 verify_jwt = true
+
+[functions.fatsecret-search]
+verify_jwt = true

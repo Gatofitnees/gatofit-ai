@@ -4,6 +4,7 @@ import { Camera, Plus } from "lucide-react";
 import Button from "../components/Button";
 import DaySelector from "../components/DaySelector";
 import { CameraCapture } from "../components/nutrition/CameraCapture";
+import AddFoodMenu from "../components/nutrition/AddFoodMenu";
 import { useFoodLog } from "../hooks/useFoodLog";
 import { useProfile } from "../hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -21,7 +22,7 @@ import { useUsageLimitsRefresh } from "@/hooks/useUsageLimitsRefresh";
 import { useLocalTimezone } from "@/hooks/useLocalTimezone";
 
 const NutritionPage: React.FC = () => {
-  const [showCamera, setShowCamera] = useState(false);
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [usageInfo, setUsageInfo] = useState({ current: 0, limit: 10, canCapture: true, isOverLimit: false });
   const [refreshKey, setRefreshKey] = useState(0);
@@ -92,7 +93,7 @@ const NutritionPage: React.FC = () => {
   }, [processingFoods.length, refreshCounter]);
 
   const handlePhotoTakenAndCloseCamera = async (photoBlob: Blob) => {
-    setShowCamera(false);
+    setIsCameraVisible(false);
     
     const canCapture = await capturePhotoWithLimitCheck();
     if (canCapture) {
@@ -110,7 +111,7 @@ const NutritionPage: React.FC = () => {
       }
     }
     
-    setShowCamera(true);
+    setIsCameraVisible(true);
   };
 
   return (
@@ -162,22 +163,14 @@ const NutritionPage: React.FC = () => {
       </div>
       
       {isToday && (
-        <div className="fixed bottom-24 right-4 animate-fade-in">
-          <Button 
-            className="h-14 w-14 rounded-full shadow-neu-button"
-            variant="primary"
-            onClick={handleOpenCamera}
-          >
-            <Camera className="h-6 w-6" />
-          </Button>
-        </div>
+        <AddFoodMenu onCameraClick={handleOpenCamera} />
       )}
 
       <AnimatePresence>
-        {isToday && showCamera && (
+        {isToday && isCameraVisible && (
           <CameraCapture
-            isOpen={showCamera}
-            onClose={() => setShowCamera(false)}
+            isOpen={isCameraVisible}
+            onClose={() => setIsCameraVisible(false)}
             onPhotoTaken={handlePhotoTakenAndCloseCamera}
           />
         )}

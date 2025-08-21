@@ -11,6 +11,7 @@ import BodyMeasurementsPage from "./pages/BodyMeasurementsPage";
 import UserInformationPage from "./pages/UserInformationPage";
 import ProgressPage from "./pages/ProgressPage";
 import CalendarPage from "./pages/CalendarPage";
+import FoodSearchPage from "./pages/FoodSearchPage";
 import SettingsPage from "./pages/SettingsPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import AIChatPage from "./pages/AIChatPage";
@@ -263,6 +264,22 @@ function App() {
                   }
                 />
                 <Route
+                  path="/nutrition/search"
+                  element={
+                    <ProtectedRoute>
+                      <FoodSearchPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/food-edit"
+                  element={
+                    <ProtectedRoute>
+                      <FoodEditPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/ranking"
                   element={
                     <ProtectedRoute>
@@ -277,14 +294,6 @@ function App() {
                     <ProtectedRoute>
                       <SocialPage />
                       <NavBar />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/food-edit"
-                  element={
-                    <ProtectedRoute>
-                      <FoodEditPage />
                     </ProtectedRoute>
                   }
                 />
