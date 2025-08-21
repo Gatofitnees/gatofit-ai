@@ -15,14 +15,15 @@ serve(async (req) => {
     });
   }
 
+  let searchQuery = "";
+  
   try {
-    const { searchQuery } = await req.json();
+    const requestBody = await req.json();
+    searchQuery = requestBody.searchQuery || "";
     
     if (!searchQuery) {
-      return new Response(JSON.stringify({ error: "Search query is required" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
+      console.log("🔄 Using fallback database - no search query provided");
+      return await tryAlternativeSearch("", corsHeaders);
     }
 
     const clientId = Deno.env.get("FATSECRET_CLIENT_ID");
@@ -36,13 +37,8 @@ serve(async (req) => {
 
     if (!clientId || !clientSecret) {
       console.error("Missing FatSecret credentials - ClientID:", !!clientId, "ClientSecret:", !!clientSecret);
-      return new Response(JSON.stringify({ 
-        error: "API configuration error",
-        details: `Missing credentials: ${!clientId ? 'ClientID ' : ''}${!clientSecret ? 'ClientSecret' : ''}`
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
+      console.log("🔄 Using fallback database due to missing credentials");
+      return await tryAlternativeSearch(searchQuery, corsHeaders);
     }
 
     console.log("Searching for:", searchQuery);
@@ -59,10 +55,8 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       console.error("Failed to get OAuth token:", await tokenResponse.text());
-      return new Response(JSON.stringify({ error: "Authentication failed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
+      console.log("🔄 Using fallback database due to OAuth failure");
+      return await tryAlternativeSearch(searchQuery, corsHeaders);
     }
 
     const tokenData = await tokenResponse.json();
@@ -79,10 +73,8 @@ serve(async (req) => {
 
     if (!searchResponse.ok) {
       console.error("Search request failed:", await searchResponse.text());
-      return new Response(JSON.stringify({ error: "Search failed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
+      console.log("🔄 Using fallback database due to search failure");
+      return await tryAlternativeSearch(searchQuery, corsHeaders);
     }
 
     const searchData = await searchResponse.json();
@@ -127,10 +119,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Unexpected error:", error);
-    return new Response(JSON.stringify({ error: "Unexpected error occurred" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.log("🔄 Using fallback database due to unexpected error");
+    return await tryAlternativeSearch(searchQuery || "", corsHeaders);
   }
 });
 
