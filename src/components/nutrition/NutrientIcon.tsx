@@ -21,35 +21,35 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
         return {
           icon: 'ss-flame',
           color: '#f97316', // orange-500
-          bgColor: 'bg-secondary/30',
+          bgColor: 'bg-muted/20',
           unit: 'kcal'
         };
       case 'protein':
         return {
           icon: 'sr-drumstick',
           color: '#dd6969', // matching MacroProgress
-          bgColor: 'bg-secondary/30',
+          bgColor: 'bg-muted/20',
           unit: 'g'
         };
       case 'carbs':
         return {
           icon: 'sr-wheat',
           color: '#EB9F6D', // matching MacroProgress  
-          bgColor: 'bg-secondary/30',
+          bgColor: 'bg-muted/20',
           unit: 'g'
         };
       case 'fat':
         return {
           icon: 'sr-avocado',
           color: '#6C95DC', // matching MacroProgress
-          bgColor: 'bg-secondary/30',
+          bgColor: 'bg-muted/20',
           unit: 'g'
         };
       default:
         return {
           icon: 'sr-circle',
           color: '#6b7280', // gray-500
-          bgColor: 'bg-secondary/30',
+          bgColor: 'bg-gray-50',
           unit: 'g'
         };
     }
