@@ -32,7 +32,7 @@ const MacroRing: React.FC<MacroRingProps> = ({
   };
   
   const colorClasses = {
-    primary: "text-primary",
+    primary: "text-[#2094F3]",
     protein: "text-[#dd6969]", 
     carbs: "text-[#EB9F6D]",
     fat: "text-[#6C95DC]"

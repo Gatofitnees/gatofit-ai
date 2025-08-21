@@ -56,14 +56,15 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick }) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ delay: 0.1 }}
+                className="relative"
               >
                 <button
                   onClick={handleSearchFood}
-                  className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  className="flex items-center justify-center w-12 h-12 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
                 >
-                  <Search className="w-6 h-6" />
+                  <Search className="w-5 h-5" />
                 </button>
-                <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
                   Buscar comida
                 </span>
               </motion.div>
@@ -73,14 +74,15 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick }) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ delay: 0.05 }}
+                className="relative"
               >
                 <button
                   onClick={handleCameraClick}
-                  className="flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  className="flex items-center justify-center w-12 h-12 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
                 >
-                  <Camera className="w-6 h-6" />
+                  <Camera className="w-5 h-5" />
                 </button>
-                <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
                   Escanear
                 </span>
               </motion.div>
