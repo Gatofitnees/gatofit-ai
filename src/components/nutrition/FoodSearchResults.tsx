@@ -41,10 +41,15 @@ const FoodSearchResults: React.FC<FoodSearchResultsProps> = ({
 
   if (error) {
     return (
-      <Alert variant="destructive">
+      <Alert variant="destructive" className="mb-4">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Error al buscar alimentos: {error}
+          {error.includes('Missing credentials') ? 
+            'Error de configuración de la API. Por favor, intenta de nuevo más tarde.' :
+            error.includes('Edge function returned a non-2xx status') ?
+            'Error de conexión. Verifica tu conexión a internet e intenta de nuevo.' :
+            `Error al buscar alimentos: ${error}`
+          }
         </AlertDescription>
       </Alert>
     );

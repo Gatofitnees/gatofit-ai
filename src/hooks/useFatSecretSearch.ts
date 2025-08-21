@@ -30,18 +30,33 @@ export const useFatSecretSearch = () => {
     setError(null);
 
     try {
+      console.log('🔍 Iniciando búsqueda de alimentos:', query);
+      
       const { data, error: functionError } = await supabase.functions.invoke('fatsecret-search', {
         body: { searchQuery: query }
       });
 
+      console.log('📡 Respuesta de la función:', { data, functionError });
+
       if (functionError) {
-        throw new Error(functionError.message || 'Error en la búsqueda');
+        console.error('❌ Error de la función:', functionError);
+        throw new Error(functionError.message || 'Error en la búsqueda de alimentos');
       }
 
+      if (data?.error) {
+        console.error('❌ Error en los datos:', data.error);
+        const errorMessage = data.details ? 
+          `${data.error}: ${data.details}` : 
+          data.error;
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ Resultados obtenidos:', data?.results?.length || 0);
       setResults(data?.results || []);
     } catch (err) {
-      console.error('Search error:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('💥 Error en searchFoods:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido al buscar alimentos';
+      setError(errorMessage);
       setResults([]);
     } finally {
       setIsLoading(false);

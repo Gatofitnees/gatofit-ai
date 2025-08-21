@@ -28,9 +28,18 @@ serve(async (req) => {
     const clientId = Deno.env.get("FATSECRET_CLIENT_ID");
     const clientSecret = Deno.env.get("FATSECRET_CLIENT_SECRET");
 
+    console.log("FatSecret credentials check:", {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      clientIdLength: clientId?.length || 0
+    });
+
     if (!clientId || !clientSecret) {
-      console.error("Missing FatSecret credentials");
-      return new Response(JSON.stringify({ error: "API configuration error" }), {
+      console.error("Missing FatSecret credentials - ClientID:", !!clientId, "ClientSecret:", !!clientSecret);
+      return new Response(JSON.stringify({ 
+        error: "API configuration error",
+        details: `Missing credentials: ${!clientId ? 'ClientID ' : ''}${!clientSecret ? 'ClientSecret' : ''}`
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
