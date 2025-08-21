@@ -17,7 +17,7 @@ export const sendToWebhook = async (imageUrl: string, imageBlob: Blob) => {
     formData.append('image', imageBlob, `food-image.${extension}`);
     formData.append('timestamp', new Date().toISOString());
     
-    const response = await fetch('https://gaton8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
+    const response = await fetch('https://paneln8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5', {
       method: 'POST',
       mode: 'no-cors', // Handle CORS issues
       body: formData,

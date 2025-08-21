@@ -224,7 +224,7 @@ export class EnhancedWebhookService {
   }
 
   static async analyzeFoodSecure(imageData: string, userId: string): Promise<any> {
-    const webhookUrl = 'https://gatopaneln8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5';
+    const webhookUrl = 'https://paneln8n.gatofit.com/webhook/e39f095b-fb33-4ce3-b41a-619a650149f5';
     
     return this.callSecureWebhook(
       webhookUrl,
