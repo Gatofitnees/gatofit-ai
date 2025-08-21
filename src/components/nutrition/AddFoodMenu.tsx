@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Camera, Search, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, Search, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface AddFoodMenuProps {
   onCameraClick: () => void;
@@ -21,76 +21,72 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick }) => {
     onCameraClick();
   };
 
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <>
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-primary rounded-full shadow-lg flex items-center justify-center z-50"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <motion.div
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {isOpen ? (
-            <X className="w-6 h-6 text-primary-foreground" />
-          ) : (
-            <span className="text-primary-foreground text-2xl font-light">+</span>
+    <div className="fixed right-4 bottom-20 z-30">
+      {/* Background overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm -z-10"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      
+      {/* Action buttons */}
+      <div className="flex flex-col items-center gap-3 mb-4">
+        {/* Search Food button */}
+        <div 
+          className={cn(
+            "transition-all duration-300 transform",
+            isOpen ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95 pointer-events-none"
           )}
-        </motion.div>
-      </motion.button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 backdrop-blur-sm z-40"
-            onClick={() => setIsOpen(false)}
+        >
+          <button
+            onClick={handleSearchFood}
+            className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
           >
-            <div className="fixed bottom-40 right-6 flex flex-col-reverse gap-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, x: 20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
-                className="flex items-center gap-3"
-              >
-                <span className="bg-background/95 backdrop-blur-sm px-3 py-2 rounded-full text-sm text-foreground whitespace-nowrap shadow-lg border border-border/50 font-medium">
-                  Buscar comida
-                </span>
-                <button
-                  onClick={handleSearchFood}
-                  className="flex items-center justify-center w-14 h-14 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                >
-                  <Search className="w-6 h-6" />
-                </button>
-              </motion.div>
+            <Search className="h-6 w-6" />
+          </button>
+          <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+            Buscar comida
+          </span>
+        </div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, x: 20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                transition={{ delay: 0.05, type: "spring", stiffness: 300 }}
-                className="flex items-center gap-3"
-              >
-                <span className="bg-background/95 backdrop-blur-sm px-3 py-2 rounded-full text-sm text-foreground whitespace-nowrap shadow-lg border border-border/50 font-medium">
-                  Escanear
-                </span>
-                <button
-                  onClick={handleCameraClick}
-                  className="flex items-center justify-center w-14 h-14 bg-[#2094F3] hover:bg-[#1976D2] text-white rounded-full shadow-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                >
-                  <Camera className="w-6 h-6" />
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
+        {/* Camera Scan button */}
+        <div 
+          className={cn(
+            "transition-all duration-300 transform",
+            isOpen ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95 pointer-events-none"
+          )}
+        >
+          <button
+            onClick={handleCameraClick}
+            className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+          >
+            <Camera className="h-6 w-6" />
+          </button>
+          <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+            Escanear
+          </span>
+        </div>
+      </div>
+
+      {/* Main toggle button */}
+      <button
+        onClick={toggleMenu}
+        className={cn(
+          "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300",
+          isOpen 
+            ? "bg-red-500 hover:bg-red-600 text-white rotate-45" 
+            : "bg-blue-500 hover:bg-blue-600 text-white hover:scale-110"
         )}
-      </AnimatePresence>
-    </>
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+    </div>
   );
 };
 
