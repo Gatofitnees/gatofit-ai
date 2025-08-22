@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { FlatIcon } from '@/components/ui/FlatIcon';
-import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-interface FoodCategory {
-  id: number;
-  name: string;
-  icon_name?: string;
-  color_class?: string;
+interface MacroFilters {
+  minCalories?: number;
+  maxCalories?: number;
+  minProtein?: number;
+  maxProtein?: number;
+  minCarbs?: number;
+  maxCarbs?: number;
+  minFat?: number;
+  maxFat?: number;
 }
 
 interface FilterSlidePanelProps {
   isOpen: boolean;
   onClose: () => void;
   selectedCategories: number[];
-  onCategoriesChange: (categories: number[]) => void;
+  onCategoriesChange: (filters: MacroFilters) => void;
 }
 
 const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
@@ -26,43 +29,27 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
   selectedCategories,
   onCategoriesChange
 }) => {
-  const [categories, setCategories] = useState<FoodCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [filters, setFilters] = useState<MacroFilters>({});
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchCategories();
-    }
-  }, [isOpen]);
-
-  const fetchCategories = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('food_categories')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const updateFilter = (key: keyof MacroFilters, value: string) => {
+    const numValue = value ? parseFloat(value) : undefined;
+    setFilters(prev => ({
+      ...prev,
+      [key]: numValue
+    }));
   };
 
-  const toggleCategory = (categoryId: number) => {
-    if (selectedCategories.includes(categoryId)) {
-      onCategoriesChange(selectedCategories.filter(id => id !== categoryId));
-    } else {
-      onCategoriesChange([...selectedCategories, categoryId]);
-    }
+  const applyFilters = () => {
+    onCategoriesChange(filters);
+    onClose();
   };
 
   const clearFilters = () => {
-    onCategoriesChange([]);
+    setFilters({});
+    onCategoriesChange({});
   };
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== undefined);
 
   return (
     <>
@@ -99,12 +86,12 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Clear filters */}
-              {selectedCategories.length > 0 && (
+              {hasActiveFilters && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    {selectedCategories.length} categoría(s) seleccionada(s)
+                    Filtros activos
                   </span>
                   <Button
                     variant="ghost"
@@ -117,41 +104,104 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
                 </div>
               )}
 
-              {/* Categories */}
+              {/* Calories Filter */}
               <div>
-                <h3 className="text-sm font-medium mb-3">Categorías</h3>
-                
-                {isLoading ? (
-                  <div className="grid grid-cols-1 gap-2">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="h-10 bg-muted rounded animate-pulse" />
-                    ))}
+                <Label className="text-sm font-medium mb-3 block">Calorías</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={filters.minCalories || ''}
+                      onChange={(e) => updateFilter('minCalories', e.target.value)}
+                    />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-2">
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => toggleCategory(category.id)}
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-lg border text-left transition-colors",
-                          selectedCategories.includes(category.id)
-                            ? "bg-primary/10 border-primary text-primary"
-                            : "bg-background border-border hover:bg-muted"
-                        )}
-                      >
-                        {category.icon_name && (
-                          <FlatIcon 
-                            name={category.icon_name} 
-                            size={16}
-                            className={category.color_class || "text-muted-foreground"}
-                          />
-                        )}
-                        <span className="text-sm font-medium">{category.name}</span>
-                      </button>
-                    ))}
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      type="number"
+                      placeholder="1000"
+                      value={filters.maxCalories || ''}
+                      onChange={(e) => updateFilter('maxCalories', e.target.value)}
+                    />
                   </div>
-                )}
+                </div>
+              </div>
+
+              {/* Protein Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Proteína (g)</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={filters.minProtein || ''}
+                      onChange={(e) => updateFilter('minProtein', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      type="number"
+                      placeholder="100"
+                      value={filters.maxProtein || ''}
+                      onChange={(e) => updateFilter('maxProtein', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Carbs Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Carbohidratos (g)</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={filters.minCarbs || ''}
+                      onChange={(e) => updateFilter('minCarbs', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      type="number"
+                      placeholder="100"
+                      value={filters.maxCarbs || ''}
+                      onChange={(e) => updateFilter('maxCarbs', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Fat Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Grasas (g)</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Mínimo</Label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={filters.minFat || ''}
+                      onChange={(e) => updateFilter('minFat', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Máximo</Label>
+                    <Input
+                      type="number"
+                      placeholder="100"
+                      value={filters.maxFat || ''}
+                      onChange={(e) => updateFilter('maxFat', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -159,7 +209,7 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
           {/* Footer */}
           <div className="p-4 border-t">
             <Button 
-              onClick={onClose}
+              onClick={applyFilters}
               className="w-full"
             >
               Aplicar filtros

@@ -15,7 +15,7 @@ import SaveFoodModal from '@/components/nutrition/SaveFoodModal';
 const FoodSearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [macroFilters, setMacroFilters] = useState<any>({});
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   
@@ -34,9 +34,8 @@ const FoodSearchPage: React.FC = () => {
 
   useEffect(() => {
     // Always search - if no query/filters, it will load default foods
-    const categoryId = selectedCategories.length > 0 ? selectedCategories[0] : null;
-    searchFoods(debouncedQuery, categoryId);
-  }, [debouncedQuery, selectedCategories, searchFoods]);
+    searchFoods(debouncedQuery, Object.keys(macroFilters).length > 0 ? macroFilters : undefined);
+  }, [debouncedQuery, macroFilters, searchFoods]);
 
   const handleSave = async (customName?: string) => {
     const success = await saveFoods(selectedFoods, quantities, customName);
@@ -121,7 +120,7 @@ const FoodSearchPage: React.FC = () => {
               variant="outline"
               size="icon"
               onClick={() => setIsFilterPanelOpen(true)}
-              className={selectedCategories.length > 0 ? "border-primary text-primary" : ""}
+              className={Object.keys(macroFilters).length > 0 ? "border-primary text-primary" : ""}
             >
               <Filter className="w-4 h-4" />
             </Button>
@@ -142,7 +141,7 @@ const FoodSearchPage: React.FC = () => {
             <div className="text-red-500 mb-2">Error</div>
             <p className="text-sm text-muted-foreground">{error}</p>
           </div>
-        ) : results.length === 0 && (searchQuery.trim() || selectedCategories.length > 0) ? (
+        ) : results.length === 0 && (searchQuery.trim() || Object.keys(macroFilters).length > 0) ? (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground mb-2">
@@ -172,8 +171,8 @@ const FoodSearchPage: React.FC = () => {
       <FilterSlidePanel
         isOpen={isFilterPanelOpen}
         onClose={() => setIsFilterPanelOpen(false)}
-        selectedCategories={selectedCategories}
-        onCategoriesChange={setSelectedCategories}
+        selectedCategories={[]}
+        onCategoriesChange={setMacroFilters}
       />
 
       {/* Save Modal */}
