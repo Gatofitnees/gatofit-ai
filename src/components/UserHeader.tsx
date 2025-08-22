@@ -93,7 +93,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
     <div className="relative">
       <div className="flex items-center justify-between mb-4">
         {/* Streak Button */}
-        <button className="absolute top-0 left-0 z-10 bg-black rounded-full px-2 py-1 flex items-center gap-1">
+        <button className="absolute top-0 right-0 z-10 bg-black rounded-full px-2 py-1 flex items-center gap-1" style={{ marginRight: '-2px' }}>
           <img src={fireIcon} alt="Fire" className="w-4 h-4" />
           <span className="text-white text-xs font-bold">{streakData?.current_streak || 0}</span>
         </button>
