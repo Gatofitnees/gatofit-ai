@@ -5,6 +5,7 @@ import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
 import AIChat from "./AIChat";
 import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-react";
+import fireIcon from "@/assets/fire.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
@@ -91,6 +92,12 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-4">
+        {/* Streak Button */}
+        <button className="absolute top-0 left-0 z-10 bg-black rounded-full px-2 py-1 flex items-center gap-1">
+          <img src={fireIcon} alt="Fire" className="w-4 h-4" />
+          <span className="text-white text-xs font-bold">{streakData?.current_streak || 0}</span>
+        </button>
+        
         <div 
           className="flex items-center cursor-pointer" 
           onClick={() => setShowMenu(!showMenu)}
