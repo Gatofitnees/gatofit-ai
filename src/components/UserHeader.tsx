@@ -92,16 +92,15 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-4">
-        {/* Streak Button */}
-        <button className="absolute top-0 right-0 z-10 bg-black rounded-full px-2 py-1 flex items-center gap-1" style={{ marginRight: '-2px' }}>
-          <img src={fireIcon} alt="Fire" className="w-4 h-4" />
-          <span className="text-white text-xs font-bold">{streakData?.current_streak || 0}</span>
-        </button>
-        
         <div 
-          className="flex items-center cursor-pointer" 
+          className="flex items-center cursor-pointer relative" 
           onClick={() => setShowMenu(!showMenu)}
         >
+          {/* Streak Button - positioned in top-right of branding area */}
+          <button className="absolute -top-2 -right-2 z-10 bg-black rounded-full px-2 py-1 flex items-center gap-1">
+            <img src={fireIcon} alt="Fire" className="w-4 h-4" style={{ marginLeft: '-2px' }} />
+            <span className="text-white text-xs font-bold">{streakData?.current_streak || 0}</span>
+          </button>
           <Avatar 
             name={displayName} 
             progress={experienceProgress?.progress || progress} 
