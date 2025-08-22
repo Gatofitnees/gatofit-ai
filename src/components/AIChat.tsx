@@ -17,7 +17,7 @@ const AIChat: React.FC = () => {
       
       <button
         onClick={handleOpenChat}
-        className="relative w-11 h-11 transition-all duration-300 hover:scale-110 active:scale-95 z-10"
+        className="relative w-11 h-11 rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
       >
         {/* Animated hollow wheel */}
         <svg 
