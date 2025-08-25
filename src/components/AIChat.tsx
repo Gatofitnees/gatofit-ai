@@ -10,14 +10,20 @@ const AIChat: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Outer aura effect */}
-      <div className="absolute inset-0 rounded-full opacity-60 blur-lg animate-pulse">
+      {/* Moving aura effects */}
+      <div className="absolute inset-0 opacity-40 blur-lg animate-spin" style={{ animationDuration: '12s' }}>
         <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-red-500" />
+      </div>
+      <div className="absolute inset-0 opacity-30 blur-xl animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}>
+        <div className="w-full h-full rounded-full bg-gradient-to-r from-red-500 via-blue-500 to-purple-500" />
+      </div>
+      <div className="absolute inset-0 opacity-20 blur-2xl animate-pulse">
+        <div className="w-full h-full rounded-full bg-gradient-to-r from-purple-500 via-red-500 to-blue-500" />
       </div>
       
       <button
         onClick={handleOpenChat}
-        className="relative w-11 h-11 rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
+        className="relative w-11 h-11 transition-all duration-300 hover:scale-110 active:scale-95"
       >
         {/* Animated hollow wheel */}
         <svg 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Camera, Image, X, RotateCcw, ImageIcon, Loader } from 'lucide-react';
+import { Camera, Image, X, RotateCcw, ImageIcon, Loader, Zap } from 'lucide-react';
 import Button from '@/components/Button';
 
 interface CameraControlsProps {
@@ -55,24 +55,34 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
         <div className="flex flex-col items-center gap-4">
           {/* Controls row */}
-          <div className="flex items-center justify-between w-full max-w-sm">
+          <div className="flex items-center justify-center w-full gap-8">
             {/* Gallery Button */}
             <Button
               variant="secondary"
               size="sm"
               onClick={onGallerySelect}
-              className="h-12 px-4 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center gap-2 hover:bg-white/30 transition-all duration-200"
+              className="h-14 w-14 rounded-2xl p-0 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-200"
               disabled={isProcessing || isLoading || showNoFoodDialog}
             >
-              <ImageIcon className="h-4 w-4 text-white" />
-              <span className="text-white text-sm">Galería</span>
+              <ImageIcon className="h-6 w-6 text-white" />
+            </Button>
+
+            {/* Flash Button */}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {}} // Flash functionality placeholder
+              className="h-14 w-14 rounded-2xl p-0 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-200"
+              disabled={isProcessing || isLoading || !!cameraError || showNoFoodDialog}
+            >
+              <Zap className="h-6 w-6 text-white" />
             </Button>
 
             {/* Capture Button */}
             <Button
               variant="primary"
               onClick={onCapturePhoto}
-              className="h-20 w-20 rounded-full p-0 bg-white shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 hover:scale-105 transition-all duration-200 border-4 border-white/90"
+              className="h-20 w-20 rounded-2xl p-0 bg-white/90 backdrop-blur-md shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 hover:scale-105 transition-all duration-200 border border-white/30"
               disabled={isProcessing || isLoading || !!cameraError || showNoFoodDialog}
             >
               {isProcessing || isLoading ? (
@@ -81,9 +91,6 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                 <Camera className="h-8 w-8 text-gray-800" />
               )}
             </Button>
-
-            {/* Spacer for balance */}
-            <div className="h-12 w-20" />
           </div>
         </div>
       </div>
