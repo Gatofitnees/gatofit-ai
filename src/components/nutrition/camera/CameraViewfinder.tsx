@@ -11,7 +11,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+    <div className="absolute inset-0 pointer-events-none flex items-center justify-center" style={{ marginTop: '-80px' }}>
       <div className="relative">
         {/* Frame corners only - no main border */}
         <div className="w-64 h-64 relative">
