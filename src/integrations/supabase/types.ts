@@ -715,64 +715,45 @@ export type Database = {
       }
       food_items: {
         Row: {
-          barcode: string | null
-          brand_name: string | null
           calories_per_serving: number
           carbs_g_per_serving: number
-          category_id: number | null
-          description: string | null
           fat_g_per_serving: number
+          fiber_g_per_serving: number | null
+          food_category: string | null
           id: number
           is_verified_by_admin: boolean
           name: string
           protein_g_per_serving: number
           serving_size_grams: number | null
-          serving_size_unit: string | null
-          subcategory: string | null
           user_contributed_id: string | null
         }
         Insert: {
-          barcode?: string | null
-          brand_name?: string | null
           calories_per_serving: number
           carbs_g_per_serving: number
-          category_id?: number | null
-          description?: string | null
           fat_g_per_serving: number
+          fiber_g_per_serving?: number | null
+          food_category?: string | null
           id?: number
           is_verified_by_admin?: boolean
           name: string
           protein_g_per_serving: number
           serving_size_grams?: number | null
-          serving_size_unit?: string | null
-          subcategory?: string | null
           user_contributed_id?: string | null
         }
         Update: {
-          barcode?: string | null
-          brand_name?: string | null
           calories_per_serving?: number
           carbs_g_per_serving?: number
-          category_id?: number | null
-          description?: string | null
           fat_g_per_serving?: number
+          fiber_g_per_serving?: number | null
+          food_category?: string | null
           id?: number
           is_verified_by_admin?: boolean
           name?: string
           protein_g_per_serving?: number
           serving_size_grams?: number | null
-          serving_size_unit?: string | null
-          subcategory?: string | null
           user_contributed_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "food_items_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "food_categories"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "food_items_user_contributed_id_fkey"
             columns: ["user_contributed_id"]
@@ -1015,6 +996,221 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_plan_meal_ingredients: {
+        Row: {
+          calories_per_serving: number
+          carbs_g_per_serving: number
+          created_at: string
+          custom_food_name: string | null
+          fats_g_per_serving: number
+          fiber_g_per_serving: number
+          food_item_id: number | null
+          id: string
+          ingredient_order: number
+          meal_option_id: string
+          protein_g_per_serving: number
+          quantity_grams: number
+          recipe_id: string | null
+        }
+        Insert: {
+          calories_per_serving?: number
+          carbs_g_per_serving?: number
+          created_at?: string
+          custom_food_name?: string | null
+          fats_g_per_serving?: number
+          fiber_g_per_serving?: number
+          food_item_id?: number | null
+          id?: string
+          ingredient_order?: number
+          meal_option_id: string
+          protein_g_per_serving?: number
+          quantity_grams: number
+          recipe_id?: string | null
+        }
+        Update: {
+          calories_per_serving?: number
+          carbs_g_per_serving?: number
+          created_at?: string
+          custom_food_name?: string | null
+          fats_g_per_serving?: number
+          fiber_g_per_serving?: number
+          food_item_id?: number | null
+          id?: string
+          ingredient_order?: number
+          meal_option_id?: string
+          protein_g_per_serving?: number
+          quantity_grams?: number
+          recipe_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plan_meal_ingredients_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_plan_meal_ingredients_meal_option_id_fkey"
+            columns: ["meal_option_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plan_meal_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_plan_meal_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_plan_meal_options: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          meal_id: string
+          option_name: string
+          option_order: number
+          total_calories: number
+          total_carbs_g: number
+          total_fats_g: number
+          total_fiber_g: number
+          total_protein_g: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          meal_id: string
+          option_name: string
+          option_order?: number
+          total_calories?: number
+          total_carbs_g?: number
+          total_fats_g?: number
+          total_fiber_g?: number
+          total_protein_g?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          meal_id?: string
+          option_name?: string
+          option_order?: number
+          total_calories?: number
+          total_carbs_g?: number
+          total_fats_g?: number
+          total_fiber_g?: number
+          total_protein_g?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plan_meal_options_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plan_meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_plan_meals: {
+        Row: {
+          created_at: string
+          id: string
+          meal_name: string
+          meal_order: number
+          meal_type: string
+          plan_id: string
+          target_calories: number | null
+          target_carbs_g: number | null
+          target_fats_g: number | null
+          target_protein_g: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meal_name: string
+          meal_order?: number
+          meal_type: string
+          plan_id: string
+          target_calories?: number | null
+          target_carbs_g?: number | null
+          target_fats_g?: number | null
+          target_protein_g?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meal_name?: string
+          meal_order?: number
+          meal_type?: string
+          plan_id?: string
+          target_calories?: number | null
+          target_carbs_g?: number | null
+          target_fats_g?: number | null
+          target_protein_g?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plan_meals_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_plans: {
+        Row: {
+          created_at: string
+          created_by_admin: string | null
+          description: string | null
+          difficulty_level: string | null
+          duration_days: number | null
+          id: string
+          is_active: boolean
+          name: string
+          target_calories: number
+          target_carbs_g: number
+          target_fats_g: number
+          target_protein_g: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_days?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          target_calories: number
+          target_carbs_g: number
+          target_fats_g: number
+          target_protein_g: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_days?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          target_calories?: number
+          target_carbs_g?: number
+          target_fats_g?: number
+          target_protein_g?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       obstacle_types: {
         Row: {
           description: string | null
@@ -1144,6 +1340,137 @@ export type Database = {
             | null
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      recipe_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          order_index: number
+          recipe_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          order_index?: number
+          recipe_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          order_index?: number
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_recipe_images_recipe"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_ingredients: {
+        Row: {
+          created_at: string
+          custom_name: string | null
+          food_item_id: number | null
+          id: string
+          quantity_grams: number
+          recipe_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_name?: string | null
+          food_item_id?: number | null
+          id?: string
+          quantity_grams: number
+          recipe_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_name?: string | null
+          food_item_id?: number | null
+          id?: string
+          quantity_grams?: number
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_recipe_ingredients_food_item"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_recipe_ingredients_recipe"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          instructions: string | null
+          name: string
+          prep_time_minutes: number | null
+          servings: number
+          total_calories: number
+          total_carbs_g: number
+          total_fat_g: number
+          total_fiber_g: number
+          total_protein_g: number
+          updated_at: string
+          user_id: string
+          youtube_url: string | null
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          name: string
+          prep_time_minutes?: number | null
+          servings?: number
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_fiber_g?: number
+          total_protein_g?: number
+          updated_at?: string
+          user_id: string
+          youtube_url?: string | null
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          name?: string
+          prep_time_minutes?: number | null
+          servings?: number
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_fiber_g?: number
+          total_protein_g?: number
+          updated_at?: string
+          user_id?: string
+          youtube_url?: string | null
         }
         Relationships: []
       }
