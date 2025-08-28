@@ -6,8 +6,6 @@ import Button from "./Button";
 import WorkoutCarousel from "./WorkoutCarousel";
 import PromoVideoCard from "./PromoVideoCard";
 import ProgrammedWorkoutButton from "./ProgrammedWorkoutButton";
-import ProgramCard from "./ProgramCard";
-import { useActiveProgramUnified } from "@/hooks/useActiveProgramUnified";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -42,7 +40,6 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   selectedDate
 }) => {
   const [currentWorkoutIndex, setCurrentWorkoutIndex] = useState(0);
-  const { activeProgram } = useActiveProgramUnified(selectedDate);
 
   const handleSlideChange = (index: number) => {
     setCurrentWorkoutIndex(index);
@@ -163,18 +160,6 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
       </CardFooter>
     </Card>
   );
-
-  // If there's an active program, show the program card instead
-  if (activeProgram && !loading) {
-    return (
-      <div className="mb-5">
-        <ProgramCard 
-          selectedDate={selectedDate}
-          onStartWorkout={handleProgrammedWorkoutStart}
-        />
-      </div>
-    );
-  }
 
   // Crear array de elementos del carrusel: siempre incluir la tarjeta promocional como primer elemento
   const carouselItems = [
