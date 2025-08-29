@@ -89,7 +89,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         
         routines = weeklyRoutines || [];
       } else if (programType === 'gatofit') {
-        // For Gatofit programs, if we have existing routines data from the main program, use it
+        // For Gatofit programs, use the loaded routines data
         if ((activeProgram as any).routines) {
           // Use the routines that are already loaded instead of fetching again
           console.log('Using existing routines data:', (activeProgram as any).routines);
@@ -99,47 +99,24 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
           const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday from 0 to 7
           
           // Get program start date to calculate week
-          const startDate = new Date((activeProgram as any).userProgress?.started_at || (activeProgram as any).userProgress?.start_date);
+          const startDate = new Date((activeProgram as any).userProgress?.started_at);
           const diffTime = date.getTime() - startDate.getTime();
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
           const weekNumber = Math.floor(diffDays / 7) + 1;
           
-          console.log('Filtering for:', { dayOfWeekAdjusted, weekNumber, diffDays });
+          console.log('Filtering for:', { 
+            dayOfWeekAdjusted, 
+            weekNumber, 
+            diffDays, 
+            startDate: startDate.toISOString(),
+            selectedDate: date.toISOString() 
+          });
           
           routines = (activeProgram as any).routines.filter((r: any) => 
             r.week_number === weekNumber && r.day_of_week === dayOfWeekAdjusted
           );
           
           console.log('Filtered routines:', routines);
-        } else {
-          // Fallback to database query
-          const { data: userProgress } = await (supabase as any)
-            .from('user_gatofit_progress')
-            .select('start_date')
-            .eq('user_id', user.id)
-            .eq('program_id', activeProgram.id)
-            .single();
-
-          if (userProgress?.start_date) {
-            const startDate = new Date(userProgress.start_date);
-            const diffTime = date.getTime() - startDate.getTime();
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays >= 0) {
-              const weekNumber = Math.floor(diffDays / 7) + 1;
-              const dayOfWeek = date.getDay();
-              const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek;
-
-              const { data: gatofitRoutines } = await (supabase as any)
-                .from('gatofit_program_routines')
-                .select('*, routine:routines(*)')
-                .eq('program_id', activeProgram.id)
-                .eq('week_number', weekNumber)
-                .eq('day_of_week', dayOfWeekAdjusted);
-              
-              routines = gatofitRoutines || [];
-            }
-          }
         }
       } else if (programType === 'admin') {
         // For admin programs
