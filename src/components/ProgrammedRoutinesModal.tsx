@@ -76,12 +76,11 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
       const user = (await (supabase as any).auth.getUser()).data.user;
       if (!user) return;
 
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
       let routines = [];
       let isCompleted = false;
 
       if (programType === 'weekly') {
-        // For weekly programs, fetch routines for the day of the week
+        const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
         const { data: weeklyRoutines } = await (supabase as any)
           .from('weekly_program_routines')
           .select('*, routine:routines(*)')
@@ -90,37 +89,70 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         
         routines = weeklyRoutines || [];
       } else if (programType === 'gatofit') {
-        // For Gatofit programs, use week_number and day_of_week like in useActiveProgramUnified
-        const user = (await (supabase as any).auth.getUser()).data.user;
-        if (!user) return;
-
-        // Get user's assigned program with start date
-        const { data: userProgress } = await (supabase as any)
-          .from('user_gatofit_progress')
-          .select('start_date')
-          .eq('user_id', user.id)
-          .eq('program_id', activeProgram.id)
-          .single();
-
-        if (userProgress?.start_date) {
-          const startDate = new Date(userProgress.start_date);
+        // For Gatofit programs, if we have existing routines data from the main program, use it
+        if ((activeProgram as any).routines) {
+          // Use the routines that are already loaded instead of fetching again
+          console.log('Using existing routines data:', (activeProgram as any).routines);
+          
+          // Filter routines based on the selected date
+          const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+          const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday from 0 to 7
+          
+          // Get program start date to calculate week
+          const startDate = new Date((activeProgram as any).userProgress?.started_at || (activeProgram as any).userProgress?.start_date);
           const diffTime = date.getTime() - startDate.getTime();
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          const weekNumber = Math.floor(diffDays / 7) + 1;
           
-          if (diffDays >= 0) {
-            const weekNumber = Math.floor(diffDays / 7) + 1;
-            const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday from 0 to 7
+          console.log('Filtering for:', { dayOfWeekAdjusted, weekNumber, diffDays });
+          
+          routines = (activeProgram as any).routines.filter((r: any) => 
+            r.week_number === weekNumber && r.day_of_week === dayOfWeekAdjusted
+          );
+          
+          console.log('Filtered routines:', routines);
+        } else {
+          // Fallback to database query
+          const { data: userProgress } = await (supabase as any)
+            .from('user_gatofit_progress')
+            .select('start_date')
+            .eq('user_id', user.id)
+            .eq('program_id', activeProgram.id)
+            .single();
 
-            const { data: gatofitRoutines } = await (supabase as any)
-              .from('gatofit_program_routines')
-              .select('*, routine:routines(*)')
-              .eq('program_id', activeProgram.id)
-              .eq('week_number', weekNumber)
-              .eq('day_of_week', dayOfWeekAdjusted);
+          if (userProgress?.start_date) {
+            const startDate = new Date(userProgress.start_date);
+            const diffTime = date.getTime() - startDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             
-            routines = gatofitRoutines || [];
+            if (diffDays >= 0) {
+              const weekNumber = Math.floor(diffDays / 7) + 1;
+              const dayOfWeek = date.getDay();
+              const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+              const { data: gatofitRoutines } = await (supabase as any)
+                .from('gatofit_program_routines')
+                .select('*, routine:routines(*)')
+                .eq('program_id', activeProgram.id)
+                .eq('week_number', weekNumber)
+                .eq('day_of_week', dayOfWeekAdjusted);
+              
+              routines = gatofitRoutines || [];
+            }
           }
         }
+      } else if (programType === 'admin') {
+        // For admin programs
+        const dayOfWeek = date.getDay();
+        const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek;
+        
+        const { data: adminRoutines } = await (supabase as any)
+          .from('admin_program_routines')
+          .select('*, routine:routines(*)')
+          .eq('program_id', activeProgram.id)
+          .eq('day_of_week', dayOfWeekAdjusted);
+        
+        routines = adminRoutines || [];
       }
 
       // Check if workouts are completed for this date
@@ -183,23 +215,28 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
 
   // Helper functions
   const handleStartRoutine = (routineId: number) => {
-    if (isCurrentDay) {
-      onStartRoutine(routineId);
-      onClose();
-    }
+    onStartRoutine(routineId);
+    onClose();
   };
 
   const getDayMessage = () => {
     if (completionStatus) {
       return "Entrenamientos completados para este día";
     }
-    if (!isCurrentDay) {
-      return "Puedes ver las rutinas programadas pero solo iniciar las del día actual";
-    }
     let programTypeName = 'Rutinas programadas';
     if (programType === 'gatofit') programTypeName = 'Programa Gatofit';
     if (programType === 'admin') programTypeName = 'Programa Asignado';
-    return `${programTypeName} para hoy`;
+    
+    const dateStatus = getDateStatus(navigatedDate);
+    if (dateStatus === "Hoy") {
+      return `${programTypeName} para hoy`;
+    } else if (dateStatus === "Ayer") {
+      return `${programTypeName} de ayer`;
+    } else if (dateStatus === "Mañana") {
+      return `${programTypeName} para mañana`;
+    } else {
+      return `${programTypeName} para este día`;
+    }
   };
 
   const getMessageIcon = () => {
@@ -352,10 +389,10 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                         onClick={() => handleStartRoutine(programRoutine.routine_id)}
                         className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
                         size="sm"
-                        disabled={!isCurrentDay || completionStatus}
+                        disabled={completionStatus}
                       >
                         <Dumbbell className="h-4 w-4 mr-2" />
-                        {completionStatus ? "Completado" : !isCurrentDay ? "Solo disponible hoy" : "Iniciar Rutina"}
+                        {completionStatus ? "Completado" : "Iniciar Rutina"}
                       </Button>
                     </div>
                   </div>
