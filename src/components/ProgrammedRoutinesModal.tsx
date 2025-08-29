@@ -37,13 +37,32 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<boolean>(initialIsCompleted);
 
-  const formatDate = (date: Date) => {
+  const formatDayOfWeek = (date: Date) => {
+    return date.toLocaleDateString('es-ES', { weekday: 'long' });
+  };
+
+  const formatShortDate = (date: Date) => {
     return date.toLocaleDateString('es-ES', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+      day: 'numeric', 
+      month: 'numeric', 
+      year: 'numeric' 
     });
+  };
+
+  const getDateStatus = (date: Date) => {
+    const today = new Date();
+    const isToday = date.toDateString() === today.toDateString();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
+    if (isToday) return "Hoy";
+    if (isYesterday) return "Ayer";
+    if (isTomorrow) return "Mañana";
+    return "";
   };
 
   const isCurrentDay = navigatedDate.toDateString() === new Date().toDateString();
@@ -71,19 +90,36 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         
         routines = weeklyRoutines || [];
       } else if (programType === 'gatofit') {
-        // For Gatofit programs, calculate the program day
-        const programStartDate = new Date(activeProgram.created_at);
-        const diffTime = date.getTime() - programStartDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        // For Gatofit programs, use week_number and day_of_week like in useActiveProgramUnified
+        const user = (await (supabase as any).auth.getUser()).data.user;
+        if (!user) return;
 
-        if (diffDays > 0) {
-          const { data: gatofitRoutines } = await (supabase as any)
-            .from('gatofit_program_routines')
-            .select('*')
-            .eq('program_id', activeProgram.id)
-            .eq('day_number', diffDays);
+        // Get user's assigned program with start date
+        const { data: userProgress } = await (supabase as any)
+          .from('user_gatofit_progress')
+          .select('start_date')
+          .eq('user_id', user.id)
+          .eq('program_id', activeProgram.id)
+          .single();
+
+        if (userProgress?.start_date) {
+          const startDate = new Date(userProgress.start_date);
+          const diffTime = date.getTime() - startDate.getTime();
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
           
-          routines = gatofitRoutines || [];
+          if (diffDays >= 0) {
+            const weekNumber = Math.floor(diffDays / 7) + 1;
+            const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday from 0 to 7
+
+            const { data: gatofitRoutines } = await (supabase as any)
+              .from('gatofit_program_routines')
+              .select('*, routine:routines(*)')
+              .eq('program_id', activeProgram.id)
+              .eq('week_number', weekNumber)
+              .eq('day_of_week', dayOfWeekAdjusted);
+            
+            routines = gatofitRoutines || [];
+          }
         }
       }
 
@@ -197,55 +233,68 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
       {/* Modal content */}
       <div className="relative z-10 w-full max-w-md animate-scale-in">
         <Card className="shadow-2xl max-h-[calc(100vh-4rem)] overflow-y-auto border-0 bg-background">
-          <CardHeader
-            title="Rutinas Programadas"
-            subtitle={formatDate(navigatedDate)}
-            action={
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            }
-          />
+          {/* Header with close button */}
+          <div className="flex items-center justify-between p-4 border-b border-border/50">
+            <h3 className="text-lg font-semibold">Rutinas Programadas</h3>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           
           <CardBody className="pt-0 space-y-4">
-            {/* Day Navigator */}
-            <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={navigateToPreviousDay}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <div className="text-center">
-                <p className="text-sm font-medium">{formatDate(navigatedDate)}</p>
-                <p className="text-xs text-muted-foreground">
-                  {isCurrentDay ? "Hoy" : navigatedDate < new Date() ? "Día pasado" : "Día futuro"}
-                </p>
-              </div>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={navigateToNextDay}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            {/* Integrated Header with Day Navigator and Program Info */}
+            <div 
+              className="relative rounded-lg overflow-hidden"
+              style={{
+                backgroundImage: programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url 
+                  ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${(activeProgram as GatofitProgram).cover_image_url})`
+                  : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              <div className={`p-4 ${programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url ? 'text-white' : 'bg-secondary/20'}`}>
+                {/* Day Navigator */}
+                <div className="flex items-center justify-between mb-4">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={navigateToPreviousDay}
+                    className={`h-8 w-8 p-0 ${programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url ? 'text-white hover:bg-white/20' : ''}`}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <div className="text-center">
+                    <p className="text-sm font-medium capitalize">{formatDayOfWeek(navigatedDate)}</p>
+                    <p className="text-xs opacity-90">{formatShortDate(navigatedDate)}</p>
+                    {getDateStatus(navigatedDate) && (
+                      <p className="text-xs font-medium">{getDateStatus(navigatedDate)}</p>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={navigateToNextDay}
+                    className={`h-8 w-8 p-0 ${programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url ? 'text-white hover:bg-white/20' : ''}`}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
 
-            {/* Program info */}
-            <div className={`flex items-center gap-2 p-3 rounded-lg ${getMessageColor()}`}>
-              {programType === 'admin' ? (
-                <i className="fi fi-sr-apple-dumbbell text-lg text-current" />
-              ) : (
-                getMessageIcon()
-              )}
-              <div>
-                <p className="text-sm font-medium">{activeProgram.name}</p>
-                <p className="text-xs">{getDayMessage()}</p>
+                {/* Program info */}
+                <div className="flex items-center gap-2">
+                  {programType === 'admin' ? (
+                    <i className="fi fi-sr-apple-dumbbell text-lg" />
+                  ) : (
+                    getMessageIcon()
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">{activeProgram.name}</p>
+                    <p className="text-xs opacity-90">{getDayMessage()}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
