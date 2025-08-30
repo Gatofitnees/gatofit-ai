@@ -89,35 +89,9 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         
         routines = weeklyRoutines || [];
       } else if (programType === 'gatofit') {
-        // For Gatofit programs, use the loaded routines data
-        if ((activeProgram as any).routines) {
-          // Use the routines that are already loaded instead of fetching again
-          console.log('Using existing routines data:', (activeProgram as any).routines);
-          
-          // Filter routines based on the selected date
-          const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-          const dayOfWeekAdjusted = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday from 0 to 7
-          
-          // Get program start date to calculate week
-          const startDate = new Date((activeProgram as any).userProgress?.started_at);
-          const diffTime = date.getTime() - startDate.getTime();
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          const weekNumber = Math.floor(diffDays / 7) + 1;
-          
-          console.log('Filtering for:', { 
-            dayOfWeekAdjusted, 
-            weekNumber, 
-            diffDays, 
-            startDate: startDate.toISOString(),
-            selectedDate: date.toISOString() 
-          });
-          
-          routines = (activeProgram as any).routines.filter((r: any) => 
-            r.week_number === weekNumber && r.day_of_week === dayOfWeekAdjusted
-          );
-          
-          console.log('Filtered routines:', routines);
-        }
+        // For Gatofit programs, use the already loaded routines from activeProgram
+        console.log('Using activeProgram routines:', (activeProgram as any).routines);
+        routines = (activeProgram as any).routines || [];
       } else if (programType === 'admin') {
         // For admin programs
         const dayOfWeek = date.getDay();

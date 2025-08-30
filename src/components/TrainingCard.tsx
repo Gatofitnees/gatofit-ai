@@ -115,22 +115,6 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
             )}
           </div>
           
-          {/* Exercises section with frame */}
-          {workout.exercises && workout.exercises.length > 0 && (
-            <div className="bg-background/40 rounded-lg p-3">
-              <span className="text-xs text-muted-foreground block mb-2">Ejercicios realizados:</span>
-              <div className="flex flex-wrap gap-2">
-                <span className="text-xs px-2 py-1 bg-secondary/40 rounded-full border border-white/10">
-                  {workout.exercises[0]}
-                </span>
-                {workout.exercises.length > 1 && (
-                  <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-                    +{workout.exercises.length - 1} más
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </CardBody>
       <CardFooter className="flex justify-between">
