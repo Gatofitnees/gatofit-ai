@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { WeeklyProgram, WeeklyProgramRoutine } from "@/hooks/useWeeklyPrograms";
 import { GatofitProgram } from "@/hooks/useGatofitPrograms";
-import { AdminProgram } from "@/hooks/useActiveProgramUnified";
+import { AdminProgram, UnifiedProgramData } from "@/hooks/useActiveProgramUnified";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProgrammedRoutinesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activeProgram: WeeklyProgram | GatofitProgram | AdminProgram | null;
+  activeProgram: UnifiedProgramData | null;
   todayRoutines: any[];
   onStartRoutine: (routineId: number) => void;
   isCurrentDay: boolean;
@@ -84,14 +84,62 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         const { data: weeklyRoutines } = await (supabase as any)
           .from('weekly_program_routines')
           .select('*, routine:routines(*)')
-          .eq('program_id', activeProgram.id)
+          .eq('program_id', activeProgram.program.id)
           .eq('day_of_week', dayOfWeek);
         
         routines = weeklyRoutines || [];
       } else if (programType === 'gatofit') {
-        // For Gatofit programs, use the already loaded routines from activeProgram
-        console.log('Using activeProgram routines:', (activeProgram as any).routines);
-        routines = (activeProgram as any).routines || [];
+        // For Gatofit programs, we need to recalculate the day for the navigated date
+        // since activeProgram.routines are filtered for the initial selected date only
+        console.log('Fetching Gatofit routines for navigated date:', date.toDateString());
+        
+        if (activeProgram.userProgress) {
+          const userProgress = activeProgram.userProgress;
+          
+          // Calculate the program day for the navigated date
+          const startDate = new Date(userProgress.started_at);
+          const daysDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff >= 0) {
+            // For today, use current progress; for other dates, calculate
+            const today = new Date();
+            const isToday = date.toDateString() === today.toDateString();
+            
+            let weekNumber, dayOfWeek;
+            
+            if (isToday) {
+              weekNumber = userProgress.current_week;
+              const jsDay = date.getDay();
+              dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // Convert to Monday-first (0=Monday)
+            } else {
+              weekNumber = Math.floor(daysDiff / 7) + 1;
+              const jsDay = date.getDay();
+              dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // Convert to Monday-first (0=Monday)
+            }
+            
+            console.log('Calculated day for Gatofit:', { weekNumber, dayOfWeek, daysDiff, isToday });
+            
+            // Fetch routines for this specific day
+            const { data: gatofitRoutines } = await (supabase as any)
+              .from('gatofit_program_routines')
+              .select(`
+                *,
+                routine:routine_id (
+                  id,
+                  name,
+                  type,
+                  estimated_duration_minutes
+                )
+              `)
+              .eq('program_id', activeProgram.program.id)
+              .eq('week_number', weekNumber)
+              .eq('day_of_week', dayOfWeek)
+              .order('order_in_day');
+            
+            console.log('Fetched Gatofit routines for day:', gatofitRoutines);
+            routines = gatofitRoutines || [];
+          }
+        }
       } else if (programType === 'admin') {
         // For admin programs
         const dayOfWeek = date.getDay();
@@ -100,7 +148,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         const { data: adminRoutines } = await (supabase as any)
           .from('admin_program_routines')
           .select('*, routine:routines(*)')
-          .eq('program_id', activeProgram.id)
+          .eq('program_id', activeProgram.program.id)
           .eq('day_of_week', dayOfWeekAdjusted);
         
         routines = adminRoutines || [];
@@ -234,21 +282,21 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
             <div 
               className="relative rounded-lg overflow-hidden"
               style={{
-                backgroundImage: programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url 
-                  ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${(activeProgram as GatofitProgram).cover_image_url})`
+                backgroundImage: programType === 'gatofit' && (activeProgram.program as GatofitProgram)?.cover_image_url 
+                  ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${(activeProgram.program as GatofitProgram).cover_image_url})`
                   : 'none',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
             >
-              <div className={`p-4 ${programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url ? 'text-white' : 'bg-secondary/20'}`}>
+              <div className={`p-4 ${programType === 'gatofit' && (activeProgram.program as GatofitProgram)?.cover_image_url ? 'text-white' : 'bg-secondary/20'}`}>
                 {/* Day Navigator */}
                 <div className="flex items-center justify-between mb-4">
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={navigateToPreviousDay}
-                    className={`h-8 w-8 p-0 ${programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url ? 'text-white hover:bg-white/20' : ''}`}
+                    className={`h-8 w-8 p-0 ${programType === 'gatofit' && (activeProgram.program as GatofitProgram)?.cover_image_url ? 'text-white hover:bg-white/20' : ''}`}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -265,7 +313,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                     variant="ghost" 
                     size="sm" 
                     onClick={navigateToNextDay}
-                    className={`h-8 w-8 p-0 ${programType === 'gatofit' && (activeProgram as GatofitProgram)?.cover_image_url ? 'text-white hover:bg-white/20' : ''}`}
+                    className={`h-8 w-8 p-0 ${programType === 'gatofit' && (activeProgram.program as GatofitProgram)?.cover_image_url ? 'text-white hover:bg-white/20' : ''}`}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -279,7 +327,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                     getMessageIcon()
                   )}
                   <div>
-                    <p className="text-sm font-medium">{activeProgram.name}</p>
+                    <p className="text-sm font-medium">{activeProgram.program.name}</p>
                     <p className="text-xs opacity-90">{getDayMessage()}</p>
                   </div>
                 </div>

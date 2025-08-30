@@ -103,7 +103,7 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
       <ProgrammedRoutinesModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        activeProgram={activeProgram.program}
+        activeProgram={activeProgram}
         todayRoutines={activeProgram.routines}
         onStartRoutine={handleStartRoutine}
         isCurrentDay={isCurrentDay}
