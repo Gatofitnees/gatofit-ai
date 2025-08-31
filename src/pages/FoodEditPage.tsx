@@ -134,10 +134,6 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
     setFormData(prev => ({ ...prev, [`${type}_consumed`]: value }));
   };
 
-  const handleChangeResults = (request: string) => {
-    console.log('AI change request:', request);
-    // TODO: Implement AI integration
-  };
 
   const handleFoodDataUpdate = (updatedData: any) => {
     console.log('Updating food data from AI response:', updatedData);
@@ -239,7 +235,7 @@ export const FoodEditPage: React.FC<FoodEditPageProps> = ({ onSave }) => {
       <ChangeResultsDialog
         isOpen={showChangeResults}
         onClose={() => setShowChangeResults(false)}
-        onSubmit={handleChangeResults}
+        onSubmit={() => {}}
         onUpdate={handleFoodDataUpdate}
         foodData={currentFoodData}
       />

@@ -125,7 +125,7 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
         console.log('Enviando datos al webhook:', payload);
 
         // Enviar al webhook y esperar respuesta
-        const response = await fetch('https://paneln8n.gatofit.com/webhook-test/4a08cf38-9d1c-43a4-a5cc-6e554a0b6f71', {
+        const response = await fetch('https://paneln8n.gatofit.com/webhook/4a08cf38-9d1c-43a4-a5cc-6e554a0b6f71', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -162,29 +162,21 @@ export const ChangeResultsDialog: React.FC<ChangeResultsDialogProps> = ({
               onClose();
             } else {
               console.error('No se pudieron obtener datos válidos de la respuesta');
-              // Aún así llamamos onSubmit para mantener la funcionalidad existente
-              onSubmit(request.trim());
               setRequest('');
               onClose();
             }
           } catch (updateError) {
             console.error('Error procesando actualización:', updateError);
-            // Fallback al comportamiento original
-            onSubmit(request.trim());
             setRequest('');
             onClose();
           }
         } else {
           console.error('Error en la respuesta del webhook:', response.status);
-          // Aún así llamamos onSubmit para mantener la funcionalidad existente
-          onSubmit(request.trim());
           setRequest('');
           onClose();
         }
       } catch (error) {
         console.error('Error enviando al webhook:', error);
-        // Aún así llamamos onSubmit para mantener la funcionalidad existente
-        onSubmit(request.trim());
         setRequest('');
         onClose();
       } finally {
