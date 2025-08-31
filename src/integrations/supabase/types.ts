@@ -2379,6 +2379,26 @@ export type Database = {
           routine_type: string
         }[]
       }
+      get_safe_public_profile: {
+        Args: { target_user_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          id: string
+          is_profile_public: boolean
+          total_workouts: number
+          username: string
+        }[]
+      }
+      get_safe_public_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          id: string
+          is_profile_public: boolean
+          username: string
+        }[]
+      }
       get_user_activity_calendar: {
         Args: { p_month?: number; p_user_id: string; p_year?: number }
         Returns: Json
