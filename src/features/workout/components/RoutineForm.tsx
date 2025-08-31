@@ -1,6 +1,7 @@
 
 import React from "react";
 import { ROUTINE_TYPES_FOR_UI } from "../utils/routineTypeMapping";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RoutineFormProps {
   routineName: string;
@@ -44,27 +45,22 @@ const RoutineForm: React.FC<RoutineFormProps> = ({
         <label className="block text-sm font-medium mb-2 text-foreground">
           Tipo de rutina *
         </label>
-        <select
-          value={routineType}
-          onChange={(e) => onTypeChange(e.target.value)}
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all duration-200 text-foreground appearance-none ${
-            validationErrors.type ? 'border-red-500' : 'border-border'
-          }`}
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-            backgroundPosition: 'right 0.5rem center',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '1.5em 1.5em',
-            paddingRight: '2.5rem'
-          }}
-        >
-          <option value="" className="text-muted-foreground">Selecciona un tipo</option>
-          {ROUTINE_TYPES_FOR_UI.map((type) => (
-            <option key={type.value} value={type.value} className="text-foreground bg-background">
-              {type.label}
-            </option>
-          ))}
-        </select>
+        <Select value={routineType} onValueChange={onTypeChange}>
+          <SelectTrigger 
+            className={`w-full ${
+              validationErrors.type ? 'border-red-500' : 'border-border'
+            }`}
+          >
+            <SelectValue placeholder="Selecciona un tipo" />
+          </SelectTrigger>
+          <SelectContent className="bg-background/95 backdrop-blur-sm border border-secondary max-h-60">
+            {ROUTINE_TYPES_FOR_UI.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {validationErrors.type && (
           <p className="text-red-500 text-xs mt-1">El tipo es requerido</p>
         )}

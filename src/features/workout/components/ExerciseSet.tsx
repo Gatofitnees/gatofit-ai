@@ -39,15 +39,17 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate })
   }, [set.reps_min, set.reps_max]);
 
   const handleRepsChange = (value: string) => {
-    setRepsValue(value);
+    // Allow only numbers and hyphens
+    const sanitizedValue = value.replace(/[^0-9-]/g, '');
+    setRepsValue(sanitizedValue);
     
-    if (value === '') {
+    if (sanitizedValue === '') {
       onSetUpdate(setIndex, "reps_min", 0);
       onSetUpdate(setIndex, "reps_max", 0);
       return;
     }
 
-    const match = value.match(/^(\d+)(?:-(\d+))?$/);
+    const match = sanitizedValue.match(/^(\d+)(?:-(\d+))?$/);
     
     if (match) {
       const min = parseInt(match[1]);
@@ -80,8 +82,9 @@ const ExerciseSet: React.FC<ExerciseSetProps> = ({ set, setIndex, onSetUpdate })
         <div className="flex flex-col">
           <div className="text-sm font-medium mb-1.5 text-center">Reps</div>
           <div className="bg-background rounded-lg px-3 py-1.5 min-h-9">
-            <NumericInput 
-              className="w-full h-full bg-transparent border-none text-sm text-center placeholder:text-muted-foreground/60"
+            <input 
+              type="text"
+              className="w-full h-full bg-transparent border-none text-sm text-center placeholder:text-muted-foreground/60 outline-none"
               value={repsValue}
               onChange={(e) => handleRepsChange(e.target.value)}
               onFocus={handleRepsFocus}
