@@ -42,11 +42,10 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
         const { data } = await supabase
           .from('food_items')
           .select('food_category')
-          .not('food_category', 'is', null)
-          .limit(8);
+          .not('food_category', 'is', null);
         
         const categories = [...new Set(data?.map(item => item.food_category).filter(Boolean))] as string[];
-        setAvailableCategories(categories.slice(0, 8));
+        setAvailableCategories(categories);
       } catch (error) {
         console.error('Error loading categories:', error);
       }
@@ -148,7 +147,7 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
               {availableCategories.length > 0 && (
                 <div>
                   <Label className="text-sm font-medium mb-3 block">Categorías</Label>
-                  <div className="space-y-2">
+                  <div className="max-h-48 overflow-y-auto space-y-2 border rounded-md p-2 bg-background">
                     {availableCategories.map((category) => (
                       <div key={category} className="flex items-center space-x-2">
                         <Checkbox

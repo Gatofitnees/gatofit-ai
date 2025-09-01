@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Flame, Beef, Wheat, Droplets } from 'lucide-react';
 import NutrientIcon from './NutrientIcon';
 import FoodCategoryBadge from './FoodCategoryBadge';
 import { cn } from '@/lib/utils';
@@ -79,19 +80,19 @@ const FoodSearchItem: React.FC<FoodSearchItemProps> = ({
           {food.nutrition && (
             <div className="flex items-center gap-4 mt-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">Cal:</span>
+                <Flame className="w-3 h-3 text-orange-500" />
                 <span className="text-xs font-medium">{Math.round(food.nutrition.calories * multiplier)}</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">P:</span>
+                <Beef className="w-3 h-3 text-red-500" />
                 <span className="text-xs font-medium">{Math.round(food.nutrition.protein * multiplier)}g</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">C:</span>
+                <Wheat className="w-3 h-3 text-yellow-600" />
                 <span className="text-xs font-medium">{Math.round(food.nutrition.carbs * multiplier)}g</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">G:</span>
+                <Droplets className="w-3 h-3 text-blue-500" />
                 <span className="text-xs font-medium">{Math.round(food.nutrition.fat * multiplier)}g</span>
               </div>
             </div>
