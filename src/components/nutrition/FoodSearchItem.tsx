@@ -45,7 +45,7 @@ const FoodSearchItem: React.FC<FoodSearchItemProps> = ({
       "p-4 space-y-3 cursor-pointer transition-colors",
       isSelected ? "bg-primary/5 border-primary" : "hover:bg-muted/50"
     )}>
-      {/* Header with checkbox and name */}
+      {/* Header with checkbox, name, and category */}
       <div className="flex items-start gap-3">
         <Checkbox
           checked={isSelected}
@@ -53,26 +53,51 @@ const FoodSearchItem: React.FC<FoodSearchItemProps> = ({
           className="mt-1 shrink-0"
         />
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-sm leading-tight line-clamp-2">
-            {food.name}
-          </h3>
-          {food.brand && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {food.brand}
-            </p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-sm leading-tight line-clamp-2">
+                {food.name}
+              </h3>
+              {food.brand && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {food.brand}
+                </p>
+              )}
+            </div>
+            {food.category && (
+              <FoodCategoryBadge
+                category={food.category}
+                subcategory={food.subcategory}
+                icon={food.categoryIcon}
+                color={food.categoryColor}
+                className="shrink-0"
+              />
+            )}
+          </div>
+          
+          {/* Horizontal macros display */}
+          {food.nutrition && (
+            <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Cal:</span>
+                <span className="text-xs font-medium">{Math.round(food.nutrition.calories * multiplier)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">P:</span>
+                <span className="text-xs font-medium">{Math.round(food.nutrition.protein * multiplier)}g</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">C:</span>
+                <span className="text-xs font-medium">{Math.round(food.nutrition.carbs * multiplier)}g</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">G:</span>
+                <span className="text-xs font-medium">{Math.round(food.nutrition.fat * multiplier)}g</span>
+              </div>
+            </div>
           )}
         </div>
       </div>
-
-      {/* Category badge */}
-      {food.category && (
-        <FoodCategoryBadge
-          category={food.category}
-          subcategory={food.subcategory}
-          icon={food.categoryIcon}
-          color={food.categoryColor}
-        />
-      )}
 
       {/* Quantity selector (only when selected) */}
       {isSelected && (
@@ -93,28 +118,6 @@ const FoodSearchItem: React.FC<FoodSearchItemProps> = ({
         </div>
       )}
 
-      {/* Nutrition info */}
-      {food.nutrition && (
-        <div className="grid grid-cols-2 gap-2">
-          <NutrientIcon 
-            type="calories" 
-            value={food.nutrition.calories * multiplier} 
-            unit="kcal"
-          />
-          <NutrientIcon 
-            type="protein" 
-            value={food.nutrition.protein * multiplier} 
-          />
-          <NutrientIcon 
-            type="carbs" 
-            value={food.nutrition.carbs * multiplier} 
-          />
-          <NutrientIcon 
-            type="fat" 
-            value={food.nutrition.fat * multiplier} 
-          />
-        </div>
-      )}
 
       {/* Description */}
       {food.description && (

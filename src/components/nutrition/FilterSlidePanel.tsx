@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MacroFilters {
   minCalories?: number;
@@ -19,8 +21,8 @@ interface MacroFilters {
 interface FilterSlidePanelProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedCategories: number[];
-  onCategoriesChange: (filters: MacroFilters) => void;
+  selectedCategories: string[];
+  onCategoriesChange: (filters: MacroFilters & { categories?: string[] }) => void;
 }
 
 const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
@@ -30,6 +32,30 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
   onCategoriesChange
 }) => {
   const [filters, setFilters] = useState<MacroFilters>({});
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<string[]>(selectedCategories);
+
+  // Load available categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const { data } = await supabase
+          .from('food_items')
+          .select('food_category')
+          .not('food_category', 'is', null)
+          .limit(8);
+        
+        const categories = [...new Set(data?.map(item => item.food_category).filter(Boolean))] as string[];
+        setAvailableCategories(categories.slice(0, 8));
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    
+    if (isOpen) {
+      loadCategories();
+    }
+  }, [isOpen]);
 
   const updateFilter = (key: keyof MacroFilters, value: string) => {
     const numValue = value ? parseFloat(value) : undefined;
@@ -39,17 +65,31 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
     }));
   };
 
+  const toggleCategory = (category: string) => {
+    setSelectedCategoryFilters(prev => {
+      const newCategories = prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category];
+      return newCategories;
+    });
+  };
+
   const applyFilters = () => {
-    onCategoriesChange(filters);
+    const allFilters = {
+      ...filters,
+      ...(selectedCategoryFilters.length > 0 ? { categories: selectedCategoryFilters } : {})
+    };
+    onCategoriesChange(allFilters);
     onClose();
   };
 
   const clearFilters = () => {
     setFilters({});
+    setSelectedCategoryFilters([]);
     onCategoriesChange({});
   };
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== undefined);
+  const hasActiveFilters = Object.values(filters).some(v => v !== undefined) || selectedCategoryFilters.length > 0;
 
   return (
     <>
@@ -101,6 +141,30 @@ const FilterSlidePanel: React.FC<FilterSlidePanelProps> = ({
                   >
                     Limpiar filtros
                   </Button>
+                </div>
+              )}
+
+              {/* Category Filter */}
+              {availableCategories.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Categorías</Label>
+                  <div className="space-y-2">
+                    {availableCategories.map((category) => (
+                      <div key={category} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`category-${category}`}
+                          checked={selectedCategoryFilters.includes(category)}
+                          onCheckedChange={() => toggleCategory(category)}
+                        />
+                        <Label
+                          htmlFor={`category-${category}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {category}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

@@ -23,21 +23,25 @@ export const useFoodSearch = () => {
   const [results, setResults] = useState<FoodSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
 
   // Load default foods on mount
   useEffect(() => {
     loadDefaultFoods();
   }, []);
 
-  const loadDefaultFoods = useCallback(async () => {
+  const loadDefaultFoods = useCallback(async (reset = true) => {
     setIsLoading(true);
     setError(null);
 
     try {
+      const currentOffset = reset ? 0 : offset;
+      
       const { data, error: dbError } = await supabase
         .from('food_items')
         .select('*')
-        .limit(20)
+        .range(currentOffset, currentOffset + 19)
         .order('name');
 
       if (dbError) {
@@ -49,6 +53,7 @@ export const useFoodSearch = () => {
         id: item.id.toString(),
         name: item.name,
         description: '',
+        category: item.food_category,
         nutrition: {
           calories: item.calories_per_serving,
           protein: item.protein_g_per_serving,
@@ -58,20 +63,30 @@ export const useFoodSearch = () => {
         }
       }));
 
-      setResults(transformedResults);
+      if (reset) {
+        setResults(transformedResults);
+        setOffset(20);
+      } else {
+        setResults(prev => [...prev, ...transformedResults]);
+        setOffset(prev => prev + 20);
+      }
+      
+      setHasMore(transformedResults.length === 20);
     } catch (err) {
       console.error('Error loading default foods:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar alimentos';
       setError(errorMessage);
-      setResults([]);
+      if (reset) setResults([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [offset]);
 
-  const searchFoods = useCallback(async (query: string, macroFilters?: any) => {
+  const searchFoods = useCallback(async (query: string, filters?: any) => {
     setIsLoading(true);
     setError(null);
+    setOffset(0);
+    setHasMore(true);
 
     try {
       let dbQuery = supabase
@@ -83,31 +98,36 @@ export const useFoodSearch = () => {
         dbQuery = dbQuery.ilike('name', `%${query}%`);
       }
 
+      // Apply category filters if they exist
+      if (filters?.categories && filters.categories.length > 0) {
+        dbQuery = dbQuery.in('food_category', filters.categories);
+      }
+
       // Apply macro filters if they exist
-      if (macroFilters) {
-        if (macroFilters.minCalories) {
-          dbQuery = dbQuery.gte('calories_per_serving', macroFilters.minCalories);
+      if (filters) {
+        if (filters.minCalories) {
+          dbQuery = dbQuery.gte('calories_per_serving', filters.minCalories);
         }
-        if (macroFilters.maxCalories) {
-          dbQuery = dbQuery.lte('calories_per_serving', macroFilters.maxCalories);
+        if (filters.maxCalories) {
+          dbQuery = dbQuery.lte('calories_per_serving', filters.maxCalories);
         }
-        if (macroFilters.minProtein) {
-          dbQuery = dbQuery.gte('protein_g_per_serving', macroFilters.minProtein);
+        if (filters.minProtein) {
+          dbQuery = dbQuery.gte('protein_g_per_serving', filters.minProtein);
         }
-        if (macroFilters.maxProtein) {
-          dbQuery = dbQuery.lte('protein_g_per_serving', macroFilters.maxProtein);
+        if (filters.maxProtein) {
+          dbQuery = dbQuery.lte('protein_g_per_serving', filters.maxProtein);
         }
-        if (macroFilters.minCarbs) {
-          dbQuery = dbQuery.gte('carbs_g_per_serving', macroFilters.minCarbs);
+        if (filters.minCarbs) {
+          dbQuery = dbQuery.gte('carbs_g_per_serving', filters.minCarbs);
         }
-        if (macroFilters.maxCarbs) {
-          dbQuery = dbQuery.lte('carbs_g_per_serving', macroFilters.maxCarbs);
+        if (filters.maxCarbs) {
+          dbQuery = dbQuery.lte('carbs_g_per_serving', filters.maxCarbs);
         }
-        if (macroFilters.minFat) {
-          dbQuery = dbQuery.gte('fat_g_per_serving', macroFilters.minFat);
+        if (filters.minFat) {
+          dbQuery = dbQuery.gte('fat_g_per_serving', filters.minFat);
         }
-        if (macroFilters.maxFat) {
-          dbQuery = dbQuery.lte('fat_g_per_serving', macroFilters.maxFat);
+        if (filters.maxFat) {
+          dbQuery = dbQuery.lte('fat_g_per_serving', filters.maxFat);
         }
       }
 
@@ -124,6 +144,7 @@ export const useFoodSearch = () => {
         id: item.id.toString(),
         name: item.name,
         description: '',
+        category: item.food_category,
         nutrition: {
           calories: item.calories_per_serving,
           protein: item.protein_g_per_serving,
@@ -144,11 +165,19 @@ export const useFoodSearch = () => {
     }
   }, []);
 
+  const loadMoreFoods = useCallback(async () => {
+    if (!hasMore || isLoading) return;
+    
+    await loadDefaultFoods(false);
+  }, [hasMore, isLoading, loadDefaultFoods]);
+
   return {
     searchFoods,
     loadDefaultFoods,
+    loadMoreFoods,
     results,
     isLoading,
     error,
+    hasMore,
   };
 };

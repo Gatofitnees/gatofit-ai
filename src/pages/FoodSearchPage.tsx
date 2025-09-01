@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Search, Filter, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -16,11 +16,12 @@ const FoodSearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [macroFilters, setMacroFilters] = useState<any>({});
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   
   const debouncedQuery = useDebounce(searchQuery, 500);
-  const { searchFoods, results, isLoading, error } = useFoodSearch();
+  const { searchFoods, results, isLoading, error, loadMoreFoods, hasMore } = useFoodSearch();
   const {
     selectedFoods,
     quantities,
@@ -34,8 +35,19 @@ const FoodSearchPage: React.FC = () => {
 
   useEffect(() => {
     // Always search - if no query/filters, it will load default foods
-    searchFoods(debouncedQuery, Object.keys(macroFilters).length > 0 ? macroFilters : undefined);
-  }, [debouncedQuery, macroFilters, searchFoods]);
+    const allFilters = Object.keys(macroFilters).length > 0 || selectedCategories.length > 0 ? { ...macroFilters, categories: selectedCategories } : undefined;
+    searchFoods(debouncedQuery, allFilters);
+  }, [debouncedQuery, macroFilters, selectedCategories, searchFoods]);
+
+  // Infinite scroll handler
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    
+    // Load more when scrolled to bottom (with some buffer)
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && hasMore && !isLoading && !debouncedQuery.trim() && Object.keys(macroFilters).length === 0 && selectedCategories.length === 0) {
+      loadMoreFoods();
+    }
+  }, [hasMore, isLoading, loadMoreFoods, debouncedQuery, macroFilters, selectedCategories]);
 
   const handleSave = async (customName?: string) => {
     const success = await saveFoods(selectedFoods, quantities, customName);
@@ -57,7 +69,7 @@ const FoodSearchPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b z-10">
         <div className="flex items-center gap-4 p-4">
@@ -120,7 +132,7 @@ const FoodSearchPage: React.FC = () => {
               variant="outline"
               size="icon"
               onClick={() => setIsFilterPanelOpen(true)}
-              className={Object.keys(macroFilters).length > 0 ? "border-primary text-primary" : ""}
+              className={Object.keys(macroFilters).length > 0 || selectedCategories.length > 0 ? "border-primary text-primary" : ""}
             >
               <Filter className="w-4 h-4" />
             </Button>
@@ -129,50 +141,71 @@ const FoodSearchPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        {isLoading ? (
-          <div className="space-y-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
-            ))}
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <div className="text-red-500 mb-2">Error</div>
-            <p className="text-sm text-muted-foreground">{error}</p>
-          </div>
-        ) : results.length === 0 && (searchQuery.trim() || Object.keys(macroFilters).length > 0) ? (
-          <div className="text-center py-12">
-            <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">
-              No se encontraron alimentos
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Intenta con otros términos de búsqueda
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {results.map((food) => (
-              <FoodSearchItem
-                key={food.id}
-                food={food}
-                isSelected={isSelected(food.id)}
-                quantity={getQuantity(food.id)}
-                onToggleSelect={() => toggleFoodSelection(food)}
-                onQuantityChange={(quantity) => updateQuantity(food.id, quantity)}
-              />
-            ))}
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
+        <div className="p-4">
+          {isLoading && results.length === 0 ? (
+            <div className="space-y-3">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-500 mb-2">Error</div>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
+          ) : results.length === 0 && (searchQuery.trim() || Object.keys(macroFilters).length > 0 || selectedCategories.length > 0) ? (
+            <div className="text-center py-12">
+              <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                No se encontraron alimentos
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Intenta con otros términos de búsqueda
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {results.map((food) => (
+                <FoodSearchItem
+                  key={food.id}
+                  food={food}
+                  isSelected={isSelected(food.id)}
+                  quantity={getQuantity(food.id)}
+                  onToggleSelect={() => toggleFoodSelection(food)}
+                  onQuantityChange={(quantity) => updateQuantity(food.id, quantity)}
+                />
+              ))}
+              
+              {/* Loading more indicator */}
+              {isLoading && results.length > 0 && (
+                <div className="text-center py-4">
+                  <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+                  <p className="text-sm text-muted-foreground mt-2">Cargando más alimentos...</p>
+                </div>
+              )}
+              
+              {/* End of results indicator */}
+              {!hasMore && results.length > 0 && !searchQuery.trim() && Object.keys(macroFilters).length === 0 && selectedCategories.length === 0 && (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">No hay más alimentos que mostrar</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filter Panel */}
       <FilterSlidePanel
         isOpen={isFilterPanelOpen}
         onClose={() => setIsFilterPanelOpen(false)}
-        selectedCategories={[]}
-        onCategoriesChange={setMacroFilters}
+        selectedCategories={selectedCategories}
+        onCategoriesChange={(filters) => {
+          const { categories, ...macros } = filters;
+          setMacroFilters(macros);
+          setSelectedCategories(categories || []);
+        }}
       />
 
       {/* Save Modal */}
