@@ -3,6 +3,7 @@ import React from 'react';
 import { Check, Star, Zap, Crown, CheckCircle } from 'lucide-react';
 import Button from '@/components/Button';
 import { SubscriptionPlan } from '@/hooks/subscription/types';
+import { PayPalButton } from './PayPalButton';
 
 interface PremiumPlanCardProps {
   plan: SubscriptionPlan;
@@ -11,6 +12,7 @@ interface PremiumPlanCardProps {
   isLoading?: boolean;
   discountText?: string;
   isCurrentPlan?: boolean;
+  onPayPalSuccess?: () => void;
 }
 
 export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
@@ -19,7 +21,8 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
   onSelect,
   isLoading = false,
   discountText,
-  isCurrentPlan = false
+  isCurrentPlan = false,
+  onPayPalSuccess
 }) => {
   const monthlyEquivalent = plan.plan_type === 'yearly' ? (plan.price_usd / 12).toFixed(2) : null;
 
@@ -150,15 +153,32 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
           </div>
         </div>
 
-        {/* Action Button */}
-        <Button
-          onClick={handleSelect}
-          disabled={isLoading || isCurrentPlan}
-          className={`w-full py-3 text-base font-semibold ${getButtonStyles()}`}
-          size="lg"
-        >
-          {getButtonContent()}
-        </Button>
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          {/* Primary Subscription Button */}
+          <Button
+            onClick={handleSelect}
+            disabled={isLoading || isCurrentPlan}
+            className={`w-full py-3 text-base font-semibold ${getButtonStyles()}`}
+            size="lg"
+          >
+            {getButtonContent()}
+          </Button>
+
+          {/* PayPal Button */}
+          {!isCurrentPlan && (plan.plan_type === 'monthly' || plan.plan_type === 'yearly') && (
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground text-center">
+                o paga con
+              </div>
+              <PayPalButton
+                planType={plan.plan_type}
+                onSuccess={onPayPalSuccess}
+                disabled={isLoading}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
