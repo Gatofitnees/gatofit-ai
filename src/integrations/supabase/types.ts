@@ -629,6 +629,48 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           created_by_user_id: string | null
@@ -1847,6 +1889,45 @@ export type Database = {
           },
         ]
       }
+      user_discount_codes: {
+        Row: {
+          discount_code_id: string
+          id: string
+          subscription_id: string | null
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          discount_code_id: string
+          id?: string
+          subscription_id?: string | null
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          discount_code_id?: string
+          id?: string
+          subscription_id?: string | null
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_discount_codes_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_discount_codes_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_follows: {
         Row: {
           created_at: string | null
@@ -2049,6 +2130,9 @@ export type Database = {
           next_plan_type:
             | Database["public"]["Enums"]["subscription_plan_type"]
             | null
+          payment_method: string | null
+          paypal_payer_id: string | null
+          paypal_subscription_id: string | null
           plan_type: Database["public"]["Enums"]["subscription_plan_type"]
           scheduled_change_created_at: string | null
           started_at: string
@@ -2068,6 +2152,9 @@ export type Database = {
           next_plan_type?:
             | Database["public"]["Enums"]["subscription_plan_type"]
             | null
+          payment_method?: string | null
+          paypal_payer_id?: string | null
+          paypal_subscription_id?: string | null
           plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
           scheduled_change_created_at?: string | null
           started_at?: string
@@ -2087,6 +2174,9 @@ export type Database = {
           next_plan_type?:
             | Database["public"]["Enums"]["subscription_plan_type"]
             | null
+          payment_method?: string | null
+          paypal_payer_id?: string | null
+          paypal_subscription_id?: string | null
           plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
           scheduled_change_created_at?: string | null
           started_at?: string
@@ -2313,6 +2403,10 @@ export type Database = {
           p_full_name: string
           p_role?: Database["public"]["Enums"]["admin_role"]
         }
+        Returns: Json
+      }
+      apply_discount_code: {
+        Args: { p_code: string; p_user_id: string }
         Returns: Json
       }
       calculate_macro_recommendations: {
