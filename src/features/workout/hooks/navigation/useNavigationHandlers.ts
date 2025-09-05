@@ -59,15 +59,16 @@ export const useNavigationHandlers = ({
     // Pass the return URL based on whether we're in edit mode or create mode
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
     
-    // Siempre pasamos los ejercicios actuales para evitar duplicados
-    // y asegurarnos de que la página de selección conozca qué ejercicios ya están seleccionados
+    // For blocks system, we don't pass currentExercises to prevent duplicate restrictions
+    // Each block can have the same exercises, so we remove the duplicate prevention logic
     navigate(`/workout/select-exercises?returnTo=${returnPath}`, {
       state: { 
-        currentExercises: routineExercises,
-        // No limpiamos los ejercicios existentes aquí, solo pasamos la referencia
+        // Remove currentExercises to allow duplicates across blocks
+        // currentExercises: routineExercises,
+        allowDuplicates: true, // Flag to indicate duplicates are allowed
       }
     });
-  }, [navigate, editRoutineId, routineExercises]);
+  }, [navigate, editRoutineId]);
 
   // Handle navigating when discard is confirmed
   const handleDiscardChanges = useCallback(() => {

@@ -17,6 +17,7 @@ export interface ExerciseSet {
 export interface RoutineExercise extends ExerciseItem {
   sets: ExerciseSet[];
   notes?: string;
+  blockId?: string; // Optional for backward compatibility
 }
 
 export type DifficultyLevel = "beginner" | "intermediate" | "advanced";
@@ -27,3 +28,7 @@ export interface Exercise extends ExerciseItem {
   video_url?: string;
   description?: string;
 }
+
+// Re-export block types for convenience
+export type { WorkoutBlock, BlockType, BlockTypeOption } from "./types/blocks";
+export { BLOCK_TYPE_OPTIONS, getBlockTypeName } from "./types/blocks";

@@ -22,6 +22,7 @@ const CreateRoutinePage: React.FC = () => {
     routineName,
     routineType,
     routineExercises,
+    workoutBlocks,
     validationErrors,
     isSubmitting,
     showNoExercisesDialog,
@@ -29,7 +30,9 @@ const CreateRoutinePage: React.FC = () => {
     showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
+    showBlockTypeSelector,
     currentExerciseIndex,
+    hasBlocks,
     
     // State setters
     setRoutineName,
@@ -39,6 +42,7 @@ const CreateRoutinePage: React.FC = () => {
     setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
+    setShowBlockTypeSelector,
     
     // Handlers
     handleAddSet,
@@ -53,6 +57,13 @@ const CreateRoutinePage: React.FC = () => {
     handleSaveRoutine,
     handleDiscardChanges,
     handleBackClick,
+    
+    // Block handlers
+    handleAddBlock,
+    handleBlockTypeSelect,
+    handleAddExercisesToBlock,
+    handleReorderBlock,
+    getUnblockedExercises,
     
     // Loading/Editing state
     loadRoutineData,
@@ -109,7 +120,10 @@ const CreateRoutinePage: React.FC = () => {
         routineName={routineName}
         routineType={routineType}
         routineExercises={routineExercises}
+        workoutBlocks={workoutBlocks}
+        hasBlocks={hasBlocks}
         validationErrors={validationErrors}
+        showBlockTypeSelector={showBlockTypeSelector}
         onNameChange={setRoutineName}
         onTypeChange={setRoutineType}
         handleAddSet={handleAddSet}
@@ -117,6 +131,12 @@ const CreateRoutinePage: React.FC = () => {
         handleExerciseOptions={handleExerciseOptions}
         handleReorderClick={handleReorderClick}
         handleSelectExercises={handleSelectExercises}
+        handleAddBlock={handleAddBlock}
+        handleBlockTypeSelect={handleBlockTypeSelect}
+        handleAddExercisesToBlock={handleAddExercisesToBlock}
+        handleReorderBlock={handleReorderBlock}
+        setShowBlockTypeSelector={setShowBlockTypeSelector}
+        getUnblockedExercises={getUnblockedExercises}
         isEditing={isEditing}
       />
 
