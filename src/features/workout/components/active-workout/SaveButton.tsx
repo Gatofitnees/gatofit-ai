@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Save, Loader2 } from "lucide-react";
 
 interface SaveButtonProps {
   isSaving: boolean;
@@ -10,14 +11,15 @@ interface SaveButtonProps {
 
 export const SaveButton: React.FC<SaveButtonProps> = ({ isSaving, onClick, className = "" }) => {
   return (
-    <div className={`fixed left-0 right-0 bottom-16 px-4 py-3 bg-background/80 backdrop-blur-md z-10 border-t border-white/5 ${className}`}>
+    <div className={`fixed right-4 bottom-16 z-10 ${className}`}>
       <Button 
         variant="default"
-        className="w-full"
+        size="lg"
+        className="h-12 w-12 rounded-full shadow-lg"
         onClick={onClick}
         disabled={isSaving}
       >
-        {isSaving ? "Guardando entrenamiento..." : "Guardar entrenamiento"}
+        {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
       </Button>
     </div>
   );
