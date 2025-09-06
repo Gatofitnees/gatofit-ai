@@ -45,18 +45,31 @@ serve(async (req) => {
     }
 
     const auth = btoa(`${paypalClientId}:${paypalClientSecret}`);
+    console.log('PayPal Auth attempt with client ID:', paypalClientId?.substring(0, 10) + '...');
+    
     const paypalTokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
       },
       body: 'grant_type=client_credentials'
     });
 
+    console.log('PayPal token response status:', paypalTokenResponse.status);
+    
+    if (!paypalTokenResponse.ok) {
+      const errorText = await paypalTokenResponse.text();
+      console.error('PayPal token error response:', errorText);
+      throw new Error(`PayPal token request failed: ${paypalTokenResponse.status} - ${errorText}`);
+    }
+
     const tokenData: PayPalTokenResponse = await paypalTokenResponse.json();
+    console.log('PayPal token received:', tokenData.access_token ? 'Yes' : 'No');
     
     if (!tokenData.access_token) {
+      console.error('PayPal token data:', tokenData);
       throw new Error('Failed to get PayPal access token');
     }
 
