@@ -1,6 +1,7 @@
+
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { RoutineExercise, WorkoutBlock } from '../types';
+import { RoutineExercise } from '../types';
 
 const STORAGE_KEY = "createRoutineState";
 
@@ -8,13 +9,9 @@ export const useRoutinePersistence = (
   routineName: string,
   routineType: string,
   routineExercises: RoutineExercise[],
-  workoutBlocks: WorkoutBlock[],
-  currentBlockForExercises: string | null,
   setRoutineName: (name: string) => void,
   setRoutineType: (type: string) => void,
   setRoutineExercises: (exercises: RoutineExercise[]) => void,
-  setWorkoutBlocks: (blocks: WorkoutBlock[]) => void,
-  addExercisesToBlock: (blockId: string, exercises: RoutineExercise[]) => void,
   editRoutineId?: number
 ) => {
   const location = useLocation();
@@ -32,7 +29,7 @@ export const useRoutinePersistence = (
     const savedState = sessionStorage.getItem(storageKey);
     if (savedState) {
       try {
-        const { name, type, exercises, blocks } = JSON.parse(savedState);
+        const { name, type, exercises } = JSON.parse(savedState);
         
         // Solo cargamos desde almacenamiento si el estado del contexto está vacío
         if (!routineName && name) {
@@ -45,11 +42,6 @@ export const useRoutinePersistence = (
         
         if (exercises && exercises.length > 0 && routineExercises.length === 0) {
           setRoutineExercises(exercises);
-        }
-
-        // Load blocks if they exist
-        if (blocks && blocks.length > 0 && workoutBlocks.length === 0) {
-          setWorkoutBlocks(blocks);
         }
         
         hasLoadedFromStorage.current = true;
@@ -69,17 +61,16 @@ export const useRoutinePersistence = (
     }
 
     // Solo guardamos si hay algo que guardar
-    if (routineName || routineType || routineExercises.length > 0 || workoutBlocks.length > 0) {
+    if (routineName || routineType || routineExercises.length > 0) {
       const stateToSave = {
         name: routineName,
         type: routineType,
-        exercises: routineExercises,
-        blocks: workoutBlocks
+        exercises: routineExercises
       };
       sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
       console.log("Estado guardado en sessionStorage:", stateToSave);
     }
-  }, [routineName, routineType, routineExercises, workoutBlocks, storageKey]);
+  }, [routineName, routineType, routineExercises, storageKey]);
 
   // Manejar ejercicios desde el state de location (al regresar de select exercises)
   useEffect(() => {
@@ -90,20 +81,25 @@ export const useRoutinePersistence = (
       const shouldAddToExisting = location.state.shouldAddToExisting !== false;
       
       console.log("Nuevos ejercicios recibidos:", newExercises.length);
-      console.log("Block para ejercicios:", currentBlockForExercises);
       console.log("Debe añadirse a existentes:", shouldAddToExisting);
       console.log("Ejercicios existentes antes:", routineExercises.length);
       
-      // If we have a specific block to add exercises to, use the block system
-      if (currentBlockForExercises) {
-        console.log("Añadiendo ejercicios al bloque:", currentBlockForExercises);
-        addExercisesToBlock(currentBlockForExercises, newExercises);
-      } else if (shouldAddToExisting) {
-        // Legacy behavior: add to existing exercises without duplicate check
-        // Since we're now allowing duplicates in blocks, we remove the duplicate filtering
-        const updatedExercises = [...routineExercises, ...newExercises];
-        console.log("Ejercicios actualizados (sin filtro de duplicados):", updatedExercises.length);
-        setRoutineExercises(updatedExercises);
+      if (shouldAddToExisting) {
+        // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
+        const existingExerciseIds = new Set(routineExercises.map(ex => ex.id));
+        
+        // Filtrar ejercicios nuevos para evitar duplicados
+        const uniqueNewExercises = newExercises.filter(
+          (ex: any) => !existingExerciseIds.has(ex.id)
+        );
+        
+        console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
+        
+        if (uniqueNewExercises.length > 0) {
+          const updatedExercises = [...routineExercises, ...uniqueNewExercises];
+          console.log("Ejercicios actualizados después de combinar:", updatedExercises.length);
+          setRoutineExercises(updatedExercises);
+        }
       } else {
         // Reemplazar todos los ejercicios
         setRoutineExercises(newExercises);
@@ -129,7 +125,7 @@ export const useRoutinePersistence = (
         isProcessingLocationState.current = false;
       }, 100);
     }
-  }, [location.state?.selectedExercises, currentBlockForExercises, addExercisesToBlock]);
+  }, [location.state?.selectedExercises]);
 
   // Limpiar sessionStorage y resetear el formulario
   const clearStoredRoutine = () => {

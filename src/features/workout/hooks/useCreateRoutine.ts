@@ -6,8 +6,7 @@ import { useRoutineNavigation } from "./navigation";
 import { useRoutineSheets } from "./useRoutineSheets";
 import { useRoutineSave } from "./useRoutineSave";
 import { useRoutineForm } from "./useRoutineForm";
-import { useWorkoutBlocks } from "./useWorkoutBlocks";
-import { RoutineExercise, BlockType } from "../types";
+import { RoutineExercise } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { convertRoutineTypeToUi } from "../utils/routineTypeMapping";
@@ -21,80 +20,45 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     routineName,
     routineType,
     routineExercises,
-    workoutBlocks,
     isSubmitting,
     showNoExercisesDialog,
     showSaveConfirmDialog,
     showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
-    showBlockTypeSelector,
     currentExerciseIndex,
-    currentBlockForExercises,
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    setWorkoutBlocks,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
-    setShowBlockTypeSelector,
-    setCurrentBlockForExercises,
   } = useRoutineContext();
-
-  // Initialize blocks handling
-  const {
-    blocks,
-    hasBlocks,
-    handleAddBlock,
-    handleBlockTypeSelect,
-    handleAddExercisesToBlock,
-    addExercisesToBlock,
-    removeExerciseFromBlocks,
-    moveExerciseInBlocks,
-    getUnblockedExercises,
-  } = useWorkoutBlocks(routineExercises, setRoutineExercises);
 
   // Initialize form handling
   const {
     validationErrors,
     handleAddSet,
     handleSetUpdate,
-    handleRemoveExercise: originalHandleRemoveExercise,
-    handleMoveExercise: originalHandleMoveExercise,
+    handleRemoveExercise,
+    handleMoveExercise,
   } = useRoutineForm(
     routineExercises, 
     routineName, 
     routineType, 
     setRoutineExercises
   );
-
-  // Wrap exercise removal to update blocks
-  const handleRemoveExercise = useCallback((index: number) => {
-    originalHandleRemoveExercise(index);
-    removeExerciseFromBlocks(index);
-  }, [originalHandleRemoveExercise, removeExerciseFromBlocks]);
-
-  // Wrap exercise movement to update blocks
-  const handleMoveExercise = useCallback((fromIndex: number, toIndex: number) => {
-    originalHandleMoveExercise(fromIndex, toIndex);
-    moveExerciseInBlocks(fromIndex, toIndex);
-  }, [originalHandleMoveExercise, moveExerciseInBlocks]);
   
   // Set up persistence
   useRoutinePersistence(
     routineName,
     routineType,
     routineExercises,
-    blocks,
-    currentBlockForExercises,
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    setWorkoutBlocks,
-    addExercisesToBlock,
     editRoutineId
   );
   
@@ -102,23 +66,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
   const { 
     handleNavigateAway,
     handleBackClick,
-    handleSelectExercises: originalHandleSelectExercises,
+    handleSelectExercises,
     handleDiscardChanges 
   } = useRoutineNavigation(editRoutineId);
-
-  // Enhanced handleSelectExercises to support blocks
-  const handleSelectExercises = useCallback((e?: React.MouseEvent, blockId?: string) => {
-    if (blockId) {
-      setCurrentBlockForExercises(blockId);
-    }
-    return originalHandleSelectExercises(e);
-  }, [originalHandleSelectExercises, setCurrentBlockForExercises]);
-
-  // Set up block reorder handler (placeholder for now)
-  const handleReorderBlock = useCallback((blockId: string) => {
-    console.log("Reorder block:", blockId);
-    // TODO: Implement block-specific reordering
-  }, []);
   
   // Set up sheet handlers
   const { 
@@ -206,7 +156,6 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     routineName,
     routineType,
     routineExercises,
-    workoutBlocks: blocks,
     validationErrors,
     isSubmitting,
     showNoExercisesDialog,
@@ -214,24 +163,18 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
-    showBlockTypeSelector,
     currentExerciseIndex,
-    currentBlockForExercises,
     isLoading,
-    hasBlocks,
     
     // State setters
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    setWorkoutBlocks,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
-    setShowBlockTypeSelector,
-    setCurrentBlockForExercises,
     
     // Handlers
     handleAddSet,
@@ -247,14 +190,6 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     handleDiscardChanges,
     handleNavigateAway,
     handleBackClick,
-    
-    // Block handlers
-    handleAddBlock,
-    handleBlockTypeSelect,
-    handleAddExercisesToBlock,
-    handleReorderBlock,
-    addExercisesToBlock,
-    getUnblockedExercises,
     
     // Carga de datos para edición
     loadRoutineData

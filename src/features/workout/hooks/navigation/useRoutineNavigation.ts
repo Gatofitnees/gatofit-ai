@@ -13,16 +13,13 @@ export const useRoutineNavigation = (
   const { 
     routineName, 
     routineType, 
-    routineExercises,
-    workoutBlocks,
-    currentBlockForExercises,
+    routineExercises, 
     setShowDiscardChangesDialog,
     setPendingNavigation,
     pendingNavigation,
     setRoutineName,
     setRoutineType,
-    setRoutineExercises,
-    setWorkoutBlocks
+    setRoutineExercises
   } = useRoutineContext();
 
   // Get the function to clear the storage
@@ -30,13 +27,9 @@ export const useRoutineNavigation = (
     routineName,
     routineType,
     routineExercises,
-    workoutBlocks,
-    currentBlockForExercises,
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    setWorkoutBlocks,
-    () => {}, // addExercisesToBlock - not needed here
     editRoutineId
   );
 

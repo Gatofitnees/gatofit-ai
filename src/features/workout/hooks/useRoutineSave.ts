@@ -19,28 +19,21 @@ export const useRoutineSave = (editRoutineId?: number) => {
     routineName,
     routineType,
     routineExercises,
-    workoutBlocks,
-    currentBlockForExercises,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setIsSubmitting,
     setRoutineName,
     setRoutineType,
-    setRoutineExercises,
-    setWorkoutBlocks
+    setRoutineExercises
   } = useRoutineContext();
   
   const { clearStoredRoutine } = useRoutinePersistence(
     routineName,
     routineType,
     routineExercises,
-    workoutBlocks,
-    currentBlockForExercises,
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    setWorkoutBlocks,
-    () => {}, // addExercisesToBlock - not needed here
     editRoutineId
   );
 
