@@ -72,9 +72,81 @@ serve(async (req) => {
       throw new Error('Subscription plan not found');
     }
 
-    // Create PayPal subscription
+    // Create PayPal plan first, then subscription
+    const planPayload = {
+      product_id: "GATOFIT_PRODUCT",
+      name: `GatoFit ${planType === 'monthly' ? 'Mensual' : 'Anual'}`,
+      description: `Suscripción ${planType === 'monthly' ? 'mensual' : 'anual'} a GatoFit Premium`,
+      status: "ACTIVE",
+      billing_cycles: [{
+        frequency: {
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_count: 1
+        },
+        tenure_type: "REGULAR",
+        sequence: 1,
+        total_cycles: 0, // 0 means infinite
+        pricing_scheme: {
+          fixed_price: {
+            value: plans.price_usd.toString(),
+            currency_code: "USD"
+          }
+        }
+      }],
+      payment_preferences: {
+        auto_bill_outstanding: true,
+        setup_fee_failure_action: "CONTINUE",
+        payment_failure_threshold: 3
+      },
+      taxes: {
+        percentage: "0",
+        inclusive: false
+      }
+    };
+
+    // First, create or get the product
+    const productPayload = {
+      id: "GATOFIT_PRODUCT",
+      name: "GatoFit Premium",
+      description: "Acceso premium a todas las funcionalidades de GatoFit",
+      type: "SERVICE",
+      category: "SOFTWARE"
+    };
+
+    // Try to create product (it might already exist)
+    const productResponse = await fetch('https://api-m.sandbox.paypal.com/v1/catalogs/products', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'PayPal-Request-Id': `product-${Date.now()}`
+      },
+      body: JSON.stringify(productPayload)
+    });
+
+    // Create the billing plan
+    const planResponse = await fetch('https://api-m.sandbox.paypal.com/v1/billing/plans', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'PayPal-Request-Id': `plan-${userId}-${Date.now()}`
+      },
+      body: JSON.stringify(planPayload)
+    });
+
+    const planData = await planResponse.json();
+    
+    if (!planResponse.ok) {
+      console.error('PayPal plan creation failed:', planData);
+      throw new Error(`PayPal plan creation failed: ${planData.message || 'Unknown error'}`);
+    }
+
+    // Now create the subscription using the plan ID
     const subscriptionPayload = {
-      plan_id: planType === 'monthly' ? 'P-MONTHLY-PLAN-ID' : 'P-YEARLY-PLAN-ID', // These should be real PayPal plan IDs
+      plan_id: planData.id,
       quantity: "1",
       application_context: {
         brand_name: "GatoFit",
@@ -85,8 +157,8 @@ serve(async (req) => {
           payer_selected: "PAYPAL",
           payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED"
         },
-        return_url: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app')}/subscription?success=true`,
-        cancel_url: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app')}/subscription?cancelled=true`
+        return_url: `https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev/subscription?success=true`,
+        cancel_url: `https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev/subscription?cancelled=true`
       }
     };
 

@@ -34,6 +34,8 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
         return;
       }
 
+      console.log('Creating PayPal subscription for plan:', planType);
+
       // Create PayPal subscription
       const { data, error } = await supabase.functions.invoke('create-paypal-subscription', {
         body: { 
@@ -43,12 +45,16 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
       });
 
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        throw new Error(`Error del servidor: ${error.message}`);
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Error al crear la suscripción de PayPal');
+      if (!data || !data.success) {
+        console.error('PayPal subscription creation failed:', data);
+        throw new Error(data?.error || 'Error al crear la suscripción de PayPal');
       }
+
+      console.log('PayPal subscription created successfully:', data);
 
       // Open PayPal checkout in a new tab
       const paypalWindow = window.open(
@@ -73,6 +79,7 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
           // Give some time for the user to complete the payment before checking
           setTimeout(async () => {
             try {
+              console.log('Verifying PayPal payment...');
               // Verify payment status
               const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-paypal-payment', {
                 body: { 
@@ -81,8 +88,13 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
                 }
               });
 
-              if (verifyError || !verifyData.success) {
-                console.log('Payment verification failed or incomplete');
+              if (verifyError) {
+                console.error('Payment verification error:', verifyError);
+                return;
+              }
+
+              if (!verifyData || !verifyData.success) {
+                console.log('Payment verification failed or incomplete:', verifyData);
                 return;
               }
 
