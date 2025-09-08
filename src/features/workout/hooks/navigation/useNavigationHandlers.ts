@@ -61,10 +61,11 @@ export const useNavigationHandlers = ({
     
     // Siempre pasamos los ejercicios actuales para evitar duplicados
     // y asegurarnos de que la página de selección conozca qué ejercicios ya están seleccionados
+    console.log("Navegando con blockIndex:", blockIndex);
     navigate(`/workout/select-exercises?returnTo=${returnPath}`, {
       state: { 
         currentExercises: routineExercises,
-        currentBlockIndex: blockIndex, // Pass the block index
+        currentBlockIndex: typeof blockIndex === 'number' ? blockIndex : undefined,
         // No limpiamos los ejercicios existentes aquí, solo pasamos la referencia
       }
     });

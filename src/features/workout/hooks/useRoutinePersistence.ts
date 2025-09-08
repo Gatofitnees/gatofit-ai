@@ -80,11 +80,13 @@ export const useRoutinePersistence = (
       isProcessingLocationState.current = true;
       
       const newExercises = location.state.selectedExercises;
-      const currentBlockIndex = location.state.currentBlockIndex;
+      const currentBlockIndex = location.state?.currentBlockIndex;
       const shouldAddToExisting = location.state.shouldAddToExisting !== false;
       
       console.log("Nuevos ejercicios recibidos:", newExercises.length);
-      console.log("Índice de bloque actual:", currentBlockIndex);
+      console.log("Índice de bloque actual (raw):", location.state?.currentBlockIndex);
+      console.log("Índice de bloque actual (processed):", currentBlockIndex);
+      console.log("Es número válido?:", typeof currentBlockIndex === 'number');
       console.log("Debe añadirse a existentes:", shouldAddToExisting);
       console.log("Ejercicios existentes antes:", routineExercises.length);
       
@@ -100,6 +102,9 @@ export const useRoutinePersistence = (
           console.log("Ejercicios actualizados desde bloques:", allExercises.length);
         }
       } else {
+        console.log("Usando método legacy - currentBlockIndex no es válido o funciones no disponibles");
+        console.log("currentBlockIndex type:", typeof currentBlockIndex);
+        console.log("addExercisesToBlock available:", !!addExercisesToBlock);
         // Fallback to legacy behavior for backwards compatibility
         if (shouldAddToExisting) {
           // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
