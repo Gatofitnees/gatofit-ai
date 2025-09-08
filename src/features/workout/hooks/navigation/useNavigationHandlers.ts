@@ -51,7 +51,7 @@ export const useNavigationHandlers = ({
   }, [routineName, routineType, routineExercises, navigate, setShowDiscardChangesDialog]);
 
   // Navigate to select exercises page
-  const handleSelectExercises = useCallback((e?: React.MouseEvent) => {
+  const handleSelectExercises = useCallback((e?: React.MouseEvent, blockIndex?: number) => {
     if (e) {
       e.preventDefault();
     }
@@ -64,6 +64,7 @@ export const useNavigationHandlers = ({
     navigate(`/workout/select-exercises?returnTo=${returnPath}`, {
       state: { 
         currentExercises: routineExercises,
+        currentBlockIndex: blockIndex, // Pass the block index
         // No limpiamos los ejercicios existentes aquí, solo pasamos la referencia
       }
     });

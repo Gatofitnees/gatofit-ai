@@ -63,10 +63,13 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     resetBlocks,
   } = useWorkoutBlocks();
 
-  // Sync blocks with context
+  // Sync blocks with context and routineExercises
   React.useEffect(() => {
     setWorkoutBlocks(blocks);
-  }, [blocks, setWorkoutBlocks]);
+    // Also sync the flattened exercise list
+    const flatExercises = convertBlocksToExercises();
+    setRoutineExercises(flatExercises);
+  }, [blocks, setWorkoutBlocks, convertBlocksToExercises, setRoutineExercises]);
 
   // Initialize form handling (for legacy support)
   const {
@@ -90,7 +93,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    editRoutineId
+    editRoutineId,
+    addExercisesToBlock,
+    convertBlocksToExercises
   );
   
   // Set up navigation handlers
@@ -130,7 +135,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
 
   const handleAddExercisesToBlock = useCallback((blockIndex: number) => {
     setCurrentBlockIndex(blockIndex);
-    handleSelectExercises();
+    handleSelectExercises(undefined, blockIndex);
   }, [setCurrentBlockIndex, handleSelectExercises]);
 
   const handleAddSetToBlock = useCallback((blockIndex: number, exerciseIndex: number) => {

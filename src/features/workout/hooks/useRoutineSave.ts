@@ -34,7 +34,9 @@ export const useRoutineSave = (editRoutineId?: number) => {
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    editRoutineId
+    editRoutineId,
+    undefined, // addExercisesToBlock - not needed in save context
+    undefined  // convertBlocksToExercises - not needed in save context
   );
 
   const validateForm = useCallback(() => {
