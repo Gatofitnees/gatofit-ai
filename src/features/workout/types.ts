@@ -21,15 +21,6 @@ export interface RoutineExercise extends ExerciseItem {
 
 export type DifficultyLevel = "beginner" | "intermediate" | "advanced";
 
-export type BlockType = "calentamiento" | "series_efectivas";
-
-export interface WorkoutBlock {
-  id: string;
-  type: BlockType;
-  title: string;
-  exercises: RoutineExercise[];
-}
-
 // Fixed the error in the sync service by explicitly defining the difficulty level type
 export interface Exercise extends ExerciseItem {
   difficulty_level?: DifficultyLevel;

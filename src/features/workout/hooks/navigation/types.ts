@@ -20,6 +20,6 @@ export interface RoutineNavigationState {
 export interface RoutineNavigationActions {
   handleNavigateAway: (targetPath: string) => boolean;
   handleBackClick: () => void;
-  handleSelectExercises: (e?: React.MouseEvent, blockIndex?: number) => void;
+  handleSelectExercises: (e?: React.MouseEvent) => void;
   handleDiscardChanges: () => void;
 }

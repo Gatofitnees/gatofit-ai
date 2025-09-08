@@ -22,7 +22,6 @@ const CreateRoutinePage: React.FC = () => {
     routineName,
     routineType,
     routineExercises,
-    workoutBlocks,
     validationErrors,
     isSubmitting,
     showNoExercisesDialog,
@@ -30,9 +29,7 @@ const CreateRoutinePage: React.FC = () => {
     showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
-    showBlockTypeSelector,
     currentExerciseIndex,
-    currentBlockIndex,
     
     // State setters
     setRoutineName,
@@ -43,17 +40,7 @@ const CreateRoutinePage: React.FC = () => {
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
     
-    // Block handlers
-    handleAddBlock,
-    handleBlockTypeSelect,
-    handleBlockTypeSelectorClose,
-    handleAddExercisesToBlock,
-    handleAddSetToBlock,
-    handleSetUpdateInBlock,
-    handleExerciseOptionsInBlock,
-    handleReorderClickInBlock,
-    
-    // Legacy handlers
+    // Handlers
     handleAddSet,
     handleSetUpdate,
     handleRemoveExercise,
@@ -122,19 +109,14 @@ const CreateRoutinePage: React.FC = () => {
         routineName={routineName}
         routineType={routineType}
         routineExercises={routineExercises}
-        workoutBlocks={workoutBlocks}
         validationErrors={validationErrors}
         onNameChange={setRoutineName}
         onTypeChange={setRoutineType}
-        onAddBlock={handleAddBlock}
-        onAddExercisesToBlock={handleAddExercisesToBlock}
-        onAddSetToBlock={handleAddSetToBlock}
-        onSetUpdateInBlock={handleSetUpdateInBlock}
-        onExerciseOptionsInBlock={handleExerciseOptionsInBlock}
-        onReorderClickInBlock={handleReorderClickInBlock}
-        showBlockTypeSelector={showBlockTypeSelector}
-        onBlockTypeSelectorClose={handleBlockTypeSelectorClose}
-        onBlockTypeSelect={handleBlockTypeSelect}
+        handleAddSet={handleAddSet}
+        handleSetUpdate={handleSetUpdate}
+        handleExerciseOptions={handleExerciseOptions}
+        handleReorderClick={handleReorderClick}
+        handleSelectExercises={handleSelectExercises}
         isEditing={isEditing}
       />
 

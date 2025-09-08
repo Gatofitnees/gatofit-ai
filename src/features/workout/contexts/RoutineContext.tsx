@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState } from 'react';
-import { RoutineExercise, WorkoutBlock } from '../types';
+import { RoutineExercise } from '../types';
 
 // Define the shape of our context state
 interface RoutineContextType {
@@ -8,7 +8,6 @@ interface RoutineContextType {
   routineName: string;
   routineType: string;
   routineExercises: RoutineExercise[];
-  workoutBlocks: WorkoutBlock[];
   isSubmitting: boolean;
   
   // UI State
@@ -17,16 +16,13 @@ interface RoutineContextType {
   showDiscardChangesDialog: boolean;
   showExerciseOptionsSheet: boolean;
   showReorderSheet: boolean;
-  showBlockTypeSelector: boolean;
   currentExerciseIndex: number | null;
-  currentBlockIndex: number | null;
   pendingNavigation: string | null;
   
   // State setters
   setRoutineName: (name: string) => void;
   setRoutineType: (type: string) => void;
   setRoutineExercises: (exercises: RoutineExercise[]) => void;
-  setWorkoutBlocks: (blocks: WorkoutBlock[]) => void;
   setIsSubmitting: (isSubmitting: boolean) => void;
   
   // UI State setters
@@ -35,9 +31,7 @@ interface RoutineContextType {
   setShowDiscardChangesDialog: (show: boolean) => void;
   setShowExerciseOptionsSheet: (show: boolean) => void;
   setShowReorderSheet: (show: boolean) => void;
-  setShowBlockTypeSelector: (show: boolean) => void;
   setCurrentExerciseIndex: (index: number | null) => void;
-  setCurrentBlockIndex: (index: number | null) => void;
   setPendingNavigation: (path: string | null) => void;
 }
 
@@ -50,7 +44,6 @@ export const RoutineProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [routineName, setRoutineName] = useState('');
   const [routineType, setRoutineType] = useState('');
   const [routineExercises, setRoutineExercises] = useState<RoutineExercise[]>([]);
-  const [workoutBlocks, setWorkoutBlocks] = useState<WorkoutBlock[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // UI state
@@ -59,9 +52,7 @@ export const RoutineProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [showDiscardChangesDialog, setShowDiscardChangesDialog] = useState(false);
   const [showExerciseOptionsSheet, setShowExerciseOptionsSheet] = useState(false);
   const [showReorderSheet, setShowReorderSheet] = useState(false);
-  const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number | null>(null);
-  const [currentBlockIndex, setCurrentBlockIndex] = useState<number | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
 
   const value = {
@@ -69,7 +60,6 @@ export const RoutineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     routineName,
     routineType,
     routineExercises,
-    workoutBlocks,
     isSubmitting,
     
     // UI State
@@ -78,16 +68,13 @@ export const RoutineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
-    showBlockTypeSelector,
     currentExerciseIndex,
-    currentBlockIndex,
     pendingNavigation,
     
     // State setters
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    setWorkoutBlocks,
     setIsSubmitting,
     
     // UI State setters
@@ -96,9 +83,7 @@ export const RoutineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
-    setShowBlockTypeSelector,
     setCurrentExerciseIndex,
-    setCurrentBlockIndex,
     setPendingNavigation,
   };
 
