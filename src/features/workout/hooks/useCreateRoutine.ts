@@ -1,11 +1,13 @@
 
 import { useCallback, useState } from "react";
+import React from "react";
 import { useRoutineContext } from "../contexts/RoutineContext";
 import { useRoutinePersistence } from "./useRoutinePersistence";
 import { useRoutineNavigation } from "./navigation";
 import { useRoutineSheets } from "./useRoutineSheets";
 import { useRoutineSave } from "./useRoutineSave";
 import { useRoutineForm } from "./useRoutineForm";
+import { useWorkoutBlocks } from "./useWorkoutBlocks";
 import { RoutineExercise } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,24 +22,56 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     routineName,
     routineType,
     routineExercises,
+    workoutBlocks,
     isSubmitting,
     showNoExercisesDialog,
     showSaveConfirmDialog,
     showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
+    showBlockTypeSelector,
     currentExerciseIndex,
+    currentBlockIndex,
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
+    setWorkoutBlocks,
     setShowNoExercisesDialog,
     setShowSaveConfirmDialog,
     setShowDiscardChangesDialog,
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
+    setShowBlockTypeSelector,
+    setCurrentExerciseIndex,
+    setCurrentBlockIndex,
   } = useRoutineContext();
 
-  // Initialize form handling
+  // Initialize workout blocks system
+  const {
+    blocks,
+    setBlocks,
+    showBlockTypeSelector: blocksShowSelector,
+    setShowBlockTypeSelector: blocksSetShowSelector,
+    createBlock,
+    addExercisesToBlock,
+    addSetToExercise,
+    updateExerciseSet,
+    removeExerciseFromBlock,
+    moveExerciseInBlock,
+    convertBlocksToExercises,
+    convertExercisesToBlocks,
+    resetBlocks,
+  } = useWorkoutBlocks();
+
+  // Sync blocks with context and routineExercises
+  React.useEffect(() => {
+    setWorkoutBlocks(blocks);
+    // Also sync the flattened exercise list
+    const flatExercises = convertBlocksToExercises();
+    setRoutineExercises(flatExercises);
+  }, [blocks, setWorkoutBlocks, convertBlocksToExercises, setRoutineExercises]);
+
+  // Initialize form handling (for legacy support)
   const {
     validationErrors,
     handleAddSet,
@@ -59,7 +93,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     setRoutineName,
     setRoutineType,
     setRoutineExercises,
-    editRoutineId
+    editRoutineId,
+    addExercisesToBlock,
+    convertBlocksToExercises
   );
   
   // Set up navigation handlers
@@ -82,6 +118,50 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     handleSaveRoutineStart,
     handleSaveRoutine 
   } = useRoutineSave(editRoutineId);
+
+  // Block-specific handlers
+  const handleAddBlock = useCallback(() => {
+    setShowBlockTypeSelector(true);
+  }, [setShowBlockTypeSelector]);
+
+  const handleBlockTypeSelect = useCallback((type: any) => {
+    createBlock(type);
+    setShowBlockTypeSelector(false);
+  }, [createBlock, setShowBlockTypeSelector]);
+
+  const handleBlockTypeSelectorClose = useCallback(() => {
+    setShowBlockTypeSelector(false);
+  }, [setShowBlockTypeSelector]);
+
+  const handleAddExercisesToBlock = useCallback((blockIndex: number) => {
+    setCurrentBlockIndex(blockIndex);
+    handleSelectExercises(undefined, blockIndex);
+  }, [setCurrentBlockIndex, handleSelectExercises]);
+
+  const handleAddSetToBlock = useCallback((blockIndex: number, exerciseIndex: number) => {
+    addSetToExercise(blockIndex, exerciseIndex);
+  }, [addSetToExercise]);
+
+  const handleSetUpdateInBlock = useCallback((
+    blockIndex: number, 
+    exerciseIndex: number, 
+    setIndex: number, 
+    field: string, 
+    value: number
+  ) => {
+    updateExerciseSet(blockIndex, exerciseIndex, setIndex, field, value);
+  }, [updateExerciseSet]);
+
+  const handleExerciseOptionsInBlock = useCallback((blockIndex: number, exerciseIndex: number) => {
+    setCurrentBlockIndex(blockIndex);
+    setCurrentExerciseIndex(exerciseIndex);
+    setShowExerciseOptionsSheet(true);
+  }, [setCurrentBlockIndex, setCurrentExerciseIndex, setShowExerciseOptionsSheet]);
+
+  const handleReorderClickInBlock = useCallback((blockIndex: number) => {
+    setCurrentBlockIndex(blockIndex);
+    setShowReorderSheet(true);
+  }, [setCurrentBlockIndex, setShowReorderSheet]);
 
   // Función para cargar los datos de la rutina a editar
   const loadRoutineData = useCallback(async (routineId: number) => {
@@ -135,7 +215,11 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
           };
         });
 
-        setRoutineExercises(formattedExercises);
+        // Convert exercises to blocks format for the block system
+        if (formattedExercises && formattedExercises.length > 0) {
+          convertExercisesToBlocks(formattedExercises);
+          setRoutineExercises(formattedExercises);
+        }
       }
 
       console.log("Rutina cargada para edición:", routineData.name);
@@ -156,6 +240,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     routineName,
     routineType,
     routineExercises,
+    workoutBlocks,
     validationErrors,
     isSubmitting,
     showNoExercisesDialog,
@@ -163,7 +248,9 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     showDiscardChangesDialog,
     showExerciseOptionsSheet,
     showReorderSheet,
+    showBlockTypeSelector,
     currentExerciseIndex,
+    currentBlockIndex,
     isLoading,
     
     // State setters
@@ -176,7 +263,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     setShowExerciseOptionsSheet,
     setShowReorderSheet,
     
-    // Handlers
+    // Legacy handlers (for backward compatibility)
     handleAddSet,
     handleSetUpdate,
     handleRemoveExercise,
@@ -185,6 +272,18 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     handleExerciseOptions,
     handleReorderClick,
     handleReorderSave,
+    
+    // Block handlers
+    handleAddBlock,
+    handleBlockTypeSelect,
+    handleBlockTypeSelectorClose,
+    handleAddExercisesToBlock,
+    handleAddSetToBlock,
+    handleSetUpdateInBlock,
+    handleExerciseOptionsInBlock,
+    handleReorderClickInBlock,
+    
+    // Save handlers
     handleSaveRoutineStart,
     handleSaveRoutine,
     handleDiscardChanges,

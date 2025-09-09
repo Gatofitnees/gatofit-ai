@@ -12,7 +12,9 @@ export const useRoutinePersistence = (
   setRoutineName: (name: string) => void,
   setRoutineType: (type: string) => void,
   setRoutineExercises: (exercises: RoutineExercise[]) => void,
-  editRoutineId?: number
+  editRoutineId?: number,
+  addExercisesToBlock?: (blockIndex: number, exercises: RoutineExercise[]) => void,
+  convertBlocksToExercises?: () => RoutineExercise[]
 ) => {
   const location = useLocation();
   const storageKey = editRoutineId ? `${STORAGE_KEY}_${editRoutineId}` : STORAGE_KEY;
@@ -78,31 +80,52 @@ export const useRoutinePersistence = (
       isProcessingLocationState.current = true;
       
       const newExercises = location.state.selectedExercises;
+      const currentBlockIndex = location.state?.currentBlockIndex;
       const shouldAddToExisting = location.state.shouldAddToExisting !== false;
       
       console.log("Nuevos ejercicios recibidos:", newExercises.length);
+      console.log("Índice de bloque actual (raw):", location.state?.currentBlockIndex);
+      console.log("Índice de bloque actual (processed):", currentBlockIndex);
+      console.log("Es número válido?:", typeof currentBlockIndex === 'number');
       console.log("Debe añadirse a existentes:", shouldAddToExisting);
       console.log("Ejercicios existentes antes:", routineExercises.length);
       
-      if (shouldAddToExisting) {
-        // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
-        const existingExerciseIds = new Set(routineExercises.map(ex => ex.id));
+      // If we have a block index and the function to add exercises to blocks, use block system
+      if (typeof currentBlockIndex === 'number' && addExercisesToBlock) {
+        console.log("Añadiendo ejercicios al bloque:", currentBlockIndex);
+        addExercisesToBlock(currentBlockIndex, newExercises);
         
-        // Filtrar ejercicios nuevos para evitar duplicados
-        const uniqueNewExercises = newExercises.filter(
-          (ex: any) => !existingExerciseIds.has(ex.id)
-        );
-        
-        console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
-        
-        if (uniqueNewExercises.length > 0) {
-          const updatedExercises = [...routineExercises, ...uniqueNewExercises];
-          console.log("Ejercicios actualizados después de combinar:", updatedExercises.length);
-          setRoutineExercises(updatedExercises);
+        // Also update routineExercises with the current state from blocks
+        if (convertBlocksToExercises) {
+          const allExercises = convertBlocksToExercises();
+          setRoutineExercises(allExercises);
+          console.log("Ejercicios actualizados desde bloques:", allExercises.length);
         }
       } else {
-        // Reemplazar todos los ejercicios
-        setRoutineExercises(newExercises);
+        console.log("Usando método legacy - currentBlockIndex no es válido o funciones no disponibles");
+        console.log("currentBlockIndex type:", typeof currentBlockIndex);
+        console.log("addExercisesToBlock available:", !!addExercisesToBlock);
+        // Fallback to legacy behavior for backwards compatibility
+        if (shouldAddToExisting) {
+          // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
+          const existingExerciseIds = new Set(routineExercises.map(ex => ex.id));
+          
+          // Filtrar ejercicios nuevos para evitar duplicados
+          const uniqueNewExercises = newExercises.filter(
+            (ex: any) => !existingExerciseIds.has(ex.id)
+          );
+          
+          console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
+          
+          if (uniqueNewExercises.length > 0) {
+            const updatedExercises = [...routineExercises, ...uniqueNewExercises];
+            console.log("Ejercicios actualizados después de combinar:", updatedExercises.length);
+            setRoutineExercises(updatedExercises);
+          }
+        } else {
+          // Reemplazar todos los ejercicios
+          setRoutineExercises(newExercises);
+        }
       }
       
       // Limpiar el estado de ubicación para evitar añadir de nuevo al navegar
@@ -113,7 +136,8 @@ export const useRoutinePersistence = (
             usr: { 
               ...window.history.state.usr, 
               selectedExercises: null,
-              shouldAddToExisting: null
+              shouldAddToExisting: null,
+              currentBlockIndex: null
             } 
           }, 
           ''
@@ -125,7 +149,7 @@ export const useRoutinePersistence = (
         isProcessingLocationState.current = false;
       }, 100);
     }
-  }, [location.state?.selectedExercises]);
+  }, [location.state?.selectedExercises, addExercisesToBlock, convertBlocksToExercises]);
 
   // Limpiar sessionStorage y resetear el formulario
   const clearStoredRoutine = () => {

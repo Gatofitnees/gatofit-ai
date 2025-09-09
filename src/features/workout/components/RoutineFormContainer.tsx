@@ -1,27 +1,36 @@
 
 import React from "react";
-import { Plus } from "lucide-react";
 import { Card, CardHeader, CardBody } from "@/components/Card";
-import Button from "@/components/Button";
-import { RoutineExercise } from "../types";
+import { RoutineExercise, WorkoutBlock } from "../types";
 import RoutineForm from "./RoutineForm";
-import ExerciseList from "./ExerciseList";
+import WorkoutBlocksList from "./blocks/WorkoutBlocksList";
+import BlockTypeSelector from "./blocks/BlockTypeSelector";
 
 interface RoutineFormContainerProps {
   routineName: string;
   routineType: string;
   routineExercises: RoutineExercise[];
+  workoutBlocks: WorkoutBlock[];
   validationErrors: {
     name: boolean;
     type: boolean;
   };
   onNameChange: (name: string) => void;
   onTypeChange: (type: string) => void;
-  handleAddSet: (index: number) => void;
-  handleSetUpdate: (exerciseIndex: number, setIndex: number, field: string, value: number) => void;
-  handleExerciseOptions: (index: number) => void;
-  handleReorderClick: () => void;
-  handleSelectExercises: (e: React.MouseEvent) => void;
+  
+  // Block handlers
+  onAddBlock: () => void;
+  onAddExercisesToBlock: (blockIndex: number) => void;
+  onAddSetToBlock: (blockIndex: number, exerciseIndex: number) => void;
+  onSetUpdateInBlock: (blockIndex: number, exerciseIndex: number, setIndex: number, field: string, value: number) => void;
+  onExerciseOptionsInBlock: (blockIndex: number, exerciseIndex: number) => void;
+  onReorderClickInBlock: (blockIndex: number) => void;
+  
+  // Block type selector
+  showBlockTypeSelector: boolean;
+  onBlockTypeSelectorClose: () => void;
+  onBlockTypeSelect: (type: any) => void;
+  
   isEditing?: boolean;
 }
 
@@ -29,14 +38,19 @@ const RoutineFormContainer: React.FC<RoutineFormContainerProps> = ({
   routineName,
   routineType,
   routineExercises,
+  workoutBlocks,
   validationErrors,
   onNameChange,
   onTypeChange,
-  handleAddSet,
-  handleSetUpdate,
-  handleExerciseOptions,
-  handleReorderClick,
-  handleSelectExercises,
+  onAddBlock,
+  onAddExercisesToBlock,
+  onAddSetToBlock,
+  onSetUpdateInBlock,
+  onExerciseOptionsInBlock,
+  onReorderClickInBlock,
+  showBlockTypeSelector,
+  onBlockTypeSelectorClose,
+  onBlockTypeSelect,
   isEditing = false,
 }) => {
   return (
@@ -53,28 +67,21 @@ const RoutineFormContainer: React.FC<RoutineFormContainerProps> = ({
               onTypeChange={onTypeChange}
             />
             
-            <ExerciseList
-              exercises={routineExercises}
-              onAddSet={handleAddSet}
-              onSetUpdate={handleSetUpdate}
-              onExerciseOptions={handleExerciseOptions}
-              onReorderClick={handleReorderClick}
+            <WorkoutBlocksList
+              blocks={workoutBlocks}
+              onAddSet={onAddSetToBlock}
+              onSetUpdate={onSetUpdateInBlock}
+              onExerciseOptions={onExerciseOptionsInBlock}
+              onAddExercises={onAddExercisesToBlock}
+              onReorderClick={onReorderClickInBlock}
+              onAddBlock={onAddBlock}
             />
             
-            <div className="pt-2">
-              <Button 
-                variant={routineExercises.length > 0 ? "secondary" : "primary"}
-                fullWidth 
-                leftIcon={<Plus className="h-4 w-4" />}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleSelectExercises(e);
-                }}
-                type="button"
-              >
-                {routineExercises.length > 0 ? 'Añadir más ejercicios' : 'Añadir Ejercicios'}
-              </Button>
-            </div>
+            <BlockTypeSelector
+              isOpen={showBlockTypeSelector}
+              onClose={onBlockTypeSelectorClose}
+              onSelectType={onBlockTypeSelect}
+            />
           </form>
         </CardBody>
       </Card>
