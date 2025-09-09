@@ -51,7 +51,7 @@ export const useNavigationHandlers = ({
   }, [routineName, routineType, routineExercises, navigate, setShowDiscardChangesDialog]);
 
   // Navigate to select exercises page
-  const handleSelectExercises = useCallback((e?: React.MouseEvent, blockIndex?: number) => {
+  const handleSelectExercises = useCallback((e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
     }
@@ -59,20 +59,13 @@ export const useNavigationHandlers = ({
     // Pass the return URL based on whether we're in edit mode or create mode
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
     
-    console.log("🔵 [NAVIGATION] Navegando con blockIndex:", blockIndex);
-    console.log("🔵 [NAVIGATION] Tipo de blockIndex:", typeof blockIndex);
-    console.log("🔵 [NAVIGATION] Es número válido:", typeof blockIndex === 'number' && blockIndex >= 0);
-    
-    const navigationState = {
-      currentExercises: routineExercises,
-      currentBlockIndex: blockIndex,
-      shouldAddToExisting: true
-    };
-    
-    console.log("🔵 [NAVIGATION] Estado de navegación:", navigationState);
-    
+    // Siempre pasamos los ejercicios actuales para evitar duplicados
+    // y asegurarnos de que la página de selección conozca qué ejercicios ya están seleccionados
     navigate(`/workout/select-exercises?returnTo=${returnPath}`, {
-      state: navigationState
+      state: { 
+        currentExercises: routineExercises,
+        // No limpiamos los ejercicios existentes aquí, solo pasamos la referencia
+      }
     });
   }, [navigate, editRoutineId, routineExercises]);
 

@@ -70,14 +70,9 @@ export const useExerciseNavigation = () => {
     // Get the return path
     const returnPath = getReturnPath();
     
-    // 🔥 CRITICAL: Get the currentBlockIndex from original location state
-    const originalCurrentBlockIndex = location.state?.currentBlockIndex;
-    
-    console.log("🔥 [ADD_EXERCISES] Añadiendo ejercicios y volviendo a:", returnPath);
-    console.log("🔥 [ADD_EXERCISES] Ejercicios seleccionados:", exercisesWithSets.length);
-    console.log("🔥 [ADD_EXERCISES] Es entrenamiento activo:", isActiveWorkout());
-    console.log("🔥 [ADD_EXERCISES] CurrentBlockIndex original:", originalCurrentBlockIndex);
-    console.log("🔥 [ADD_EXERCISES] Tipo de currentBlockIndex:", typeof originalCurrentBlockIndex);
+    console.log("Añadiendo ejercicios y volviendo a:", returnPath);
+    console.log("Ejercicios seleccionados:", exercisesWithSets.length);
+    console.log("Es entrenamiento activo:", isActiveWorkout());
     
     // Navigate back with the selected exercises
     if (isActiveWorkout()) {
@@ -85,8 +80,7 @@ export const useExerciseNavigation = () => {
       navigate(returnPath, { 
         state: { 
           selectedExercises: exercisesWithSets,
-          isTemporary: true, // Flag to indicate these are temporary exercises
-          currentBlockIndex: originalCurrentBlockIndex // 🔥 PRESERVE BLOCK INDEX
+          isTemporary: true // Flag to indicate these are temporary exercises
         } 
       });
     } else {
@@ -94,8 +88,7 @@ export const useExerciseNavigation = () => {
       navigate(returnPath, { 
         state: { 
           selectedExercises: exercisesWithSets,
-          shouldAddToExisting: true,
-          currentBlockIndex: originalCurrentBlockIndex // 🔥 PRESERVE BLOCK INDEX
+          shouldAddToExisting: true
         } 
       });
     }
