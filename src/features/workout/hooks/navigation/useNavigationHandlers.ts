@@ -59,15 +59,20 @@ export const useNavigationHandlers = ({
     // Pass the return URL based on whether we're in edit mode or create mode
     const returnPath = editRoutineId ? `/workout/edit/${editRoutineId}` : "/workout/create";
     
-    // Siempre pasamos los ejercicios actuales para evitar duplicados
-    // y asegurarnos de que la página de selección conozca qué ejercicios ya están seleccionados
-    console.log("Navegando con blockIndex:", blockIndex);
+    console.log("🔵 [NAVIGATION] Navegando con blockIndex:", blockIndex);
+    console.log("🔵 [NAVIGATION] Tipo de blockIndex:", typeof blockIndex);
+    console.log("🔵 [NAVIGATION] Es número válido:", typeof blockIndex === 'number' && blockIndex >= 0);
+    
+    const navigationState = {
+      currentExercises: routineExercises,
+      currentBlockIndex: blockIndex,
+      shouldAddToExisting: true
+    };
+    
+    console.log("🔵 [NAVIGATION] Estado de navegación:", navigationState);
+    
     navigate(`/workout/select-exercises?returnTo=${returnPath}`, {
-      state: { 
-        currentExercises: routineExercises,
-        currentBlockIndex: typeof blockIndex === 'number' ? blockIndex : undefined,
-        // No limpiamos los ejercicios existentes aquí, solo pasamos la referencia
-      }
+      state: navigationState
     });
   }, [navigate, editRoutineId, routineExercises]);
 

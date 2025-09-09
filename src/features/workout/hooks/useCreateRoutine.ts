@@ -65,11 +65,19 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
 
   // Sync blocks with context and routineExercises
   React.useEffect(() => {
+    console.log("🔄 [SYNC] Sincronizando bloques con contexto. Bloques:", blocks.length);
     setWorkoutBlocks(blocks);
+    
     // Also sync the flattened exercise list
     const flatExercises = convertBlocksToExercises();
-    setRoutineExercises(flatExercises);
-  }, [blocks, setWorkoutBlocks, convertBlocksToExercises, setRoutineExercises]);
+    console.log("🔄 [SYNC] Ejercicios aplanados:", flatExercises.length);
+    
+    // Only update if different to avoid infinite loops
+    if (JSON.stringify(flatExercises) !== JSON.stringify(routineExercises)) {
+      setRoutineExercises(flatExercises);
+      console.log("🔄 [SYNC] ✅ Ejercicios actualizados en contexto");
+    }
+  }, [blocks, setWorkoutBlocks, convertBlocksToExercises]);
 
   // Initialize form handling (for legacy support)
   const {
@@ -134,6 +142,7 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
   }, [setShowBlockTypeSelector]);
 
   const handleAddExercisesToBlock = useCallback((blockIndex: number) => {
+    console.log("🎯 [BLOCK] Añadiendo ejercicios a bloque:", blockIndex);
     setCurrentBlockIndex(blockIndex);
     handleSelectExercises(undefined, blockIndex);
   }, [setCurrentBlockIndex, handleSelectExercises]);

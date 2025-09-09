@@ -83,28 +83,32 @@ export const useRoutinePersistence = (
       const currentBlockIndex = location.state?.currentBlockIndex;
       const shouldAddToExisting = location.state.shouldAddToExisting !== false;
       
-      console.log("Nuevos ejercicios recibidos:", newExercises.length);
-      console.log("Índice de bloque actual (raw):", location.state?.currentBlockIndex);
-      console.log("Índice de bloque actual (processed):", currentBlockIndex);
-      console.log("Es número válido?:", typeof currentBlockIndex === 'number');
-      console.log("Debe añadirse a existentes:", shouldAddToExisting);
-      console.log("Ejercicios existentes antes:", routineExercises.length);
+      console.log("🟢 [PERSISTENCE] Estado completo de location:", location.state);
+      console.log("🟢 [PERSISTENCE] Nuevos ejercicios recibidos:", newExercises.length);
+      console.log("🟢 [PERSISTENCE] Índice de bloque actual (raw):", location.state?.currentBlockIndex);
+      console.log("🟢 [PERSISTENCE] Índice de bloque actual (processed):", currentBlockIndex);
+      console.log("🟢 [PERSISTENCE] Es número válido?:", typeof currentBlockIndex === 'number' && currentBlockIndex >= 0);
+      console.log("🟢 [PERSISTENCE] Debe añadirse a existentes:", shouldAddToExisting);
+      console.log("🟢 [PERSISTENCE] Ejercicios existentes antes:", routineExercises.length);
+      console.log("🟢 [PERSISTENCE] addExercisesToBlock disponible:", !!addExercisesToBlock);
+      console.log("🟢 [PERSISTENCE] convertBlocksToExercises disponible:", !!convertBlocksToExercises);
       
-      // If we have a block index and the function to add exercises to blocks, use block system
-      if (typeof currentBlockIndex === 'number' && addExercisesToBlock) {
-        console.log("Añadiendo ejercicios al bloque:", currentBlockIndex);
+      // Check if we should use the block system
+      const shouldUseBlockSystem = typeof currentBlockIndex === 'number' && currentBlockIndex >= 0 && addExercisesToBlock && convertBlocksToExercises;
+      
+      if (shouldUseBlockSystem) {
+        console.log("🟢 [PERSISTENCE] ✅ Usando sistema de bloques - añadiendo a bloque:", currentBlockIndex);
         addExercisesToBlock(currentBlockIndex, newExercises);
         
-        // Also update routineExercises with the current state from blocks
-        if (convertBlocksToExercises) {
-          const allExercises = convertBlocksToExercises();
-          setRoutineExercises(allExercises);
-          console.log("Ejercicios actualizados desde bloques:", allExercises.length);
-        }
+        // Update routineExercises with the current state from blocks
+        const allExercises = convertBlocksToExercises();
+        setRoutineExercises(allExercises);
+        console.log("🟢 [PERSISTENCE] ✅ Ejercicios actualizados desde bloques:", allExercises.length);
       } else {
-        console.log("Usando método legacy - currentBlockIndex no es válido o funciones no disponibles");
-        console.log("currentBlockIndex type:", typeof currentBlockIndex);
-        console.log("addExercisesToBlock available:", !!addExercisesToBlock);
+        console.log("🟢 [PERSISTENCE] ⚠️ Usando método legacy");
+        console.log("🟢 [PERSISTENCE] Razón - currentBlockIndex:", currentBlockIndex, "tipo:", typeof currentBlockIndex);
+        console.log("🟢 [PERSISTENCE] Funciones disponibles - addExercisesToBlock:", !!addExercisesToBlock, "convert:", !!convertBlocksToExercises);
+        
         // Fallback to legacy behavior for backwards compatibility
         if (shouldAddToExisting) {
           // Crear un conjunto de IDs de ejercicios existentes para evitar duplicados
@@ -115,11 +119,11 @@ export const useRoutinePersistence = (
             (ex: any) => !existingExerciseIds.has(ex.id)
           );
           
-          console.log("Ejercicios únicos a añadir:", uniqueNewExercises.length);
+          console.log("🟢 [PERSISTENCE] Ejercicios únicos a añadir:", uniqueNewExercises.length);
           
           if (uniqueNewExercises.length > 0) {
             const updatedExercises = [...routineExercises, ...uniqueNewExercises];
-            console.log("Ejercicios actualizados después de combinar:", updatedExercises.length);
+            console.log("🟢 [PERSISTENCE] Ejercicios actualizados después de combinar:", updatedExercises.length);
             setRoutineExercises(updatedExercises);
           }
         } else {
@@ -149,7 +153,7 @@ export const useRoutinePersistence = (
         isProcessingLocationState.current = false;
       }, 100);
     }
-  }, [location.state?.selectedExercises, addExercisesToBlock, convertBlocksToExercises]);
+  }, [location.state?.selectedExercises, addExercisesToBlock, convertBlocksToExercises, routineExercises, setRoutineExercises]);
 
   // Limpiar sessionStorage y resetear el formulario
   const clearStoredRoutine = () => {
