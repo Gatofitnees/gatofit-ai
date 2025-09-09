@@ -24,8 +24,17 @@ export function useWorkoutBlocks() {
   const addExercisesToBlock = useCallback((blockIndex: number, exercises: RoutineExercise[]) => {
     setBlocks(prev => {
       const updatedBlocks = [...prev];
+      
+      // Check if blockIndex is valid and block exists
+      if (blockIndex < 0 || blockIndex >= updatedBlocks.length || !updatedBlocks[blockIndex]) {
+        console.error(`❌ [BLOCKS] Invalid blockIndex: ${blockIndex}, available blocks: ${updatedBlocks.length}`);
+        return prev; // Return unchanged state if invalid
+      }
+      
       const existingIds = new Set(updatedBlocks[blockIndex].exercises.map(ex => ex.id));
       const newExercises = exercises.filter(ex => !existingIds.has(ex.id));
+      
+      console.log(`✅ [BLOCKS] Adding ${newExercises.length} exercises to block ${blockIndex}`);
       
       updatedBlocks[blockIndex] = {
         ...updatedBlocks[blockIndex],
@@ -40,7 +49,20 @@ export function useWorkoutBlocks() {
   const addSetToExercise = useCallback((blockIndex: number, exerciseIndex: number) => {
     setBlocks(prev => {
       const updatedBlocks = [...prev];
-      const exercise = updatedBlocks[blockIndex].exercises[exerciseIndex];
+      
+      // Check bounds
+      if (blockIndex < 0 || blockIndex >= updatedBlocks.length || !updatedBlocks[blockIndex]) {
+        console.error(`❌ [BLOCKS] Invalid blockIndex for addSet: ${blockIndex}`);
+        return prev;
+      }
+      
+      const exercises = updatedBlocks[blockIndex].exercises;
+      if (exerciseIndex < 0 || exerciseIndex >= exercises.length || !exercises[exerciseIndex]) {
+        console.error(`❌ [BLOCKS] Invalid exerciseIndex for addSet: ${exerciseIndex}`);
+        return prev;
+      }
+      
+      const exercise = exercises[exerciseIndex];
       const lastSet = exercise.sets[exercise.sets.length - 1];
       
       updatedBlocks[blockIndex].exercises[exerciseIndex].sets.push({
@@ -63,6 +85,25 @@ export function useWorkoutBlocks() {
   ) => {
     setBlocks(prev => {
       const updatedBlocks = [...prev];
+      
+      // Check bounds
+      if (blockIndex < 0 || blockIndex >= updatedBlocks.length || !updatedBlocks[blockIndex]) {
+        console.error(`❌ [BLOCKS] Invalid blockIndex for updateSet: ${blockIndex}`);
+        return prev;
+      }
+      
+      const exercises = updatedBlocks[blockIndex].exercises;
+      if (exerciseIndex < 0 || exerciseIndex >= exercises.length || !exercises[exerciseIndex]) {
+        console.error(`❌ [BLOCKS] Invalid exerciseIndex for updateSet: ${exerciseIndex}`);
+        return prev;
+      }
+      
+      const sets = exercises[exerciseIndex].sets;
+      if (setIndex < 0 || setIndex >= sets.length) {
+        console.error(`❌ [BLOCKS] Invalid setIndex for updateSet: ${setIndex}`);
+        return prev;
+      }
+      
       updatedBlocks[blockIndex].exercises[exerciseIndex].sets[setIndex] = {
         ...updatedBlocks[blockIndex].exercises[exerciseIndex].sets[setIndex],
         [field]: value,
@@ -76,6 +117,19 @@ export function useWorkoutBlocks() {
   const removeExerciseFromBlock = useCallback((blockIndex: number, exerciseIndex: number) => {
     setBlocks(prev => {
       const updatedBlocks = [...prev];
+      
+      // Check bounds
+      if (blockIndex < 0 || blockIndex >= updatedBlocks.length || !updatedBlocks[blockIndex]) {
+        console.error(`❌ [BLOCKS] Invalid blockIndex for removeExercise: ${blockIndex}`);
+        return prev;
+      }
+      
+      const exercises = updatedBlocks[blockIndex].exercises;
+      if (exerciseIndex < 0 || exerciseIndex >= exercises.length) {
+        console.error(`❌ [BLOCKS] Invalid exerciseIndex for removeExercise: ${exerciseIndex}`);
+        return prev;
+      }
+      
       updatedBlocks[blockIndex].exercises.splice(exerciseIndex, 1);
       return updatedBlocks;
     });
@@ -85,7 +139,19 @@ export function useWorkoutBlocks() {
   const moveExerciseInBlock = useCallback((blockIndex: number, fromIndex: number, toIndex: number) => {
     setBlocks(prev => {
       const updatedBlocks = [...prev];
+      
+      // Check bounds
+      if (blockIndex < 0 || blockIndex >= updatedBlocks.length || !updatedBlocks[blockIndex]) {
+        console.error(`❌ [BLOCKS] Invalid blockIndex for moveExercise: ${blockIndex}`);
+        return prev;
+      }
+      
       const exercises = updatedBlocks[blockIndex].exercises;
+      if (fromIndex < 0 || fromIndex >= exercises.length || toIndex < 0 || toIndex >= exercises.length) {
+        console.error(`❌ [BLOCKS] Invalid indices for moveExercise: from ${fromIndex}, to ${toIndex}`);
+        return prev;
+      }
+      
       const [movedExercise] = exercises.splice(fromIndex, 1);
       exercises.splice(toIndex, 0, movedExercise);
       return updatedBlocks;
