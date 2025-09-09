@@ -100,10 +100,14 @@ export const useRoutinePersistence = (
         console.log("🟢 [PERSISTENCE] ✅ Usando sistema de bloques - añadiendo a bloque:", currentBlockIndex);
         addExercisesToBlock(currentBlockIndex, newExercises);
         
-        // Update routineExercises with the current state from blocks
-        const allExercises = convertBlocksToExercises();
-        setRoutineExercises(allExercises);
-        console.log("🟢 [PERSISTENCE] ✅ Ejercicios actualizados desde bloques:", allExercises.length);
+        // Force immediate sync - get updated exercises from blocks
+        setTimeout(() => {
+          if (convertBlocksToExercises) {
+            const allExercises = convertBlocksToExercises();
+            setRoutineExercises(allExercises);
+            console.log("🟢 [PERSISTENCE] ✅ Forzando sincronización - ejercicios desde bloques:", allExercises.length);
+          }
+        }, 50);
       } else {
         console.log("🟢 [PERSISTENCE] ⚠️ Usando método legacy");
         console.log("🟢 [PERSISTENCE] Razón - currentBlockIndex:", currentBlockIndex, "tipo:", typeof currentBlockIndex);

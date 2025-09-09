@@ -68,14 +68,20 @@ export const useCreateRoutine = (initialExercises: RoutineExercise[] = [], editR
     console.log("🔄 [SYNC] Sincronizando bloques con contexto. Bloques:", blocks.length);
     setWorkoutBlocks(blocks);
     
-    // Also sync the flattened exercise list
-    const flatExercises = convertBlocksToExercises();
-    console.log("🔄 [SYNC] Ejercicios aplanados:", flatExercises.length);
-    
-    // Only update if different to avoid infinite loops
-    if (JSON.stringify(flatExercises) !== JSON.stringify(routineExercises)) {
-      setRoutineExercises(flatExercises);
-      console.log("🔄 [SYNC] ✅ Ejercicios actualizados en contexto");
+    // Only sync flattened exercises if we actually have blocks with exercises
+    // This prevents overwriting exercises when using legacy mode
+    const hasBlocksWithExercises = blocks.some(block => block.exercises.length > 0);
+    if (hasBlocksWithExercises) {
+      const flatExercises = convertBlocksToExercises();
+      console.log("🔄 [SYNC] Ejercicios aplanados desde bloques:", flatExercises.length);
+      
+      // Only update if different to avoid infinite loops
+      if (JSON.stringify(flatExercises) !== JSON.stringify(routineExercises)) {
+        setRoutineExercises(flatExercises);
+        console.log("🔄 [SYNC] ✅ Ejercicios actualizados desde bloques");
+      }
+    } else {
+      console.log("🔄 [SYNC] ⏭️ Saltando sincronización - no hay ejercicios en bloques");
     }
   }, [blocks, setWorkoutBlocks, convertBlocksToExercises]);
 
