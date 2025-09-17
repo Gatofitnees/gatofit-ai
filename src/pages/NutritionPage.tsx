@@ -20,6 +20,7 @@ import { PremiumModal } from "@/components/premium/PremiumModal";
 import { useFoodCaptureWithLimits } from "@/hooks/useFoodCaptureWithLimits";
 import { useUsageLimitsRefresh } from "@/hooks/useUsageLimitsRefresh";
 import { useLocalTimezone } from "@/hooks/useLocalTimezone";
+import { NutritionProgramButton } from "@/components/nutrition/NutritionProgramButton";
 
 const NutritionPage: React.FC = () => {
   const [isCameraVisible, setIsCameraVisible] = useState(false);
@@ -138,16 +139,19 @@ const NutritionPage: React.FC = () => {
           <h2 className="text-lg font-semibold">
             Comidas - {formatSelectedDate}
           </h2>
-          {isToday && (
-            <Button 
-              variant="primary"
-              size="sm"
-              leftIcon={<Plus className="h-4 w-4" />}
-              onClick={handleOpenCamera}
-            >
-              Añadir
-            </Button>
-          )}
+          <div className="flex gap-2">
+            <NutritionProgramButton selectedDate={selectedDate} />
+            {isToday && (
+              <Button 
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="h-4 w-4" />}
+                onClick={handleOpenCamera}
+              >
+                Añadir
+              </Button>
+            )}
+          </div>
         </div>
         
         <MealsList

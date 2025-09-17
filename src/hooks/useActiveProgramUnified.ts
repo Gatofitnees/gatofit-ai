@@ -19,8 +19,8 @@ export interface AdminProgram {
 }
 
 export interface UnifiedProgramData {
-  type: 'weekly' | 'gatofit';
-  program: WeeklyProgram | GatofitProgram;
+  type: 'weekly' | 'gatofit' | 'admin';
+  program: WeeklyProgram | GatofitProgram | AdminProgram;
   routines: any[];
   userProgress?: UserGatofitProgress;
 }
@@ -106,7 +106,90 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         return;
       }
 
-      // 1. Verificar programa Gatofit activo (prioridad alta)
+      // 1. Verificar programa Admin activo (prioridad más alta)
+      const { data: adminPrograms, error: adminError } = await supabase
+        .from('user_assigned_programs')
+        .select(`
+          *,
+          program:program_id (*)
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1);
+
+      if (adminError) throw adminError;
+
+      if (adminPrograms && adminPrograms.length > 0) {
+        const adminAssignment = adminPrograms[0];
+        console.log('Active Admin program found:', adminAssignment);
+        
+        // Calcular día actual del programa admin
+        const startDate = new Date(adminAssignment.started_at);
+        const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff >= 0) {
+          const weekNumber = Math.floor(daysDiff / 7) + 1;
+          const jsDay = selectedDate.getDay();
+          const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 6=domingo
+          
+          console.log('Admin program day calculation:', { weekNumber, dayOfWeek, daysDiff });
+
+          // Obtener rutinas del programa admin para este día
+          const { data: adminRoutines, error: adminRoutinesError } = await supabase
+            .from('admin_program_routines')
+            .select(`
+              *,
+              routine:routine_id (
+                id,
+                name,
+                type,
+                estimated_duration_minutes,
+                description
+              )
+            `)
+            .eq('program_id', adminAssignment.program_id)
+            .eq('week_number', weekNumber)
+            .eq('day_of_week', dayOfWeek)
+            .order('order_in_day');
+
+          if (adminRoutinesError) {
+            console.error('Error fetching admin routines:', adminRoutinesError);
+          }
+
+          const routines = adminRoutines || [];
+          console.log('Admin routines for day:', routines);
+
+          // Verificar completado
+          if (routines.length > 0) {
+            const selectedDateString = selectedDate.toISOString().split('T')[0];
+            const { data: workoutLogs, error: workoutError } = await supabase
+              .from('workout_logs')
+              .select('routine_id')
+              .eq('user_id', user.id)
+              .gte('workout_date', `${selectedDateString}T00:00:00.000Z`)
+              .lte('workout_date', `${selectedDateString}T23:59:59.999Z`);
+
+            if (workoutError) throw workoutError;
+
+            const completedRoutineIds = new Set(workoutLogs?.map(log => log.routine_id) || []);
+            const programmedRoutineIds = routines.map((r: any) => r.routine_id);
+            const hasCompletedProgrammedRoutine = programmedRoutineIds.some(id => completedRoutineIds.has(id));
+
+            setIsCompletedForSelectedDate(hasCompletedProgrammedRoutine);
+          } else {
+            setIsCompletedForSelectedDate(false);
+          }
+
+          setActiveProgram({
+            type: 'admin',
+            program: adminAssignment.program,
+            routines: routines
+          });
+          return;
+        }
+      }
+
+      // 2. Verificar programa Gatofit activo (prioridad alta)
       const { data: gatofitProgress, error: gatofitError } = await supabase
         .from('user_gatofit_program_progress')
         .select(`
@@ -223,7 +306,7 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         return;
       }
 
-      // 2. Si no hay programa Gatofit, buscar programa semanal
+      // 3. Si no hay programa Gatofit ni Admin, buscar programa semanal
       const { data: weeklyPrograms, error: weeklyProgramError } = await supabase
         .from('weekly_programs')
         .select('*')
