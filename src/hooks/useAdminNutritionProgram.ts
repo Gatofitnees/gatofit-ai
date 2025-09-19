@@ -63,9 +63,19 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
   const [nutritionPlan, setNutritionPlan] = useState<AdminNutritionPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasNutritionPlan, setHasNutritionPlan] = useState(false);
+  const [lastFetchedDate, setLastFetchedDate] = useState<string | null>(null);
 
-  const fetchAdminNutritionPlan = useCallback(async () => {
-    console.log('Fetching admin nutrition plan for date:', selectedDate.toISOString());
+  const fetchAdminNutritionPlan = useCallback(async (dateToFetch: Date) => {
+    const dateString = dateToFetch.toISOString().split('T')[0];
+    
+    // Avoid refetching if we already have data for this date
+    if (lastFetchedDate === dateString && nutritionPlan) {
+      console.log('Skipping fetch - already have data for', dateString);
+      return;
+    }
+
+    console.log('Fetching admin nutrition plan for date:', dateString);
+    
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -89,6 +99,7 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
       if (!adminPrograms || adminPrograms.length === 0) {
         setNutritionPlan(null);
         setHasNutritionPlan(false);
+        setLastFetchedDate(dateString);
         return;
       }
 
@@ -96,16 +107,17 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
       
       // Calcular día actual del programa
       const startDate = new Date(adminAssignment.started_at);
-      const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const daysDiff = Math.floor((dateToFetch.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       
       if (daysDiff < 0) {
         setNutritionPlan(null);
         setHasNutritionPlan(false);
+        setLastFetchedDate(dateString);
         return;
       }
 
       const weekNumber = Math.floor(daysDiff / 7) + 1;
-      const jsDay = selectedDate.getDay();
+      const jsDay = dateToFetch.getDay();
       const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 6=domingo
 
       console.log('Admin nutrition plan calculation:', { weekNumber, dayOfWeek, daysDiff });
@@ -155,23 +167,20 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
 
         if (planDetails && planDetails.length > 0) {
           const planData = planDetails[0];
-          // Only update if the plan actually changed
-          setNutritionPlan(prevPlan => {
-            if (prevPlan?.id === planData.id) {
-              return prevPlan; // Same plan, don't update
-            }
-            console.log('Admin nutrition plan found:', planData);
-            return planData as any;
-          });
+          setNutritionPlan(planData as any);
           setHasNutritionPlan(true);
+          setLastFetchedDate(dateString);
+          console.log('Admin nutrition plan found:', planData);
         } else {
           setNutritionPlan(null);
           setHasNutritionPlan(false);
+          setLastFetchedDate(dateString);
         }
       } else {
         // Aún hay programa admin, pero no plan nutricional para este día
         setNutritionPlan(null);
         setHasNutritionPlan(false);
+        setLastFetchedDate(dateString);
       }
 
     } catch (error: any) {
@@ -179,19 +188,23 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
       // Don't use toast here to avoid infinite loop
       setNutritionPlan(null);
       setHasNutritionPlan(false);
+      setLastFetchedDate(dateString);
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, []); // Remove dependencies to prevent infinite loop
 
   useEffect(() => {
-    fetchAdminNutritionPlan();
-  }, [fetchAdminNutritionPlan]);
+    const dateString = selectedDate.toISOString().split('T')[0];
+    if (lastFetchedDate !== dateString) {
+      fetchAdminNutritionPlan(selectedDate);
+    }
+  }, [selectedDate.toISOString().split('T')[0], fetchAdminNutritionPlan]);
 
   return {
     nutritionPlan,
     loading,
     hasNutritionPlan,
-    refetch: fetchAdminNutritionPlan
+    refetch: () => fetchAdminNutritionPlan(selectedDate)
   };
 };

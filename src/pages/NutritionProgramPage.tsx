@@ -90,6 +90,9 @@ export const NutritionProgramPage: React.FC = () => {
       }
     });
 
+    console.log('Recipe groups:', recipeGroups);
+    console.log('Individual ingredients:', individualIngredients);
+
     return { recipeGroups, individualIngredients };
   };
 
@@ -139,7 +142,15 @@ export const NutritionProgramPage: React.FC = () => {
 
                 {/* Recipe Groups */}
                 {Object.entries(recipeGroups).map(([recipeId, recipeIngredients]) => {
-                  const recipeName = recipeIngredients[0]?.recipe_name || `Receta ${recipeId}`;
+                  // Try to get recipe name from the first ingredient, fallback to a proper name format
+                  const firstIngredient = recipeIngredients[0];
+                  let recipeName = firstIngredient?.recipe_name;
+                  
+                  // If no recipe name, create a meaningful name
+                  if (!recipeName || recipeName.trim() === '') {
+                    recipeName = `Receta de ${recipeIngredients.length} ingrediente${recipeIngredients.length > 1 ? 's' : ''}`;
+                  }
+                  
                   const totalCalories = recipeIngredients.reduce((sum, ing) => sum + (ing.calories_per_serving * (ingredientQuantities[ing.id] || ing.quantity_grams) / ing.quantity_grams), 0);
                   const totalProtein = recipeIngredients.reduce((sum, ing) => sum + (ing.protein_g_per_serving * (ingredientQuantities[ing.id] || ing.quantity_grams) / ing.quantity_grams), 0);
                   const totalCarbs = recipeIngredients.reduce((sum, ing) => sum + (ing.carbs_g_per_serving * (ingredientQuantities[ing.id] || ing.quantity_grams) / ing.quantity_grams), 0);

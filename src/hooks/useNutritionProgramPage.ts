@@ -19,6 +19,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
 
   // Reset initialization when date changes
   useEffect(() => {
+    console.log('Date changed, resetting initialization');
     setInitialized(false);
     setSelectedOptions({});
     setCheckedIngredients({});
@@ -28,6 +29,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
   // Initialize selected options and quantities when nutrition plan loads (only once per plan)
   useEffect(() => {
     if (nutritionPlan?.meals && !initialized) {
+      console.log('Initializing nutrition plan data');
       const initialOptions: Record<string, number> = {};
       const initialQuantities: Record<string, number> = {};
       
@@ -47,6 +49,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       setSelectedOptions(initialOptions);
       setIngredientQuantities(initialQuantities);
       setInitialized(true);
+      console.log('Nutrition plan initialized');
     }
   }, [nutritionPlan?.id, initialized]); // Only depend on plan ID, not the whole object
 
