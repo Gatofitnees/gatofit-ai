@@ -110,7 +110,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     };
   };
 
-  const handleSaveMeals = useCallback(async () => {
+  const handleSaveMeals = useCallback(async (specificIngredients?: AdminNutritionIngredient[]) => {
     if (!nutritionPlan?.meals) return;
 
     setSaving(true);
@@ -118,22 +118,33 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     let errorCount = 0;
 
     try {
-      // Collect all checked ingredients
+      // Collect ingredients to save (either specific ones or all checked ones)
       const ingredientsToSave: { ingredient: AdminNutritionIngredient; quantity: number }[] = [];
       
-      nutritionPlan.meals.forEach(meal => {
-        const selectedOptionIndex = selectedOptions[meal.id] || 0;
-        const selectedOption = meal.options?.[selectedOptionIndex];
-        
-        if (selectedOption?.ingredients) {
-          selectedOption.ingredients.forEach(ingredient => {
-            if (checkedIngredients[ingredient.id]) {
-              const quantity = ingredientQuantities[ingredient.id] || ingredient.quantity_grams;
-              ingredientsToSave.push({ ingredient, quantity });
-            }
-          });
-        }
-      });
+      if (specificIngredients) {
+        // Save only the specific ingredients passed (for recipe save)
+        specificIngredients.forEach(ingredient => {
+          if (checkedIngredients[ingredient.id]) {
+            const quantity = ingredientQuantities[ingredient.id] || ingredient.quantity_grams;
+            ingredientsToSave.push({ ingredient, quantity });
+          }
+        });
+      } else {
+        // Collect all checked ingredients (for main save button)
+        nutritionPlan.meals.forEach(meal => {
+          const selectedOptionIndex = selectedOptions[meal.id] || 0;
+          const selectedOption = meal.options?.[selectedOptionIndex];
+          
+          if (selectedOption?.ingredients) {
+            selectedOption.ingredients.forEach(ingredient => {
+              if (checkedIngredients[ingredient.id]) {
+                const quantity = ingredientQuantities[ingredient.id] || ingredient.quantity_grams;
+                ingredientsToSave.push({ ingredient, quantity });
+              }
+            });
+          }
+        });
+      }
 
       if (ingredientsToSave.length === 0) {
         toast({
@@ -168,11 +179,19 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
           variant: "default"
         });
         
-        // Clear selections after successful save
-        setCheckedIngredients({});
-        
-        // Navigate back to nutrition page
-        navigate('/nutrition');
+        // Clear selections for saved ingredients
+        if (specificIngredients) {
+          const newCheckedIngredients = { ...checkedIngredients };
+          specificIngredients.forEach(ingredient => {
+            delete newCheckedIngredients[ingredient.id];
+          });
+          setCheckedIngredients(newCheckedIngredients);
+        } else {
+          // Clear all selections after successful save
+          setCheckedIngredients({});
+          // Navigate back to nutrition page only for main save
+          navigate('/nutrition');
+        }
       }
 
       if (errorCount > 0) {

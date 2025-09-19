@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import NutrientIcon from '@/components/nutrition/NutrientIcon';
 import { EditableIngredientItem } from './EditableIngredientItem';
 
@@ -15,6 +16,7 @@ interface RecipeCardProps {
   ingredientQuantities: Record<string, number>;
   onIngredientCheck: (ingredientId: string, checked: boolean) => void;
   onQuantityChange: (ingredientId: string, quantity: number) => void;
+  onSaveRecipeIngredients?: () => void;
   recipeImageUrl?: string;
   recipeDescription?: string;
   recipeInstructions?: string;
@@ -31,10 +33,12 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   ingredientQuantities,
   onIngredientCheck,
   onQuantityChange,
+  onSaveRecipeIngredients,
   recipeImageUrl,
   recipeDescription,
   recipeInstructions
 }) => {
+  const hasSelectedIngredients = ingredients.some(ingredient => checkedIngredients[ingredient.id]);
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -160,6 +164,19 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
                 />
               ))}
             </div>
+            
+            {/* Save Recipe Ingredients Button */}
+            {hasSelectedIngredients && onSaveRecipeIngredients && (
+              <div className="mt-4 pt-4 border-t">
+                <Button
+                  onClick={onSaveRecipeIngredients}
+                  className="w-full"
+                  size="lg"
+                >
+                  Guardar Ingredientes Seleccionados
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

@@ -142,19 +142,49 @@ export const NutritionProgramPage: React.FC = () => {
 
                 {/* Recipe Groups */}
                 {Object.entries(recipeGroups).map(([recipeId, recipeIngredients]) => {
-                  // Try to get recipe name from the first ingredient, fallback to a proper name format
+                  // Get recipe name from the first ingredient that has it
                   const firstIngredient = recipeIngredients[0];
-                  let recipeName = firstIngredient?.recipe_name;
+                  let recipeName = firstIngredient?.recipe_name || '';
                   
                   // If no recipe name, create a meaningful name
                   if (!recipeName || recipeName.trim() === '') {
                     recipeName = `Receta de ${recipeIngredients.length} ingrediente${recipeIngredients.length > 1 ? 's' : ''}`;
                   }
                   
-                  const totalCalories = recipeIngredients.reduce((sum, ing) => sum + (ing.calories_per_serving * (ingredientQuantities[ing.id] || ing.quantity_grams) / ing.quantity_grams), 0);
-                  const totalProtein = recipeIngredients.reduce((sum, ing) => sum + (ing.protein_g_per_serving * (ingredientQuantities[ing.id] || ing.quantity_grams) / ing.quantity_grams), 0);
-                  const totalCarbs = recipeIngredients.reduce((sum, ing) => sum + (ing.carbs_g_per_serving * (ingredientQuantities[ing.id] || ing.quantity_grams) / ing.quantity_grams), 0);
-                  const totalFat = recipeIngredients.reduce((sum, ing) => sum + (ing.fats_g_per_serving * (ingredientQuantities[ing.id] || ing.quantity_grams) / ing.quantity_grams), 0);
+                  // Calculate totals based on current quantities
+                  const totalCalories = recipeIngredients.reduce((sum, ing) => {
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
+                    const ratio = currentQuantity / ing.quantity_grams;
+                    return sum + (ing.calories_per_serving * ratio);
+                  }, 0);
+                  
+                  const totalProtein = recipeIngredients.reduce((sum, ing) => {
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
+                    const ratio = currentQuantity / ing.quantity_grams;
+                    return sum + (ing.protein_g_per_serving * ratio);
+                  }, 0);
+                  
+                  const totalCarbs = recipeIngredients.reduce((sum, ing) => {
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
+                    const ratio = currentQuantity / ing.quantity_grams;
+                    return sum + (ing.carbs_g_per_serving * ratio);
+                  }, 0);
+                  
+                  const totalFat = recipeIngredients.reduce((sum, ing) => {
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
+                    const ratio = currentQuantity / ing.quantity_grams;
+                    return sum + (ing.fats_g_per_serving * ratio);
+                  }, 0);
+
+                  const handleSaveRecipeIngredients = () => {
+                    const selectedRecipeIngredients = recipeIngredients.filter(ingredient => 
+                      checkedIngredients[ingredient.id]
+                    );
+                    
+                    if (selectedRecipeIngredients.length > 0) {
+                      handleSaveMeals(selectedRecipeIngredients);
+                    }
+                  };
 
                   return (
                     <RecipeCard
@@ -169,6 +199,7 @@ export const NutritionProgramPage: React.FC = () => {
                       ingredientQuantities={ingredientQuantities}
                       onIngredientCheck={handleIngredientCheck}
                       onQuantityChange={handleQuantityChange}
+                      onSaveRecipeIngredients={handleSaveRecipeIngredients}
                       recipeImageUrl={recipeIngredients[0]?.recipe_image_url}
                       recipeDescription={recipeIngredients[0]?.recipe_description}
                       recipeInstructions={recipeIngredients[0]?.recipe_instructions}
@@ -203,7 +234,7 @@ export const NutritionProgramPage: React.FC = () => {
       {hasSelectedIngredients && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
           <Button
-            onClick={handleSaveMeals}
+            onClick={() => handleSaveMeals()}
             disabled={saving}
             className="w-full"
             size="lg"
