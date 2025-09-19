@@ -18,14 +18,14 @@ export interface SubscriptionPlan {
 export interface UserSubscription {
   id: string;
   user_id: string;
-  plan_type: 'free' | 'monthly' | 'yearly';
+  plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados';
   status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial';
   started_at: string;
   expires_at?: string;
   store_transaction_id?: string;
   store_platform?: string;
   auto_renewal: boolean;
-  next_plan_type?: 'free' | 'monthly' | 'yearly';
+  next_plan_type?: 'free' | 'monthly' | 'yearly' | 'asesorados';
   next_plan_starts_at?: string;
   scheduled_change_created_at?: string;
 }
@@ -35,6 +35,7 @@ export const useSubscription = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
+  const [isAsesorado, setIsAsesorado] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,8 +60,10 @@ export const useSubscription = () => {
       }
 
       if (data) {
-        setSubscription(data);
-        setIsPremium(data.plan_type !== 'free' && data.status === 'active');
+        setSubscription(data as UserSubscription);
+        const planType = data.plan_type as string;
+        setIsPremium((planType === 'monthly' || planType === 'yearly' || planType === 'asesorados') && data.status === 'active');
+        setIsAsesorado(planType === 'asesorados' && data.status === 'active');
       }
     } catch (error) {
       console.error('Error in fetchSubscriptionData:', error);
@@ -127,14 +130,14 @@ export const useSubscription = () => {
       if (error) return false;
       
       return data?.status === 'active' && 
-        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly');
+        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly' || (data?.plan_type as any) === 'asesorados');
     } catch (error) {
       console.error('Error checking user premium status:', error);
       return false;
     }
   };
 
-  const scheduleOrUpgradeSubscription = async (planType: 'monthly' | 'yearly', transactionId?: string) => {
+  const scheduleOrUpgradeSubscription = async (planType: 'monthly' | 'yearly' | 'asesorados', transactionId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
@@ -148,7 +151,7 @@ export const useSubscription = () => {
 
       const { data, error } = await supabase.rpc('schedule_plan_change', {
         p_user_id: user.id,
-        p_new_plan_type: planType
+        p_new_plan_type: planType as any
       });
 
       if (error) throw error;
@@ -176,7 +179,7 @@ export const useSubscription = () => {
     }
   };
 
-  const upgradeSubscription = async (planType: 'monthly' | 'yearly', transactionId?: string) => {
+  const upgradeSubscription = async (planType: 'monthly' | 'yearly' | 'asesorados', transactionId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
@@ -197,7 +200,7 @@ export const useSubscription = () => {
         const { error } = await supabase
           .from('user_subscriptions')
           .update({
-            plan_type: planType,
+            plan_type: planType as any,
             status: 'active',
             expires_at: expiresAt.toISOString(),
             store_transaction_id: transactionId,
@@ -212,7 +215,7 @@ export const useSubscription = () => {
           .from('user_subscriptions')
           .insert({
             user_id: user.id,
-            plan_type: planType,
+            plan_type: planType as any,
             status: 'active',
             expires_at: expiresAt.toISOString(),
             store_transaction_id: transactionId,
@@ -302,6 +305,7 @@ export const useSubscription = () => {
     plans,
     isLoading,
     isPremium,
+    isAsesorado,
     hasScheduledChange,
     checkPremiumStatus,
     checkUserPremiumStatus,

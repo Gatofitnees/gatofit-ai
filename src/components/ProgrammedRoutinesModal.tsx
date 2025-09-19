@@ -271,7 +271,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         <Card className="shadow-2xl max-h-[calc(100vh-4rem)] overflow-y-auto border-0 bg-background">
           {/* Header with close button */}
           <div className="flex items-center justify-between p-4 border-b border-border/50">
-            <h3 className="text-lg font-semibold">Rutinas Programadas</h3>
+            <h3 className="text-lg font-semibold">{programType === 'admin' ? 'Programa' : 'Rutinas Programadas'}</h3>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>

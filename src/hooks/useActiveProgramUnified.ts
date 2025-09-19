@@ -123,16 +123,18 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         const adminAssignment = adminPrograms[0];
         console.log('Active Admin program found:', adminAssignment);
         
+        // For admin programs - calculate which routines to show
+        const dayOfWeek = selectedDate.getDay();
+        const dayOfWeekAdjusted = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert JS day (0=Sunday) to our format (0=Monday)
         // Calcular día actual del programa admin
         const startDate = new Date(adminAssignment.started_at);
         const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         
         if (daysDiff >= 0) {
           const weekNumber = Math.floor(daysDiff / 7) + 1;
-          const jsDay = selectedDate.getDay();
-          const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 6=domingo
+          const dayOfWeekAdjusted = dayOfWeek;
           
-          console.log('Admin program day calculation:', { weekNumber, dayOfWeek, daysDiff });
+          console.log('Admin program day calculation:', { weekNumber, dayOfWeek: dayOfWeekAdjusted, daysDiff });
 
           // Obtener rutinas del programa admin para este día
           const { data: adminRoutines, error: adminRoutinesError } = await supabase
@@ -149,7 +151,7 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
             `)
             .eq('program_id', adminAssignment.program_id)
             .eq('week_number', weekNumber)
-            .eq('day_of_week', dayOfWeek)
+            .eq('day_of_week', dayOfWeekAdjusted)
             .order('order_in_day');
 
           if (adminRoutinesError) {

@@ -8,7 +8,7 @@ import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-rea
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
-import { useSubscription } from "@/hooks/subscription";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,7 +28,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
   const { user, signOut } = useAuth();
   const { profile, loading: profileLoading } = useProfileContext();
   const { streakData } = useStreaks();
-  const { isPremium } = useSubscription();
+  const { isPremium, isAsesorado } = useSubscription();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -101,6 +101,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             size="md"
             src={avatarUrl}
             isPremium={isPremium}
+            isAsesorado={isAsesorado}
           />
           <div className="ml-4">
             <h1 className="text-xl font-bold">
@@ -134,6 +135,7 @@ const UserHeader: React.FC<UserHeaderProps> = ({
                 size="sm" 
                 src={avatarUrl}
                 isPremium={isPremium}
+                isAsesorado={isAsesorado}
               />
               <div className="ml-2">
                 <p className="font-medium text-sm">{displayName}</p>

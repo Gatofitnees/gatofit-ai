@@ -10,6 +10,7 @@ interface AvatarProps {
   size?: "sm" | "md" | "lg";
   className?: string;
   isPremium?: boolean;
+  isAsesorado?: boolean;
 }
 
 const Avatar: React.FC<AvatarProps> = ({ 
@@ -18,7 +19,8 @@ const Avatar: React.FC<AvatarProps> = ({
   progress = 0, 
   size = "md",
   className,
-  isPremium = false
+  isPremium = false,
+  isAsesorado = false
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -83,10 +85,25 @@ const Avatar: React.FC<AvatarProps> = ({
           <div className="w-full h-full rounded-full bg-background" />
         </div>
       )}
+      
+      {/* Asesorado red ring */}
+      {isAsesorado && (
+        <div 
+          className="absolute inset-0 rounded-full border-2"
+          style={{
+            background: 'linear-gradient(45deg, #ef4444, #dc2626)',
+            padding: '2px',
+            borderRadius: '50%'
+          }}
+        >
+          <div className="w-full h-full rounded-full bg-background" />
+        </div>
+      )}
       <div
         className={cn(
           "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-secondary flex items-center justify-center overflow-hidden",
-          isPremium ? "border-2 border-yellow-400 shadow-lg shadow-yellow-400/20" : "border border-black/10",
+          isPremium ? "border-2 border-yellow-400 shadow-lg shadow-yellow-400/20" : 
+          isAsesorado ? "border-2 border-red-500 shadow-lg shadow-red-500/20" : "border border-black/10",
           sizeClasses[size]
         )}
       >
@@ -126,6 +143,33 @@ const Avatar: React.FC<AvatarProps> = ({
               className={cn(
                 crownSizes[size],
                 "absolute top-0 left-0 text-yellow-300 transform rotate-45 opacity-60"
+              )}
+              style={{
+                filter: 'blur(2px)'
+              }}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Asesorado Crown - Red version */}
+      {isAsesorado && (
+        <div className="absolute -top-1 -right-1 z-10">
+          <div className="relative">
+            <Crown 
+              className={cn(
+                crownSizes[size],
+                "text-red-500 transform rotate-45 drop-shadow-lg"
+              )}
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
+              }}
+            />
+            {/* Subtle glow effect */}
+            <Crown 
+              className={cn(
+                crownSizes[size],
+                "absolute top-0 left-0 text-red-400 transform rotate-45 opacity-60"
               )}
               style={{
                 filter: 'blur(2px)'

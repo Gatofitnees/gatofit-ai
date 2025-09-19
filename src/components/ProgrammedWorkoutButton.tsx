@@ -79,6 +79,11 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
       return <Check className="h-5 w-5" />;
     }
     
+    // Use apple-dumbbell icon for admin programs
+    if (activeProgram?.type === 'admin') {
+      return <i className="fi fi-sr-apple-dumbbell text-lg" />;
+    }
+    
     return <Calendar className="h-5 w-5" />;
   };
 
@@ -86,6 +91,12 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
     if (isCompletedForSelectedDate) {
       return "w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-neu-button border-2 border-green-500";
     }
+    
+    // Red styling for admin programs
+    if (activeProgram?.type === 'admin') {
+      return "w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-neu-button";
+    }
+    
     return "w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-neu-button";
   };
 
