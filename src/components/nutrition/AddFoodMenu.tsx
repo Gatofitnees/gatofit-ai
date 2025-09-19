@@ -3,7 +3,6 @@ import { Camera, Search, Plus, UtensilsCrossed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAdminNutritionProgram } from '@/hooks/useAdminNutritionProgram';
-import { NutritionProgramModal } from './NutritionProgramModal';
 
 interface AddFoodMenuProps {
   onCameraClick: () => void;
@@ -12,7 +11,6 @@ interface AddFoodMenuProps {
 
 const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showNutritionModal, setShowNutritionModal] = useState(false);
   const navigate = useNavigate();
   const { hasNutritionPlan, loading } = useAdminNutritionProgram(selectedDate);
 
@@ -28,7 +26,8 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
 
   const handleNutritionClick = () => {
     setIsOpen(false);
-    setShowNutritionModal(true);
+    const dateString = selectedDate.toISOString().split('T')[0];
+    navigate(`/nutrition-program?date=${dateString}`);
   };
 
   const toggleMenu = () => {
@@ -116,12 +115,6 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
       >
         <Plus className="h-6 w-6" />
       </button>
-
-      <NutritionProgramModal
-        isOpen={showNutritionModal}
-        onClose={() => setShowNutritionModal(false)}
-        selectedDate={selectedDate}
-      />
     </div>
   );
 };

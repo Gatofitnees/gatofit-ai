@@ -3,26 +3,40 @@ import { useAdminNutritionProgram, AdminNutritionIngredient } from './useAdminNu
 import { useFoodLog } from './useFoodLog';
 import { useToast } from './use-toast';
 import { FoodLogEntry } from '@/types/foodLog';
+import { useNavigate } from 'react-router-dom';
 
-export const useNutritionProgramModal = (selectedDate: Date, onClose?: () => void) => {
+export const useNutritionProgramPage = (selectedDate: Date) => {
+  const navigate = useNavigate();
   const { nutritionPlan, loading } = useAdminNutritionProgram(selectedDate);
   const { addEntry } = useFoodLog(selectedDate.toISOString().split('T')[0]);
   const { toast } = useToast();
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
+  const [ingredientQuantities, setIngredientQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
 
-  // Initialize selected options when nutrition plan loads
+  // Initialize selected options and quantities when nutrition plan loads
   useEffect(() => {
     if (nutritionPlan?.meals) {
       const initialOptions: Record<string, number> = {};
+      const initialQuantities: Record<string, number> = {};
+      
       nutritionPlan.meals.forEach(meal => {
         if (meal.options && meal.options.length > 0) {
           initialOptions[meal.id] = 0; // Select first option by default
+          
+          // Initialize quantities for all ingredients
+          meal.options.forEach(option => {
+            option.ingredients?.forEach(ingredient => {
+              initialQuantities[ingredient.id] = ingredient.quantity_grams;
+            });
+          });
         }
       });
+      
       setSelectedOptions(initialOptions);
+      setIngredientQuantities(initialQuantities);
     }
   }, [nutritionPlan]);
 
@@ -55,17 +69,27 @@ export const useNutritionProgramModal = (selectedDate: Date, onClose?: () => voi
     }));
   }, []);
 
-  const convertIngredientToFoodLogEntry = (ingredient: AdminNutritionIngredient): Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> => {
+  const handleQuantityChange = useCallback((ingredientId: string, quantity: number) => {
+    setIngredientQuantities(prev => ({
+      ...prev,
+      [ingredientId]: quantity
+    }));
+  }, []);
+
+  const convertIngredientToFoodLogEntry = (ingredient: AdminNutritionIngredient, quantity: number): Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> => {
+    // Calculate scaled macros based on quantity
+    const scale = quantity / ingredient.quantity_grams;
+    
     return {
       food_item_id: null,
       meal_type: 'other' as any,
       custom_food_name: ingredient.custom_food_name || 'Alimento del plan nutricional',
-      quantity_consumed: ingredient.quantity_grams,
+      quantity_consumed: quantity,
       unit_consumed: 'g',
-      calories_consumed: ingredient.calories_per_serving,
-      protein_g_consumed: ingredient.protein_g_per_serving,
-      carbs_g_consumed: ingredient.carbs_g_per_serving,
-      fat_g_consumed: ingredient.fats_g_per_serving,
+      calories_consumed: ingredient.calories_per_serving * scale,
+      protein_g_consumed: ingredient.protein_g_per_serving * scale,
+      carbs_g_consumed: ingredient.carbs_g_per_serving * scale,
+      fat_g_consumed: ingredient.fats_g_per_serving * scale,
       health_score: null,
       ingredients: null,
       notes: 'Agregado desde plan nutricional programado',
@@ -82,7 +106,7 @@ export const useNutritionProgramModal = (selectedDate: Date, onClose?: () => voi
 
     try {
       // Collect all checked ingredients
-      const ingredientsToSave: AdminNutritionIngredient[] = [];
+      const ingredientsToSave: { ingredient: AdminNutritionIngredient; quantity: number }[] = [];
       
       nutritionPlan.meals.forEach(meal => {
         const selectedOptionIndex = selectedOptions[meal.id] || 0;
@@ -91,7 +115,8 @@ export const useNutritionProgramModal = (selectedDate: Date, onClose?: () => voi
         if (selectedOption?.ingredients) {
           selectedOption.ingredients.forEach(ingredient => {
             if (checkedIngredients[ingredient.id]) {
-              ingredientsToSave.push(ingredient);
+              const quantity = ingredientQuantities[ingredient.id] || ingredient.quantity_grams;
+              ingredientsToSave.push({ ingredient, quantity });
             }
           });
         }
@@ -107,9 +132,9 @@ export const useNutritionProgramModal = (selectedDate: Date, onClose?: () => voi
       }
 
       // Save each ingredient as a food log entry
-      for (const ingredient of ingredientsToSave) {
+      for (const { ingredient, quantity } of ingredientsToSave) {
         try {
-          const foodLogEntry = convertIngredientToFoodLogEntry(ingredient);
+          const foodLogEntry = convertIngredientToFoodLogEntry(ingredient, quantity);
           const result = await addEntry(foodLogEntry);
           
           if (result) {
@@ -133,9 +158,8 @@ export const useNutritionProgramModal = (selectedDate: Date, onClose?: () => voi
         // Clear selections after successful save
         setCheckedIngredients({});
         
-        if (onClose) {
-          onClose();
-        }
+        // Navigate back to nutrition page
+        navigate('/nutrition');
       }
 
       if (errorCount > 0) {
@@ -156,16 +180,18 @@ export const useNutritionProgramModal = (selectedDate: Date, onClose?: () => voi
     } finally {
       setSaving(false);
     }
-  }, [nutritionPlan, selectedOptions, checkedIngredients, addEntry, toast, onClose]);
+  }, [nutritionPlan, selectedOptions, checkedIngredients, ingredientQuantities, addEntry, toast, navigate]);
 
   return {
     nutritionPlan,
     selectedOptions,
     checkedIngredients,
+    ingredientQuantities,
     loading,
     saving,
     handleOptionSelect,
     handleIngredientCheck,
+    handleQuantityChange,
     handleSaveMeals
   };
 };

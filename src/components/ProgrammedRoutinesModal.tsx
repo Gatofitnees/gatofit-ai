@@ -503,27 +503,28 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                               key={`${plan.id}-${index}`}
                               className="p-4 border border-border/50 rounded-lg bg-card"
                             >
-                              <h4 className="font-medium text-base mb-2">
-                                {plan.name}
-                              </h4>
-                              {plan.description && (
-                                <p className="text-sm text-muted-foreground mb-3">
-                                  {plan.description}
-                                </p>
-                              )}
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <span className="text-muted-foreground">
-                                  Calorías: <span className="text-foreground font-medium">{plan.target_calories}</span>
-                                </span>
-                                <span className="text-muted-foreground">
-                                  Proteína: <span className="text-foreground font-medium">{plan.target_protein_g}g</span>
-                                </span>
-                                <span className="text-muted-foreground">
-                                  Carbohidratos: <span className="text-foreground font-medium">{plan.target_carbs_g}g</span>
-                                </span>
-                                <span className="text-muted-foreground">
-                                  Grasas: <span className="text-foreground font-medium">{plan.target_fats_g}g</span>
-                                </span>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h4 className="font-medium text-base mb-1">
+                                    Plan de alimentación ({plan.name})
+                                  </h4>
+                                  <div className="flex gap-4 text-sm text-muted-foreground">
+                                    <span>🔥 {plan.target_calories} kcal</span>
+                                    <span>🥩 {plan.target_protein_g}g</span>
+                                    <span>🌾 {plan.target_carbs_g}g</span>
+                                    <span>🥑 {plan.target_fats_g}g</span>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() => {
+                                    const dateString = navigatedDate.toISOString().split('T')[0];
+                                    window.location.href = `/nutrition-program?date=${dateString}`;
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  Ver Plan
+                                </Button>
                               </div>
                             </div>
                           ))}

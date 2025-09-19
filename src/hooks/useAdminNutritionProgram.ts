@@ -47,6 +47,8 @@ export interface AdminNutritionIngredient {
   carbs_g_per_serving: number;
   fats_g_per_serving: number;
   fiber_g_per_serving: number;
+  recipe_id?: string;
+  recipe_name?: string;
 }
 
 export const useAdminNutritionProgram = (selectedDate: Date) => {
@@ -123,7 +125,11 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
               *,
               options:nutrition_plan_meal_options (
                 *,
-                ingredients:nutrition_plan_meal_ingredients (*)
+                ingredients:nutrition_plan_meal_ingredients (
+                  *,
+                  recipe_id,
+                  recipe_name
+                )
               )
             )
           `)
