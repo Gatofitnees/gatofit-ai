@@ -62,8 +62,9 @@ export const useSubscription = () => {
       if (data) {
         setSubscription(data as UserSubscription);
         const planType = data.plan_type as string;
-        setIsPremium((planType === 'monthly' || planType === 'yearly' || planType === 'asesorados') && data.status === 'active');
-        setIsAsesorado(planType === 'asesorados' && data.status === 'active');
+        const isActiveAsesorado = planType === 'asesorados' && data.status === 'active';
+        setIsAsesorado(isActiveAsesorado);
+        setIsPremium((planType === 'monthly' || planType === 'yearly') && data.status === 'active' && !isActiveAsesorado);
       }
     } catch (error) {
       console.error('Error in fetchSubscriptionData:', error);

@@ -132,7 +132,6 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         
         if (daysDiff >= 0) {
           const weekNumber = Math.floor(daysDiff / 7) + 1;
-          const dayOfWeekAdjusted = dayOfWeek;
           
           console.log('Admin program day calculation:', { weekNumber, dayOfWeek: dayOfWeekAdjusted, daysDiff });
 
