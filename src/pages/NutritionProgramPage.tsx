@@ -80,12 +80,14 @@ export const NutritionProgramPage: React.FC = () => {
     const individualIngredients: any[] = [];
 
     ingredients.forEach(ingredient => {
-      if (ingredient.recipe_id) {
+      // Check if ingredient has a recipe_id and recipe_name to be considered part of a recipe
+      if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
       } else {
+        // This is an individual ingredient (not part of a recipe)
         individualIngredients.push(ingredient);
       }
     });
@@ -142,14 +144,9 @@ export const NutritionProgramPage: React.FC = () => {
 
                 {/* Recipe Groups */}
                 {Object.entries(recipeGroups).map(([recipeId, recipeIngredients]) => {
-                  // Get recipe name from the first ingredient that has it
+                  // Get recipe information from the first ingredient
                   const firstIngredient = recipeIngredients[0];
-                  let recipeName = firstIngredient?.recipe_name || '';
-                  
-                  // If no recipe name, create a meaningful name
-                  if (!recipeName || recipeName.trim() === '') {
-                    recipeName = `Receta de ${recipeIngredients.length} ingrediente${recipeIngredients.length > 1 ? 's' : ''}`;
-                  }
+                  const recipeName = firstIngredient?.recipe_name || `Receta de ${recipeIngredients.length} ingrediente${recipeIngredients.length > 1 ? 's' : ''}`;
                   
                   // Calculate totals based on current quantities
                   const totalCalories = recipeIngredients.reduce((sum, ing) => {

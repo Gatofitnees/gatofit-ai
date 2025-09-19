@@ -93,10 +93,16 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     // Calculate scaled macros based on quantity
     const scale = quantity / ingredient.quantity_grams;
     
+    // Get the appropriate food name
+    const foodName = ingredient.custom_food_name || 
+                    ingredient.food_items?.name || 
+                    ingredient.recipe_name || 
+                    'Alimento del plan nutricional';
+    
     return {
-      food_item_id: null,
-      meal_type: 'other' as any,
-      custom_food_name: ingredient.custom_food_name || 'Alimento del plan nutricional',
+      food_item_id: ingredient.food_items?.id || null,
+      meal_type: 'breakfast', // Default to breakfast, can be improved to detect from meal context
+      custom_food_name: foodName,
       quantity_consumed: quantity,
       unit_consumed: 'g',
       calories_consumed: ingredient.calories_per_serving * scale,

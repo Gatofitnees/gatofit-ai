@@ -136,7 +136,7 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
       if (nutritionPlanData && nutritionPlanData.length > 0) {
         const nutritionPlanRef = nutritionPlanData[0];
         
-        // Obtener detalles del plan nutricional
+        // Obtener detalles del plan nutricional con información completa de recetas
         const { data: planDetails, error: planError } = await supabase
           .from('nutrition_plans')
           .select(`
@@ -147,11 +147,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                 *,
                 ingredients:nutrition_plan_meal_ingredients (
                   *,
-                  recipe_id,
-                  recipe_name,
-                  recipe_description,
-                  recipe_instructions,
-                  recipe_image_url,
                   food_items (
                     id,
                     name
@@ -167,6 +162,48 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
 
         if (planDetails && planDetails.length > 0) {
           const planData = planDetails[0];
+          
+          // Enrich ingredients with recipe information
+          if (planData.meals) {
+            for (const meal of planData.meals) {
+              if (meal.options) {
+                for (const option of meal.options) {
+                  if (option.ingredients) {
+                    // Get all unique recipe IDs from ingredients
+                    const recipeIds = [...new Set(
+                      option.ingredients
+                        .filter(ing => ing.recipe_id)
+                        .map(ing => ing.recipe_id)
+                    )];
+                    
+                    // Fetch recipe details for all recipes in this option
+                    if (recipeIds.length > 0) {
+                      const { data: recipesData } = await supabase
+                        .from('recipes')
+                        .select('id, name, description, instructions, cover_image_url')
+                        .in('id', recipeIds);
+                      
+                      // Enrich ingredients with recipe data
+                      if (recipesData) {
+                        option.ingredients.forEach((ingredient: any) => {
+                          if (ingredient.recipe_id) {
+                            const recipeData = recipesData.find(r => r.id === ingredient.recipe_id);
+                            if (recipeData) {
+                              ingredient.recipe_name = recipeData.name;
+                              ingredient.recipe_description = recipeData.description;
+                              ingredient.recipe_instructions = recipeData.instructions;
+                              ingredient.recipe_image_url = recipeData.cover_image_url;
+                            }
+                          }
+                        });
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
           setNutritionPlan(planData as any);
           setHasNutritionPlan(true);
           setLastFetchedDate(dateString);
