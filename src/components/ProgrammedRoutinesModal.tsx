@@ -148,76 +148,80 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
         // Convert to Monday=0, Sunday=6 format for admin programs
         const dayOfWeekAdjusted = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
         
+        // First fetch admin program routines
         const { data: adminRoutines } = await (supabase as any)
           .from('admin_program_routines')
-          .select(`
-            routine_id,
-            order_in_day,
-            notes,
-            routines (
-              id,
-              name,
-              description,
-              estimated_duration_minutes,
-              difficulty_level,
-              muscle_groups
-            )
-          `)
+          .select('routine_id, order_in_day, notes')
           .eq('program_id', activeProgram.program.id)
           .eq('week_number', 1)
           .eq('day_of_week', dayOfWeekAdjusted)
           .order('order_in_day');
         
-        if (adminRoutines) {
+        if (adminRoutines && adminRoutines.length > 0) {
+          // Get unique routine IDs
+          const routineIds = adminRoutines.map((r: any) => r.routine_id);
+          
+          // Fetch routine details separately
+          const { data: routineDetails } = await (supabase as any)
+            .from('routines')
+            .select('id, name, description, estimated_duration_minutes, difficulty_level, type')
+            .in('id', routineIds);
+          
+          // Create a map for easy lookup
+          const routineMap = new Map(routineDetails?.map((r: any) => [r.id, r]) || []);
+          
+          // Combine the data
           routines = adminRoutines.map((item: any) => ({
             id: item.routine_id,
             routine_id: item.routine_id,
-            routine: {
-              id: item.routines?.id,
-              name: item.routines?.name || `Rutina ${item.routine_id}`,
-              description: item.routines?.description,
-              estimated_duration_minutes: item.routines?.estimated_duration_minutes || 60,
-              difficulty_level: item.routines?.difficulty_level || 'medium',
-              muscle_groups: item.routines?.muscle_groups || []
+            routine: routineMap.get(item.routine_id) || { 
+              id: item.routine_id, 
+              name: `Rutina ${item.routine_id}`,
+              description: null,
+              estimated_duration_minutes: 60,
+              difficulty_level: 'medium',
+              type: 'strength'
             },
             notes: item.notes,
             order_in_day: item.order_in_day,
           }));
         }
 
-        // Also fetch nutrition plans for admin programs
-        const { data: nutritionPlansData } = await (supabase as any)
+        // Fetch nutrition plans for admin programs
+        const { data: adminNutritionPlans } = await (supabase as any)
           .from('admin_program_nutrition_plans')
-          .select(`
-            nutrition_plan_id,
-            order_in_day,
-            notes,
-            nutrition_plans (
-              id,
-              name,
-              description,
-              target_calories,
-              target_protein_g,
-              target_carbs_g,
-              target_fats_g
-            )
-          `)
+          .select('nutrition_plan_id, order_in_day, notes')
           .eq('program_id', activeProgram.program.id)
           .eq('week_number', 1)
           .eq('day_of_week', dayOfWeekAdjusted)
           .order('order_in_day');
 
-        if (nutritionPlansData && nutritionPlansData.length > 0) {
-          setNutritionPlans(nutritionPlansData.map((item: any) => ({
-            id: item.nutrition_plan_id,
-            name: item.nutrition_plans?.name || `Plan ${item.nutrition_plan_id}`,
-            description: item.nutrition_plans?.description,
-            target_calories: item.nutrition_plans?.target_calories,
-            target_protein_g: item.nutrition_plans?.target_protein_g,
-            target_carbs_g: item.nutrition_plans?.target_carbs_g,
-            target_fats_g: item.nutrition_plans?.target_fats_g,
-            notes: item.notes
-          })));
+        if (adminNutritionPlans && adminNutritionPlans.length > 0) {
+          // Get unique nutrition plan IDs
+          const planIds = adminNutritionPlans.map((p: any) => p.nutrition_plan_id);
+          
+          // Fetch nutrition plan details separately
+          const { data: planDetails } = await (supabase as any)
+            .from('nutrition_plans')
+            .select('id, name, description, target_calories, target_protein_g, target_carbs_g, target_fats_g')
+            .in('id', planIds);
+          
+          // Create a map for easy lookup
+          const planMap = new Map(planDetails?.map((p: any) => [p.id, p]) || []);
+          
+          setNutritionPlans(adminNutritionPlans.map((item: any) => {
+            const planDetail = planMap.get(item.nutrition_plan_id) as any;
+            return {
+              id: item.nutrition_plan_id,
+              name: planDetail?.name || `Plan ${item.nutrition_plan_id}`,
+              description: planDetail?.description,
+              target_calories: planDetail?.target_calories,
+              target_protein_g: planDetail?.target_protein_g,
+              target_carbs_g: planDetail?.target_carbs_g,
+              target_fats_g: planDetail?.target_fats_g,
+              notes: item.notes
+            };
+          }));
         } else {
           setNutritionPlans([]);
         }
