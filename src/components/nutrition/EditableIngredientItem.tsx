@@ -58,7 +58,7 @@ export const EditableIngredientItem: React.FC<EditableIngredientItemProps> = ({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-medium text-foreground truncate">
-            {ingredient.custom_food_name || ingredient.recipe_name || 'Alimento sin nombre'}
+            {ingredient.custom_food_name || ingredient.recipe_name || ingredient.food_items?.name || 'Alimento sin nombre'}
           </h4>
           
           <div className="flex items-center gap-2">

@@ -15,10 +15,19 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
   const [ingredientQuantities, setIngredientQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // Initialize selected options and quantities when nutrition plan loads
+  // Reset initialization when date changes
   useEffect(() => {
-    if (nutritionPlan?.meals) {
+    setInitialized(false);
+    setSelectedOptions({});
+    setCheckedIngredients({});
+    setIngredientQuantities({});
+  }, [selectedDate.toDateString()]);
+
+  // Initialize selected options and quantities when nutrition plan loads (only once per plan)
+  useEffect(() => {
+    if (nutritionPlan?.meals && !initialized) {
       const initialOptions: Record<string, number> = {};
       const initialQuantities: Record<string, number> = {};
       
@@ -37,8 +46,9 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       
       setSelectedOptions(initialOptions);
       setIngredientQuantities(initialQuantities);
+      setInitialized(true);
     }
-  }, [nutritionPlan]);
+  }, [nutritionPlan?.id, initialized]); // Only depend on plan ID, not the whole object
 
   const handleOptionSelect = useCallback((mealId: string, optionIndex: number) => {
     setSelectedOptions(prev => ({

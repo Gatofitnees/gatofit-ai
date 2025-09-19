@@ -52,6 +52,10 @@ export interface AdminNutritionIngredient {
   recipe_description?: string;
   recipe_instructions?: string;
   recipe_image_url?: string;
+  food_items?: {
+    id: number;
+    name: string;
+  };
 }
 
 export const useAdminNutritionProgram = (selectedDate: Date) => {
@@ -61,6 +65,7 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
   const [hasNutritionPlan, setHasNutritionPlan] = useState(false);
 
   const fetchAdminNutritionPlan = useCallback(async () => {
+    console.log('Fetching admin nutrition plan for date:', selectedDate.toISOString());
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -134,7 +139,11 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                   recipe_name,
                   recipe_description,
                   recipe_instructions,
-                  recipe_image_url
+                  recipe_image_url,
+                  food_items (
+                    id,
+                    name
+                  )
                 )
               )
             )
@@ -146,9 +155,15 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
 
         if (planDetails && planDetails.length > 0) {
           const planData = planDetails[0];
-          setNutritionPlan(planData as any);
+          // Only update if the plan actually changed
+          setNutritionPlan(prevPlan => {
+            if (prevPlan?.id === planData.id) {
+              return prevPlan; // Same plan, don't update
+            }
+            console.log('Admin nutrition plan found:', planData);
+            return planData as any;
+          });
           setHasNutritionPlan(true);
-          console.log('Admin nutrition plan found:', planData);
         } else {
           setNutritionPlan(null);
           setHasNutritionPlan(false);
