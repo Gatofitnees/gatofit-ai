@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import NutrientIcon from '@/components/nutrition/NutrientIcon';
 import { EditableIngredientItem } from './EditableIngredientItem';
 
@@ -16,6 +15,9 @@ interface RecipeCardProps {
   ingredientQuantities: Record<string, number>;
   onIngredientCheck: (ingredientId: string, checked: boolean) => void;
   onQuantityChange: (ingredientId: string, quantity: number) => void;
+  recipeImageUrl?: string;
+  recipeDescription?: string;
+  recipeInstructions?: string;
 }
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({
@@ -28,74 +30,139 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   checkedIngredients,
   ingredientQuantities,
   onIngredientCheck,
-  onQuantityChange
+  onQuantityChange,
+  recipeImageUrl,
+  recipeDescription,
+  recipeInstructions
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
-    <Card className="overflow-hidden">
-      <div
-        className="p-4 cursor-pointer hover:bg-secondary/20 transition-colors"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-foreground mb-3">
-              {recipeName}
-            </h3>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Card className="p-4 cursor-pointer hover:bg-secondary/20 transition-colors">
+          <div className="flex items-center gap-4">
+            {/* Recipe Image */}
+            <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+              {recipeImageUrl ? (
+                <img 
+                  src={recipeImageUrl} 
+                  alt={recipeName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                  <span className="text-2xl">🍽️</span>
+                </div>
+              )}
+            </div>
+
+            {/* Recipe Info */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground truncate mb-2">
+                {recipeName}
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                <NutrientIcon
+                  type="calories"
+                  value={Math.round(totalCalories)}
+                  unit="kcal"
+                  className="text-xs"
+                />
+                <NutrientIcon
+                  type="protein"
+                  value={Math.round(totalProtein)}
+                  className="text-xs"
+                />
+                <NutrientIcon
+                  type="carbs"
+                  value={Math.round(totalCarbs)}
+                  className="text-xs"
+                />
+                <NutrientIcon
+                  type="fat"
+                  value={Math.round(totalFat)}
+                  className="text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">{recipeName}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Recipe Image */}
+          {recipeImageUrl && (
+            <div className="w-full h-48 rounded-lg overflow-hidden">
+              <img 
+                src={recipeImageUrl} 
+                alt={recipeName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Recipe Description */}
+          {recipeDescription && (
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Descripción</h4>
+              <p className="text-muted-foreground">{recipeDescription}</p>
+            </div>
+          )}
+
+          {/* Macros Summary */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-3">Información Nutricional</h4>
             <div className="flex flex-wrap gap-4">
               <NutrientIcon
                 type="calories"
-                value={totalCalories}
+                value={Math.round(totalCalories)}
                 unit="kcal"
               />
               <NutrientIcon
                 type="protein"
-                value={totalProtein}
+                value={Math.round(totalProtein)}
               />
               <NutrientIcon
                 type="carbs"
-                value={totalCarbs}
+                value={Math.round(totalCarbs)}
               />
               <NutrientIcon
                 type="fat"
-                value={totalFat}
+                value={Math.round(totalFat)}
               />
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="p-2 ml-4"
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5" />
-            ) : (
-              <ChevronDown className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-      </div>
 
-      {isExpanded && (
-        <div className="border-t border-border bg-secondary/10">
-          <div className="p-4 space-y-2">
-            <h4 className="text-sm font-medium text-muted-foreground mb-3">
-              Ingredientes:
-            </h4>
-            {ingredients.map((ingredient) => (
-              <EditableIngredientItem
-                key={ingredient.id}
-                ingredient={ingredient}
-                checked={checkedIngredients[ingredient.id] || false}
-                quantity={ingredientQuantities[ingredient.id] || ingredient.quantity_grams}
-                onCheck={(checked) => onIngredientCheck(ingredient.id, checked)}
-                onQuantityChange={(quantity) => onQuantityChange(ingredient.id, quantity)}
-              />
-            ))}
+          {/* Instructions */}
+          {recipeInstructions && (
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Preparación</h4>
+              <p className="text-muted-foreground whitespace-pre-line">{recipeInstructions}</p>
+            </div>
+          )}
+
+          {/* Ingredients */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-3">Ingredientes</h4>
+            <div className="space-y-2">
+              {ingredients.map((ingredient) => (
+                <EditableIngredientItem
+                  key={ingredient.id}
+                  ingredient={ingredient}
+                  checked={checkedIngredients[ingredient.id] || false}
+                  quantity={ingredientQuantities[ingredient.id] || ingredient.quantity_grams}
+                  onCheck={(checked) => onIngredientCheck(ingredient.id, checked)}
+                  onQuantityChange={(quantity) => onQuantityChange(ingredient.id, quantity)}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      )}
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 };

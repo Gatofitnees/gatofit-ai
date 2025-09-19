@@ -49,6 +49,9 @@ export interface AdminNutritionIngredient {
   fiber_g_per_serving: number;
   recipe_id?: string;
   recipe_name?: string;
+  recipe_description?: string;
+  recipe_instructions?: string;
+  recipe_image_url?: string;
 }
 
 export const useAdminNutritionProgram = (selectedDate: Date) => {
@@ -128,7 +131,10 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                 ingredients:nutrition_plan_meal_ingredients (
                   *,
                   recipe_id,
-                  recipe_name
+                  recipe_name,
+                  recipe_description,
+                  recipe_instructions,
+                  recipe_image_url
                 )
               )
             )
@@ -155,17 +161,13 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
 
     } catch (error: any) {
       console.error("Error fetching admin nutrition plan:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo cargar el plan nutricional",
-        variant: "destructive"
-      });
+      // Don't use toast here to avoid infinite loop
       setNutritionPlan(null);
       setHasNutritionPlan(false);
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, toast]);
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchAdminNutritionPlan();

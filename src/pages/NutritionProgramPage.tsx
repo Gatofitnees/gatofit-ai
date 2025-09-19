@@ -158,6 +158,9 @@ export const NutritionProgramPage: React.FC = () => {
                       ingredientQuantities={ingredientQuantities}
                       onIngredientCheck={handleIngredientCheck}
                       onQuantityChange={handleQuantityChange}
+                      recipeImageUrl={recipeIngredients[0]?.recipe_image_url}
+                      recipeDescription={recipeIngredients[0]?.recipe_description}
+                      recipeInstructions={recipeIngredients[0]?.recipe_instructions}
                     />
                   );
                 })}
