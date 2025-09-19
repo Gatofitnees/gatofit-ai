@@ -64,7 +64,7 @@ export const useSubscription = () => {
         const planType = data.plan_type as string;
         const isActiveAsesorado = planType === 'asesorados' && data.status === 'active';
         setIsAsesorado(isActiveAsesorado);
-        setIsPremium((planType === 'monthly' || planType === 'yearly') && data.status === 'active' && !isActiveAsesorado);
+        setIsPremium((planType === 'monthly' || planType === 'yearly' || planType === 'asesorados') && data.status === 'active');
       }
     } catch (error) {
       console.error('Error in fetchSubscriptionData:', error);
@@ -159,7 +159,7 @@ export const useSubscription = () => {
 
       await fetchSubscriptionData();
       
-      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly';
+      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly' || subscription.plan_type === 'asesorados';
       
       toast({
         title: hadPremiumPlan ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",

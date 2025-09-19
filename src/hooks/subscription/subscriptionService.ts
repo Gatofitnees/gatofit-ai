@@ -146,7 +146,7 @@ export const scheduleOrUpgradeSubscription = async (
 
     if (error) throw error;
 
-    const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly';
+    const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly' || subscription.plan_type === 'asesorados';
     return { success: true, isScheduled: hadPremiumPlan };
   } catch (error) {
     console.error('Error scheduling/upgrading subscription:', error);

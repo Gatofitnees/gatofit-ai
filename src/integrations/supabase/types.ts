@@ -89,6 +89,39 @@ export type Database = {
           },
         ]
       }
+      admin_program_nutrition_plans: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          notes: string | null
+          nutrition_plan_id: string
+          order_in_day: number
+          program_id: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          notes?: string | null
+          nutrition_plan_id: string
+          order_in_day?: number
+          program_id: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          notes?: string | null
+          nutrition_plan_id?: string
+          order_in_day?: number
+          program_id?: string
+          week_number?: number
+        }
+        Relationships: []
+      }
       admin_program_routines: {
         Row: {
           created_at: string
@@ -1214,7 +1247,10 @@ export type Database = {
           duration_days: number | null
           id: string
           is_active: boolean
+          is_program_specific: boolean | null
           name: string
+          original_plan_id: string | null
+          program_specific_id: string | null
           target_calories: number
           target_carbs_g: number
           target_fats_g: number
@@ -1229,7 +1265,10 @@ export type Database = {
           duration_days?: number | null
           id?: string
           is_active?: boolean
+          is_program_specific?: boolean | null
           name: string
+          original_plan_id?: string | null
+          program_specific_id?: string | null
           target_calories: number
           target_carbs_g: number
           target_fats_g: number
@@ -1244,14 +1283,32 @@ export type Database = {
           duration_days?: number | null
           id?: string
           is_active?: boolean
+          is_program_specific?: boolean | null
           name?: string
+          original_plan_id?: string | null
+          program_specific_id?: string | null
           target_calories?: number
           target_carbs_g?: number
           target_fats_g?: number
           target_protein_g?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plans_original_plan_id_fkey"
+            columns: ["original_plan_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_plans_program_specific_id_fkey"
+            columns: ["program_specific_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       obstacle_types: {
         Row: {
@@ -2188,6 +2245,65 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tag_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by_admin: string | null
+          id: string
+          tag_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by_admin?: string | null
+          id?: string
+          tag_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by_admin?: string | null
+          id?: string
+          tag_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "user_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_tags: {
+        Row: {
+          color: Database["public"]["Enums"]["tag_color"]
+          created_at: string
+          created_by_admin: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: Database["public"]["Enums"]["tag_color"]
+          created_at?: string
+          created_by_admin?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: Database["public"]["Enums"]["tag_color"]
+          created_at?: string
+          created_by_admin?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       weekly_program_routines: {
         Row: {
           created_at: string
@@ -2441,6 +2557,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      clone_nutrition_plan_for_program: {
+        Args: {
+          new_plan_name?: string
+          source_plan_id: string
+          target_program_id: string
+        }
+        Returns: string
+      }
       copy_routine: {
         Args: { source_routine_id: number; target_user_id: string }
         Returns: Json
@@ -2563,6 +2687,32 @@ export type Database = {
           username: string
         }[]
       }
+      get_users_with_tags_and_filters: {
+        Args: {
+          p_activity_level?: string
+          p_limit?: number
+          p_offset?: number
+          p_order_by?: string
+          p_order_direction?: string
+          p_search?: string
+          p_subscription_type?: string
+          p_tag_id?: string
+        }
+        Returns: {
+          assigned_tags: Json
+          avatar_url: string
+          created_at: string
+          current_streak: number
+          full_name: string
+          id: string
+          is_active: boolean
+          last_activity: string
+          subscription_status: string
+          subscription_type: string
+          total_workouts: number
+          username: string
+        }[]
+      }
       get_week_start: {
         Args: { input_date?: string }
         Returns: string
@@ -2614,6 +2764,14 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      update_user_subscription_plan: {
+        Args: {
+          p_admin_user_id?: string
+          p_new_plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          p_user_id: string
+        }
+        Returns: Json
+      }
       verify_admin_status: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -2632,13 +2790,22 @@ export type Database = {
         | "increase_strength"
       meal_type: "breakfast" | "lunch" | "dinner" | "snack1" | "snack2"
       pace_type: "sloth" | "rabbit" | "leopard"
-      subscription_plan_type: "free" | "monthly" | "yearly"
+      subscription_plan_type: "free" | "monthly" | "yearly" | "asesorados"
       subscription_status:
         | "active"
         | "expired"
         | "cancelled"
         | "pending"
         | "trial"
+      tag_color:
+        | "gray"
+        | "red"
+        | "yellow"
+        | "green"
+        | "blue"
+        | "indigo"
+        | "purple"
+        | "pink"
       unit_system: "metric" | "imperial"
     }
     CompositeTypes: {
@@ -2780,13 +2947,23 @@ export const Constants = {
       ],
       meal_type: ["breakfast", "lunch", "dinner", "snack1", "snack2"],
       pace_type: ["sloth", "rabbit", "leopard"],
-      subscription_plan_type: ["free", "monthly", "yearly"],
+      subscription_plan_type: ["free", "monthly", "yearly", "asesorados"],
       subscription_status: [
         "active",
         "expired",
         "cancelled",
         "pending",
         "trial",
+      ],
+      tag_color: [
+        "gray",
+        "red",
+        "yellow",
+        "green",
+        "blue",
+        "indigo",
+        "purple",
+        "pink",
       ],
       unit_system: ["metric", "imperial"],
     },

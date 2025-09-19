@@ -44,7 +44,7 @@ export const useOptimizedSubscription = () => {
           
           if (retryData) {
             setSubscription(retryData);
-            setIsPremium(retryData.plan_type !== 'free' && retryData.status === 'active');
+            setIsPremium((retryData.plan_type === 'monthly' || retryData.plan_type === 'yearly' || retryData.plan_type === 'asesorados') && retryData.status === 'active');
           }
         }
         return;
@@ -52,7 +52,7 @@ export const useOptimizedSubscription = () => {
 
       if (data) {
         setSubscription(data);
-        setIsPremium(data.plan_type !== 'free' && data.status === 'active');
+        setIsPremium((data.plan_type === 'monthly' || data.plan_type === 'yearly' || data.plan_type === 'asesorados') && data.status === 'active');
       } else {
         // No existe suscripción, crear una
         await supabase.rpc('ensure_user_subscription', {
@@ -146,7 +146,7 @@ export const useOptimizedSubscription = () => {
 
       await fetchSubscriptionData();
       
-      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly';
+      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly' || subscription.plan_type === 'asesorados';
       
       toast({
         title: hadPremiumPlan ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",

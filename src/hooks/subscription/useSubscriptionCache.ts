@@ -57,7 +57,7 @@ export const useSubscriptionCache = () => {
       }
       
       const isPremium = data?.status === 'active' && 
-        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly');
+        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly' || data?.plan_type === 'asesorados');
       
       setCachedPremiumStatus(userId, isPremium);
       return isPremium;

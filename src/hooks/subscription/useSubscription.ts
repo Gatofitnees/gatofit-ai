@@ -19,14 +19,14 @@ export interface SubscriptionPlan {
 export interface UserSubscription {
   id: string;
   user_id: string;
-  plan_type: 'free' | 'monthly' | 'yearly';
+  plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados';
   status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial';
   started_at: string;
   expires_at?: string;
   store_transaction_id?: string;
   store_platform?: string;
   auto_renewal: boolean;
-  next_plan_type?: 'free' | 'monthly' | 'yearly';
+  next_plan_type?: 'free' | 'monthly' | 'yearly' | 'asesorados';
   next_plan_starts_at?: string;
   scheduled_change_created_at?: string;
 }
@@ -128,7 +128,7 @@ export const useSubscription = () => {
       if (error) return false;
       
       return data?.status === 'active' && 
-        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly');
+        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly' || data?.plan_type === 'asesorados');
     } catch (error) {
       console.error('Error checking user premium status:', error);
       return false;
@@ -156,7 +156,7 @@ export const useSubscription = () => {
 
       await fetchSubscriptionData();
       
-      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly';
+      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly' || subscription.plan_type === 'asesorados';
       
       toast({
         title: hadPremiumPlan ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",
