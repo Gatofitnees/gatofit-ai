@@ -66,7 +66,9 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
   const [lastFetchedDate, setLastFetchedDate] = useState<string | null>(null);
 
   const fetchAdminNutritionPlan = useCallback(async (dateToFetch: Date) => {
-    const dateString = dateToFetch.toISOString().split('T')[0];
+    // Ensure we're working with the correct date by normalizing to UTC
+    const normalizedDate = new Date(dateToFetch.getFullYear(), dateToFetch.getMonth(), dateToFetch.getDate());
+    const dateString = normalizedDate.toISOString().split('T')[0];
     
     // Avoid refetching if we already have data for this date
     if (lastFetchedDate === dateString && nutritionPlan) {
@@ -105,9 +107,10 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
 
       const adminAssignment = adminPrograms[0];
       
-      // Calcular día actual del programa
+      // Calcular día actual del programa - fix timezone issues
       const startDate = new Date(adminAssignment.started_at);
-      const daysDiff = Math.floor((dateToFetch.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const startDateNormalized = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const daysDiff = Math.floor((normalizedDate.getTime() - startDateNormalized.getTime()) / (1000 * 60 * 60 * 24));
       
       if (daysDiff < 0) {
         setNutritionPlan(null);
@@ -117,10 +120,19 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
       }
 
       const weekNumber = Math.floor(daysDiff / 7) + 1;
-      const jsDay = dateToFetch.getDay();
-      const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // 0=lunes, 6=domingo
+      // Fix day of week calculation - use normalized date
+      const jsDay = normalizedDate.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+      const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // Convert to 0=Monday, 6=Sunday
 
-      console.log('Admin nutrition plan calculation:', { weekNumber, dayOfWeek, daysDiff });
+      console.log('Admin nutrition plan calculation:', { 
+        weekNumber, 
+        dayOfWeek, 
+        daysDiff, 
+        dateToFetch: normalizedDate.toISOString(),
+        jsDay,
+        startDate: startDateNormalized.toISOString(),
+        dateString 
+      });
 
       // Buscar plan nutricional para este día
       const { data: nutritionPlanData, error: nutritionError } = await supabase
