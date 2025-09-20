@@ -20,6 +20,7 @@ interface RecipeCardProps {
   recipeImageUrl?: string;
   recipeDescription?: string;
   recipeInstructions?: string;
+  recipePreparationTime?: number;
 }
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({
@@ -36,7 +37,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   onSaveRecipeIngredients,
   recipeImageUrl,
   recipeDescription,
-  recipeInstructions
+  recipeInstructions,
+  recipePreparationTime
 }) => {
   const hasSelectedIngredients = ingredients.some(ingredient => checkedIngredients[ingredient.id]);
   return (
@@ -45,7 +47,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
         <Card className="p-4 cursor-pointer hover:bg-secondary/20 transition-colors">
           <div className="flex items-center gap-4">
             {/* Recipe Image */}
-            <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+            <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
               {recipeImageUrl ? (
                 <img 
                   src={recipeImageUrl} 
@@ -54,7 +56,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
-                  <span className="text-2xl">🍽️</span>
+                  <span className="text-3xl">🍽️</span>
                 </div>
               )}
             </div>
@@ -114,6 +116,14 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
             <div>
               <h4 className="font-semibold text-foreground mb-2">Descripción</h4>
               <p className="text-muted-foreground">{recipeDescription}</p>
+            </div>
+          )}
+
+          {/* Preparation Time */}
+          {recipePreparationTime && (
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Tiempo de Preparación</h4>
+              <p className="text-muted-foreground">{recipePreparationTime} minutos</p>
             </div>
           )}
 

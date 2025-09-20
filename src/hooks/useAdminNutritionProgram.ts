@@ -224,92 +224,33 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                     if (recipeIds.length > 0) {
                       console.log('Fetching recipe data for IDs:', recipeIds);
                       
-                      // Fetch recipe basic info
+                      // Fetch recipe basic info including prep_time_minutes
                       const { data: recipesData, error: recipeError } = await supabase
                         .from('recipes')
-                        .select('id, name, description, instructions, cover_image_url')
+                        .select('id, name, description, instructions, cover_image_url, prep_time_minutes')
                         .in('id', recipeIds);
                       
                       if (recipeError) {
                         console.error('Error fetching recipe data:', recipeError);
                       }
                       
-                      // Fetch actual recipe ingredients from recipe_ingredients table
-                      const { data: recipeIngredientsData, error: recipeIngredientsError } = await supabase
-                        .from('recipe_ingredients')
-                        .select(`
-                          *,
-                          food_items (
-                            id,
-                            name,
-                            calories_per_serving,
-                            protein_g_per_serving,
-                            carbs_g_per_serving,
-                            fat_g_per_serving,
-                            fiber_g_per_serving
-                          )
-                        `)
-                        .in('recipe_id', recipeIds);
-                      
-                      if (recipeIngredientsError) {
-                        console.error('Error fetching recipe ingredients:', recipeIngredientsError);
-                      }
-                      
-                      // Process recipe ingredients and replace placeholders
-                      if (recipesData && recipeIngredientsData) {
+                      // Update recipe ingredients with metadata from recipes table instead of replacing them
+                      if (recipesData) {
                         console.log('Recipe data fetched:', recipesData);
-                        console.log('Recipe ingredients data fetched:', recipeIngredientsData);
                         
-                        // Create a new ingredients array without recipe placeholders
-                        const newIngredients: any[] = [];
-                        
+                        // Update ingredients with recipe metadata
                         option.ingredients.forEach((ingredient: any) => {
                           if (ingredient.recipe_id) {
-                            // This is a recipe placeholder - replace with actual recipe ingredients
                             const recipeData = recipesData.find(r => r.id === ingredient.recipe_id);
-                            const recipeIngredients = recipeIngredientsData.filter(ri => ri.recipe_id === ingredient.recipe_id);
-                            
-                            if (recipeData && recipeIngredients.length > 0) {
-                              console.log(`Replacing recipe placeholder ${ingredient.id} with ${recipeIngredients.length} real ingredients`);
-                              
-                              // Add each recipe ingredient as a separate ingredient
-                              recipeIngredients.forEach((recipeIngredient: any) => {
-                                const foodItem = recipeIngredient.food_items;
-                                if (foodItem) {
-                                  // Calculate nutritional values based on the recipe ingredient quantity
-                                  const servingRatio = recipeIngredient.quantity_grams / 100; // Assuming food_items nutrition is per 100g
-                                  
-                                  newIngredients.push({
-                                    id: `${ingredient.id}_${recipeIngredient.id}`, // Unique ID combining original and recipe ingredient
-                                    custom_food_name: recipeIngredient.custom_name || foodItem.name,
-                                    quantity_grams: recipeIngredient.quantity_grams,
-                                    calories_per_serving: (foodItem.calories_per_serving || 0) * servingRatio,
-                                    protein_g_per_serving: (foodItem.protein_g_per_serving || 0) * servingRatio,
-                                    carbs_g_per_serving: (foodItem.carbs_g_per_serving || 0) * servingRatio,
-                                    fats_g_per_serving: (foodItem.fat_g_per_serving || 0) * servingRatio,
-                                    fiber_g_per_serving: (foodItem.fiber_g_per_serving || 0) * servingRatio,
-                                    recipe_id: ingredient.recipe_id,
-                                    recipe_name: recipeData.name,
-                                    recipe_description: recipeData.description,
-                                    recipe_instructions: recipeData.instructions,
-                                    recipe_image_url: recipeData.cover_image_url,
-                                    food_items: {
-                                      id: foodItem.id,
-                                      name: foodItem.name
-                                    }
-                                  });
-                                }
-                              });
+                            if (recipeData) {
+                              // Update with metadata from recipes table
+                              ingredient.recipe_name = recipeData.name;
+                              ingredient.recipe_description = recipeData.description;
+                              ingredient.recipe_instructions = recipeData.instructions;
+                              ingredient.recipe_image_url = recipeData.cover_image_url;
                             }
-                          } else {
-                            // This is a regular ingredient, keep as is
-                            newIngredients.push(ingredient);
                           }
                         });
-                        
-                        // Replace the ingredients array with the new one
-                        option.ingredients = newIngredients;
-                        console.log(`Replaced ingredients for option ${option.option_name}:`, newIngredients.length, 'ingredients');
                       }
                     }
                   }
