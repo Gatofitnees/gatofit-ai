@@ -80,8 +80,8 @@ export const NutritionProgramPage: React.FC = () => {
     const individualIngredients: any[] = [];
 
     ingredients.forEach(ingredient => {
-      // Check if ingredient has a recipe_id and recipe_name to be considered part of a recipe
-      if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
+      // Check if ingredient has a recipe_id to be considered part of a recipe
+      if (ingredient.recipe_id) {
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }

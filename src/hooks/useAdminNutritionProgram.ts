@@ -175,13 +175,37 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
         if (planDetails && planDetails.length > 0) {
           const planData = planDetails[0];
           
+          // Debug: log the raw data first
+          console.log('Raw plan data from database:', JSON.stringify(planData, null, 2));
+          
           // Enrich ingredients with recipe information
           if (planData.meals) {
             for (const meal of planData.meals) {
               if (meal.options) {
                 for (const option of meal.options) {
                   if (option.ingredients) {
-                    // Get all unique recipe IDs from ingredients
+                    console.log(`Processing ingredients for meal option ${option.option_name}:`, option.ingredients);
+                    
+                    // Check for ingredients that already have recipe data from the original query
+                    option.ingredients.forEach((ingredient: any) => {
+                      console.log('Ingredient data:', {
+                        id: ingredient.id,
+                        custom_food_name: ingredient.custom_food_name,
+                        recipe_id: ingredient.recipe_id,
+                        recipe_name: (ingredient as any).recipe_name,
+                        food_items: ingredient.food_items
+                      });
+                      
+                      // If ingredient has recipe data from the nutrition_plan_meal_ingredients table
+                      if ((ingredient as any).recipe_name && (ingredient as any).recipe_name.trim() !== '') {
+                        console.log('Ingredient already has recipe info from database');
+                        // Use the recipe data that's already in the ingredient
+                        // The recipe_name, recipe_description, recipe_instructions, recipe_image_url 
+                        // should already be populated from the nutrition_plan_meal_ingredients table
+                      }
+                    });
+                    
+                    // Get all unique recipe IDs from ingredients that have recipe_id
                     const recipeIds = [...new Set(
                       option.ingredients
                         .filter(ing => ing.recipe_id)
@@ -190,21 +214,31 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                     
                     // Fetch recipe details for all recipes in this option
                     if (recipeIds.length > 0) {
-                      const { data: recipesData } = await supabase
+                      console.log('Fetching recipe data for IDs:', recipeIds);
+                      const { data: recipesData, error: recipeError } = await supabase
                         .from('recipes')
                         .select('id, name, description, instructions, cover_image_url')
                         .in('id', recipeIds);
                       
+                      if (recipeError) {
+                        console.error('Error fetching recipe data:', recipeError);
+                      }
+                      
                       // Enrich ingredients with recipe data
                       if (recipesData) {
+                        console.log('Recipe data fetched:', recipesData);
                         option.ingredients.forEach((ingredient: any) => {
                           if (ingredient.recipe_id) {
                             const recipeData = recipesData.find(r => r.id === ingredient.recipe_id);
                             if (recipeData) {
-                              ingredient.recipe_name = recipeData.name;
-                              ingredient.recipe_description = recipeData.description;
-                              ingredient.recipe_instructions = recipeData.instructions;
-                              ingredient.recipe_image_url = recipeData.cover_image_url;
+                              (ingredient as any).recipe_name = recipeData.name;
+                              (ingredient as any).recipe_description = recipeData.description;
+                              (ingredient as any).recipe_instructions = recipeData.instructions;
+                              (ingredient as any).recipe_image_url = recipeData.cover_image_url;
+                              console.log(`Enriched ingredient ${ingredient.id} with recipe data:`, {
+                                recipe_name: recipeData.name,
+                                recipe_id: ingredient.recipe_id
+                              });
                             }
                           }
                         });
