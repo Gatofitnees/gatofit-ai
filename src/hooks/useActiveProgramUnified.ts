@@ -138,16 +138,7 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
           // Obtener rutinas del programa admin para este día
           const { data: adminRoutines, error: adminRoutinesError } = await supabase
             .from('admin_program_routines')
-            .select(`
-              *,
-              routine:routine_id (
-                id,
-                name,
-                type,
-                estimated_duration_minutes,
-                description
-              )
-            `)
+            .select('*')
             .eq('program_id', adminAssignment.program_id)
             .eq('week_number', weekNumber)
             .eq('day_of_week', dayOfWeekAdjusted)
@@ -157,27 +148,35 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
             console.error('Error fetching admin routines:', adminRoutinesError);
           }
 
-          // Separate fetch for routine details to handle missing routines
-          if (adminRoutines && adminRoutines.length > 0) {
-            const routineIds = adminRoutines.map((r: any) => r.routine_id);
-            
-            const { data: routineDetails, error: routineDetailsError } = await supabase
-              .from('routines')
-              .select('id, name, type, estimated_duration_minutes, description')
-              .in('id', routineIds);
+          console.log('🔍 Admin routines found:', adminRoutines);
 
-            if (routineDetailsError) {
-              console.error('Error fetching routine details:', routineDetailsError);
-            }
+            // Separate fetch for routine details to handle missing routines
+            if (adminRoutines && adminRoutines.length > 0) {
+              const routineIds = adminRoutines.map((r: any) => r.routine_id);
+              
+              console.log('🔍 Fetching routine details for IDs:', routineIds);
+              
+              const { data: routineDetails, error: routineDetailsError } = await supabase
+                .from('routines')
+                .select('id, name, type, estimated_duration_minutes, description')
+                .in('id', routineIds);
 
-            // Create map for easy lookup
-            const routineMap = new Map(routineDetails?.map((r: any) => [r.id, r]) || []);
-            
-            // Log missing routines for debugging
-            const missingRoutines = routineIds.filter(id => !routineMap.has(id));
-            if (missingRoutines.length > 0) {
-              console.warn('⚠️ Missing routine details for admin program IDs:', missingRoutines);
-            }
+              console.log('📋 Routine details response:', { routineDetails, error: routineDetailsError });
+
+              if (routineDetailsError) {
+                console.error('Error fetching routine details:', routineDetailsError);
+              }
+
+              // Create map for easy lookup
+              const routineMap = new Map(routineDetails?.map((r: any) => [r.id, r]) || []);
+              
+              console.log('🗺️ Routine map created:', routineMap);
+              
+              // Log missing routines for debugging
+              const missingRoutines = routineIds.filter(id => !routineMap.has(id));
+              if (missingRoutines.length > 0) {
+                console.warn('⚠️ Missing routine details for admin program IDs:', missingRoutines);
+              }
 
             // Combine data with fallback for missing routines
             const routines = adminRoutines.map((item: any) => {
