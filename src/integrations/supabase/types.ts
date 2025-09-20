@@ -1085,7 +1085,12 @@ export type Database = {
           meal_option_id: string
           protein_g_per_serving: number
           quantity_grams: number
+          recipe_description: string | null
           recipe_id: string | null
+          recipe_image_url: string | null
+          recipe_instructions: string | null
+          recipe_name: string | null
+          recipe_preparation_time: number | null
         }
         Insert: {
           calories_per_serving?: number
@@ -1100,7 +1105,12 @@ export type Database = {
           meal_option_id: string
           protein_g_per_serving?: number
           quantity_grams: number
+          recipe_description?: string | null
           recipe_id?: string | null
+          recipe_image_url?: string | null
+          recipe_instructions?: string | null
+          recipe_name?: string | null
+          recipe_preparation_time?: number | null
         }
         Update: {
           calories_per_serving?: number
@@ -1115,7 +1125,12 @@ export type Database = {
           meal_option_id?: string
           protein_g_per_serving?: number
           quantity_grams?: number
+          recipe_description?: string | null
           recipe_id?: string | null
+          recipe_image_url?: string | null
+          recipe_instructions?: string | null
+          recipe_name?: string | null
+          recipe_preparation_time?: number | null
         }
         Relationships: [
           {
@@ -2595,6 +2610,16 @@ export type Database = {
           routine_id: number
           routine_name: string
           routine_type: string
+        }[]
+      }
+      get_routine_details: {
+        Args: { routine_ids: number[] }
+        Returns: {
+          description: string
+          estimated_duration_minutes: number
+          id: number
+          name: string
+          type: string
         }[]
       }
       get_safe_public_profile: {

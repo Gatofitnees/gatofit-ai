@@ -165,11 +165,6 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
 
               if (routineDetailsError) {
                 console.error('Error fetching routine details:', routineDetailsError);
-                // Try without RLS check - query all routines by ID
-                const { data: fallbackRoutines } = await supabase
-                  .rpc('get_routine_details', { routine_ids: routineIds })
-                  .single();
-                console.log('🔄 Fallback routine query result:', fallbackRoutines);
               }
 
               // Create map for easy lookup
