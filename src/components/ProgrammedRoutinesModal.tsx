@@ -246,7 +246,8 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
           .from('workout_logs')
           .select('id')
           .eq('user_id', user.id)
-          .eq('date', date.toISOString().split('T')[0]);
+          .gte('workout_date', date.toISOString().split('T')[0])
+          .lt('workout_date', new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
         
         isCompleted = (workoutLogs?.length || 0) > 0;
       }
