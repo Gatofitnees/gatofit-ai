@@ -16,6 +16,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
   const [ingredientQuantities, setIngredientQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Reset initialization when date changes
   useEffect(() => {
@@ -24,6 +25,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     setSelectedOptions({});
     setCheckedIngredients({});
     setIngredientQuantities({});
+    setShowSaveModal(false);
   }, [selectedDate.toDateString()]);
 
   // Initialize selected options and quantities when nutrition plan loads (only once per plan)
@@ -89,12 +91,13 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     }));
   }, []);
 
-  const convertIngredientToFoodLogEntry = (ingredient: AdminNutritionIngredient, quantity: number): Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> => {
+  const convertIngredientToFoodLogEntry = (ingredient: AdminNutritionIngredient, quantity: number, customName?: string): Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'> => {
     // Calculate scaled macros based on quantity
     const scale = quantity / ingredient.quantity_grams;
     
-    // Get the appropriate food name
-    const foodName = ingredient.custom_food_name || 
+    // Get the appropriate food name, with custom name override
+    const foodName = customName || 
+                    ingredient.custom_food_name || 
                     ingredient.food_items?.name || 
                     ingredient.recipe_name || 
                     'Alimento del plan nutricional';
@@ -116,7 +119,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     };
   };
 
-  const handleSaveMeals = useCallback(async (specificIngredients?: AdminNutritionIngredient[]) => {
+  const handleSaveMeals = useCallback(async (specificIngredients?: AdminNutritionIngredient[], customName?: string) => {
     if (!nutritionPlan?.meals) return;
 
     setSaving(true);
@@ -164,7 +167,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       // Save each ingredient as a food log entry
       for (const { ingredient, quantity } of ingredientsToSave) {
         try {
-          const foodLogEntry = convertIngredientToFoodLogEntry(ingredient, quantity);
+          const foodLogEntry = convertIngredientToFoodLogEntry(ingredient, quantity, customName);
           const result = await addEntry(foodLogEntry);
           
           if (result) {
@@ -220,6 +223,54 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     }
   }, [nutritionPlan, selectedOptions, checkedIngredients, ingredientQuantities, addEntry, toast, navigate]);
 
+  const handleOpenSaveModal = useCallback(() => {
+    if (!nutritionPlan?.meals) return;
+    
+    // Check if there are selected ingredients
+    const hasSelected = nutritionPlan.meals.some(meal => {
+      const selectedOptionIndex = selectedOptions[meal.id] || 0;
+      const selectedOption = meal.options?.[selectedOptionIndex];
+      return selectedOption?.ingredients?.some(ingredient => checkedIngredients[ingredient.id]);
+    });
+
+    if (!hasSelected) {
+      toast({
+        title: "Sin ingredientes seleccionados",
+        description: "Selecciona al menos un ingrediente para guardar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setShowSaveModal(true);
+  }, [nutritionPlan, selectedOptions, checkedIngredients, toast]);
+
+  const handleSaveWithName = useCallback(async (customName?: string) => {
+    setShowSaveModal(false);
+    await handleSaveMeals(undefined, customName);
+  }, [handleSaveMeals]);
+
+  const getSelectedIngredients = useCallback(() => {
+    if (!nutritionPlan?.meals) return [];
+    
+    const selectedIngredients: AdminNutritionIngredient[] = [];
+    
+    nutritionPlan.meals.forEach(meal => {
+      const selectedOptionIndex = selectedOptions[meal.id] || 0;
+      const selectedOption = meal.options?.[selectedOptionIndex];
+      
+      if (selectedOption?.ingredients) {
+        selectedOption.ingredients.forEach(ingredient => {
+          if (checkedIngredients[ingredient.id]) {
+            selectedIngredients.push(ingredient);
+          }
+        });
+      }
+    });
+    
+    return selectedIngredients;
+  }, [nutritionPlan, selectedOptions, checkedIngredients]);
+
   return {
     nutritionPlan,
     selectedOptions,
@@ -227,9 +278,14 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     ingredientQuantities,
     loading,
     saving,
+    showSaveModal,
     handleOptionSelect,
     handleIngredientCheck,
     handleQuantityChange,
-    handleSaveMeals
+    handleSaveMeals,
+    handleOpenSaveModal,
+    handleSaveWithName,
+    setShowSaveModal,
+    getSelectedIngredients
   };
 };

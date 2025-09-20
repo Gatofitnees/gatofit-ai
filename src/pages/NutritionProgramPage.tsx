@@ -7,6 +7,7 @@ import { RecipeCard } from '@/components/nutrition/RecipeCard';
 import { EditableIngredientItem } from '@/components/nutrition/EditableIngredientItem';
 import { useNutritionProgramPage } from '@/hooks/useNutritionProgramPage';
 import { Separator } from '@/components/ui/separator';
+import SaveNutritionMealModal from '@/components/nutrition/SaveNutritionMealModal';
 
 export const NutritionProgramPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,10 +22,15 @@ export const NutritionProgramPage: React.FC = () => {
     ingredientQuantities,
     loading,
     saving,
+    showSaveModal,
     handleOptionSelect,
     handleIngredientCheck,
     handleQuantityChange,
-    handleSaveMeals
+    handleSaveMeals,
+    handleOpenSaveModal,
+    handleSaveWithName,
+    setShowSaveModal,
+    getSelectedIngredients
   } = useNutritionProgramPage(selectedDate);
 
   if (loading) {
@@ -259,7 +265,7 @@ export const NutritionProgramPage: React.FC = () => {
       {hasSelectedIngredients && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
           <Button
-            onClick={() => handleSaveMeals()}
+            onClick={handleOpenSaveModal}
             disabled={saving}
             className="w-full"
             size="lg"
@@ -268,6 +274,16 @@ export const NutritionProgramPage: React.FC = () => {
           </Button>
         </div>
       )}
+
+      {/* Save Modal */}
+      <SaveNutritionMealModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveWithName}
+        ingredients={getSelectedIngredients()}
+        quantities={ingredientQuantities}
+        isSaving={saving}
+      />
     </div>
   );
 };
