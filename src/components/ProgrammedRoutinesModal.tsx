@@ -164,7 +164,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
           // Fetch routine details separately
           const { data: routineDetails, error: routineDetailsError } = await (supabase as any)
             .from('routines')
-            .select('id, name, description, estimated_duration_minutes, difficulty_level, type')
+            .select('id, name, description, estimated_duration_minutes, type')
             .in('id', routineIds);
           
           if (routineDetailsError) {
@@ -191,7 +191,6 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                 name: `Rutina no encontrada (ID: ${item.routine_id})`,
                 description: 'Esta rutina no está disponible en el sistema',
                 estimated_duration_minutes: 60,
-                difficulty_level: 'medium',
                 type: 'strength',
                 is_missing: true
               },
