@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { toast as sonnerToast } from 'sonner';
 
 type ToastProps = React.ComponentPropsWithoutRef<"div"> & {
@@ -35,42 +35,47 @@ function generateToastId() {
   return count.toString();
 }
 
-type ToastState = {
-  toasts: ToasterToast[];
-};
+// Simplified state management without context
+let globalToasts: ToasterToast[] = [];
+const listeners: Array<(toasts: ToasterToast[]) => void> = [];
 
-const toastState = React.createContext<ToastState | undefined>(undefined);
+function notifyListeners() {
+  listeners.forEach(listener => listener([...globalToasts]));
+}
 
-function useToastState(): ToastState {
-  const context = React.useContext(toastState);
+function addToast(toast: ToasterToast) {
+  globalToasts = [...globalToasts, toast].slice(-TOAST_LIMIT);
+  notifyListeners();
+}
 
-  if (context === undefined) {
-    throw new Error("useToastState must be used within a ToastProvider");
-  }
-
-  return context;
+function removeToast(toastId: string) {
+  globalToasts = globalToasts.filter(t => t.id !== toastId);
+  notifyListeners();
 }
 
 const ToastStateProvider = ({ children }: { children: React.ReactNode }) => {
-  const [toasts, setToasts] = React.useState<ToasterToast[]>([]);
-
-  return (
-    <toastState.Provider
-      value={{
-        toasts,
-      }}
-    >
-      {children}
-    </toastState.Provider>
-  );
+  return <>{children}</>;
 };
 
 function useToast() {
-  const [toasts, setToasts] = React.useState<ToasterToast[]>([]);
+  const [toasts, setToasts] = React.useState<ToasterToast[]>(globalToasts);
 
-  // Sync with Sonner's implementation
+  React.useEffect(() => {
+    const listener = (newToasts: ToasterToast[]) => {
+      setToasts(newToasts);
+    };
+    
+    listeners.push(listener);
+    return () => {
+      const index = listeners.indexOf(listener);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    };
+  }, []);
+
   const toast = React.useMemo(() => {
-    const addToast = (
+    const showToast = (
       props: {
         title?: React.ReactNode;
         description?: React.ReactNode;
@@ -90,7 +95,7 @@ function useToast() {
 
       const id = generateToastId();
 
-      // Add toast to our internal state
+      // Add toast to global state
       const newToast = {
         id,
         title,
@@ -100,9 +105,9 @@ function useToast() {
         duration,
       };
       
-      setToasts((prev) => [...prev, newToast]);
+      addToast(newToast);
 
-      // Also trigger sonner toast for compatibility with existing code
+      // Also trigger sonner toast for compatibility
       const variantStyle = 
         variant === "destructive" ? { style: { backgroundColor: "hsl(var(--destructive))", color: "hsl(var(--destructive-foreground))" } } :
         variant === "success" ? { style: { backgroundColor: "hsl(var(--success, 142 71% 45%))", color: "hsl(var(--success-foreground, 210 40% 98%))" } } :
@@ -118,14 +123,14 @@ function useToast() {
       return id;
     };
 
-    return Object.assign(addToast, {
+    return Object.assign(showToast, {
       dismiss: (toastId?: string) => {
         if (toastId) {
-          setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
+          removeToast(toastId);
         }
       },
-      error: (props: any) => addToast({ ...props, variant: "destructive" }),
-      success: (props: any) => addToast({ ...props, variant: "success" }),
+      error: (props: any) => showToast({ ...props, variant: "destructive" }),
+      success: (props: any) => showToast({ ...props, variant: "success" }),
     });
   }, []);
 
@@ -134,7 +139,7 @@ function useToast() {
     toasts,
     dismiss: (toastId?: string) => {
       if (toastId) {
-        setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
+        removeToast(toastId);
       }
     },
   };
