@@ -228,6 +228,7 @@ export const NutritionProgramPage: React.FC = () => {
                       recipeImageUrl={recipeIngredients[0]?.recipe_image_url}
                       recipeDescription={recipeIngredients[0]?.recipe_description}
                       recipeInstructions={recipeIngredients[0]?.recipe_instructions}
+                      recipePreparationTime={recipeIngredients[0]?.recipe_preparation_time}
                     />
                   );
                 })}
