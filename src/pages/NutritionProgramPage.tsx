@@ -92,17 +92,14 @@ export const NutritionProgramPage: React.FC = () => {
       });
 
       // Check if ingredient has a recipe_id to be considered part of a recipe
-      if (ingredient.recipe_id && ingredient.recipe_name) {
+      if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
       } else {
         // This is an individual ingredient (not part of a recipe)
-        // Only add if it doesn't have a recipe_id (to avoid duplicates)
-        if (!ingredient.recipe_id) {
-          individualIngredients.push(ingredient);
-        }
+        individualIngredients.push(ingredient);
       }
     });
 
@@ -130,6 +127,11 @@ export const NutritionProgramPage: React.FC = () => {
             }
 
             const { recipeGroups, individualIngredients } = groupIngredientsByRecipe(selectedOption.ingredients);
+
+            console.log('Meal:', meal.meal_name);
+            console.log('Selected option ingredients:', selectedOption.ingredients);
+            console.log('Recipe groups found:', Object.keys(recipeGroups));
+            console.log('Individual ingredients found:', individualIngredients.length);
 
             return (
               <div key={meal.id} className="space-y-4">

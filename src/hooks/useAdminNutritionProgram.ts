@@ -184,7 +184,15 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
               if (meal.options) {
                 for (const option of meal.options) {
                   if (option.ingredients) {
-                    console.log(`Processing ingredients for meal option ${option.option_name}:`, option.ingredients);
+                    console.log(`Processing ingredients for meal option ${option.option_name}:`, option.ingredients.length, 'ingredients');
+                    console.log('Raw ingredients before processing:', option.ingredients.map(ing => ({
+                      id: ing.id,
+                      name: ing.custom_food_name || 'No name',
+                      recipe_id: ing.recipe_id,
+                      recipe_name: ing.recipe_name,
+                      quantity: ing.quantity_grams,
+                      calories: ing.calories_per_serving
+                    })));
                     
                     // Check for ingredients that already have recipe data from the original query
                     option.ingredients.forEach((ingredient: any) => {
@@ -275,11 +283,11 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                                     id: `${ingredient.id}_${recipeIngredient.id}`, // Unique ID combining original and recipe ingredient
                                     custom_food_name: recipeIngredient.custom_name || foodItem.name,
                                     quantity_grams: recipeIngredient.quantity_grams,
-                                    calories_per_serving: foodItem.calories_per_serving * servingRatio,
-                                    protein_g_per_serving: foodItem.protein_g_per_serving * servingRatio,
-                                    carbs_g_per_serving: foodItem.carbs_g_per_serving * servingRatio,
-                                    fats_g_per_serving: foodItem.fat_g_per_serving * servingRatio,
-                                    fiber_g_per_serving: foodItem.fiber_g_per_serving * servingRatio,
+                                    calories_per_serving: (foodItem.calories_per_serving || 0) * servingRatio,
+                                    protein_g_per_serving: (foodItem.protein_g_per_serving || 0) * servingRatio,
+                                    carbs_g_per_serving: (foodItem.carbs_g_per_serving || 0) * servingRatio,
+                                    fats_g_per_serving: (foodItem.fat_g_per_serving || 0) * servingRatio,
+                                    fiber_g_per_serving: (foodItem.fiber_g_per_serving || 0) * servingRatio,
                                     recipe_id: ingredient.recipe_id,
                                     recipe_name: recipeData.name,
                                     recipe_description: recipeData.description,
