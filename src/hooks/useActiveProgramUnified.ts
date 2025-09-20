@@ -157,36 +157,77 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
             console.error('Error fetching admin routines:', adminRoutinesError);
           }
 
-          const routines = adminRoutines || [];
-          console.log('Admin routines for day:', routines);
+          // Separate fetch for routine details to handle missing routines
+          if (adminRoutines && adminRoutines.length > 0) {
+            const routineIds = adminRoutines.map((r: any) => r.routine_id);
+            
+            const { data: routineDetails, error: routineDetailsError } = await supabase
+              .from('routines')
+              .select('id, name, type, estimated_duration_minutes, description')
+              .in('id', routineIds);
 
-          // Verificar completado
-          if (routines.length > 0) {
-            const selectedDateString = selectedDate.toISOString().split('T')[0];
-            const { data: workoutLogs, error: workoutError } = await supabase
-              .from('workout_logs')
-              .select('routine_id')
-              .eq('user_id', user.id)
-              .gte('workout_date', `${selectedDateString}T00:00:00.000Z`)
-              .lte('workout_date', `${selectedDateString}T23:59:59.999Z`);
+            if (routineDetailsError) {
+              console.error('Error fetching routine details:', routineDetailsError);
+            }
 
-            if (workoutError) throw workoutError;
+            // Create map for easy lookup
+            const routineMap = new Map(routineDetails?.map((r: any) => [r.id, r]) || []);
+            
+            // Log missing routines for debugging
+            const missingRoutines = routineIds.filter(id => !routineMap.has(id));
+            if (missingRoutines.length > 0) {
+              console.warn('⚠️ Missing routine details for admin program IDs:', missingRoutines);
+            }
 
-            const completedRoutineIds = new Set(workoutLogs?.map(log => log.routine_id) || []);
-            const programmedRoutineIds = routines.map((r: any) => r.routine_id);
-            const hasCompletedProgrammedRoutine = programmedRoutineIds.some(id => completedRoutineIds.has(id));
+            // Combine data with fallback for missing routines
+            const routines = adminRoutines.map((item: any) => {
+              const routineDetail = routineMap.get(item.routine_id);
+              return {
+                ...item,
+                routine: routineDetail || {
+                  id: item.routine_id,
+                  name: `Rutina no encontrada (ID: ${item.routine_id})`,
+                  type: 'strength',
+                  estimated_duration_minutes: 60,
+                  description: 'Esta rutina no está disponible en el sistema',
+                  is_missing: true
+                }
+              };
+            });
 
-            setIsCompletedForSelectedDate(hasCompletedProgrammedRoutine);
+            console.log('Admin routines for day:', routines);
+            
+            // Only check completion for existing routines
+            const existingRoutines = routines.filter(r => !r.routine?.is_missing);
+            if (existingRoutines.length > 0) {
+              const selectedDateString = selectedDate.toISOString().split('T')[0];
+              const { data: workoutLogs, error: workoutError } = await supabase
+                .from('workout_logs')
+                .select('routine_id')
+                .eq('user_id', user.id)
+                .gte('workout_date', `${selectedDateString}T00:00:00.000Z`)
+                .lte('workout_date', `${selectedDateString}T23:59:59.999Z`);
+
+              if (workoutError) throw workoutError;
+
+              const completedRoutineIds = new Set(workoutLogs?.map(log => log.routine_id) || []);
+              const programmedRoutineIds = existingRoutines.map((r: any) => r.routine_id);
+              const hasCompletedProgrammedRoutine = programmedRoutineIds.some(id => completedRoutineIds.has(id));
+
+              setIsCompletedForSelectedDate(hasCompletedProgrammedRoutine);
+            } else {
+              setIsCompletedForSelectedDate(false);
+            }
+
+            setActiveProgram({
+              type: 'admin',
+              program: adminAssignment.program,
+              routines: routines
+            });
+            return;
           } else {
-            setIsCompletedForSelectedDate(false);
+            console.log('No admin routines found for day:', { weekNumber, dayOfWeekAdjusted });
           }
-
-          setActiveProgram({
-            type: 'admin',
-            program: adminAssignment.program,
-            routines: routines
-          });
-          return;
         }
       }
 

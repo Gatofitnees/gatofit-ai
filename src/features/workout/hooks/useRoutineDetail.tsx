@@ -57,6 +57,16 @@ export const useRoutineDetail = (routineId: number | undefined) => {
 
         if (routineError) {
           console.error("❌ Error fetching routine:", routineError);
+          if (routineError.code === 'PGRST116') {
+            // No rows returned - routine doesn't exist
+            toast({
+              title: "Rutina no encontrada",
+              description: `La rutina con ID ${routineId} no existe en el sistema`,
+              variant: "destructive"
+            });
+            setLoading(false);
+            return;
+          }
           throw routineError;
         }
 

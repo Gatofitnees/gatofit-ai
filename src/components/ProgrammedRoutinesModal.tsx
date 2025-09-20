@@ -162,29 +162,43 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
           const routineIds = adminRoutines.map((r: any) => r.routine_id);
           
           // Fetch routine details separately
-          const { data: routineDetails } = await (supabase as any)
+          const { data: routineDetails, error: routineDetailsError } = await (supabase as any)
             .from('routines')
             .select('id, name, description, estimated_duration_minutes, difficulty_level, type')
             .in('id', routineIds);
           
+          if (routineDetailsError) {
+            console.error('Error fetching routine details:', routineDetailsError);
+          }
+          
           // Create a map for easy lookup
           const routineMap = new Map(routineDetails?.map((r: any) => [r.id, r]) || []);
           
-          // Combine the data
-          routines = adminRoutines.map((item: any) => ({
-            id: item.routine_id,
-            routine_id: item.routine_id,
-            routine: routineMap.get(item.routine_id) || { 
-              id: item.routine_id, 
-              name: `Rutina ${item.routine_id}`,
-              description: null,
-              estimated_duration_minutes: 60,
-              difficulty_level: 'medium',
-              type: 'strength'
-            },
-            notes: item.notes,
-            order_in_day: item.order_in_day,
-          }));
+          // Log missing routines for debugging
+          const missingRoutines = routineIds.filter(id => !routineMap.has(id));
+          if (missingRoutines.length > 0) {
+            console.warn('⚠️ Missing routine details for IDs:', missingRoutines);
+          }
+          
+          // Combine the data with better fallback for missing routines
+          routines = adminRoutines.map((item: any) => {
+            const routineDetail = routineMap.get(item.routine_id);
+            return {
+              id: item.routine_id,
+              routine_id: item.routine_id,
+              routine: routineDetail || { 
+                id: item.routine_id, 
+                name: `Rutina no encontrada (ID: ${item.routine_id})`,
+                description: 'Esta rutina no está disponible en el sistema',
+                estimated_duration_minutes: 60,
+                difficulty_level: 'medium',
+                type: 'strength',
+                is_missing: true
+              },
+              notes: item.notes,
+              order_in_day: item.order_in_day,
+            };
+          });
         }
 
         // Fetch nutrition plans for admin programs
@@ -444,9 +458,16 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                               className="p-4 border border-border/50 rounded-lg hover:bg-secondary/30 transition-colors"
                             >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-medium text-base">
-                                  {programRoutine.routine?.name || `Rutina ID: ${programRoutine.routine_id}`}
-                                </h4>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-medium text-base">
+                                    {programRoutine.routine?.name || `Rutina ID: ${programRoutine.routine_id}`}
+                                  </h4>
+                                  {programRoutine.routine?.is_missing && (
+                                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                                      No disponible
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-1 rounded-full">
                                   #{index + 1}
                                 </span>
@@ -473,18 +494,24 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                                   variant="outline"
                                   size="sm"
                                   className="flex-1"
+                                  disabled={programRoutine.routine?.is_missing}
                                 >
                                   <Eye className="h-4 w-4 mr-2" />
                                   Ver
                                 </Button>
                                 <Button
                                   onClick={() => handleStartRoutine(programRoutine.routine_id)}
-                                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50"
                                   size="sm"
-                                  disabled={completionStatus}
+                                  disabled={completionStatus || programRoutine.routine?.is_missing}
                                 >
                                   <Dumbbell className="h-4 w-4 mr-2" />
-                                  {completionStatus ? "Completado" : "Iniciar Rutina"}
+                                  {programRoutine.routine?.is_missing 
+                                    ? "No disponible" 
+                                    : completionStatus 
+                                      ? "Completado" 
+                                      : "Iniciar Rutina"
+                                  }
                                 </Button>
                               </div>
                             </div>
