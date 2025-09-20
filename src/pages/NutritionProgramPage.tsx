@@ -80,15 +80,29 @@ export const NutritionProgramPage: React.FC = () => {
     const individualIngredients: any[] = [];
 
     ingredients.forEach(ingredient => {
+      console.log('Processing ingredient:', {
+        id: ingredient.id,
+        name: ingredient.custom_food_name || ingredient.food_items?.name,
+        recipe_id: ingredient.recipe_id,
+        recipe_name: ingredient.recipe_name,
+        calories: ingredient.calories_per_serving,
+        protein: ingredient.protein_g_per_serving,
+        carbs: ingredient.carbs_g_per_serving,
+        fats: ingredient.fats_g_per_serving
+      });
+
       // Check if ingredient has a recipe_id to be considered part of a recipe
-      if (ingredient.recipe_id) {
+      if (ingredient.recipe_id && ingredient.recipe_name) {
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
       } else {
         // This is an individual ingredient (not part of a recipe)
-        individualIngredients.push(ingredient);
+        // Only add if it doesn't have a recipe_id (to avoid duplicates)
+        if (!ingredient.recipe_id) {
+          individualIngredients.push(ingredient);
+        }
       }
     });
 
@@ -148,29 +162,41 @@ export const NutritionProgramPage: React.FC = () => {
                   const firstIngredient = recipeIngredients[0];
                   const recipeName = firstIngredient?.recipe_name || `Receta de ${recipeIngredients.length} ingrediente${recipeIngredients.length > 1 ? 's' : ''}`;
                   
-                  // Calculate totals based on current quantities
+                  // Calculate totals based on current quantities with safety checks
                   const totalCalories = recipeIngredients.reduce((sum, ing) => {
-                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
-                    const ratio = currentQuantity / ing.quantity_grams;
-                    return sum + (ing.calories_per_serving * ratio);
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams || 0;
+                    const baseQuantity = ing.quantity_grams || 1; // Avoid division by zero
+                    const calories = ing.calories_per_serving || 0;
+                    const ratio = currentQuantity / baseQuantity;
+                    const result = sum + (calories * ratio);
+                    return isNaN(result) ? sum : result;
                   }, 0);
                   
                   const totalProtein = recipeIngredients.reduce((sum, ing) => {
-                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
-                    const ratio = currentQuantity / ing.quantity_grams;
-                    return sum + (ing.protein_g_per_serving * ratio);
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams || 0;
+                    const baseQuantity = ing.quantity_grams || 1;
+                    const protein = ing.protein_g_per_serving || 0;
+                    const ratio = currentQuantity / baseQuantity;
+                    const result = sum + (protein * ratio);
+                    return isNaN(result) ? sum : result;
                   }, 0);
                   
                   const totalCarbs = recipeIngredients.reduce((sum, ing) => {
-                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
-                    const ratio = currentQuantity / ing.quantity_grams;
-                    return sum + (ing.carbs_g_per_serving * ratio);
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams || 0;
+                    const baseQuantity = ing.quantity_grams || 1;
+                    const carbs = ing.carbs_g_per_serving || 0;
+                    const ratio = currentQuantity / baseQuantity;
+                    const result = sum + (carbs * ratio);
+                    return isNaN(result) ? sum : result;
                   }, 0);
                   
                   const totalFat = recipeIngredients.reduce((sum, ing) => {
-                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams;
-                    const ratio = currentQuantity / ing.quantity_grams;
-                    return sum + (ing.fats_g_per_serving * ratio);
+                    const currentQuantity = ingredientQuantities[ing.id] || ing.quantity_grams || 0;
+                    const baseQuantity = ing.quantity_grams || 1;
+                    const fats = ing.fats_g_per_serving || 0;
+                    const ratio = currentQuantity / baseQuantity;
+                    const result = sum + (fats * ratio);
+                    return isNaN(result) ? sum : result;
                   }, 0);
 
                   const handleSaveRecipeIngredients = () => {
