@@ -81,7 +81,7 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
     
     // Use apple-dumbbell icon for admin programs
     if (activeProgram?.type === 'admin') {
-      return <i className="fi fi-sr-apple-dumbbell text-lg" />;
+      return <i className="fi fi-sr-apple-dumbbell text-lg translate-y-0.5" />;
     }
     
     return <Calendar className="h-5 w-5" />;
