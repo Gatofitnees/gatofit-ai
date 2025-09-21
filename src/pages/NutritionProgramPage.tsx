@@ -7,13 +7,18 @@ import { RecipeCard } from '@/components/nutrition/RecipeCard';
 import { EditableIngredientItem } from '@/components/nutrition/EditableIngredientItem';
 import { useNutritionProgramPage } from '@/hooks/useNutritionProgramPage';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import SaveNutritionMealModal from '@/components/nutrition/SaveNutritionMealModal';
+import { useLocalTimezone } from '@/hooks/useLocalTimezone';
 
 export const NutritionProgramPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { getCurrentLocalDate } = useLocalTimezone();
   const dateParam = searchParams.get('date');
-  const selectedDate = dateParam ? new Date(dateParam) : new Date(new Date().toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
+  
+  // Use user's local current date when no date parameter is provided
+  const selectedDate = dateParam ? new Date(dateParam) : new Date(getCurrentLocalDate());
 
   const {
     nutritionPlan,
@@ -99,13 +104,16 @@ export const NutritionProgramPage: React.FC = () => {
 
     // Second pass: only add ingredients that are NOT part of any recipe
     ingredients.forEach(ingredient => {
-      if (!recipeIngredientIds.has(ingredient.id)) {
+      // Check if ingredient is NOT part of any recipe or has empty recipe info
+      const isPartOfRecipe = ingredient.recipe_id && 
+                           ingredient.recipe_name && 
+                           ingredient.recipe_name.trim() !== '' &&
+                           recipeIngredientIds.has(ingredient.id);
+      
+      if (!isPartOfRecipe) {
         individualIngredients.push(ingredient);
       }
     });
-
-    console.log('Recipe groups:', recipeGroups);
-    console.log('Individual ingredients (excluding recipe ingredients):', individualIngredients);
 
     return { recipeGroups, individualIngredients };
   };
@@ -142,21 +150,25 @@ export const NutritionProgramPage: React.FC = () => {
                     {meal.meal_name}
                   </h2>
                   
-                  {/* Meal Options */}
-                  {meal.options && meal.options.length > 1 && (
-                    <div className="flex gap-2 flex-wrap">
-                      {meal.options.map((option, optionIndex) => (
-                        <Button
-                          key={option.id}
-                          variant={selectedOptions[meal.id] === optionIndex ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleOptionSelect(meal.id, optionIndex)}
-                        >
-                          Opción {optionIndex + 1}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                   {/* Meal Options - Horizontal Scrollable */}
+                   {meal.options && meal.options.length > 1 && (
+                     <ScrollArea className="w-full whitespace-nowrap">
+                       <div className="flex w-max space-x-2 p-1">
+                         {meal.options.map((option, optionIndex) => (
+                           <Button
+                             key={option.id}
+                             variant={selectedOptions[meal.id] === optionIndex ? "default" : "outline"}
+                             size="sm"
+                             onClick={() => handleOptionSelect(meal.id, optionIndex)}
+                             className="flex-shrink-0"
+                           >
+                             Opción {optionIndex + 1}
+                           </Button>
+                         ))}
+                       </div>
+                       <ScrollBar orientation="horizontal" />
+                     </ScrollArea>
+                   )}
                 </div>
 
                 {/* Recipe Groups */}
