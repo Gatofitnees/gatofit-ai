@@ -60,7 +60,7 @@ export const NutritionProgramHeader: React.FC<NutritionProgramHeaderProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onBack}
+          onClick={() => navigate('/nutrition')}
           className="p-2"
         >
           <ArrowLeft className="h-5 w-5" />
