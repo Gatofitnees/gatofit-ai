@@ -89,31 +89,25 @@ export const NutritionProgramPage: React.FC = () => {
   const groupIngredientsByRecipe = (ingredients: any[]) => {
     const recipeGroups: Record<string, any[]> = {};
     const individualIngredients: any[] = [];
-    const recipeIngredientIds = new Set<string>();
 
-    // First pass: identify all ingredients that belong to recipes
+    console.log('All ingredients:', ingredients);
+
+    // Group ingredients by recipe and separate individual ingredients
     ingredients.forEach(ingredient => {
+      // If ingredient has recipe_id, it belongs to a recipe
       if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
-        recipeIngredientIds.add(ingredient.id);
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
-      }
-    });
-
-    // Second pass: only add ingredients that are NOT part of any recipe
-    ingredients.forEach(ingredient => {
-      // Check if ingredient is NOT part of any recipe or has empty recipe info
-      const isPartOfRecipe = ingredient.recipe_id && 
-                           ingredient.recipe_name && 
-                           ingredient.recipe_name.trim() !== '' &&
-                           recipeIngredientIds.has(ingredient.id);
-      
-      if (!isPartOfRecipe) {
+      } else {
+        // If ingredient has no recipe_id, it's an individual ingredient
         individualIngredients.push(ingredient);
       }
     });
+
+    console.log('Recipe groups:', Object.keys(recipeGroups));
+    console.log('Individual ingredients (no recipe_id):', individualIngredients.map(i => i.name));
 
     return { recipeGroups, individualIngredients };
   };
