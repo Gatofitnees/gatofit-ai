@@ -89,9 +89,8 @@ const Avatar: React.FC<AvatarProps> = ({
       {/* Asesorado red ring */}
       {isAsesorado && (
         <div 
-          className="absolute inset-0 rounded-full border-2"
+          className="absolute inset-0 rounded-full border-2 bg-gradient-to-br from-red-500 to-red-600"
           style={{
-            background: 'linear-gradient(45deg, #ef4444, #dc2626)',
             padding: '2px',
             borderRadius: '50%'
           }}

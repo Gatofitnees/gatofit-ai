@@ -1,8 +1,7 @@
 import React from "react";
-import { UtensilsCrossed } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Button from "@/components/Button";
 import { useAdminNutritionProgram } from "@/hooks/useAdminNutritionProgram";
+import gatofitLogo from "@/assets/gatofit-logo.svg";
 
 interface NutritionProgramButtonProps {
   selectedDate: Date;
@@ -25,13 +24,15 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = ({
   };
 
   return (
-    <Button 
-      variant="secondary"
-      size="sm"
-      leftIcon={<UtensilsCrossed className="h-4 w-4" />}
+    <button
       onClick={handleClick}
+      className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/20 border-2 border-primary/30 hover:bg-primary/30 transition-all duration-200 shadow-lg hover:shadow-xl"
     >
-      Alimentación
-    </Button>
+      <img 
+        src={gatofitLogo} 
+        alt="Gatofit Logo" 
+        className="w-8 h-8 object-contain"
+      />
+    </button>
   );
 };

@@ -8,7 +8,6 @@ import DaySelector from "../components/DaySelector";
 import TrainingCard from "../components/TrainingCard";
 import MacrosCard from "../components/MacrosCard";
 import FloatingActionButton from "../components/FloatingActionButton";
-import { NutritionProgramButton } from "../components/nutrition/NutritionProgramButton";
 
 const HomePage: React.FC = () => {
   const { toast } = useToast();
@@ -76,11 +75,6 @@ const HomePage: React.FC = () => {
         macros={macros}
         onAddFood={handleAddFood}
       />
-      
-      {/* Nutrition Program Section */}
-      <div className="mb-6">
-        <NutritionProgramButton selectedDate={selectedDate} />
-      </div>
       
       <FloatingActionButton onClick={handleAddFood} />
     </div>
