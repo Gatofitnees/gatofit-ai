@@ -10,11 +10,13 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import SaveNutritionMealModal from '@/components/nutrition/SaveNutritionMealModal';
 import { useLocalTimezone } from '@/hooks/useLocalTimezone';
+import { useToast } from '@/hooks/use-toast';
 
 export const NutritionProgramPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getCurrentLocalDate } = useLocalTimezone();
+  const { toast } = useToast();
   const dateParam = searchParams.get('date');
   
   // Use user's local current date when no date parameter is provided
@@ -216,7 +218,14 @@ export const NutritionProgramPage: React.FC = () => {
                     );
                     
                     if (selectedRecipeIngredients.length > 0) {
-                      handleSaveMeals(selectedRecipeIngredients);
+                      // Open the modal just like individual ingredients do
+                      setShowSaveModal(true);
+                    } else {
+                      toast({
+                        title: "Sin ingredientes seleccionados",
+                        description: "Selecciona al menos un ingrediente para guardar.",
+                        variant: "destructive"
+                      });
                     }
                   };
 
