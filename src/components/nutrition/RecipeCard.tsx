@@ -44,18 +44,37 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
       <DialogTrigger asChild>
         <Card className="p-0 cursor-pointer hover:bg-secondary/20 transition-colors overflow-hidden h-32">
           <div className="flex h-full">
+            {/* Recipe Image */}
+            <div className="w-32 h-full bg-muted flex-shrink-0">
+              {recipeImageUrl ? (
+                <img 
+                  src={recipeImageUrl} 
+                  alt={recipeName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                  <span className="text-2xl">🍽️</span>
+                </div>
+              )}
+            </div>
+
             {/* Recipe Info */}
             <div className="flex-1 p-4 min-w-0">
-              <h3 className="font-semibold text-foreground truncate mb-2">
+              <h3 className="font-semibold text-foreground truncate mb-3">
                 {recipeName}
               </h3>
-              <div className="flex flex-wrap gap-3">
+              {/* Calories prominent */}
+              <div className="mb-2">
                 <NutrientIcon
                   type="calories"
                   value={Math.round(totalCalories)}
                   unit="kcal"
-                  className="text-xs"
+                  className="text-sm font-semibold"
                 />
+              </div>
+              {/* Macros below */}
+              <div className="flex flex-wrap gap-3">
                 <NutrientIcon
                   type="protein"
                   value={Math.round(totalProtein)}
@@ -72,21 +91,6 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
                   className="text-xs"
                 />
               </div>
-            </div>
-
-            {/* Recipe Image */}
-            <div className="w-24 h-full bg-muted flex-shrink-0">
-              {recipeImageUrl ? (
-                <img 
-                  src={recipeImageUrl} 
-                  alt={recipeName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
-                  <span className="text-2xl">🍽️</span>
-                </div>
-              )}
             </div>
           </div>
         </Card>

@@ -13,7 +13,7 @@ export const NutritionProgramPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dateParam = searchParams.get('date');
-  const selectedDate = dateParam ? new Date(dateParam) : new Date();
+  const selectedDate = dateParam ? new Date(dateParam) : new Date(new Date().toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
 
   const {
     nutritionPlan,
@@ -84,33 +84,28 @@ export const NutritionProgramPage: React.FC = () => {
   const groupIngredientsByRecipe = (ingredients: any[]) => {
     const recipeGroups: Record<string, any[]> = {};
     const individualIngredients: any[] = [];
+    const recipeIngredientIds = new Set<string>();
 
+    // First pass: identify all ingredients that belong to recipes
     ingredients.forEach(ingredient => {
-      console.log('Processing ingredient:', {
-        id: ingredient.id,
-        name: ingredient.custom_food_name || ingredient.food_items?.name,
-        recipe_id: ingredient.recipe_id,
-        recipe_name: ingredient.recipe_name,
-        calories: ingredient.calories_per_serving,
-        protein: ingredient.protein_g_per_serving,
-        carbs: ingredient.carbs_g_per_serving,
-        fats: ingredient.fats_g_per_serving
-      });
-
-      // Check if ingredient has a recipe_id to be considered part of a recipe
       if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
+        recipeIngredientIds.add(ingredient.id);
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
-      } else {
-        // This is an individual ingredient (not part of a recipe)
+      }
+    });
+
+    // Second pass: only add ingredients that are NOT part of any recipe
+    ingredients.forEach(ingredient => {
+      if (!recipeIngredientIds.has(ingredient.id)) {
         individualIngredients.push(ingredient);
       }
     });
 
     console.log('Recipe groups:', recipeGroups);
-    console.log('Individual ingredients:', individualIngredients);
+    console.log('Individual ingredients (excluding recipe ingredients):', individualIngredients);
 
     return { recipeGroups, individualIngredients };
   };
