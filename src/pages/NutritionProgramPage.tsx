@@ -92,45 +92,22 @@ export const NutritionProgramPage: React.FC = () => {
 
     console.log('All ingredients:', ingredients);
 
-    // First, collect all ingredients that have recipe_id to identify recipe ingredients
-    const recipeIngredientNames = new Set<string>();
-    
+    // Group ingredients by recipe and separate individual ingredients
     ingredients.forEach(ingredient => {
+      // If ingredient has recipe_id, it belongs to a recipe
       if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
-        // This ingredient belongs to a recipe
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
-        
-        // Track the food item name to avoid duplicates
-        const foodName = ingredient.custom_food_name || ingredient.food_items?.name;
-        if (foodName) {
-          recipeIngredientNames.add(foodName.toLowerCase().trim());
-        }
+      } else {
+        // If ingredient has no recipe_id, it's an individual ingredient
+        individualIngredients.push(ingredient);
       }
-    });
-
-    // Then, add ingredients that are NOT part of any recipe
-    ingredients.forEach(ingredient => {
-      // Skip if it has recipe_id (already processed above)
-      if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
-        return;
-      }
-      
-      // Skip if this ingredient name is already part of a recipe
-      const foodName = ingredient.custom_food_name || ingredient.food_items?.name;
-      if (foodName && recipeIngredientNames.has(foodName.toLowerCase().trim())) {
-        console.log(`Skipping duplicate ingredient: ${foodName} (already in recipe)`);
-        return;
-      }
-      
-      // This is a unique individual ingredient
-      individualIngredients.push(ingredient);
     });
 
     console.log('Recipe groups:', Object.keys(recipeGroups));
-    console.log('Individual ingredients (unique):', individualIngredients.map(i => i.custom_food_name || i.food_items?.name));
+    console.log('Individual ingredients (no recipe_id):', individualIngredients.map(i => i.custom_food_name || i.food_items?.name));
 
     return { recipeGroups, individualIngredients };
   };
