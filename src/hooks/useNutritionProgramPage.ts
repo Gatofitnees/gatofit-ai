@@ -247,7 +247,115 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
 
   const handleSaveWithName = useCallback(async (customName?: string) => {
     setShowSaveModal(false);
-    await handleSaveMeals(undefined, customName);
+    
+    if (!nutritionPlan?.meals) return;
+
+    setSaving(true);
+
+    try {
+      // Collect all checked ingredients
+      const ingredientsToSave: { ingredient: AdminNutritionIngredient; quantity: number }[] = [];
+      
+      nutritionPlan.meals.forEach(meal => {
+        const selectedOptionIndex = selectedOptions[meal.id] || 0;
+        const selectedOption = meal.options?.[selectedOptionIndex];
+        
+        if (selectedOption?.ingredients) {
+          selectedOption.ingredients.forEach(ingredient => {
+            if (checkedIngredients[ingredient.id]) {
+              const quantity = ingredientQuantities[ingredient.id] || ingredient.quantity_grams;
+              ingredientsToSave.push({ ingredient, quantity });
+            }
+          });
+        }
+      });
+
+      if (ingredientsToSave.length === 0) {
+        toast({
+          title: "Sin ingredientes seleccionados",
+          description: "Selecciona al menos un ingrediente para guardar.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create composite meal entry
+      const mealName = customName || 'Comida del plan nutricional';
+      let totalCalories = 0;
+      let totalProtein = 0;
+      let totalCarbs = 0;
+      let totalFat = 0;
+      let totalQuantity = 0;
+      
+      const ingredients: any[] = [];
+      const ingredientsList: string[] = [];
+
+      for (const { ingredient, quantity } of ingredientsToSave) {
+        const scale = quantity / ingredient.quantity_grams;
+        
+        totalCalories += ingredient.calories_per_serving * scale;
+        totalProtein += ingredient.protein_g_per_serving * scale;
+        totalCarbs += ingredient.carbs_g_per_serving * scale;
+        totalFat += ingredient.fats_g_per_serving * scale;
+        totalQuantity += quantity;
+        
+        const ingredientName = ingredient.custom_food_name || 
+                             ingredient.food_items?.name || 
+                             ingredient.recipe_name || 
+                             'Ingrediente del plan';
+        
+        ingredients.push({
+          name: ingredientName,
+          grams: quantity,
+          calories: ingredient.calories_per_serving * scale,
+          protein: ingredient.protein_g_per_serving * scale,
+          carbs: ingredient.carbs_g_per_serving * scale,
+          fat: ingredient.fats_g_per_serving * scale
+        });
+        ingredientsList.push(`${ingredientName} (${quantity}g)`);
+      }
+
+      // Save as single composite meal
+      const result = await addEntry({
+        food_item_id: null,
+        meal_type: 'breakfast',
+        custom_food_name: mealName,
+        quantity_consumed: totalQuantity,
+        unit_consumed: 'g',
+        calories_consumed: totalCalories,
+        protein_g_consumed: totalProtein,
+        carbs_g_consumed: totalCarbs,
+        fat_g_consumed: totalFat,
+        health_score: null,
+        ingredients: ingredients,
+        notes: `Comida del plan nutricional: ${ingredientsList.join(', ')}`,
+        photo_url: null
+      });
+
+      if (result) {
+        toast({
+          title: "¡Comida guardada!",
+          description: `${mealName} se ha guardado con ${ingredientsToSave.length} ingredientes`,
+        });
+        
+        // Clear all selections after successful save
+        setCheckedIngredients({});
+        // Navigate back to nutrition page
+        navigate('/nutrition');
+      } else {
+        throw new Error('No se pudo guardar la comida');
+      }
+
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      toast({
+        title: "Error al guardar",
+        description: "Hubo un problema al guardar la comida. Intenta de nuevo.",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   }, [handleSaveMeals]);
 
   const getSelectedIngredients = useCallback(() => {
