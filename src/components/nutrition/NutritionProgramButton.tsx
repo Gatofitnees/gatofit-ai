@@ -21,7 +21,7 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = ({
 
   const handleClick = () => {
     const dateString = selectedDate.toISOString().split('T')[0];
-    navigate(`/admin-nutrition-plan?date=${dateString}`);
+    navigate(`/nutrition-program?date=${dateString}`);
   };
 
   return (

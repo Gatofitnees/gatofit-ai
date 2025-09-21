@@ -34,7 +34,6 @@ import CreateRoutinePage from "./pages/CreateRoutinePage";
 import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
 import WorkoutSummaryPage from "./pages/WorkoutSummaryPage";
 import { FoodEditPage } from "./pages/FoodEditPage";
-import AdminNutritionPlanPage from "./pages/AdminNutritionPlanPage";
 import { NutritionProgramPage } from "./pages/NutritionProgramPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
@@ -278,14 +277,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <FoodEditPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin-nutrition-plan"
-                  element={
-                    <ProtectedRoute>
-                      <AdminNutritionPlanPage />
                     </ProtectedRoute>
                   }
                 />
