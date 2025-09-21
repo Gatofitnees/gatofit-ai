@@ -93,7 +93,8 @@ export function useBaseExerciseData({
         initialBaseExercises[ex.id] = {
           ...storedExercise,
           sets: updatedSets,
-          notes: exerciseNotesMap[ex.id] || storedExercise.notes
+          notes: exerciseNotesMap[ex.id] || storedExercise.notes,
+          rest_between_sets_seconds: ex.rest_between_sets_seconds // Update with current rest time
         };
         console.log(`Using stored data for exercise ${ex.id} with user inputs preserved`);
       } else {
