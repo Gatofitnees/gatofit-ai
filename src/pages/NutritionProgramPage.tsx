@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,13 @@ export const NutritionProgramPage: React.FC = () => {
   const dateParam = searchParams.get('date');
   
   // Use user's local current date when no date parameter is provided
-  const selectedDate = dateParam ? new Date(dateParam) : new Date(getCurrentLocalDate());
+  const selectedDate = useMemo(() => {
+    if (dateParam) {
+      return new Date(dateParam + 'T00:00:00'); // Ensure local interpretation
+    }
+    const localDateString = getCurrentLocalDate();
+    return new Date(localDateString + 'T00:00:00'); // Current local date
+  }, [dateParam, getCurrentLocalDate]);
 
   const {
     nutritionPlan,
@@ -89,33 +95,57 @@ export const NutritionProgramPage: React.FC = () => {
   const groupIngredientsByRecipe = (ingredients: any[]) => {
     const recipeGroups: Record<string, any[]> = {};
     const individualIngredients: any[] = [];
+    const recipeIngredientNames = new Set<string>();
 
     console.log('All ingredients:', ingredients);
 
-    // Group ingredients by recipe and separate individual ingredients
+    // First pass: collect recipe ingredients and their names
     ingredients.forEach(ingredient => {
-      console.log(`Processing ingredient: ${ingredient.custom_food_name || ingredient.food_items?.name}`, {
-        id: ingredient.id,
-        recipe_id: ingredient.recipe_id,
-        recipe_name: ingredient.recipe_name
-      });
-      
-      // If ingredient has recipe_id, it belongs to a recipe
       if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
+        console.log(`Processing ingredient: ${ingredient.custom_food_name || ingredient.food_items?.name}`, {
+          id: ingredient.id,
+          recipe_id: ingredient.recipe_id,
+          recipe_name: ingredient.recipe_name
+        });
         console.log(`→ Adding to recipe group: ${ingredient.recipe_id}`);
+        
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
-      } else {
+        
+        // Track recipe ingredient names to avoid duplicates
+        const ingredientName = ingredient.custom_food_name || ingredient.food_items?.name;
+        if (ingredientName) {
+          recipeIngredientNames.add(ingredientName.toLowerCase().trim());
+        }
+      }
+    });
+
+    // Second pass: only add individual ingredients that are NOT already in recipes
+    ingredients.forEach(ingredient => {
+      if (!ingredient.recipe_id || !ingredient.recipe_name || ingredient.recipe_name.trim() === '') {
+        const ingredientName = ingredient.custom_food_name || ingredient.food_items?.name;
+        
+        console.log(`Processing ingredient: ${ingredientName}`, {
+          id: ingredient.id,
+          recipe_id: ingredient.recipe_id,
+          recipe_name: ingredient.recipe_name
+        });
+        
+        // Skip if this ingredient name is already part of a recipe
+        if (ingredientName && recipeIngredientNames.has(ingredientName.toLowerCase().trim())) {
+          console.log(`→ Skipping duplicate ingredient: ${ingredientName} (already in recipe)`);
+          return;
+        }
+        
         console.log(`→ Adding as individual ingredient`);
-        // If ingredient has no recipe_id, it's an individual ingredient
         individualIngredients.push(ingredient);
       }
     });
 
     console.log('Recipe groups:', Object.keys(recipeGroups));
-    console.log('Individual ingredients (no recipe_id):', individualIngredients.map(i => i.custom_food_name || i.food_items?.name));
+    console.log('Individual ingredients (unique):', individualIngredients.map(i => i.custom_food_name || i.food_items?.name));
 
     return { recipeGroups, individualIngredients };
   };
