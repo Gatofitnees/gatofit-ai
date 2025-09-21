@@ -65,30 +65,30 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
                 {recipeName}
               </h3>
               {/* Calories prominent */}
-              <div className="mb-2">
+              <div className="mb-2 -mt-1">
                 <NutrientIcon
                   type="calories"
                   value={Math.round(totalCalories)}
                   unit="kcal"
-                  className="text-sm font-semibold"
+                  className="text-base font-semibold"
                 />
               </div>
               {/* Macros below */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 -mt-2">
                 <NutrientIcon
                   type="protein"
                   value={Math.round(totalProtein)}
-                  className="text-xs"
+                  className="text-[11px]"
                 />
                 <NutrientIcon
                   type="carbs"
                   value={Math.round(totalCarbs)}
-                  className="text-xs"
+                  className="text-[11px]"
                 />
                 <NutrientIcon
                   type="fat"
                   value={Math.round(totalFat)}
-                  className="text-xs"
+                  className="text-[11px]"
                 />
               </div>
             </div>
