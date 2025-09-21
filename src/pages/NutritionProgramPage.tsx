@@ -94,13 +94,21 @@ export const NutritionProgramPage: React.FC = () => {
 
     // Group ingredients by recipe and separate individual ingredients
     ingredients.forEach(ingredient => {
+      console.log(`Processing ingredient: ${ingredient.custom_food_name || ingredient.food_items?.name}`, {
+        id: ingredient.id,
+        recipe_id: ingredient.recipe_id,
+        recipe_name: ingredient.recipe_name
+      });
+      
       // If ingredient has recipe_id, it belongs to a recipe
       if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
+        console.log(`→ Adding to recipe group: ${ingredient.recipe_id}`);
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
       } else {
+        console.log(`→ Adding as individual ingredient`);
         // If ingredient has no recipe_id, it's an individual ingredient
         individualIngredients.push(ingredient);
       }
