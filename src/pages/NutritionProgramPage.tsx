@@ -92,22 +92,45 @@ export const NutritionProgramPage: React.FC = () => {
 
     console.log('All ingredients:', ingredients);
 
-    // Group ingredients by recipe and separate individual ingredients
+    // First, collect all ingredients that have recipe_id to identify recipe ingredients
+    const recipeIngredientNames = new Set<string>();
+    
     ingredients.forEach(ingredient => {
-      // If ingredient has recipe_id, it belongs to a recipe
       if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
+        // This ingredient belongs to a recipe
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
-      } else {
-        // If ingredient has no recipe_id, it's an individual ingredient
-        individualIngredients.push(ingredient);
+        
+        // Track the food item name to avoid duplicates
+        const foodName = ingredient.custom_food_name || ingredient.food_items?.name;
+        if (foodName) {
+          recipeIngredientNames.add(foodName.toLowerCase().trim());
+        }
       }
     });
 
+    // Then, add ingredients that are NOT part of any recipe
+    ingredients.forEach(ingredient => {
+      // Skip if it has recipe_id (already processed above)
+      if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
+        return;
+      }
+      
+      // Skip if this ingredient name is already part of a recipe
+      const foodName = ingredient.custom_food_name || ingredient.food_items?.name;
+      if (foodName && recipeIngredientNames.has(foodName.toLowerCase().trim())) {
+        console.log(`Skipping duplicate ingredient: ${foodName} (already in recipe)`);
+        return;
+      }
+      
+      // This is a unique individual ingredient
+      individualIngredients.push(ingredient);
+    });
+
     console.log('Recipe groups:', Object.keys(recipeGroups));
-    console.log('Individual ingredients (no recipe_id):', individualIngredients.map(i => i.name));
+    console.log('Individual ingredients (unique):', individualIngredients.map(i => i.custom_food_name || i.food_items?.name));
 
     return { recipeGroups, individualIngredients };
   };
@@ -130,11 +153,6 @@ export const NutritionProgramPage: React.FC = () => {
             }
 
             const { recipeGroups, individualIngredients } = groupIngredientsByRecipe(selectedOption.ingredients);
-
-            console.log('Meal:', meal.meal_name);
-            console.log('Selected option ingredients:', selectedOption.ingredients);
-            console.log('Recipe groups found:', Object.keys(recipeGroups));
-            console.log('Individual ingredients found:', individualIngredients.length);
 
             return (
               <div key={meal.id} className="space-y-4">
