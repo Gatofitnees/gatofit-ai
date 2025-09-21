@@ -125,7 +125,8 @@ export function useBaseExerciseData({
           sets: formattedSets,
           muscle_group_main: ex.muscle_group_main,
           equipment_required: ex.equipment_required,
-          notes: exerciseNotesMap[ex.id] || ""
+          notes: exerciseNotesMap[ex.id] || "",
+          rest_between_sets_seconds: ex.rest_between_sets_seconds
         };
         console.log(`Created fresh exercise ${ex.id} with target reps:`, ex.reps_min, "-", ex.reps_max);
       }
@@ -170,7 +171,8 @@ export function useBaseExerciseData({
           sets: formattedSets,
           muscle_group_main: ex.muscle_group_main,
           equipment_required: ex.equipment_required,
-          notes: exerciseNotesMap[ex.id] || ""
+          notes: exerciseNotesMap[ex.id] || "",
+          rest_between_sets_seconds: ex.rest_between_sets_seconds
         };
         
         initializedExerciseIds.current.add(ex.id);

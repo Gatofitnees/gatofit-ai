@@ -17,6 +17,7 @@ export interface WorkoutExercise {
   muscle_group_main?: string;
   equipment_required?: string;
   notes: string;
+  rest_between_sets_seconds?: number;
 }
 
 export interface PreviousData {

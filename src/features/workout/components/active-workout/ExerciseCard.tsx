@@ -53,14 +53,24 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               </p>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onShowStats(exercise.id)}
-            >
-              <BarChart2 className="h-4 w-4 mr-1" />
-              Estadísticas
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Rest time display */}
+              {exercise.rest_between_sets_seconds && (
+                <div className="text-xs text-muted-foreground">
+                  {exercise.rest_between_sets_seconds}s descanso
+                </div>
+              )}
+              
+              {/* Statistics button - icon only */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onShowStats(exercise.id)}
+                className="px-2"
+              >
+                <BarChart2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           {/* Sets */}
