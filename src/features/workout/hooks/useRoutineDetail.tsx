@@ -20,6 +20,7 @@ interface ExerciseDetail {
   rest_between_sets_seconds: number;
   muscle_group_main?: string;
   equipment_required?: string;
+  notes?: string;
 }
 
 interface Routine {
@@ -85,6 +86,7 @@ export const useRoutineDetail = (routineId: number | undefined) => {
             rest_between_sets_seconds,
             exercise_id,
             exercise_order,
+            notes,
             exercises!routine_exercises_exercise_id_fkey(
               name,
               muscle_group_main,
@@ -119,7 +121,8 @@ export const useRoutineDetail = (routineId: number | undefined) => {
               reps_max: ex.reps_max || 0,
               rest_between_sets_seconds: ex.rest_between_sets_seconds || 60,
               muscle_group_main: ex.exercises?.muscle_group_main,
-              equipment_required: ex.exercises?.equipment_required
+              equipment_required: ex.exercises?.equipment_required,
+              notes: ex.notes || ""
             };
             
             console.log('🔄 Formatted exercise:', formatted);

@@ -93,7 +93,7 @@ export function useBaseExerciseData({
         initialBaseExercises[ex.id] = {
           ...storedExercise,
           sets: updatedSets,
-          notes: exerciseNotesMap[ex.id] || storedExercise.notes,
+          notes: ex.notes || exerciseNotesMap[ex.id] || storedExercise.notes,
           rest_between_sets_seconds: ex.rest_between_sets_seconds // Update with current rest time
         };
         console.log(`Using stored data for exercise ${ex.id} with user inputs preserved`);
@@ -126,7 +126,7 @@ export function useBaseExerciseData({
           sets: formattedSets,
           muscle_group_main: ex.muscle_group_main,
           equipment_required: ex.equipment_required,
-          notes: exerciseNotesMap[ex.id] || "",
+          notes: ex.notes || exerciseNotesMap[ex.id] || "",
           rest_between_sets_seconds: ex.rest_between_sets_seconds
         };
         console.log(`Created fresh exercise ${ex.id} with target reps:`, ex.reps_min, "-", ex.reps_max);
@@ -172,7 +172,7 @@ export function useBaseExerciseData({
           sets: formattedSets,
           muscle_group_main: ex.muscle_group_main,
           equipment_required: ex.equipment_required,
-          notes: exerciseNotesMap[ex.id] || "",
+          notes: ex.notes || exerciseNotesMap[ex.id] || "",
           rest_between_sets_seconds: ex.rest_between_sets_seconds
         };
         
