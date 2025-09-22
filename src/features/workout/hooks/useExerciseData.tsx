@@ -71,16 +71,10 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
       const tempIndex = exerciseIndex - baseExerciseCount;
       updateTemporaryExerciseNotes(tempIndex, notes);
     } else {
-      // Use base exercise notes update
-      setExerciseNotesMap(prev => ({
-        ...prev,
-        [exercise.id]: notes
-      }));
-      
-      // Update the exercise data
+      // Update the exercise data - user workout notes, not routine creator notes
       const updateExercise = (prev: WorkoutExercise) => ({
         ...prev,
-        notes
+        user_notes: notes // Update user workout notes, not routine creator notes
       });
       
       updateBaseExerciseData(exercise.id, updateExercise);

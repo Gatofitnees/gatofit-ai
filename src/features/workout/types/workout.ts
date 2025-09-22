@@ -16,7 +16,8 @@ export interface WorkoutExercise {
   sets: WorkoutSet[];
   muscle_group_main?: string;
   equipment_required?: string;
-  notes: string;
+  notes: string; // Routine creator notes (instructor instructions)
+  user_notes?: string; // User workout notes (personal notes during workout)
   rest_between_sets_seconds?: number;
 }
 

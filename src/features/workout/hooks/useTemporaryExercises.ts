@@ -15,7 +15,8 @@ interface TemporaryExercise {
     previous_weight: number | null;
     previous_reps: number | null;
   }>;
-  notes: string;
+  notes: string; // Routine creator notes
+  user_notes?: string; // User workout notes
 }
 
 // Helper function to create a valid set with proper set_number
@@ -55,7 +56,8 @@ const formatExerciseWithValidSets = (exercise: any): TemporaryExercise => {
     muscle_group_main: exercise.muscle_group_main,
     equipment_required: exercise.equipment_required,
     sets: sets,
-    notes: exercise.notes || ""
+    notes: exercise.notes || "", // Routine creator notes
+    user_notes: exercise.user_notes || "" // User workout notes
   };
 };
 
@@ -160,7 +162,7 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
       if (updated[exerciseIndex]) {
         updated[exerciseIndex] = {
           ...updated[exerciseIndex],
-          notes
+          user_notes: notes // Update user workout notes, not routine creator notes
         };
       }
       return updated;
