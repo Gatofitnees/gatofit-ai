@@ -94,6 +94,17 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
             ))}
           </div>
           
+          {/* Exercise Notes Display */}
+          {exercise.notes && (
+            <div className="mt-3 p-3 bg-secondary/20 rounded-lg border border-white/5">
+              <div className="flex items-center gap-2 mb-1">
+                <Pencil className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Notas</span>
+              </div>
+              <p className="text-sm text-foreground">{exercise.notes}</p>
+            </div>
+          )}
+
           {/* Exercise Actions */}
           <div className="mt-3 flex space-x-2">
             <Button 
