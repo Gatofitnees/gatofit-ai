@@ -1,12 +1,12 @@
 
 import { useState, useCallback } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useOptimizedUsageLimits } from '@/hooks/useOptimizedUsageLimits';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
 
 export const useFoodCaptureWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { isPremium } = useSubscription();
-  const { checkNutritionLimit, showLimitReachedToast } = useOptimizedUsageLimits();
+  const { checkNutritionLimit, showLimitReachedToast } = useUsageLimits();
 
   const capturePhotoWithLimitCheck = useCallback(async () => {
     console.log('📸 [FOOD CAPTURE WITH LIMITS] Attempting to capture photo');

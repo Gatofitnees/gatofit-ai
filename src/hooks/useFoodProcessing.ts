@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useFoodCapture } from './useFoodCapture';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useOptimizedUsageLimits } from '@/hooks/useOptimizedUsageLimits';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { useToast } from '@/hooks/use-toast';
 import { useWebhookResponse } from './useWebhookResponse';
 import { FoodLogEntry } from './useFoodLog';
@@ -63,7 +63,7 @@ export const useFoodProcessing = (addEntry: AddEntryFn) => {
   const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
   const { sendToWebhookWithResponse } = useWebhookResponse();
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkLimitWithoutFetch, showLimitReachedToast } = useOptimizedUsageLimits();
+  const { incrementUsage, checkLimitWithoutFetch, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
   const runAnalysis = async (blob: Blob, id: string, imageSrc: string, supabaseUrl?: string) => {

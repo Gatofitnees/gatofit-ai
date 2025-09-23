@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useAIChat } from '@/hooks/ai-chat/useAIChat';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useOptimizedUsageLimits } from '@/hooks/useOptimizedUsageLimits';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
 
 export const useAIChatWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -12,7 +12,7 @@ export const useAIChatWithLimits = () => {
     checkAIChatLimit, 
     showLimitReachedToast,
     usage 
-  } = useOptimizedUsageLimits();
+  } = useUsageLimits();
   const { messages, isLoading, sendMessage: originalSendMessage, clearMessages } = useAIChat();
 
   const sendMessage = useCallback(async (content: string) => {

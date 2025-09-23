@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useOptimizedAdminNutritionProgram, AdminNutritionIngredient } from './useOptimizedAdminNutritionProgram';
+import { useAdminNutritionProgram, AdminNutritionIngredient } from './useAdminNutritionProgram';
 import { useFoodLog } from './useFoodLog';
 import { useToast } from './use-toast';
 import { FoodLogEntry } from '@/types/foodLog';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const useNutritionProgramPage = (selectedDate: Date) => {
   const navigate = useNavigate();
-  const { nutritionPlan, loading } = useOptimizedAdminNutritionProgram(selectedDate);
+  const { nutritionPlan, loading } = useAdminNutritionProgram(selectedDate);
   const { addEntry } = useFoodLog(selectedDate.toISOString().split('T')[0]);
   const { toast } = useToast();
 

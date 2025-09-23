@@ -178,10 +178,35 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
           // Debug: log the raw data first
           console.log('Raw plan data from database:', JSON.stringify(planData, null, 2));
           
+          // Debug: Check meal options ordering specifically for Almuerzo
+          const almuerzoMeal = planData.meals?.find(meal => meal.meal_name === 'Almuerzo');
+          if (almuerzoMeal && almuerzoMeal.options) {
+            console.log('=== ALMUERZO OPTIONS ORDER DEBUG ===');
+            almuerzoMeal.options.forEach((option, index) => {
+              console.log(`Array index ${index}: option_order=${option.option_order}, option_name="${option.option_name}", ingredients=${option.ingredients?.length || 0}`);
+            });
+            console.log('=== END ALMUERZO DEBUG ===');
+          }
+          
           // Enrich ingredients with recipe information
           if (planData.meals) {
+            // First, ensure proper ordering of meals and their options
+            planData.meals.sort((a, b) => (a.meal_order || 0) - (b.meal_order || 0));
+            
             for (const meal of planData.meals) {
               if (meal.options) {
+                // Ensure options are properly ordered by option_order
+                meal.options.sort((a, b) => (a.option_order || 0) - (b.option_order || 0));
+                
+                // Debug: Log the sorted options for Almuerzo
+                if (meal.meal_name === 'Almuerzo') {
+                  console.log('=== ALMUERZO OPTIONS AFTER SORTING ===');
+                  meal.options.forEach((option, index) => {
+                    console.log(`Array index ${index}: option_order=${option.option_order}, option_name="${option.option_name}", ingredients=${option.ingredients?.length || 0}`);
+                  });
+                  console.log('=== END ALMUERZO SORTED DEBUG ===');
+                }
+                
                 for (const option of meal.options) {
                   if (option.ingredients) {
                     console.log(`Processing ingredients for meal option ${option.option_name}:`, option.ingredients.length, 'ingredients');

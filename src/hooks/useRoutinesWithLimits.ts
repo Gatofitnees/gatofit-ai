@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useRoutines } from '@/hooks/useRoutines';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useOptimizedUsageLimits } from '@/hooks/useOptimizedUsageLimits';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -10,7 +10,7 @@ export const useRoutinesWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const routinesHook = useRoutines();
   const { isPremium } = useSubscription();
-  const { incrementUsage, checkRoutineLimit, showLimitReachedToast } = useOptimizedUsageLimits();
+  const { incrementUsage, checkRoutineLimit, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
   const createRoutine = useCallback(async (routineData: any) => {
