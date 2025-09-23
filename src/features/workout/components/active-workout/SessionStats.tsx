@@ -1,6 +1,7 @@
 
 import React from "react";
 import { ExerciseSession } from "@/hooks/types/exerciseHistory";
+import { Separator } from "@/components/ui/separator";
 
 interface SessionStatsProps {
   session: ExerciseSession;
@@ -8,10 +9,10 @@ interface SessionStatsProps {
 
 export const SessionStats: React.FC<SessionStatsProps> = ({ session }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Daily Summary */}
-      <div className="bg-background/40 rounded-lg border border-white/10 p-4">
-        <h5 className="text-sm font-medium mb-3 text-primary">Resumen del día</h5>
+      <div className="py-4">
+        <h5 className="text-sm font-medium mb-4 text-primary">Resumen del día</h5>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Peso máximo:</span>
@@ -27,33 +28,43 @@ export const SessionStats: React.FC<SessionStatsProps> = ({ session }) => {
         </div>
       </div>
 
-      {/* Individual Workouts - Sin marco exterior */}
-      <div className="space-y-4">
-        {session.workouts.map((workout) => (
-          <div key={workout.workout_log_id} className="bg-background/40 rounded-lg border border-white/10 p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h6 className="text-sm font-medium text-primary">
-                Entreno {workout.workout_number}
-              </h6>
-              <div className="flex gap-4 text-xs text-muted-foreground">
-                <span>Peso máx: {workout.maxWeight ? `${workout.maxWeight} kg` : '-'}</span>
-                <span>Total reps: {workout.totalReps}</span>
+      <Separator className="bg-white/10" />
+
+      {/* Individual Workouts */}
+      <div className="space-y-6">
+        {session.workouts.map((workout, workoutIndex) => (
+          <div key={workout.workout_log_id}>
+            <div className="py-4">
+              <div className="flex justify-between items-center mb-4">
+                <h6 className="text-sm font-medium text-primary">
+                  Entreno {workout.workout_number}
+                </h6>
+                <div className="flex gap-4 text-xs text-muted-foreground">
+                  <span>Peso máx: {workout.maxWeight ? `${workout.maxWeight} kg` : '-'}</span>
+                  <span>Total reps: {workout.totalReps}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                {workout.sets.map((set, setIndex) => (
+                  <div key={set.set_number}>
+                    <div className="flex justify-between items-center text-sm py-2">
+                      <span className="font-medium">Serie {set.set_number}</span>
+                      <span className="font-medium">
+                        {set.weight_kg_used ? `${set.weight_kg_used} kg` : '-'} × {set.reps_completed || 0}
+                      </span>
+                    </div>
+                    {setIndex < workout.sets.length - 1 && (
+                      <Separator className="bg-white/5" />
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
             
-            <div className="space-y-2">
-              {workout.sets.map((set) => (
-                <div 
-                  key={set.set_number}
-                  className="flex justify-between items-center text-sm p-3 bg-background/30 rounded-md border border-white/5"
-                >
-                  <span className="font-medium">Serie {set.set_number}</span>
-                  <span className="font-medium">
-                    {set.weight_kg_used ? `${set.weight_kg_used} kg` : '-'} × {set.reps_completed || 0}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {workoutIndex < session.workouts.length - 1 && (
+              <Separator className="bg-white/10" />
+            )}
           </div>
         ))}
       </div>
