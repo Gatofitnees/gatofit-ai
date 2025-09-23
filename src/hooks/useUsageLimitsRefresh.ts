@@ -1,12 +1,13 @@
 
 import { useCallback } from 'react';
-import { useUsageLimits } from './useUsageLimits';
+import { useOptimizedUsageLimits } from '@/hooks/useOptimizedUsageLimits';
 
 export const useUsageLimitsRefresh = () => {
-  const { fetchUsage } = useUsageLimits();
+  const { fetchUsage } = useOptimizedUsageLimits();
 
   const refreshUsageLimits = useCallback(async () => {
-    console.log('🔄 [USAGE LIMITS REFRESH] Forcing refresh');
+// Remove debug logs to improve performance
+console.log('🔄 [USAGE LIMITS REFRESH] Forcing refresh');
     await fetchUsage();
   }, [fetchUsage]);
 

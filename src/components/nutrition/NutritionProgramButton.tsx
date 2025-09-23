@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAdminNutritionProgram } from "@/hooks/useAdminNutritionProgram";
+import { useAdminNutritionProgramCheck } from "@/hooks/useAdminNutritionProgramCheck";
 import gatofitLogo from "@/assets/gatofit-logo.svg";
 
 interface NutritionProgramButtonProps {
@@ -11,7 +11,7 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = ({
   selectedDate
 }) => {
   const navigate = useNavigate();
-  const { hasNutritionPlan, loading } = useAdminNutritionProgram(selectedDate);
+  const { hasNutritionPlan, loading } = useAdminNutritionProgramCheck(selectedDate);
 
   // No mostrar si está cargando o no hay plan
   if (loading || !hasNutritionPlan) {
