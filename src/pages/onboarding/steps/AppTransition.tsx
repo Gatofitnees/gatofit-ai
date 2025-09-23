@@ -13,6 +13,8 @@ const AppTransition: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [currentStatus, setCurrentStatus] = useState("Configurando tu cuenta...");
   const hasRedirectedRef = useRef(false);
+  const hasProcessedRef = useRef(false);
+  const userIdRef = useRef<string | null>(null);
   
   const { 
     handleGoogleAuthData, 
@@ -23,10 +25,15 @@ const AppTransition: React.FC = () => {
 
   useEffect(() => {
     const processTransition = async () => {
-      // Prevent multiple executions
-      if (hasRedirectedRef.current) {
-        console.log('AppTransition: Already redirected, skipping...');
+      // Prevent multiple executions for the same user
+      if (hasRedirectedRef.current || hasProcessedRef.current) {
         return;
+      }
+      
+      // If user changed, reset processing state
+      if (user?.id && userIdRef.current && userIdRef.current !== user.id) {
+        hasProcessedRef.current = false;
+        hasRedirectedRef.current = false;
       }
 
       console.log('AppTransition: Starting transition process');
@@ -47,6 +54,10 @@ const AppTransition: React.FC = () => {
         return;
       }
 
+      // Mark this user as being processed
+      userIdRef.current = user.id;
+      hasProcessedRef.current = true;
+      
       console.log('AppTransition: User authenticated:', user.id);
       setCurrentStatus("Guardando tus datos...");
 
@@ -85,18 +96,26 @@ const AppTransition: React.FC = () => {
         // Show appropriate messages and redirect
         if (saveSuccess) {
           setCurrentStatus("¡Configuración completada!");
-          toast({
-            title: "¡Bienvenido a GatofitAI!",
-            description: "Tu perfil ha sido configurado exitosamente",
-          });
+          // Only show toast if there's actual onboarding data saved
+          const onboardingData = loadOnboardingData();
+          if (onboardingData && Object.keys(onboardingData).length > 0) {
+            toast({
+              title: "¡Bienvenido a GatofitAI!",
+              description: "Tu perfil ha sido configurado exitosamente",
+            });
+          }
         } else {
           console.error('AppTransition: Failed to save onboarding data');
           setCurrentStatus("Finalizando configuración...");
-          toast({
-            title: "Configuración parcial",
-            description: "Algunos datos no se pudieron guardar, pero puedes completarlos desde tu perfil",
-            variant: "default"
-          });
+          // Only show error toast if there was actually data to save
+          const onboardingData = loadOnboardingData();
+          if (onboardingData && Object.keys(onboardingData).length > 0) {
+            toast({
+              title: "Configuración parcial",
+              description: "Algunos datos no se pudieron guardar, pero puedes completarlos desde tu perfil",
+              variant: "default"
+            });
+          }
         }
 
         // Wait a moment before redirecting to ensure everything is ready
@@ -130,8 +149,11 @@ const AppTransition: React.FC = () => {
       }
     };
 
-    processTransition();
-  }, [user, authLoading, navigate, handleGoogleAuthData, saveOnboardingToProfile, loadOnboardingData, toast]);
+    // Only run when user changes or auth stops loading
+    if (!authLoading) {
+      processTransition();
+    }
+  }, [user?.id, authLoading]); // Simplified dependencies
 
   return (
     <OnboardingLayout currentStep={20} totalSteps={20}>

@@ -166,11 +166,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         return { error, data: null };
       }
 
-      toast({
-        title: "¡Bienvenido de nuevo!",
-        description: "Sesión iniciada exitosamente",
-      });
-      
+      // Removed login success toast to prevent repeated messages
       logSecurityEvent('user_login', 'User login successful', data.user?.id);
       return { error: null, data };
     } catch (err: any) {

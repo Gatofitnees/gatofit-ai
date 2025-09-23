@@ -49,7 +49,12 @@ export const useAutoProfileSetup = (user: User | null) => {
 
   useEffect(() => {
     // Prevent multiple executions for the same user
-    if (!user || hasRunRef.current) return;
+    if (!user || (hasRunRef.current && currentUserIdRef.current === user.id)) return;
+    
+    // Reset if user changed
+    if (currentUserIdRef.current && currentUserIdRef.current !== user.id) {
+      hasRunRef.current = false;
+    }
 
     const setupUserProfile = async () => {
       try {
@@ -155,10 +160,7 @@ export const useAutoProfileSetup = (user: User | null) => {
             
             if (pendingDataStr || regularDataStr) {
               console.log('Found potential onboarding data for Google user');
-              toast({
-                title: "Datos de configuración detectados",
-                description: "Procesando tu información del onboarding...",
-              });
+              // Removed toast to reduce noise during login
             }
           } catch (storageError) {
             console.log('No accessible localStorage data:', storageError);
