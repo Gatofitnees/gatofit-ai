@@ -20,6 +20,7 @@ import { PremiumModal } from "@/components/premium/PremiumModal";
 import { useFoodCaptureWithLimits } from "@/hooks/useFoodCaptureWithLimits";
 import { useUsageLimitsRefresh } from "@/hooks/useUsageLimitsRefresh";
 import { useLocalTimezone } from "@/hooks/useLocalTimezone";
+import { NutritionProgramButton } from "@/components/nutrition/NutritionProgramButton";
 
 
 const NutritionPage: React.FC = () => {
@@ -140,6 +141,7 @@ const NutritionPage: React.FC = () => {
             Comidas - {formatSelectedDate}
           </h2>
           <div className="flex gap-2">
+            <NutritionProgramButton selectedDate={selectedDate} />
             {isToday && (
               <Button 
                 variant="primary"

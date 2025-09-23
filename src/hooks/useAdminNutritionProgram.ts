@@ -168,8 +168,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
             )
           `)
           .eq('id', (nutritionPlanRef as any).nutrition_plan_id)
-          .order('meal_order', { referencedTable: 'nutrition_plan_meals' })
-          .order('option_order', { referencedTable: 'nutrition_plan_meal_options' })
           .limit(1);
 
         if (planError) throw planError;
