@@ -134,14 +134,22 @@ export const NutritionProgramPage: React.FC = () => {
             const selectedOptionIndex = selectedOptions[meal.id] || 0;
             const selectedOption = meal.options?.[selectedOptionIndex];
             
+            console.log(`Rendering meal: ${meal.meal_name}, option ${selectedOptionIndex}/${meal.options?.length || 0}`, {
+              mealId: meal.id,
+              selectedOptionIndex,
+              ingredientsCount: selectedOption?.ingredients?.length || 0,
+              ingredientIds: selectedOption?.ingredients?.map(ing => ing.id).slice(0, 3) // First 3 IDs
+            });
+            
             if (!selectedOption?.ingredients || selectedOption.ingredients.length === 0) {
+              console.log(`Skipping meal ${meal.meal_name} - no ingredients`);
               return null;
             }
 
             const { recipeGroups, individualIngredients } = groupIngredientsByRecipe(selectedOption.ingredients);
 
             return (
-              <div key={meal.id} className="space-y-4">
+              <div key={`${meal.id}-${selectedOptionIndex}`} className="space-y-4">
                 {/* Meal Header */}
                 <div className="space-y-3">
                   <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">

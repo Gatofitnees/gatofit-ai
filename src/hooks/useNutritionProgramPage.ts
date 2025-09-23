@@ -55,46 +55,55 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
   }, [nutritionPlan?.id, initialized]); // Only depend on plan ID, not the whole object
 
   const handleOptionSelect = useCallback((mealId: string, optionIndex: number) => {
-    setSelectedOptions(prev => ({
-      ...prev,
-      [mealId]: optionIndex
-    }));
+    console.log(`Option select: meal ${mealId}, option ${optionIndex}`);
     
-    // Clear checked ingredients and quantities when changing options
+    if (!nutritionPlan?.meals) return;
+    
+    const meal = nutritionPlan.meals.find(m => m.id === mealId);
+    if (!meal?.options) return;
+    
+    const selectedOption = meal.options[optionIndex];
+    if (!selectedOption) return;
+    
+    // Perform all state updates atomically
+    setSelectedOptions(prev => {
+      const newOptions = {
+        ...prev,
+        [mealId]: optionIndex
+      };
+      console.log('New selected options:', newOptions);
+      return newOptions;
+    });
+    
     setCheckedIngredients(prev => {
       const newChecked = { ...prev };
-      // Find the meal and clear its ingredients
-      const meal = nutritionPlan?.meals?.find(m => m.id === mealId);
-      if (meal?.options) {
-        meal.options.forEach(option => {
-          option.ingredients?.forEach(ingredient => {
-            delete newChecked[ingredient.id];
-          });
+      // Clear all ingredients for this meal
+      meal.options.forEach(option => {
+        option.ingredients?.forEach(ingredient => {
+          delete newChecked[ingredient.id];
         });
-      }
+      });
+      console.log('Cleared checked ingredients for meal:', mealId);
       return newChecked;
     });
     
-    // Update quantities for the new selected option
     setIngredientQuantities(prev => {
       const newQuantities = { ...prev };
-      const meal = nutritionPlan?.meals?.find(m => m.id === mealId);
       
-      if (meal?.options) {
-        // Remove quantities for all options of this meal
-        meal.options.forEach(option => {
-          option.ingredients?.forEach(ingredient => {
-            delete newQuantities[ingredient.id];
-          });
+      // Clear all ingredient quantities for this meal
+      meal.options.forEach(option => {
+        option.ingredients?.forEach(ingredient => {
+          delete newQuantities[ingredient.id];
         });
-        
-        // Add quantities for the newly selected option
-        const selectedOption = meal.options[optionIndex];
-        selectedOption.ingredients?.forEach(ingredient => {
-          newQuantities[ingredient.id] = ingredient.quantity_grams;
-        });
-      }
+      });
       
+      // Set quantities for the newly selected option
+      console.log(`Setting quantities for option ${optionIndex}:`, selectedOption.ingredients?.length, 'ingredients');
+      selectedOption.ingredients?.forEach(ingredient => {
+        newQuantities[ingredient.id] = ingredient.quantity_grams;
+      });
+      
+      console.log('Updated ingredient quantities for meal:', mealId);
       return newQuantities;
     });
   }, [nutritionPlan]);
