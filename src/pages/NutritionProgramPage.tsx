@@ -141,12 +141,10 @@ export const NutritionProgramPage: React.FC = () => {
               ingredientIds: selectedOption?.ingredients?.map(ing => ing.id).slice(0, 3) // First 3 IDs
             });
             
-            if (!selectedOption?.ingredients || selectedOption.ingredients.length === 0) {
-              console.log(`Skipping meal ${meal.meal_name} - no ingredients`);
-              return null;
-            }
-
-            const { recipeGroups, individualIngredients } = groupIngredientsByRecipe(selectedOption.ingredients);
+            const hasIngredients = selectedOption?.ingredients && selectedOption.ingredients.length > 0;
+            const { recipeGroups, individualIngredients } = hasIngredients 
+              ? groupIngredientsByRecipe(selectedOption.ingredients)
+              : { recipeGroups: [], individualIngredients: [] };
 
             return (
               <div key={`${meal.id}-${selectedOptionIndex}`} className="space-y-4">
@@ -175,10 +173,27 @@ export const NutritionProgramPage: React.FC = () => {
                        <ScrollBar orientation="horizontal" />
                      </ScrollArea>
                    )}
-                </div>
+                 </div>
 
-                {/* Recipe Groups */}
-                {Object.entries(recipeGroups).map(([recipeId, recipeIngredients]) => {
+                 {/* Empty State for options with no ingredients */}
+                 {!hasIngredients && (
+                   <div className="text-center py-8">
+                     <div className="bg-muted/50 rounded-lg p-6">
+                       <p className="text-muted-foreground">
+                         Esta opción no tiene ingredientes configurados
+                       </p>
+                       <p className="text-sm text-muted-foreground mt-2">
+                         Selecciona otra opción para ver los ingredientes disponibles
+                       </p>
+                     </div>
+                   </div>
+                 )}
+
+                  {/* Recipe Groups and Individual Ingredients - Only show when there are ingredients */}
+                  {hasIngredients && (
+                    <>
+                      {/* Recipe Groups */}
+                      {Object.entries(recipeGroups).map(([recipeId, recipeIngredients]) => {
                   // Get recipe information from the first ingredient
                   const firstIngredient = recipeIngredients[0];
                   const recipeName = firstIngredient?.recipe_name || `Receta de ${recipeIngredients.length} ingrediente${recipeIngredients.length > 1 ? 's' : ''}`;
@@ -270,9 +285,11 @@ export const NutritionProgramPage: React.FC = () => {
                         onCheck={(checked) => handleIngredientCheck(ingredient.id, checked)}
                         onQuantityChange={(quantity) => handleQuantityChange(ingredient.id, quantity)}
                       />
-                    ))}
-                  </div>
-                )}
+                     ))}
+                   </div>
+                 )}
+                    </>
+                  )}
 
                 <Separator />
               </div>
