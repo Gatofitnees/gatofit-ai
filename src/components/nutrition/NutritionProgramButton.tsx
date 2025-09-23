@@ -26,12 +26,12 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = ({
   return (
     <button
       onClick={handleClick}
-      className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/20 border-2 border-primary/30 hover:bg-primary/30 transition-all duration-200 shadow-lg hover:shadow-xl"
+      className="relative w-12 h-12 rounded-full border-2 border-primary/30 hover:border-primary/50 transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden"
     >
       <img 
         src={gatofitLogo} 
         alt="Gatofit Logo" 
-        className="w-8 h-8 object-contain"
+        className="w-full h-full object-cover rounded-full"
       />
     </button>
   );
