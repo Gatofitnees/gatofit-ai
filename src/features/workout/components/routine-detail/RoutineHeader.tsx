@@ -12,12 +12,12 @@ const RoutineHeader: React.FC<RoutineHeaderProps> = ({ title, onBack }) => {
     <div className="flex items-center mb-6">
       <button 
         onClick={onBack}
-        className="mr-3 p-1 rounded-full hover:bg-secondary/50"
+        className="mr-3 p-1 rounded-full hover:bg-secondary/50 text-foreground"
         type="button"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
-      <h1 className="text-xl font-bold">{title}</h1>
+      <h1 className="text-xl font-bold text-foreground">{title}</h1>
     </div>
   );
 };

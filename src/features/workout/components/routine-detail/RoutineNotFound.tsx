@@ -9,16 +9,16 @@ interface RoutineNotFoundProps {
 
 const RoutineNotFound: React.FC<RoutineNotFoundProps> = ({ onBack }) => {
   return (
-    <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
+    <div className="min-h-screen bg-background text-foreground pt-6 pb-24 px-4 max-w-md mx-auto">
       <div className="flex items-center mb-6">
         <button 
           onClick={onBack}
-          className="mr-3 p-1 rounded-full hover:bg-secondary/50"
+          className="mr-3 p-1 rounded-full hover:bg-secondary/50 text-foreground"
           type="button"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-xl font-bold">Rutina no encontrada</h1>
+        <h1 className="text-xl font-bold text-foreground">Rutina no encontrada</h1>
       </div>
       
       <div className="text-center py-10">

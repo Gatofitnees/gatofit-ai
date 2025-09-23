@@ -33,7 +33,7 @@ const RoutineDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
+    <div className="min-h-screen bg-background text-foreground pt-6 pb-24 px-4 max-w-md mx-auto">
       {/* Header */}
       <RoutineHeader title={routine.name} onBack={handleBack} />
       
@@ -46,7 +46,7 @@ const RoutineDetailPage: React.FC = () => {
       />
       
       {/* Exercises List */}
-      <h2 className="font-semibold mb-4">Ejercicios</h2>
+      <h2 className="font-semibold mb-4 text-foreground">Ejercicios</h2>
       {/* @ts-ignore - Ignoring the type issue until we can refactor the useRoutineDetail hook */}
       <ExercisesList exercises={exerciseDetails} />
     </div>

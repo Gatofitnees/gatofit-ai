@@ -17,14 +17,14 @@ const RoutineInfo: React.FC<RoutineInfoProps> = ({
   isStarting 
 }) => {
   return (
-    <div className="bg-secondary/10 p-4 rounded-xl mb-6">
+    <div className="bg-card border border-border p-4 rounded-xl mb-6">
       <div className="flex items-center text-sm text-muted-foreground mb-2">
         <Clock className="h-4 w-4 mr-1" />
         <span>Duración estimada: {estimatedDuration || '30'} min</span>
       </div>
       
       {description && (
-        <p className="text-sm">{description}</p>
+        <p className="text-sm text-card-foreground mb-4">{description}</p>
       )}
       
       <div className="mt-4">
