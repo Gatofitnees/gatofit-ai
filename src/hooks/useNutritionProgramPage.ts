@@ -39,11 +39,10 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
         if (meal.options && meal.options.length > 0) {
           initialOptions[meal.id] = 0; // Select first option by default
           
-          // Initialize quantities for all ingredients
-          meal.options.forEach(option => {
-            option.ingredients?.forEach(ingredient => {
-              initialQuantities[ingredient.id] = ingredient.quantity_grams;
-            });
+          // Only initialize quantities for the selected option (first option by default)
+          const selectedOption = meal.options[0];
+          selectedOption.ingredients?.forEach(ingredient => {
+            initialQuantities[ingredient.id] = ingredient.quantity_grams;
           });
         }
       });
@@ -61,7 +60,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       [mealId]: optionIndex
     }));
     
-    // Clear checked ingredients when changing options
+    // Clear checked ingredients and quantities when changing options
     setCheckedIngredients(prev => {
       const newChecked = { ...prev };
       // Find the meal and clear its ingredients
@@ -74,6 +73,29 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
         });
       }
       return newChecked;
+    });
+    
+    // Update quantities for the new selected option
+    setIngredientQuantities(prev => {
+      const newQuantities = { ...prev };
+      const meal = nutritionPlan?.meals?.find(m => m.id === mealId);
+      
+      if (meal?.options) {
+        // Remove quantities for all options of this meal
+        meal.options.forEach(option => {
+          option.ingredients?.forEach(ingredient => {
+            delete newQuantities[ingredient.id];
+          });
+        });
+        
+        // Add quantities for the newly selected option
+        const selectedOption = meal.options[optionIndex];
+        selectedOption.ingredients?.forEach(ingredient => {
+          newQuantities[ingredient.id] = ingredient.quantity_grams;
+        });
+      }
+      
+      return newQuantities;
     });
   }, [nutritionPlan]);
 
