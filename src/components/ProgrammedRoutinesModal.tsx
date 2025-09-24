@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle, ChevronLeft, ChevronRight, Eye, ChefHat, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { WeeklyProgram, WeeklyProgramRoutine } from "@/hooks/useWeeklyPrograms";
 import { GatofitProgram } from "@/hooks/useGatofitPrograms";
 import { AdminProgram, UnifiedProgramData } from "@/hooks/useActiveProgramUnified";
 import { supabase } from "@/integrations/supabase/client";
+import { useNutritionPlanCheck } from "@/hooks/useNutritionPlanCheck";
 
 interface ProgrammedRoutinesModalProps {
   isOpen: boolean;
@@ -37,6 +38,9 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   const [nutritionPlans, setNutritionPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<boolean>(initialIsCompleted);
+  
+  // Check for nutrition plan availability
+  const { hasNutritionPlan, loading: nutritionLoading } = useNutritionPlanCheck(navigatedDate);
 
   const formatDayOfWeek = (date: Date) => {
     return date.toLocaleDateString('es-ES', { weekday: 'long' });
@@ -521,40 +525,37 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                     )}
 
                     {/* Nutrition Section */}
-                    {nutritionPlans.length > 0 && (
+                    {hasNutritionPlan && (
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-3">Alimentación</h3>
-                        <div className="space-y-3">
-                          {nutritionPlans.map((plan, index) => (
-                            <div
-                              key={`${plan.id}-${index}`}
-                              className="p-4 border border-border/50 rounded-lg bg-card"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h4 className="font-medium text-base mb-1">
-                                    Plan de alimentación ({plan.name})
-                                  </h4>
-                                  <div className="flex gap-4 text-sm text-muted-foreground">
-                                    <span>🔥 {plan.target_calories} kcal</span>
-                                    <span>🥩 {plan.target_protein_g}g</span>
-                                    <span>🌾 {plan.target_carbs_g}g</span>
-                                    <span>🥑 {plan.target_fats_g}g</span>
-                                  </div>
-                                </div>
-                                <Button
-                                  onClick={() => {
-                                    const dateString = navigatedDate.toISOString().split('T')[0];
-                                    window.location.href = `/nutrition-program?date=${dateString}`;
-                                  }}
-                                  variant="outline"
-                                  size="sm"
-                                >
-                                  Ver Plan
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
+                        <div className="p-4 border border-border/50 rounded-lg bg-card">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Utensils className="h-5 w-5 text-primary" />
+                            <h4 className="font-medium text-base">Plan de alimentación</h4>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground mb-4">
+                            {getDateStatus(navigatedDate) === "Hoy" 
+                              ? "Tienes un plan nutricional programado para hoy"
+                              : getDateStatus(navigatedDate) === "Ayer"
+                              ? "Tenías un plan nutricional programado para ayer"
+                              : getDateStatus(navigatedDate) === "Mañana"
+                              ? "Tienes un plan nutricional programado para mañana"
+                              : "Tienes un plan nutricional programado para este día"
+                            }
+                          </p>
+                          
+                          <Button
+                            onClick={() => {
+                              const dateString = navigatedDate.toISOString().split('T')[0];
+                              window.location.href = `/nutrition-program?date=${dateString}`;
+                              onClose();
+                            }}
+                            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                            size="sm"
+                          >
+                            Iniciar
+                          </Button>
                         </div>
                       </div>
                     )}
