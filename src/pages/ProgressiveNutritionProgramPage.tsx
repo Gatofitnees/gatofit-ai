@@ -21,7 +21,16 @@ export const ProgressiveNutritionProgramPage: React.FC = React.memo(() => {
   const dateParam = searchParams.get('date');
   
   // Use user's local current date when no date parameter is provided
-  const selectedDate = dateParam ? new Date(dateParam) : new Date(getCurrentLocalDate());
+  const selectedDate = useMemo(() => {
+    if (dateParam) {
+      // Create a date object that represents the local date, not UTC
+      const [year, month, day] = dateParam.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    // For current date, create a Date object representing today in local timezone
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  }, [dateParam]);
 
   const {
     nutritionPlan,

@@ -41,11 +41,11 @@ export const useProgressiveNutritionProgram = (selectedDate: Date) => {
     mealRefs.current = {};
   }, [selectedDate.toDateString()]);
 
-  // Initialize first meal when nutrition plan loads
+  // Initialize ONLY the first meal when nutrition plan loads
   useEffect(() => {
     if (nutritionPlan?.meals && nutritionPlan.meals.length > 0 && loadedMeals.size === 0) {
       const firstMeal = nutritionPlan.meals[0];
-      loadMeal(firstMeal.id, 0); // Load first meal with first option
+      loadMeal(firstMeal.id, 0); // Load only first meal with first option
     }
   }, [nutritionPlan?.id]);
 
