@@ -34,7 +34,7 @@ import CreateRoutinePage from "./pages/CreateRoutinePage";
 import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
 import WorkoutSummaryPage from "./pages/WorkoutSummaryPage";
 import { FoodEditPage } from "./pages/FoodEditPage";
-import { NutritionProgramPage } from "./pages/NutritionProgramPage";
+import { ProgressiveNutritionProgramPage } from "./pages/ProgressiveNutritionProgramPage";
 import RoutineDetailPage from "./pages/RoutineDetailPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
@@ -293,7 +293,7 @@ function App() {
                   path="/nutrition-program"
                   element={
                     <ProtectedRoute>
-                      <NutritionProgramPage />
+                      <ProgressiveNutritionProgramPage />
                     </ProtectedRoute>
                   }
                 />
