@@ -35,7 +35,7 @@ const NutritionPage: React.FC = () => {
   const { entries, datesWithEntries, deleteEntry, isLoading, addEntry } = useFoodLog(getLocalDateString(selectedDate));
   const { refreshUsageLimits } = useUsageLimitsRefresh();
   
-  // Memoize date management calculations
+  // Call hooks at the top level - never inside useMemo or useCallback
   const { 
     isToday, 
     isSelectedDay, 
@@ -43,17 +43,7 @@ const NutritionPage: React.FC = () => {
     getDatesWithEntries
   } = useDateManagement(selectedDate, entries, datesWithEntries);
   
-  const dateManagement = useMemo(() => ({
-    isToday,
-    isSelectedDay,
-    formatSelectedDate,
-    getDatesWithEntries
-  }), [isToday, isSelectedDay, formatSelectedDate, getDatesWithEntries]);
-  
-  // Memoize nutrition calculations
-  const nutritionData = useMemo(() => {
-    return useNutritionCalculations(entries, profile);
-  }, [entries, profile]);
+  const { macros, calorieProgress } = useNutritionCalculations(entries, profile);
   
   const { 
     processingFoods,
@@ -138,22 +128,22 @@ const NutritionPage: React.FC = () => {
       
       <DaySelector 
         onSelectDate={setSelectedDate}
-        datesWithRecords={dateManagement.getDatesWithEntries()}
+        datesWithRecords={getDatesWithEntries()}
         selectedDate={selectedDate}
       />
       
-      <CaloriesSummary macros={nutritionData.macros} calorieProgress={nutritionData.calorieProgress} />
+      <CaloriesSummary macros={macros} calorieProgress={calorieProgress} />
       
-      <MacrosSummary macros={nutritionData.macros} />
+      <MacrosSummary macros={macros} />
       
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">
-            Comidas - {dateManagement.formatSelectedDate}
+            Comidas - {formatSelectedDate}
           </h2>
           <div className="flex gap-2">
             <NutritionProgramButton selectedDate={selectedDate} />
-            {dateManagement.isToday && (
+            {isToday && (
               <Button 
                 variant="primary"
                 size="sm"
@@ -170,20 +160,20 @@ const NutritionPage: React.FC = () => {
           entries={entries}
           isLoading={isLoading}
           processingFoods={processingFoods}
-          isToday={dateManagement.isToday}
-          isSelectedDay={dateManagement.isSelectedDay}
+          isToday={isToday}
+          isSelectedDay={isSelectedDay}
           deleteEntry={deleteEntry}
           handleRetryAnalysis={handleRetryAnalysis}
           handleCancelProcessing={handleCancelProcessing}
         />
       </div>
       
-      {dateManagement.isToday && (
+      {isToday && (
         <AddFoodMenu onCameraClick={handleOpenCamera} selectedDate={selectedDate} />
       )}
 
       <AnimatePresence>
-        {dateManagement.isToday && isCameraVisible && (
+        {isToday && isCameraVisible && (
           <CameraCapture
             isOpen={isCameraVisible}
             onClose={() => setIsCameraVisible(false)}
