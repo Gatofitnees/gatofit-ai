@@ -71,12 +71,9 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
     const dateString = normalizedDate.toISOString().split('T')[0];
     
     // Avoid refetching if we already have data for this date
-    if (lastFetchedDate === dateString && nutritionPlan) {
-      console.log('Skipping fetch - already have data for', dateString);
+    if (lastFetchedDate === dateString && (nutritionPlan || hasNutritionPlan === false)) {
       return;
     }
-
-    console.log('Fetching admin nutrition plan for date:', dateString);
     
     try {
       setLoading(true);
@@ -120,19 +117,8 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
       }
 
       const weekNumber = Math.floor(daysDiff / 7) + 1;
-      // Fix day of week calculation - use normalized date
-      const jsDay = normalizedDate.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-      const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // Convert to 0=Monday, 6=Sunday
-
-      console.log('Admin nutrition plan calculation:', { 
-        weekNumber, 
-        dayOfWeek, 
-        daysDiff, 
-        dateToFetch: normalizedDate.toISOString(),
-        jsDay,
-        startDate: startDateNormalized.toISOString(),
-        dateString 
-      });
+      const jsDay = normalizedDate.getDay();
+      const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
 
       // Buscar plan nutricional para este día
       const { data: nutritionPlanData, error: nutritionError } = await supabase
@@ -175,18 +161,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
         if (planDetails && planDetails.length > 0) {
           const planData = planDetails[0];
           
-          // Debug: log the raw data first
-          console.log('Raw plan data from database:', JSON.stringify(planData, null, 2));
-          
-          // Debug: Check meal options ordering specifically for Almuerzo
-          const almuerzoMeal = planData.meals?.find(meal => meal.meal_name === 'Almuerzo');
-          if (almuerzoMeal && almuerzoMeal.options) {
-            console.log('=== ALMUERZO OPTIONS ORDER DEBUG ===');
-            almuerzoMeal.options.forEach((option, index) => {
-              console.log(`Array index ${index}: option_order=${option.option_order}, option_name="${option.option_name}", ingredients=${option.ingredients?.length || 0}`);
-            });
-            console.log('=== END ALMUERZO DEBUG ===');
-          }
           
           // Enrich ingredients with recipe information
           if (planData.meals) {
@@ -198,45 +172,9 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                 // Ensure options are properly ordered by option_order
                 meal.options.sort((a, b) => (a.option_order || 0) - (b.option_order || 0));
                 
-                // Debug: Log the sorted options for Almuerzo
-                if (meal.meal_name === 'Almuerzo') {
-                  console.log('=== ALMUERZO OPTIONS AFTER SORTING ===');
-                  meal.options.forEach((option, index) => {
-                    console.log(`Array index ${index}: option_order=${option.option_order}, option_name="${option.option_name}", ingredients=${option.ingredients?.length || 0}`);
-                  });
-                  console.log('=== END ALMUERZO SORTED DEBUG ===');
-                }
                 
                 for (const option of meal.options) {
                   if (option.ingredients) {
-                    console.log(`Processing ingredients for meal option ${option.option_name}:`, option.ingredients.length, 'ingredients');
-                    console.log('Raw ingredients before processing:', option.ingredients.map(ing => ({
-                      id: ing.id,
-                      name: ing.custom_food_name || 'No name',
-                      recipe_id: ing.recipe_id,
-                      recipe_name: ing.recipe_name,
-                      quantity: ing.quantity_grams,
-                      calories: ing.calories_per_serving
-                    })));
-                    
-                    // Check for ingredients that already have recipe data from the original query
-                    option.ingredients.forEach((ingredient: any) => {
-                      console.log('Ingredient data:', {
-                        id: ingredient.id,
-                        custom_food_name: ingredient.custom_food_name,
-                        recipe_id: ingredient.recipe_id,
-                        recipe_name: (ingredient as any).recipe_name,
-                        food_items: ingredient.food_items
-                      });
-                      
-                      // If ingredient has recipe data from the nutrition_plan_meal_ingredients table
-                      if ((ingredient as any).recipe_name && (ingredient as any).recipe_name.trim() !== '') {
-                        console.log('Ingredient already has recipe info from database');
-                        // Use the recipe data that's already in the ingredient
-                        // The recipe_name, recipe_description, recipe_instructions, recipe_image_url 
-                        // should already be populated from the nutrition_plan_meal_ingredients table
-                      }
-                    });
                     
                     // Get all unique recipe IDs from ingredients that have recipe_id
                     const recipeIds = [...new Set(
@@ -247,7 +185,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                     
                     // Fetch recipe details and ingredients for all recipes in this option
                     if (recipeIds.length > 0) {
-                      console.log('Fetching recipe data for IDs:', recipeIds);
                       
                       // Fetch recipe basic info
                       const { data: recipesData, error: recipeError } = await supabase
@@ -282,8 +219,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                       
                       // Process recipe ingredients and replace placeholders
                       if (recipesData && recipeIngredientsData) {
-                        console.log('Recipe data fetched:', recipesData);
-                        console.log('Recipe ingredients data fetched:', recipeIngredientsData);
                         
                         // Create a new ingredients array without recipe placeholders
                         const newIngredients: any[] = [];
@@ -295,7 +230,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                             const recipeIngredients = recipeIngredientsData.filter(ri => ri.recipe_id === ingredient.recipe_id);
                             
                             if (recipeData && recipeIngredients.length > 0) {
-                              console.log(`Replacing recipe placeholder ${ingredient.id} with ${recipeIngredients.length} real ingredients`);
                               
                               // Add each recipe ingredient as a separate ingredient
                               recipeIngredients.forEach((recipeIngredient: any) => {
@@ -334,7 +268,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
                         
                         // Replace the ingredients array with the new one
                         option.ingredients = newIngredients;
-                        console.log(`Replaced ingredients for option ${option.option_name}:`, newIngredients.length, 'ingredients');
                       }
                     }
                   }
@@ -346,7 +279,6 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
           setNutritionPlan(planData as any);
           setHasNutritionPlan(true);
           setLastFetchedDate(dateString);
-          console.log('Admin nutrition plan found:', planData);
         } else {
           setNutritionPlan(null);
           setHasNutritionPlan(false);

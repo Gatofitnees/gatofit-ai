@@ -14,7 +14,7 @@ interface MacrosSummaryProps {
   macros: Macros;
 }
 
-export const MacrosSummary: React.FC<MacrosSummaryProps> = ({ macros }) => {
+export const MacrosSummary: React.FC<MacrosSummaryProps> = React.memo(({ macros }) => {
   return (
     <Card className="mb-6">
       <CardHeader 
@@ -45,4 +45,4 @@ export const MacrosSummary: React.FC<MacrosSummaryProps> = ({ macros }) => {
       </CardBody>
     </Card>
   );
-};
+});

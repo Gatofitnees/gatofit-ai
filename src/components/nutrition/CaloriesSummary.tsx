@@ -14,7 +14,7 @@ interface CaloriesSummaryProps {
   calorieProgress: number;
 }
 
-export const CaloriesSummary: React.FC<CaloriesSummaryProps> = ({ macros, calorieProgress }) => {
+export const CaloriesSummary: React.FC<CaloriesSummaryProps> = React.memo(({ macros, calorieProgress }) => {
   return (
     <div className="flex items-center justify-center mb-8 animate-fade-in">
       <div className="relative flex items-center justify-center">
@@ -27,4 +27,4 @@ export const CaloriesSummary: React.FC<CaloriesSummaryProps> = ({ macros, calori
       </div>
     </div>
   );
-};
+});
