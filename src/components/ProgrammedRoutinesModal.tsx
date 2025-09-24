@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle, ChevronLeft, ChevronRight, Eye, ChefHat, Utensils } from "lucide-react";
+import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardBody, CardHeader } from "@/components/Card";
 import { WeeklyProgram, WeeklyProgramRoutine } from "@/hooks/useWeeklyPrograms";
 import { GatofitProgram } from "@/hooks/useGatofitPrograms";
 import { AdminProgram, UnifiedProgramData } from "@/hooks/useActiveProgramUnified";
-import { useNutritionPlanCheck } from "@/hooks/useNutritionPlanCheck";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProgrammedRoutinesModalProps {
@@ -38,9 +37,6 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   const [nutritionPlans, setNutritionPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<boolean>(initialIsCompleted);
-  
-  // Check for nutrition plan for the navigated date
-  const { hasNutritionPlan, loading: nutritionLoading } = useNutritionPlanCheck(navigatedDate);
 
   const formatDayOfWeek = (date: Date) => {
     return date.toLocaleDateString('es-ES', { weekday: 'long' });
@@ -374,7 +370,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
             </Button>
           </div>
           
-          <CardContent className="pt-0 space-y-4">
+          <CardBody className="pt-0 space-y-4">
             {/* Integrated Header with Day Navigator and Program Info */}
             <div 
               className="relative rounded-lg overflow-hidden"
@@ -524,85 +520,49 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                       </div>
                     )}
 
-                     {/* Nutrition Section */}
-                     {(nutritionPlans.length > 0 || (programType !== 'admin' && hasNutritionPlan)) && (
-                       <div>
-                         <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                           <ChefHat className="h-5 w-5 text-primary" />
-                           Alimentación
-                         </h3>
-                         
-                         {/* Admin program nutrition plans */}
-                         {nutritionPlans.length > 0 && (
-                           <div className="space-y-3">
-                             {nutritionPlans.map((plan, index) => (
-                               <div
-                                 key={`${plan.id}-${index}`}
-                                 className="p-4 border border-border/50 rounded-lg bg-card"
-                               >
-                                 <div className="flex items-center justify-between">
-                                   <div>
-                                     <h4 className="font-medium text-base mb-1">
-                                       Plan de alimentación ({plan.name})
-                                     </h4>
-                                     <div className="flex gap-4 text-sm text-muted-foreground">
-                                       <span>🔥 {plan.target_calories} kcal</span>
-                                       <span>🥩 {plan.target_protein_g}g</span>
-                                       <span>🌾 {plan.target_carbs_g}g</span>
-                                       <span>🥑 {plan.target_fats_g}g</span>
-                                     </div>
-                                   </div>
-                                   <Button
-                                     onClick={() => {
-                                       const dateString = navigatedDate.toISOString().split('T')[0];
-                                       window.location.href = `/nutrition-program?date=${dateString}`;
-                                       onClose();
-                                     }}
-                                     variant="outline"
-                                     size="sm"
-                                   >
-                                     Ver Plan
-                                   </Button>
-                                 </div>
-                               </div>
-                             ))}
-                           </div>
-                         )}
-                         
-                         {/* General nutrition plan for all program types */}
-                         {programType !== 'admin' && hasNutritionPlan && (
-                           <div className="p-4 border border-border/50 rounded-lg bg-card">
-                             <div className="flex items-center justify-between">
-                               <div className="flex items-center gap-3">
-                                 <Utensils className="h-5 w-5 text-primary" />
-                                 <div>
-                                   <h4 className="font-medium text-base">Plan de alimentación</h4>
-                                   <p className="text-sm text-muted-foreground">
-                                     Tienes un plan nutricional programado para este día
-                                   </p>
-                                 </div>
-                               </div>
-                               <Button
-                                 onClick={() => {
-                                   const dateString = navigatedDate.toISOString().split('T')[0];
-                                   window.location.href = `/nutrition-program?date=${dateString}`;
-                                   onClose();
-                                 }}
-                                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                                 size="sm"
-                               >
-                                 Iniciar
-                               </Button>
-                             </div>
-                           </div>
-                         )}
-                       </div>
-                     )}
+                    {/* Nutrition Section */}
+                    {nutritionPlans.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-3">Alimentación</h3>
+                        <div className="space-y-3">
+                          {nutritionPlans.map((plan, index) => (
+                            <div
+                              key={`${plan.id}-${index}`}
+                              className="p-4 border border-border/50 rounded-lg bg-card"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h4 className="font-medium text-base mb-1">
+                                    Plan de alimentación ({plan.name})
+                                  </h4>
+                                  <div className="flex gap-4 text-sm text-muted-foreground">
+                                    <span>🔥 {plan.target_calories} kcal</span>
+                                    <span>🥩 {plan.target_protein_g}g</span>
+                                    <span>🌾 {plan.target_carbs_g}g</span>
+                                    <span>🥑 {plan.target_fats_g}g</span>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() => {
+                                    const dateString = navigatedDate.toISOString().split('T')[0];
+                                    window.location.href = `/nutrition-program?date=${dateString}`;
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  Ver Plan
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
             )}
-          </CardContent>
+          </CardBody>
         </Card>
       </div>
     </div>

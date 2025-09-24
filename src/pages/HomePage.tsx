@@ -77,6 +77,10 @@ const HomePage: React.FC = () => {
         selectedDate={selectedDate}
       />
 
+      <NutritionCard
+        selectedDate={selectedDate}
+        onStartNutrition={handleStartNutrition}
+      />
       
       <MacrosCard 
         macros={macros}
