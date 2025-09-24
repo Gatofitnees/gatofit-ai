@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle, ChevronLeft, ChevronRight, Eye, ChefHat, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/Card";
@@ -33,6 +34,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   selectedDate: initialSelectedDate,
   programType = 'weekly'
 }) => {
+  const navigate = useNavigate();
   const [navigatedDate, setNavigatedDate] = useState<Date>(initialSelectedDate);
   const [currentRoutines, setCurrentRoutines] = useState<any[]>(initialRoutines);
   const [nutritionPlans, setNutritionPlans] = useState<any[]>([]);
@@ -548,7 +550,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                           <Button
                             onClick={() => {
                               const dateString = navigatedDate.toISOString().split('T')[0];
-                              window.location.href = `/nutrition-program?date=${dateString}`;
+                              navigate(`/nutrition-program?date=${dateString}`);
                               onClose();
                             }}
                             className="w-full bg-blue-500 hover:bg-blue-600 text-white"
