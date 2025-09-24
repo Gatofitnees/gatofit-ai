@@ -1,7 +1,7 @@
 import React from "react";
 import { ChefHat, ChevronRight, Utensils } from "lucide-react";
-import { Card, CardHeader, CardBody, CardFooter } from "./Card";
-import Button from "./Button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNutritionPlanCheck } from "@/hooks/useNutritionPlanCheck";
@@ -32,17 +32,17 @@ const NutritionCard: React.FC<NutritionCardProps> = ({
     return (
       <div className={cn("mb-5", className)}>
         <Card>
-          <CardHeader 
-            title="Alimentación" 
-            icon={<ChefHat className="h-5 w-5" />} 
-          />
-          <CardBody>
+          <CardHeader className="flex flex-row items-center gap-3 pb-3">
+            <ChefHat className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-lg">Alimentación</h3>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-3">
               <Skeleton className="h-6 w-3/4 rounded-md" />
               <Skeleton className="h-4 w-1/2 rounded-md" />
               <Skeleton className="h-12 w-full rounded-md" />
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     );
@@ -55,11 +55,11 @@ const NutritionCard: React.FC<NutritionCardProps> = ({
   return (
     <div className={cn("mb-5", className)}>
       <Card>
-        <CardHeader 
-          title="Alimentación" 
-          icon={<ChefHat className="h-5 w-5" />} 
-        />
-        <CardBody>
+        <CardHeader className="flex flex-row items-center gap-3 pb-3">
+          <ChefHat className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-lg">Alimentación</h3>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Utensils className="h-5 w-5 text-primary" />
@@ -70,18 +70,15 @@ const NutritionCard: React.FC<NutritionCardProps> = ({
               Tienes un plan nutricional programado para hoy
             </p>
           </div>
-        </CardBody>
-        <CardFooter>
+          
           <Button 
-            variant="primary"
-            size="md"
             onClick={handleStartNutrition}
-            rightIcon={<ChevronRight className="h-4 w-4" />}
             className="w-full"
           >
             Iniciar
+            <ChevronRight className="h-4 w-4 ml-2" />
           </Button>
-        </CardFooter>
+        </CardContent>
       </Card>
     </div>
   );
