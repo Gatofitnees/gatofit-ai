@@ -20,7 +20,6 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
 
   // Reset initialization when date changes
   useEffect(() => {
-    console.log('Date changed, resetting initialization');
     setInitialized(false);
     setSelectedOptions({});
     setCheckedIngredients({});
@@ -31,7 +30,6 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
   // Initialize selected options and quantities when nutrition plan loads (only once per plan)
   useEffect(() => {
     if (nutritionPlan?.meals && !initialized) {
-      console.log('Initializing nutrition plan data');
       const initialOptions: Record<string, number> = {};
       const initialQuantities: Record<string, number> = {};
       
@@ -50,13 +48,10 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       setSelectedOptions(initialOptions);
       setIngredientQuantities(initialQuantities);
       setInitialized(true);
-      console.log('Nutrition plan initialized');
     }
   }, [nutritionPlan?.id, initialized]); // Only depend on plan ID, not the whole object
 
   const handleOptionSelect = useCallback((mealId: string, optionIndex: number) => {
-    console.log(`Option select: meal ${mealId}, option ${optionIndex}`);
-    
     if (!nutritionPlan?.meals) return;
     
     const meal = nutritionPlan.meals.find(m => m.id === mealId);
@@ -66,14 +61,10 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     if (!selectedOption) return;
     
     // Perform all state updates atomically
-    setSelectedOptions(prev => {
-      const newOptions = {
-        ...prev,
-        [mealId]: optionIndex
-      };
-      console.log('New selected options:', newOptions);
-      return newOptions;
-    });
+    setSelectedOptions(prev => ({
+      ...prev,
+      [mealId]: optionIndex
+    }));
     
     setCheckedIngredients(prev => {
       const newChecked = { ...prev };
@@ -83,7 +74,6 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
           delete newChecked[ingredient.id];
         });
       });
-      console.log('Cleared checked ingredients for meal:', mealId);
       return newChecked;
     });
     
@@ -98,12 +88,10 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       });
       
       // Set quantities for the newly selected option
-      console.log(`Setting quantities for option ${optionIndex}:`, selectedOption.ingredients?.length, 'ingredients');
       selectedOption.ingredients?.forEach(ingredient => {
         newQuantities[ingredient.id] = ingredient.quantity_grams;
       });
       
-      console.log('Updated ingredient quantities for meal:', mealId);
       return newQuantities;
     });
   }, [nutritionPlan]);

@@ -22,7 +22,7 @@ interface RecipeCardProps {
   recipeInstructions?: string;
 }
 
-export const RecipeCard: React.FC<RecipeCardProps> = ({
+export const RecipeCard: React.FC<RecipeCardProps> = React.memo(({
   recipeName,
   totalCalories,
   totalProtein,
@@ -186,4 +186,4 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
+});

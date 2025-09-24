@@ -13,7 +13,7 @@ interface EditableIngredientItemProps {
   onQuantityChange: (quantity: number) => void;
 }
 
-export const EditableIngredientItem: React.FC<EditableIngredientItemProps> = ({
+export const EditableIngredientItem: React.FC<EditableIngredientItemProps> = React.memo(({
   ingredient,
   checked,
   quantity,
@@ -132,4 +132,4 @@ export const EditableIngredientItem: React.FC<EditableIngredientItemProps> = ({
       </div>
     </div>
   );
-};
+});

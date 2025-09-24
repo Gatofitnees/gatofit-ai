@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,9 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import SaveNutritionMealModal from '@/components/nutrition/SaveNutritionMealModal';
 import { useLocalTimezone } from '@/hooks/useLocalTimezone';
 import { useToast } from '@/hooks/use-toast';
+import { AdminNutritionIngredient } from '@/hooks/useAdminNutritionProgram';
 
-export const NutritionProgramPage: React.FC = () => {
+export const NutritionProgramPage: React.FC = React.memo(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getCurrentLocalDate } = useLocalTimezone();
@@ -134,32 +135,10 @@ export const NutritionProgramPage: React.FC = () => {
             const selectedOptionIndex = selectedOptions[meal.id] || 0;
             const selectedOption = meal.options?.[selectedOptionIndex];
             
-            // Debug: log all options for this meal to understand the data structure
-            if (meal.meal_name === 'Almuerzo') {
-              console.log(`=== DEBUG ALMUERZO OPTIONS ===`);
-              console.log(`Total options: ${meal.options?.length || 0}`);
-              meal.options?.forEach((option, index) => {
-                console.log(`Option ${index}: "${option.option_name}" - ${option.ingredients?.length || 0} ingredients`);
-                console.log(`  Option ID: ${option.id}`);
-                console.log(`  First few ingredients:`, option.ingredients?.slice(0, 3).map(ing => ing.custom_food_name || 'No name'));
-              });
-              console.log(`Selected option index: ${selectedOptionIndex}`);
-              console.log(`Selected option name: ${selectedOption?.option_name || 'None'}`);
-              console.log(`Selected option ingredients: ${selectedOption?.ingredients?.length || 0}`);
-              console.log(`=== END DEBUG ===`);
-            }
-            
-            console.log(`Rendering meal: ${meal.meal_name}, option ${selectedOptionIndex}/${meal.options?.length || 0}`, {
-              mealId: meal.id,
-              selectedOptionIndex,
-              ingredientsCount: selectedOption?.ingredients?.length || 0,
-              ingredientIds: selectedOption?.ingredients?.map(ing => ing.id).slice(0, 3) // First 3 IDs
-            });
-            
             const hasIngredients = selectedOption?.ingredients && selectedOption.ingredients.length > 0;
             const { recipeGroups, individualIngredients } = hasIngredients 
               ? groupIngredientsByRecipe(selectedOption.ingredients)
-              : { recipeGroups: [], individualIngredients: [] };
+              : { recipeGroups: {}, individualIngredients: [] };
 
             return (
               <div key={`${meal.id}-${selectedOptionIndex}`} className="space-y-4">
@@ -338,4 +317,4 @@ export const NutritionProgramPage: React.FC = () => {
       />
     </div>
   );
-};
+});

@@ -7,6 +7,7 @@ import UserHeader from "../components/UserHeader";
 import DaySelector from "../components/DaySelector";
 import TrainingCard from "../components/TrainingCard";
 import MacrosCard from "../components/MacrosCard";
+import NutritionCard from "../components/NutritionCard";
 import FloatingActionButton from "../components/FloatingActionButton";
 
 const HomePage: React.FC = () => {
@@ -52,6 +53,11 @@ const HomePage: React.FC = () => {
     navigate("/nutrition");
   };
 
+  const handleStartNutrition = () => {
+    const dateString = selectedDate.toISOString().split('T')[0];
+    navigate(`/nutrition-program?date=${dateString}`);
+  };
+
   return (
     <div className="min-h-screen pt-6 pb-24 px-4 max-w-md mx-auto">
       <UserHeader />
@@ -69,6 +75,11 @@ const HomePage: React.FC = () => {
         onViewDetails={handleViewWorkoutDetails}
         showProgramModal={true}
         selectedDate={selectedDate}
+      />
+
+      <NutritionCard
+        selectedDate={selectedDate}
+        onStartNutrition={handleStartNutrition}
       />
       
       <MacrosCard 
