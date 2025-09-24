@@ -286,8 +286,9 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   };
 
   const handleViewRoutine = (routineId: number) => {
-    // Navigate to routine detail page
-    window.location.href = `/routine/${routineId}`;
+    // Navigate to routine detail page using React Router
+    navigate(`/routine/${routineId}`);
+    onClose();
   };
 
   // Effect to fetch routines when navigated date changes
