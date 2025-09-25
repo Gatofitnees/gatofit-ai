@@ -121,19 +121,44 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
 
       if (adminPrograms && adminPrograms.length > 0) {
         const adminAssignment = adminPrograms[0];
-        console.log('Active Admin program found:', adminAssignment);
+        console.log('🏃‍♂️ Active Admin program found:', adminAssignment);
+        
+        // Helper function to normalize dates for calculation
+        const normalizeDateForCalculation = (date: Date | string) => {
+          const d = new Date(date);
+          // Create a new date using only year, month, day to avoid timezone issues
+          return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        };
         
         // For admin programs - calculate which routines to show
         const dayOfWeek = selectedDate.getDay();
         const dayOfWeekAdjusted = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert JS day (0=Sunday) to our format (0=Monday)
-        // Calcular día actual del programa admin
-        const startDate = new Date(adminAssignment.started_at);
-        const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Normalize both dates to avoid timezone issues
+        const normalizedStartDate = normalizeDateForCalculation(adminAssignment.started_at);
+        const normalizedSelectedDate = normalizeDateForCalculation(selectedDate);
+        
+        console.log('📅 Date normalization:', {
+          originalStartDate: adminAssignment.started_at,
+          normalizedStartDate: normalizedStartDate.toDateString(),
+          originalSelectedDate: selectedDate.toDateString(),
+          normalizedSelectedDate: normalizedSelectedDate.toDateString()
+        });
+        
+        const daysDiff = Math.floor((normalizedSelectedDate.getTime() - normalizedStartDate.getTime()) / (1000 * 60 * 60 * 24));
         
         if (daysDiff >= 0) {
           const weekNumber = Math.floor(daysDiff / 7) + 1;
           
-          console.log('Admin program day calculation:', { weekNumber, dayOfWeek: dayOfWeekAdjusted, daysDiff });
+          console.log('🧮 Admin program day calculation (FIXED):', { 
+            weekNumber, 
+            dayOfWeek: dayOfWeekAdjusted, 
+            daysDiff,
+            selectedDate: selectedDate.toDateString(),
+            startDate: adminAssignment.started_at,
+            normalizedStartDate: normalizedStartDate.toDateString(),
+            normalizedSelectedDate: normalizedSelectedDate.toDateString()
+          });
 
           // Obtener rutinas del programa admin para este día
           const { data: adminRoutines, error: adminRoutinesError } = await supabase
