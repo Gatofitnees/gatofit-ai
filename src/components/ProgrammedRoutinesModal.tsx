@@ -148,18 +148,57 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
           }
         }
       } else if (programType === 'admin') {
-        // For admin programs
+        // For admin programs - calculate week and day using same logic as useActiveProgramUnified
         const currentDate = new Date(date);
         const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
         // Convert to Monday=0, Sunday=6 format for admin programs
         const dayOfWeekAdjusted = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        
+        // Find the user's assignment to get the start date
+        const { data: userAssignment } = await (supabase as any)
+          .from('user_assigned_programs')
+          .select('started_at')
+          .eq('user_id', user.id)
+          .eq('program_id', activeProgram.program.id)
+          .eq('is_active', true)
+          .single();
+        
+        let weekNumber = 1; // Default fallback
+        
+        if (userAssignment?.started_at) {
+          // Helper function to normalize dates for calculation
+          const normalizeDateForCalculation = (inputDate: Date | string) => {
+            const d = new Date(inputDate);
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          };
+          
+          // Normalize both dates to avoid timezone issues
+          const normalizedStartDate = normalizeDateForCalculation(userAssignment.started_at);
+          const normalizedSelectedDate = normalizeDateForCalculation(currentDate);
+          
+          const daysDiff = Math.floor((normalizedSelectedDate.getTime() - normalizedStartDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff >= 0) {
+            weekNumber = Math.floor(daysDiff / 7) + 1;
+          }
+          
+          console.log('🧮 Modal - Admin program day calculation:', { 
+            weekNumber, 
+            dayOfWeek: dayOfWeekAdjusted, 
+            daysDiff,
+            selectedDate: currentDate.toDateString(),
+            startDate: userAssignment.started_at,
+            normalizedStartDate: normalizedStartDate.toDateString(),
+            normalizedSelectedDate: normalizedSelectedDate.toDateString()
+          });
+        }
         
         // First fetch admin program routines
         const { data: adminRoutines } = await (supabase as any)
           .from('admin_program_routines')
           .select('routine_id, order_in_day, notes')
           .eq('program_id', activeProgram.program.id)
-          .eq('week_number', 1)
+          .eq('week_number', weekNumber)
           .eq('day_of_week', dayOfWeekAdjusted)
           .order('order_in_day');
         
@@ -206,12 +245,12 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
           });
         }
 
-        // Fetch nutrition plans for admin programs
+        // Fetch nutrition plans for admin programs using the calculated week
         const { data: adminNutritionPlans } = await (supabase as any)
           .from('admin_program_nutrition_plans')
           .select('nutrition_plan_id, order_in_day, notes')
           .eq('program_id', activeProgram.program.id)
-          .eq('week_number', 1)
+          .eq('week_number', weekNumber)
           .eq('day_of_week', dayOfWeekAdjusted)
           .order('order_in_day');
 
