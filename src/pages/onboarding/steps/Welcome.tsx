@@ -20,13 +20,13 @@ const Welcome: React.FC = () => {
 
   return (
     <OnboardingLayout currentStep={1} totalSteps={20}>
-      {/* Login button in top right corner */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Login button positioned below progress bar */}
+      <div className="absolute top-16 right-4 z-10">
         <Button 
-          variant="outline" 
+          variant="ghost" 
           size="sm"
           onClick={handleLogin}
-          className="text-sm"
+          className="text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200 px-4 py-2 rounded-lg border border-border/50 hover:border-border bg-background/80 backdrop-blur-sm"
         >
           Iniciar sesión
         </Button>
