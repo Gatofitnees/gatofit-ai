@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import OnboardingNavigation from "@/components/onboarding/OnboardingNavigation";
 import GatofitAILogo from "@/components/GatofitAILogo";
+import { Button } from "@/components/ui/button";
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
@@ -13,8 +14,24 @@ const Welcome: React.FC = () => {
     navigate("/onboarding/gender");
   };
 
+  const handleLogin = () => {
+    navigate("/onboarding/login");
+  };
+
   return (
     <OnboardingLayout currentStep={1} totalSteps={20}>
+      {/* Login button in top right corner */}
+      <div className="absolute top-4 right-4 z-10">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleLogin}
+          className="text-sm"
+        >
+          Iniciar sesión
+        </Button>
+      </div>
+
       <div className="flex flex-col items-center justify-center flex-1 text-center min-h-[calc(100vh-200px)]">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
