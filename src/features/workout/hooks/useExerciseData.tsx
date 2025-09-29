@@ -11,7 +11,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
   
   // Get exercise IDs for fetching previous data
-  const exerciseIds = exerciseDetails.map(detail => detail.id);
+  const exerciseIds = exerciseDetails.map(detail => detail.exercise_id);
   
   console.log("useExerciseData: exerciseIds for previous data:", exerciseIds);
   
@@ -48,7 +48,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   // Create ordered base exercises list based on exerciseDetails order
   const getOrderedBaseExercises = useCallback(() => {
     return exerciseDetails
-      .map(detail => baseExerciseData[detail.id])
+      .map(detail => baseExerciseData[detail.exercise_id])
       .filter(Boolean); // Remove any undefined entries
   }, [exerciseDetails, baseExerciseData]);
 
