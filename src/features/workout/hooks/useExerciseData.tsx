@@ -13,8 +13,13 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   // Get exercise IDs for fetching previous data
   const exerciseIds = exerciseDetails.map(detail => detail.id);
   
+  console.log("useExerciseData: exerciseIds for previous data:", exerciseIds);
+  
   // Use general exercise previous data instead of routine-specific data
   const { exercisePreviousData, exercisePreviousLoaded } = useExercisePreviousData(exerciseIds);
+  
+  console.log("useExerciseData: exercisePreviousData:", exercisePreviousData);
+  console.log("useExerciseData: exercisePreviousLoaded:", exercisePreviousLoaded);
   
   const { baseExerciseData, updateBaseExerciseData, clearStoredData } = useBaseExerciseData({
     exerciseDetails,
