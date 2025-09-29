@@ -67,20 +67,17 @@ export function useBaseExerciseData({
     const initialBaseExercises: Record<number, WorkoutExercise> = {};
     
     exerciseDetails.forEach(ex => {
-      const exerciseId = ex.exercise_id; // Use exercise_id instead of id
-      const exerciseName = ex.exercises?.name || 'Unknown Exercise';
-      
-      console.log(`Processing exercise ${exerciseId} (${exerciseName})`);
-      console.log(`Previous data for exercise ${exerciseId}:`, previousData[exerciseId]);
+      console.log(`Processing exercise ${ex.id} (${ex.name})`);
+      console.log(`Previous data for exercise ${ex.id}:`, previousData[ex.id]);
       
       // Check if we have stored data for this exercise
-      const storedExercise = storedData[exerciseId];
+      const storedExercise = storedData[ex.id];
       
       if (storedExercise && storedExercise.sets.length > 0) {
         // Use stored data but update previous data and add target reps
         const updatedSets = storedExercise.sets.map((set, i) => {
-          const prevWeight = previousData[exerciseId]?.[i]?.weight || null;
-          const prevReps = previousData[exerciseId]?.[i]?.reps || null;
+          const prevWeight = previousData[ex.id]?.[i]?.weight || null;
+          const prevReps = previousData[ex.id]?.[i]?.reps || null;
           
           console.log(`Set ${i + 1} - Previous: ${prevWeight}kg × ${prevReps}`);
           
@@ -93,21 +90,21 @@ export function useBaseExerciseData({
           };
         });
         
-        initialBaseExercises[exerciseId] = {
+        initialBaseExercises[ex.id] = {
           ...storedExercise,
           sets: updatedSets,
           notes: ex.notes || "", // Routine creator notes from database
           user_notes: storedExercise.user_notes || "", // User workout notes from storage
           rest_between_sets_seconds: ex.rest_between_sets_seconds // Update with current rest time
         };
-        console.log(`Using stored data for exercise ${exerciseId} with user inputs preserved`);
+        console.log(`Using stored data for exercise ${ex.id} with user inputs preserved`);
       } else {
         // Create fresh exercise with target reps
         const formattedSets: WorkoutSet[] = Array.from(
           { length: ex.sets || 1 },
           (_, i) => {
-            const prevWeight = previousData[exerciseId]?.[i]?.weight || null;
-            const prevReps = previousData[exerciseId]?.[i]?.reps || null;
+            const prevWeight = previousData[ex.id]?.[i]?.weight || null;
+            const prevReps = previousData[ex.id]?.[i]?.reps || null;
             
             console.log(`Fresh set ${i + 1} - Previous: ${prevWeight}kg × ${prevReps}`);
             
@@ -124,20 +121,20 @@ export function useBaseExerciseData({
           }
         );
 
-        initialBaseExercises[exerciseId] = {
-          id: exerciseId,
-          name: exerciseName,
+        initialBaseExercises[ex.id] = {
+          id: ex.id,
+          name: ex.name,
           sets: formattedSets,
-          muscle_group_main: ex.exercises?.muscle_group_main,
-          equipment_required: ex.exercises?.equipment_required,
+          muscle_group_main: ex.muscle_group_main,
+          equipment_required: ex.equipment_required,
           notes: ex.notes || "", // Routine creator notes from database
           user_notes: "", // Initialize user workout notes as empty
           rest_between_sets_seconds: ex.rest_between_sets_seconds
         };
-        console.log(`Created fresh exercise ${exerciseId} with target reps:`, ex.reps_min, "-", ex.reps_max);
+        console.log(`Created fresh exercise ${ex.id} with target reps:`, ex.reps_min, "-", ex.reps_max);
       }
       
-      initializedExerciseIds.current.add(exerciseId);
+      initializedExerciseIds.current.add(ex.id);
     });
     
     console.log("Final base exercises data:", initialBaseExercises);
@@ -154,10 +151,8 @@ export function useBaseExerciseData({
     let hasNewExercises = false;
     
     exerciseDetails.forEach(ex => {
-      const exerciseId = ex.exercise_id; // Use exercise_id instead of id
-      
-      if (!initializedExerciseIds.current.has(exerciseId)) {
-        console.log(`Adding new base exercise ${exerciseId} to existing data`);
+      if (!initializedExerciseIds.current.has(ex.id)) {
+        console.log(`Adding new base exercise ${ex.id} to existing data`);
         
         const formattedSets: WorkoutSet[] = Array.from(
           { length: ex.sets || 1 },
@@ -166,25 +161,25 @@ export function useBaseExerciseData({
             weight: null,
             reps: null,
             notes: "",
-            previous_weight: previousData[exerciseId]?.[i]?.weight || null,
-            previous_reps: previousData[exerciseId]?.[i]?.reps || null,
+            previous_weight: previousData[ex.id]?.[i]?.weight || null,
+            previous_reps: previousData[ex.id]?.[i]?.reps || null,
             target_reps_min: ex.reps_min || undefined,
             target_reps_max: ex.reps_max || undefined
           })
         );
 
-        newExercises[exerciseId] = {
-          id: exerciseId,
-          name: ex.exercises?.name || 'Unknown Exercise',
+        newExercises[ex.id] = {
+          id: ex.id,
+          name: ex.name,
           sets: formattedSets,
-          muscle_group_main: ex.exercises?.muscle_group_main,
-          equipment_required: ex.exercises?.equipment_required,
+          muscle_group_main: ex.muscle_group_main,
+          equipment_required: ex.equipment_required,
           notes: ex.notes || "", // Routine creator notes from database
           user_notes: "", // Initialize user workout notes as empty
           rest_between_sets_seconds: ex.rest_between_sets_seconds
         };
         
-        initializedExerciseIds.current.add(exerciseId);
+        initializedExerciseIds.current.add(ex.id);
         hasNewExercises = true;
       }
     });

@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { WorkoutExercise } from "../types/workout";
 import { useBaseExerciseData } from "./useBaseExerciseData";
-import { useExercisePreviousData } from "./useExercisePreviousData";
+import { useRoutinePreviousData } from "./useRoutinePreviousData";
 import { useExerciseInputHandlers } from "./useExerciseInputHandlers";
 import { useExerciseUIState } from "./useExerciseUIState";
 import { useTemporaryExercises } from "./useTemporaryExercises";
@@ -10,22 +10,14 @@ import { useTemporaryExercises } from "./useTemporaryExercises";
 export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
   
-  // Get exercise IDs for fetching previous data
-  const exerciseIds = exerciseDetails.map(detail => detail.exercise_id);
-  
-  console.log("useExerciseData: exerciseIds for previous data:", exerciseIds);
-  
-  // Use general exercise previous data instead of routine-specific data
-  const { exercisePreviousData, exercisePreviousLoaded } = useExercisePreviousData(exerciseIds);
-  
-  console.log("useExerciseData: exercisePreviousData:", exercisePreviousData);
-  console.log("useExerciseData: exercisePreviousLoaded:", exercisePreviousLoaded);
+  // Use routine-specific previous data instead of general exercise data
+  const { routinePreviousData, routinePreviousLoaded } = useRoutinePreviousData(routineId);
   
   const { baseExerciseData, updateBaseExerciseData, clearStoredData } = useBaseExerciseData({
     exerciseDetails,
-    previousData: exercisePreviousData,
+    previousData: routinePreviousData,
     exerciseNotesMap,
-    previousDataLoaded: exercisePreviousLoaded,
+    previousDataLoaded: routinePreviousLoaded,
     routineId
   });
 
@@ -48,7 +40,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   // Create ordered base exercises list based on exerciseDetails order
   const getOrderedBaseExercises = useCallback(() => {
     return exerciseDetails
-      .map(detail => baseExerciseData[detail.exercise_id])
+      .map(detail => baseExerciseData[detail.id])
       .filter(Boolean); // Remove any undefined entries
   }, [exerciseDetails, baseExerciseData]);
 
