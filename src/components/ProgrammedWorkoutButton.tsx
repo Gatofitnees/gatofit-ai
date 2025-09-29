@@ -39,22 +39,9 @@ const ProgrammedWorkoutButton: React.FC<ProgrammedWorkoutButtonProps> = ({
     return null;
   }
 
-  // Para programas Gatofit, mostrar el botón incluso si no hay rutinas para el día
-  // para que el usuario sepa que tiene un programa activo
-  if (activeProgram.type === 'gatofit') {
-    // Si es un programa Gatofit activo, siempre mostrar el botón
-    // Solo ocultar si no hay rutinas Y no es el día actual
-    if (!activeProgram.routines || activeProgram.routines.length === 0) {
-      if (!isCurrentDay) {
-        return null; // No hay rutinas para un día que no es hoy
-      }
-    }
-  } else {
-    // Para programas semanales, solo mostrar si hay rutinas
-    if (!activeProgram.routines || activeProgram.routines.length === 0) {
-      return null;
-    }
-  }
+  // Siempre mostrar el botón si hay un programa activo,
+  // independientemente de si hay rutinas para el día seleccionado.
+  // Esto permite al usuario navegar y revisar otros días.
 
   const handleButtonClick = () => {
     if (showModal) {

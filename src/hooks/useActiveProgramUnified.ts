@@ -246,11 +246,18 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
             setActiveProgram({
               type: 'admin',
               program: adminAssignment.program,
-              routines: routines
+              routines: routines || []
             });
             return;
           } else {
-            console.log('No admin routines found for day:', { weekNumber, dayOfWeekAdjusted });
+            // Aunque no haya rutinas para este día, mostrar el programa activo
+            // para que el usuario pueda navegar y ver otros días
+            setActiveProgram({
+              type: 'admin',
+              program: adminAssignment.program,
+              routines: []
+            });
+            return;
           }
         }
       }
@@ -444,11 +451,17 @@ export const useActiveProgramUnified = (selectedDate: Date) => {
         setActiveProgram({
           type: 'weekly',
           program: program,
-          routines: weeklyRoutines
+          routines: weeklyRoutines || []
         });
         setIsCompletedForSelectedDate(hasCompletedProgrammedRoutine);
       } else {
-        setActiveProgram(null);
+        // Aunque no haya rutinas para este día, mostrar el programa activo
+        // para que el usuario pueda navegar y ver otros días
+        setActiveProgram({
+          type: 'weekly',
+          program: program,
+          routines: []
+        });
         setIsCompletedForSelectedDate(false);
       }
 
