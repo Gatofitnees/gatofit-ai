@@ -7,11 +7,16 @@ export function useExercisePreviousData(exerciseIds: number[]) {
   const [exercisePreviousLoaded, setExercisePreviousLoaded] = useState(false);
 
   useEffect(() => {
+    console.log("useExercisePreviousData: Effect called with exerciseIds:", exerciseIds);
+    
     if (!exerciseIds || exerciseIds.length === 0) {
-      console.log("No exercise IDs provided, marking as loaded");
+      console.log("useExercisePreviousData: No exercise IDs provided, marking as loaded");
       setExercisePreviousLoaded(true);
       return;
     }
+
+    setExercisePreviousLoaded(false);
+    setExercisePreviousData({});
 
     const fetchExercisePreviousData = async () => {
       try {
@@ -25,12 +30,11 @@ export function useExercisePreviousData(exerciseIds: number[]) {
             set_number, 
             weight_kg_used, 
             reps_completed,
-            workout_log_id,
-            workout_log:workout_logs!workout_log_exercise_details_workout_log_id_fkey(workout_date)
+            workout_log_id
           `)
           .in('exercise_id', exerciseIds)
           .order('workout_log_id', { ascending: false })
-          .limit(100); // Get more data to ensure we have recent data for each exercise
+          .limit(200); // Get more data to ensure we have recent data for each exercise
 
         if (detailsError) {
           console.error("useExercisePreviousData: Error fetching exercise details:", detailsError);
@@ -38,6 +42,7 @@ export function useExercisePreviousData(exerciseIds: number[]) {
           return;
         }
 
+        console.log("useExercisePreviousData: Raw exercise details found:", exerciseDetails?.length || 0);
         console.log("useExercisePreviousData: Raw exercise details:", exerciseDetails);
 
         if (exerciseDetails && exerciseDetails.length > 0) {
@@ -90,7 +95,7 @@ export function useExercisePreviousData(exerciseIds: number[]) {
     };
 
     fetchExercisePreviousData();
-  }, [exerciseIds.join(',')]); // Use join to create a stable dependency
+  }, [JSON.stringify(exerciseIds)]); // Use JSON.stringify for more reliable dependency tracking
 
   return {
     exercisePreviousData,
