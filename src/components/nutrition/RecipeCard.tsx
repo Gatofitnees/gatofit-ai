@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = React.memo(({
   recipeDescription,
   recipeInstructions
 }) => {
-  const hasSelectedIngredients = ingredients.some(ingredient => checkedIngredients[ingredient.id]);
+  const hasSelectedIngredients = useMemo(() => 
+    ingredients.some(ingredient => checkedIngredients[ingredient.id]),
+    [ingredients, checkedIngredients]
+  );
+
+  // Memoize rounded values to prevent recalculation
+  const roundedCalories = useMemo(() => Math.round(totalCalories), [totalCalories]);
+  const roundedProtein = useMemo(() => Math.round(totalProtein), [totalProtein]);
+  const roundedCarbs = useMemo(() => Math.round(totalCarbs), [totalCarbs]);
+  const roundedFat = useMemo(() => Math.round(totalFat), [totalFat]);
+  
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -68,7 +78,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = React.memo(({
               <div className="mb-2 -mt-1">
                 <NutrientIcon
                   type="calories"
-                  value={Math.round(totalCalories)}
+                  value={roundedCalories}
                   unit="kcal"
                   className="text-base font-semibold"
                 />
@@ -77,17 +87,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = React.memo(({
               <div className="flex flex-wrap gap-3 -mt-2">
                 <NutrientIcon
                   type="protein"
-                  value={Math.round(totalProtein)}
+                  value={roundedProtein}
                   className="text-[11px]"
                 />
                 <NutrientIcon
                   type="carbs"
-                  value={Math.round(totalCarbs)}
+                  value={roundedCarbs}
                   className="text-[11px]"
                 />
                 <NutrientIcon
                   type="fat"
-                  value={Math.round(totalFat)}
+                  value={roundedFat}
                   className="text-[11px]"
                 />
               </div>
@@ -127,20 +137,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = React.memo(({
             <div className="flex flex-wrap gap-4">
               <NutrientIcon
                 type="calories"
-                value={Math.round(totalCalories)}
+                value={roundedCalories}
                 unit="kcal"
               />
               <NutrientIcon
                 type="protein"
-                value={Math.round(totalProtein)}
+                value={roundedProtein}
               />
               <NutrientIcon
                 type="carbs"
-                value={Math.round(totalCarbs)}
+                value={roundedCarbs}
               />
               <NutrientIcon
                 type="fat"
-                value={Math.round(totalFat)}
+                value={roundedFat}
               />
             </div>
           </div>
@@ -185,5 +195,18 @@ export const RecipeCard: React.FC<RecipeCardProps> = React.memo(({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.recipeName === nextProps.recipeName &&
+    prevProps.totalCalories === nextProps.totalCalories &&
+    prevProps.totalProtein === nextProps.totalProtein &&
+    prevProps.totalCarbs === nextProps.totalCarbs &&
+    prevProps.totalFat === nextProps.totalFat &&
+    prevProps.ingredients === nextProps.ingredients &&
+    prevProps.checkedIngredients === nextProps.checkedIngredients &&
+    prevProps.ingredientQuantities === nextProps.ingredientQuantities &&
+    prevProps.recipeImageUrl === nextProps.recipeImageUrl
   );
 });

@@ -132,4 +132,11 @@ export const EditableIngredientItem: React.FC<EditableIngredientItemProps> = Rea
       </div>
     </div>
   );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.checked === nextProps.checked &&
+    prevProps.quantity === nextProps.quantity &&
+    prevProps.ingredient.id === nextProps.ingredient.id
+  );
 });

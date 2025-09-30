@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -87,40 +87,28 @@ export const NutritionProgramPage: React.FC = React.memo(() => {
     );
   }
 
-  const hasSelectedIngredients = Object.values(checkedIngredients).some(checked => checked);
+  const hasSelectedIngredients = useMemo(() => 
+    Object.values(checkedIngredients).some(checked => checked),
+    [checkedIngredients]
+  );
 
-  const groupIngredientsByRecipe = (ingredients: any[]) => {
+  const groupIngredientsByRecipe = useCallback((ingredients: any[]) => {
     const recipeGroups: Record<string, any[]> = {};
     const individualIngredients: any[] = [];
 
-    console.log('All ingredients:', ingredients);
-
     ingredients.forEach(ingredient => {
-      console.log(`Processing ingredient: ${ingredient.custom_food_name || ingredient.food_items?.name}`, {
-        id: ingredient.id,
-        recipe_id: ingredient.recipe_id,
-        recipe_name: ingredient.recipe_name
-      });
-
       if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
-        // This ingredient belongs to a recipe
-        console.log(`→ Adding to recipe group: ${ingredient.recipe_id}`);
         if (!recipeGroups[ingredient.recipe_id]) {
           recipeGroups[ingredient.recipe_id] = [];
         }
         recipeGroups[ingredient.recipe_id].push(ingredient);
       } else {
-        // This is an individual ingredient (no recipe_id)
-        console.log('→ Adding as individual ingredient');
         individualIngredients.push(ingredient);
       }
     });
 
-    console.log('Recipe groups:', Object.keys(recipeGroups));
-    console.log('Individual ingredients (no recipe_id):', individualIngredients.map(i => i.custom_food_name || i.food_items?.name));
-
     return { recipeGroups, individualIngredients };
-  };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

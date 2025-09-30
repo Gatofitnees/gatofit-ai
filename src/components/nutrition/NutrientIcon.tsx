@@ -9,7 +9,7 @@ interface NutrientIconProps {
   className?: string;
 }
 
-const NutrientIcon: React.FC<NutrientIconProps> = ({ 
+const NutrientIcon: React.FC<NutrientIconProps> = React.memo(({ 
   type, 
   value, 
   unit = 'g',
@@ -20,35 +20,35 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
       case 'calories':
         return {
           icon: 'ss-flame',
-          color: '#2094F3', // blue calories color
+          color: '#2094F3',
           bgColor: 'bg-secondary/30',
           unit: 'kcal'
         };
       case 'protein':
         return {
           icon: 'sr-drumstick',
-          color: '#dd6969', // matching MacroProgress
+          color: '#dd6969',
           bgColor: 'bg-secondary/30',
           unit: 'g'
         };
       case 'carbs':
         return {
           icon: 'sr-wheat',
-          color: '#EB9F6D', // matching MacroProgress  
+          color: '#EB9F6D',
           bgColor: 'bg-secondary/30',
           unit: 'g'
         };
       case 'fat':
         return {
           icon: 'sr-avocado',
-          color: '#6C95DC', // matching MacroProgress
+          color: '#6C95DC',
           bgColor: 'bg-secondary/30',
           unit: 'g'
         };
       default:
         return {
           icon: 'sr-circle',
-          color: '#6b7280', // gray-500
+          color: '#6b7280',
           bgColor: 'bg-secondary/30',
           unit: 'g'
         };
@@ -56,6 +56,7 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
   };
 
   const config = getIconConfig();
+  const roundedValue = Math.round(value);
   
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
@@ -71,7 +72,7 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
       </div>
       <div className="flex flex-col">
         <span className="text-sm font-semibold text-foreground">
-          {Math.round(value)}
+          {roundedValue}
         </span>
         <span className="text-xs text-muted-foreground leading-none">
           {unit === 'g' ? config.unit : unit}
@@ -79,6 +80,6 @@ const NutrientIcon: React.FC<NutrientIconProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default NutrientIcon;

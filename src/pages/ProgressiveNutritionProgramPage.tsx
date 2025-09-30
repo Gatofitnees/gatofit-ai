@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -103,9 +103,12 @@ export const ProgressiveNutritionProgramPage: React.FC = React.memo(() => {
     );
   }
 
-  const hasSelectedIngredients = Object.values(checkedIngredients).some(checked => checked);
+  const hasSelectedIngredients = useMemo(() => 
+    Object.values(checkedIngredients).some(checked => checked),
+    [checkedIngredients]
+  );
 
-  const groupIngredientsByRecipe = (ingredients: any[]) => {
+  const groupIngredientsByRecipe = useCallback((ingredients: any[]) => {
     const recipeGroups: Record<string, any[]> = {};
     const individualIngredients: any[] = [];
 
@@ -121,7 +124,7 @@ export const ProgressiveNutritionProgramPage: React.FC = React.memo(() => {
     });
 
     return { recipeGroups, individualIngredients };
-  };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

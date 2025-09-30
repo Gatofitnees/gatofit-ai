@@ -8,18 +8,16 @@ interface FlatIconProps {
   style?: React.CSSProperties;
 }
 
-export const FlatIcon: React.FC<FlatIconProps> = ({ 
+export const FlatIcon: React.FC<FlatIconProps> = React.memo(({ 
   name, 
   className,
   size = 16,
   style 
 }) => {
-  console.log('FlatIcon rendering with name:', name);
-  
   return (
     <i 
       className={cn(`fi fi-${name}`, className)}
       style={{ fontSize: `${size}px`, ...style }}
     />
   );
-};
+});
