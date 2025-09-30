@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const useProgressiveNutritionProgram = (selectedDate: Date) => {
   const navigate = useNavigate();
-  const { nutritionPlan, loading: planLoading } = useAdminNutritionProgram(selectedDate);
+  const { nutritionPlan, loading: planLoading, loadOptionIngredients } = useAdminNutritionProgram(selectedDate);
   const { addEntry } = useFoodLog(selectedDate.toISOString().split('T')[0]);
   const { toast } = useToast();
 
@@ -90,19 +90,24 @@ export const useProgressiveNutritionProgram = (selectedDate: Date) => {
     if (!nutritionPlan?.meals) return;
 
     const meal = nutritionPlan.meals.find(m => m.id === mealId);
-    if (!meal) return;
+    if (!meal || !meal.options || !meal.options[optionIndex]) return;
 
-    // Mark meal as loading
+    const option = meal.options[optionIndex];
+
+    // Mark meal and option as loading
     setLoadingMeals(prev => new Set([...prev, mealId]));
     setLoadingOptions(prev => ({
       ...prev,
       [mealId]: new Set([...(prev[mealId] || []), optionIndex])
     }));
 
-    // Simulate loading delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 300));
-
     try {
+      // Cargar ingredientes desde la base de datos si aún no están cargados
+      if (!option.ingredients) {
+        const ingredients = await loadOptionIngredients(option.id);
+        option.ingredients = ingredients;
+      }
+
       // Mark meal as loaded
       setLoadedMeals(prev => new Set([...prev, mealId]));
       setLoadedOptions(prev => ({
@@ -116,10 +121,9 @@ export const useProgressiveNutritionProgram = (selectedDate: Date) => {
         [mealId]: optionIndex
       }));
 
-      const selectedOption = meal.options?.[optionIndex];
-      if (selectedOption?.ingredients) {
+      if (option.ingredients && option.ingredients.length > 0) {
         const newQuantities: Record<string, number> = {};
-        selectedOption.ingredients.forEach(ingredient => {
+        option.ingredients.forEach(ingredient => {
           newQuantities[ingredient.id] = ingredient.quantity_grams;
         });
         
@@ -147,31 +151,47 @@ export const useProgressiveNutritionProgram = (selectedDate: Date) => {
         [mealId]: new Set([...(prev[mealId] || [])].filter(i => i !== optionIndex))
       }));
     }
-  }, [nutritionPlan, toast]);
+  }, [nutritionPlan, toast, loadOptionIngredients]);
 
   const loadOption = useCallback(async (mealId: string, optionIndex: number) => {
     if (loadedOptions[mealId]?.has(optionIndex)) return;
+    if (!nutritionPlan?.meals) return;
+
+    const meal = nutritionPlan.meals.find(m => m.id === mealId);
+    if (!meal || !meal.options || !meal.options[optionIndex]) return;
+
+    const option = meal.options[optionIndex];
 
     setLoadingOptions(prev => ({
       ...prev,
       [mealId]: new Set([...(prev[mealId] || []), optionIndex])
     }));
 
-    // Simulate loading delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-
     try {
+      // Cargar ingredientes desde la base de datos si aún no están cargados
+      if (!option.ingredients) {
+        const ingredients = await loadOptionIngredients(option.id);
+        option.ingredients = ingredients;
+      }
+
       setLoadedOptions(prev => ({
         ...prev,
         [mealId]: new Set([...(prev[mealId] || []), optionIndex])
       }));
+    } catch (error) {
+      console.error('Error loading option:', error);
+      toast({
+        title: "Error de carga",
+        description: "No se pudo cargar esta opción. Intenta de nuevo.",
+        variant: "destructive"
+      });
     } finally {
       setLoadingOptions(prev => ({
         ...prev,
         [mealId]: new Set([...(prev[mealId] || [])].filter(i => i !== optionIndex))
       }));
     }
-  }, [loadedOptions]);
+  }, [loadedOptions, nutritionPlan, loadOptionIngredients, toast]);
 
   const handleOptionSelect = useCallback(async (mealId: string, optionIndex: number) => {
     if (!nutritionPlan?.meals) return;

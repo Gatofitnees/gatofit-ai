@@ -35,7 +35,9 @@ export interface AdminNutritionMealOption {
   total_protein_g: number;
   total_carbs_g: number;
   total_fats_g: number;
-  ingredients?: AdminNutritionIngredient[];
+  option_order?: number;
+  meal_id?: string;
+  ingredients?: AdminNutritionIngredient[]; // Opcional - se carga lazy
 }
 
 export interface AdminNutritionIngredient {
@@ -134,7 +136,7 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
       if (nutritionPlanData && nutritionPlanData.length > 0) {
         const nutritionPlanRef = nutritionPlanData[0];
         
-        // Obtener detalles del plan nutricional con información completa de recetas
+        // OPTIMIZACIÓN: Solo cargar estructura básica sin ingredientes
         const { data: planDetails, error: planError } = await supabase
           .from('nutrition_plans')
           .select(`
@@ -142,14 +144,15 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
             meals:nutrition_plan_meals (
               *,
               options:nutrition_plan_meal_options (
-                *,
-                ingredients:nutrition_plan_meal_ingredients (
-                  *,
-                  food_items (
-                    id,
-                    name
-                  )
-                )
+                id,
+                option_name,
+                description,
+                total_calories,
+                total_protein_g,
+                total_carbs_g,
+                total_fats_g,
+                option_order,
+                meal_id
               )
             )
           `)
@@ -161,117 +164,17 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
         if (planDetails && planDetails.length > 0) {
           const planData = planDetails[0];
           
-          
-          // Enrich ingredients with recipe information
+          // Solo ordenar meals y opciones, NO cargar ingredientes
           if (planData.meals) {
-            // First, ensure proper ordering of meals and their options
             planData.meals.sort((a, b) => (a.meal_order || 0) - (b.meal_order || 0));
             
             for (const meal of planData.meals) {
               if (meal.options) {
-                // Ensure options are properly ordered by option_order
                 meal.options.sort((a, b) => (a.option_order || 0) - (b.option_order || 0));
-                
-                
-                for (const option of meal.options) {
-                  if (option.ingredients) {
-                    
-                    // Get all unique recipe IDs from ingredients that have recipe_id
-                    const recipeIds = [...new Set(
-                      option.ingredients
-                        .filter(ing => ing.recipe_id)
-                        .map(ing => ing.recipe_id)
-                    )];
-                    
-                    // Fetch recipe details and ingredients for all recipes in this option
-                    if (recipeIds.length > 0) {
-                      
-                      // Fetch recipe basic info
-                      const { data: recipesData, error: recipeError } = await supabase
-                        .from('recipes')
-                        .select('id, name, description, instructions, cover_image_url')
-                        .in('id', recipeIds);
-                      
-                      if (recipeError) {
-                        console.error('Error fetching recipe data:', recipeError);
-                      }
-                      
-                      // Fetch actual recipe ingredients from recipe_ingredients table
-                      const { data: recipeIngredientsData, error: recipeIngredientsError } = await supabase
-                        .from('recipe_ingredients')
-                        .select(`
-                          *,
-                          food_items (
-                            id,
-                            name,
-                            calories_per_serving,
-                            protein_g_per_serving,
-                            carbs_g_per_serving,
-                            fat_g_per_serving,
-                            fiber_g_per_serving
-                          )
-                        `)
-                        .in('recipe_id', recipeIds);
-                      
-                      if (recipeIngredientsError) {
-                        console.error('Error fetching recipe ingredients:', recipeIngredientsError);
-                      }
-                      
-                      // Process recipe ingredients and replace placeholders
-                      if (recipesData && recipeIngredientsData) {
-                        
-                        // Create a new ingredients array without recipe placeholders
-                        const newIngredients: any[] = [];
-                        
-                        option.ingredients.forEach((ingredient: any) => {
-                          if (ingredient.recipe_id) {
-                            // This is a recipe placeholder - replace with actual recipe ingredients
-                            const recipeData = recipesData.find(r => r.id === ingredient.recipe_id);
-                            const recipeIngredients = recipeIngredientsData.filter(ri => ri.recipe_id === ingredient.recipe_id);
-                            
-                            if (recipeData && recipeIngredients.length > 0) {
-                              
-                              // Add each recipe ingredient as a separate ingredient
-                              recipeIngredients.forEach((recipeIngredient: any) => {
-                                const foodItem = recipeIngredient.food_items;
-                                if (foodItem) {
-                                  // Calculate nutritional values based on the recipe ingredient quantity
-                                  const servingRatio = recipeIngredient.quantity_grams / 100; // Assuming food_items nutrition is per 100g
-                                  
-                                  newIngredients.push({
-                                    id: `${ingredient.id}_${recipeIngredient.id}`, // Unique ID combining original and recipe ingredient
-                                    custom_food_name: recipeIngredient.custom_name || foodItem.name,
-                                    quantity_grams: recipeIngredient.quantity_grams,
-                                    calories_per_serving: (foodItem.calories_per_serving || 0) * servingRatio,
-                                    protein_g_per_serving: (foodItem.protein_g_per_serving || 0) * servingRatio,
-                                    carbs_g_per_serving: (foodItem.carbs_g_per_serving || 0) * servingRatio,
-                                    fats_g_per_serving: (foodItem.fat_g_per_serving || 0) * servingRatio,
-                                    fiber_g_per_serving: (foodItem.fiber_g_per_serving || 0) * servingRatio,
-                                    recipe_id: ingredient.recipe_id,
-                                    recipe_name: recipeData.name,
-                                    recipe_description: recipeData.description,
-                                    recipe_instructions: recipeData.instructions,
-                                    recipe_image_url: recipeData.cover_image_url,
-                                    food_items: {
-                                      id: foodItem.id,
-                                      name: foodItem.name
-                                    }
-                                  });
-                                }
-                              });
-                            }
-                          } else {
-                            // This is a regular ingredient, keep as is
-                            newIngredients.push(ingredient);
-                          }
-                        });
-                        
-                        // Replace the ingredients array with the new one
-                        option.ingredients = newIngredients;
-                      }
-                    }
-                  }
-                }
+                // Inicializar ingredients como undefined para carga lazy posterior
+                meal.options.forEach((option: any) => {
+                  option.ingredients = undefined;
+                });
               }
             }
           }
@@ -293,14 +196,116 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
 
     } catch (error: any) {
       console.error("Error fetching admin nutrition plan:", error);
-      // Don't use toast here to avoid infinite loop
       setNutritionPlan(null);
       setHasNutritionPlan(false);
       setLastFetchedDate(dateString);
     } finally {
       setLoading(false);
     }
-  }, []); // Remove dependencies to prevent infinite loop
+  }, []);
+
+  // Nueva función para cargar ingredientes de una opción específica
+  const loadOptionIngredients = async (optionId: string): Promise<AdminNutritionIngredient[]> => {
+    try {
+      const { data: ingredients, error } = await supabase
+        .from('nutrition_plan_meal_ingredients')
+        .select(`
+          *,
+          food_items (
+            id,
+            name
+          )
+        `)
+        .eq('meal_option_id', optionId)
+        .order('ingredient_order');
+
+      if (error) throw error;
+
+      if (!ingredients || ingredients.length === 0) {
+        return [];
+      }
+
+      // Obtener IDs únicos de recetas
+      const recipeIds = [...new Set(
+        ingredients
+          .filter(ing => ing.recipe_id)
+          .map(ing => ing.recipe_id)
+      )];
+
+      let enrichedIngredients: any[] = [];
+
+      if (recipeIds.length > 0) {
+        // Cargar información de recetas
+        const { data: recipesData } = await supabase
+          .from('recipes')
+          .select('id, name, description, instructions, cover_image_url')
+          .in('id', recipeIds);
+
+        // Cargar ingredientes de recetas
+        const { data: recipeIngredientsData } = await supabase
+          .from('recipe_ingredients')
+          .select(`
+            *,
+            food_items (
+              id,
+              name,
+              calories_per_serving,
+              protein_g_per_serving,
+              carbs_g_per_serving,
+              fat_g_per_serving,
+              fiber_g_per_serving
+            )
+          `)
+          .in('recipe_id', recipeIds);
+
+        // Procesar ingredientes
+        ingredients.forEach((ingredient: any) => {
+          if (ingredient.recipe_id && recipesData && recipeIngredientsData) {
+            const recipeData = recipesData.find(r => r.id === ingredient.recipe_id);
+            const recipeIngredients = recipeIngredientsData.filter(ri => ri.recipe_id === ingredient.recipe_id);
+
+            if (recipeData && recipeIngredients.length > 0) {
+              recipeIngredients.forEach((recipeIngredient: any) => {
+                const foodItem = recipeIngredient.food_items;
+                if (foodItem) {
+                  const servingRatio = recipeIngredient.quantity_grams / 100;
+                  
+                  enrichedIngredients.push({
+                    id: `${ingredient.id}_${recipeIngredient.id}`,
+                    custom_food_name: recipeIngredient.custom_name || foodItem.name,
+                    quantity_grams: recipeIngredient.quantity_grams,
+                    calories_per_serving: (foodItem.calories_per_serving || 0) * servingRatio,
+                    protein_g_per_serving: (foodItem.protein_g_per_serving || 0) * servingRatio,
+                    carbs_g_per_serving: (foodItem.carbs_g_per_serving || 0) * servingRatio,
+                    fats_g_per_serving: (foodItem.fat_g_per_serving || 0) * servingRatio,
+                    fiber_g_per_serving: (foodItem.fiber_g_per_serving || 0) * servingRatio,
+                    recipe_id: ingredient.recipe_id,
+                    recipe_name: recipeData.name,
+                    recipe_description: recipeData.description,
+                    recipe_instructions: recipeData.instructions,
+                    recipe_image_url: recipeData.cover_image_url,
+                    food_items: {
+                      id: foodItem.id,
+                      name: foodItem.name
+                    }
+                  });
+                }
+              });
+            }
+          } else {
+            enrichedIngredients.push(ingredient);
+          }
+        });
+      } else {
+        enrichedIngredients = ingredients;
+      }
+
+      return enrichedIngredients as AdminNutritionIngredient[];
+    } catch (error) {
+      console.error('Error loading option ingredients:', error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     const dateString = selectedDate.toISOString().split('T')[0];
@@ -313,6 +318,7 @@ export const useAdminNutritionProgram = (selectedDate: Date) => {
     nutritionPlan,
     loading,
     hasNutritionPlan,
-    refetch: () => fetchAdminNutritionPlan(selectedDate)
+    refetch: () => fetchAdminNutritionPlan(selectedDate),
+    loadOptionIngredients
   };
 };
