@@ -41,6 +41,29 @@ export const NutritionProgramPage: React.FC = React.memo(() => {
     getSelectedIngredients
   } = useNutritionProgramPage(selectedDate);
 
+  const hasSelectedIngredients = useMemo(() => 
+    Object.values(checkedIngredients).some(checked => checked),
+    [checkedIngredients]
+  );
+
+  const groupIngredientsByRecipe = useCallback((ingredients: any[]) => {
+    const recipeGroups: Record<string, any[]> = {};
+    const individualIngredients: any[] = [];
+
+    ingredients.forEach(ingredient => {
+      if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
+        if (!recipeGroups[ingredient.recipe_id]) {
+          recipeGroups[ingredient.recipe_id] = [];
+        }
+        recipeGroups[ingredient.recipe_id].push(ingredient);
+      } else {
+        individualIngredients.push(ingredient);
+      }
+    });
+
+    return { recipeGroups, individualIngredients };
+  }, []);
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -86,29 +109,6 @@ export const NutritionProgramPage: React.FC = React.memo(() => {
       </div>
     );
   }
-
-  const hasSelectedIngredients = useMemo(() => 
-    Object.values(checkedIngredients).some(checked => checked),
-    [checkedIngredients]
-  );
-
-  const groupIngredientsByRecipe = useCallback((ingredients: any[]) => {
-    const recipeGroups: Record<string, any[]> = {};
-    const individualIngredients: any[] = [];
-
-    ingredients.forEach(ingredient => {
-      if (ingredient.recipe_id && ingredient.recipe_name && ingredient.recipe_name.trim() !== '') {
-        if (!recipeGroups[ingredient.recipe_id]) {
-          recipeGroups[ingredient.recipe_id] = [];
-        }
-        recipeGroups[ingredient.recipe_id].push(ingredient);
-      } else {
-        individualIngredients.push(ingredient);
-      }
-    });
-
-    return { recipeGroups, individualIngredients };
-  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
