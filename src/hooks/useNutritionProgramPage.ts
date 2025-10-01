@@ -145,6 +145,13 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     let savedCount = 0;
     let errorCount = 0;
 
+    // Check if saving for a different date
+    const isToday = selectedDate.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+    const dateDisplay = selectedDate.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long'
+    });
+
     try {
       // Collect ingredients to save (either specific ones or all checked ones)
       const ingredientsToSave: { ingredient: AdminNutritionIngredient; quantity: number }[] = [];
@@ -203,7 +210,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       if (savedCount > 0) {
         toast({
           title: "Comidas guardadas",
-          description: `Se guardaron ${savedCount} alimento${savedCount > 1 ? 's' : ''} en tu registro nutricional.`,
+          description: `Se guardaron ${savedCount} alimento${savedCount > 1 ? 's' : ''} en ${isToday ? 'tu registro de hoy' : dateDisplay}.`,
           variant: "default"
         });
         
@@ -270,6 +277,13 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
     if (!nutritionPlan?.meals) return;
 
     setSaving(true);
+
+    // Check if saving for a different date
+    const isToday = selectedDate.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+    const dateDisplay = selectedDate.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long'
+    });
 
     try {
       // Collect all checked ingredients
@@ -354,7 +368,7 @@ export const useNutritionProgramPage = (selectedDate: Date) => {
       if (result) {
         toast({
           title: "¡Comida guardada!",
-          description: `${mealName} se ha guardado con ${ingredientsToSave.length} ingredientes`,
+          description: `${mealName} se ha guardado en ${isToday ? 'tu registro de hoy' : dateDisplay} con ${ingredientsToSave.length} ingredientes`,
         });
         
         // Clear all selections after successful save

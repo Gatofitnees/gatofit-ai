@@ -16,9 +16,9 @@ interface FoodSearchResult {
   };
 }
 
-export const useFoodSaving = () => {
+export const useFoodSaving = (selectedDate?: string) => {
   const [isSaving, setIsSaving] = useState(false);
-  const { addEntry } = useFoodLog();
+  const { addEntry } = useFoodLog(selectedDate);
   const { toast } = useToast();
 
   const saveFoods = useCallback(async (
@@ -31,6 +31,13 @@ export const useFoodSaving = () => {
     setIsSaving(true);
 
     try {
+      // Check if saving for a different date
+      const isToday = !selectedDate || selectedDate === new Date().toISOString().split('T')[0];
+      const dateDisplay = selectedDate ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long'
+      }) : 'hoy';
+
       if (foods.length === 1) {
         // Single food - save directly
         const food = foods[0];
@@ -63,7 +70,7 @@ export const useFoodSaving = () => {
 
         toast({
           title: "¡Alimento guardado!",
-          description: `${food.name} se ha guardado en tu registro`,
+          description: `${food.name} se ha guardado en ${isToday ? 'tu registro de hoy' : dateDisplay}`,
         });
       } else {
         // Multiple foods - create composite meal
@@ -117,7 +124,7 @@ export const useFoodSaving = () => {
 
         toast({
           title: "¡Comida guardada!",
-          description: `${mealName} se ha guardado con ${foods.length} alimentos`,
+          description: `${mealName} se ha guardado en ${isToday ? 'tu registro de hoy' : dateDisplay} con ${foods.length} alimentos`,
         });
       }
 

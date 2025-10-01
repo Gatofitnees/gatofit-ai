@@ -16,7 +16,8 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
 
   const handleSearchFood = () => {
     setIsOpen(false);
-    navigate('/nutrition/search');
+    const dateString = selectedDate.toISOString().split('T')[0];
+    navigate(`/nutrition/search?date=${dateString}`);
   };
 
   const handleCameraClick = () => {

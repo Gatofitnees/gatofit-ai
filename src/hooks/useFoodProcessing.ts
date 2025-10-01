@@ -58,7 +58,7 @@ const deleteImageFromStorage = async (imageUrl: string): Promise<void> => {
   }
 };
 
-export const useFoodProcessing = (addEntry: AddEntryFn) => {
+export const useFoodProcessing = (addEntry: AddEntryFn, selectedDate?: string) => {
   const [processingFoods, setProcessingFoods] = useState<ProcessingFood[]>([]);
   const { uploadImageWithAnalysis, clearError, error: foodCaptureError, isCompressing } = useFoodCapture();
   const { sendToWebhookWithResponse } = useWebhookResponse();

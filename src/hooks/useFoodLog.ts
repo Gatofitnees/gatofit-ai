@@ -69,7 +69,7 @@ export const useFoodLog = (selectedDate?: string) => {
 
   const addEntry = async (entry: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>): Promise<FoodLogEntry | null> => {
     try {
-      const result = await addEntryOperation(entry);
+      const result = await addEntryOperation(entry, selectedDate);
       await fetchEntriesForDate(selectedDate);
       await fetchDatesWithEntries(); // Refrescar fechas con entradas
       return result;

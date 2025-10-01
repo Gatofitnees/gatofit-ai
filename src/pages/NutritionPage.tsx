@@ -50,7 +50,7 @@ const NutritionPage: React.FC = () => {
     handlePhotoTaken,
     handleRetryAnalysis,
     handleCancelProcessing
-  } = useFoodProcessing(addEntry);
+  } = useFoodProcessing(addEntry, getLocalDateString(selectedDate));
 
   const {
     capturePhotoWithLimitCheck,
@@ -143,16 +143,14 @@ const NutritionPage: React.FC = () => {
           </h2>
           <div className="flex gap-2">
             <NutritionProgramButton selectedDate={selectedDate} />
-            {isToday && (
-              <Button 
-                variant="primary"
-                size="sm"
-                leftIcon={<Plus className="h-4 w-4" />}
-                onClick={handleOpenCamera}
-              >
-                Añadir
-              </Button>
-            )}
+            <Button 
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="h-4 w-4" />}
+              onClick={handleOpenCamera}
+            >
+              Añadir
+            </Button>
           </div>
         </div>
         
@@ -168,12 +166,10 @@ const NutritionPage: React.FC = () => {
         />
       </div>
       
-      {isToday && (
-        <AddFoodMenu onCameraClick={handleOpenCamera} selectedDate={selectedDate} />
-      )}
+      <AddFoodMenu onCameraClick={handleOpenCamera} selectedDate={selectedDate} />
 
       <AnimatePresence>
-        {isToday && isCameraVisible && (
+        {isCameraVisible && (
           <CameraCapture
             isOpen={isCameraVisible}
             onClose={() => setIsCameraVisible(false)}

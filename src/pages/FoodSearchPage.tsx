@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Search, Filter, Save } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -14,6 +14,8 @@ import SaveFoodModal from '@/components/nutrition/SaveFoodModal';
 
 const FoodSearchPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedDate = searchParams.get('date') || undefined;
   const [searchQuery, setSearchQuery] = useState('');
   const [macroFilters, setMacroFilters] = useState<any>({});
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -31,7 +33,7 @@ const FoodSearchPage: React.FC = () => {
     isSelected,
     getQuantity,
   } = useFoodSelection();
-  const { saveFoods, isSaving } = useFoodSaving();
+  const { saveFoods, isSaving } = useFoodSaving(selectedDate);
 
   useEffect(() => {
     // Always search - if no query/filters, it will load default foods
