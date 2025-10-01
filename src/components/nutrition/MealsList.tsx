@@ -78,7 +78,7 @@ export const MealsList: React.FC<MealsListProps> = ({
           fat={entry.fat_g_consumed}
           loggedAt={entry.logged_at}
           onClick={() => handleEditEntry(entry)}
-          onDelete={isToday ? () => handleDeleteEntry(entry.id!) : undefined}
+          onDelete={() => handleDeleteEntry(entry.id!)}
         />
       ))}
 
