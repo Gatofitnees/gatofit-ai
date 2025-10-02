@@ -12,7 +12,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   
   // Extract exercise IDs from exerciseDetails
   const exerciseIds = useMemo(() => 
-    exerciseDetails.map(detail => detail.exercise_id).filter(Boolean),
+    exerciseDetails.map(detail => detail.id).filter(Boolean),
     [exerciseDetails]
   );
   
