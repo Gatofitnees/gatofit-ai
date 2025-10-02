@@ -128,8 +128,51 @@ export const useOnboardingPersistence = () => {
     return { isValid: true, user: currentUser };
   };
 
-  const saveOnboardingToProfile = async (data: OnboardingData, skipRetries: boolean = false): Promise<boolean> => {
+  const checkIfUserHasCompleteProfile = async (): Promise<boolean> => {
+    console.log('Checking if user has complete profile...');
+    
+    const validationResult = await validateUserForSaving();
+    if (!validationResult.isValid) {
+      console.log('User not authenticated, considering profile incomplete');
+      return false;
+    }
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('gender, date_of_birth, main_goal, height_cm, current_weight_kg')
+        .eq('id', validationResult.user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return false;
+      }
+
+      // Check if critical fields are filled
+      const hasCompleteProfile = !!(
+        profile?.gender &&
+        profile?.date_of_birth &&
+        profile?.main_goal &&
+        profile?.height_cm &&
+        profile?.current_weight_kg
+      );
+
+      console.log('Profile completeness check:', {
+        hasCompleteProfile,
+        profileData: profile
+      });
+
+      return hasCompleteProfile;
+    } catch (error) {
+      console.error('Error checking profile completeness:', error);
+      return false;
+    }
+  };
+
+  const saveOnboardingToProfile = async (data: OnboardingData, skipRetries: boolean = false, preserveExisting: boolean = false): Promise<boolean> => {
     console.log('Starting to save onboarding data to profile:', data);
+    console.log('Preserve existing data:', preserveExisting);
     
     // Check for Google auth pending data first
     const pendingData = getGoogleAuthPendingData();
@@ -178,7 +221,7 @@ export const useOnboardingPersistence = () => {
       };
 
       // Prepare profile updates with better validation
-      const profileUpdates = {
+      const profileUpdates: any = {
         gender: dataToSave.gender as 'male' | 'female' | null,
         height_cm: dataToSave.height || null,
         current_weight_kg: dataToSave.weight || null,
@@ -198,18 +241,47 @@ export const useOnboardingPersistence = () => {
         unit_system_preference: dataToSave.unit_system_preference as 'metric' | 'imperial' | null
       };
 
-      console.log('Profile updates to be saved:', profileUpdates);
-
-      const success = await updateProfile(profileUpdates);
-      
-      if (success) {
-        console.log('Onboarding data successfully saved to profile');
-        // Clear all onboarding data after successful save
-        clearOnboardingData();
-        return true;
+      // If preserveExisting is true, filter out null/undefined values to avoid overwriting existing data
+      if (preserveExisting) {
+        console.log('Filtering null values to preserve existing data...');
+        const filteredUpdates: any = {};
+        Object.keys(profileUpdates).forEach(key => {
+          if (profileUpdates[key] !== null && profileUpdates[key] !== undefined) {
+            filteredUpdates[key] = profileUpdates[key];
+          }
+        });
+        
+        // Only proceed if there's actually data to update
+        if (Object.keys(filteredUpdates).length === 0) {
+          console.log('No non-null data to update, skipping profile update');
+          return true;
+        }
+        
+        console.log('Filtered profile updates:', filteredUpdates);
+        
+        const success = await updateProfile(filteredUpdates);
+        
+        if (success) {
+          console.log('Onboarding data successfully saved to profile (preserved existing)');
+          return true;
+        } else {
+          console.error('Failed to save onboarding data to profile - updateProfile returned false');
+          return false;
+        }
       } else {
-        console.error('Failed to save onboarding data to profile - updateProfile returned false');
-        return false;
+        console.log('Profile updates to be saved (full update):', profileUpdates);
+
+        const success = await updateProfile(profileUpdates);
+        
+        if (success) {
+          console.log('Onboarding data successfully saved to profile');
+          // Clear all onboarding data after successful save
+          clearOnboardingData();
+          return true;
+        } else {
+          console.error('Failed to save onboarding data to profile - updateProfile returned false');
+          return false;
+        }
       }
       
     } catch (error) {
@@ -270,6 +342,7 @@ export const useOnboardingPersistence = () => {
     saveOnboardingToProfile,
     waitForUserAuthentication,
     validateUserForSaving,
+    checkIfUserHasCompleteProfile,
     markGoogleAuthPending,
     getGoogleAuthPendingData,
     clearGoogleAuthPending,

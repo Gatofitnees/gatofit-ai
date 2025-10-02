@@ -15,7 +15,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle } = useAuth();
   const context = useContext(OnboardingContext);
-  const { saveOnboardingToProfile } = useOnboardingPersistence();
+  const { saveOnboardingToProfile, checkIfUserHasCompleteProfile } = useOnboardingPersistence();
 
   const { 
     email, setEmail,
@@ -51,8 +51,19 @@ const Login: React.FC = () => {
           setError(error.message);
         }
       } else {
-        // Save onboarding data to profile after successful login
-        await saveOnboardingToProfile(context.data);
+        // Check if user already has complete profile data
+        const hasCompleteProfile = await checkIfUserHasCompleteProfile();
+        
+        console.log('User has complete profile:', hasCompleteProfile);
+        
+        // Only save onboarding data if user has incomplete profile
+        // Use preserveExisting=true to avoid overwriting existing data on direct login
+        if (!hasCompleteProfile) {
+          console.log('Profile incomplete, saving onboarding data');
+          await saveOnboardingToProfile(context.data, false, true);
+        } else {
+          console.log('Profile already complete, skipping onboarding data save');
+        }
         
         toast.success({
           title: "¡Bienvenido de nuevo!",
