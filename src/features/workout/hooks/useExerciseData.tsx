@@ -1,8 +1,8 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { WorkoutExercise } from "../types/workout";
 import { useBaseExerciseData } from "./useBaseExerciseData";
-import { useExercisePreviousData } from "./useExercisePreviousData";
+import { useRoutinePreviousData } from "./useRoutinePreviousData";
 import { useExerciseInputHandlers } from "./useExerciseInputHandlers";
 import { useExerciseUIState } from "./useExerciseUIState";
 import { useTemporaryExercises } from "./useTemporaryExercises";
@@ -10,20 +10,14 @@ import { useTemporaryExercises } from "./useTemporaryExercises";
 export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
   
-  // Extract exercise IDs from exerciseDetails
-  const exerciseIds = useMemo(() => 
-    exerciseDetails.map(detail => detail.id).filter(Boolean),
-    [exerciseDetails]
-  );
-  
-  // Use exercise-specific previous data from any routine
-  const { exercisePreviousData, exercisePreviousLoaded } = useExercisePreviousData(exerciseIds);
+  // Use routine-specific previous data instead of general exercise data
+  const { routinePreviousData, routinePreviousLoaded } = useRoutinePreviousData(routineId);
   
   const { baseExerciseData, updateBaseExerciseData, clearStoredData } = useBaseExerciseData({
     exerciseDetails,
-    previousData: exercisePreviousData,
+    previousData: routinePreviousData,
     exerciseNotesMap,
-    previousDataLoaded: exercisePreviousLoaded,
+    previousDataLoaded: routinePreviousLoaded,
     routineId
   });
 
