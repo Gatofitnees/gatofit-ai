@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { 
   WorkoutHeader,
   ExerciseList,
@@ -9,11 +9,18 @@ import {
   SaveButton
 } from "@/features/workout/components/active-workout";
 import { useActiveWorkout } from "@/features/workout/hooks/useActiveWorkout";
+import { useWorkoutCache } from "@/features/workout/hooks/useWorkoutCache";
 import DiscardChangesDialog from "@/features/workout/components/dialogs/DiscardChangesDialog";
 import { Button } from "@/components/ui/button";
 
 const ActiveWorkoutPage: React.FC = () => {
   const { routineId } = useParams<{ routineId: string }>();
+  const location = useLocation();
+  const { loadWorkoutCache } = useWorkoutCache();
+  
+  // Check if we're recovering from cache
+  const cachedData = location.state?.fromCache ? loadWorkoutCache() : null;
+  const cachedStartTime = cachedData?.startTime;
   
   const {
     routine,
@@ -35,7 +42,7 @@ const ActiveWorkoutPage: React.FC = () => {
     cancelDiscardChanges,
     setShowStatsDialog,
     handleToggleReorderMode
-  } = useActiveWorkout(routineId ? parseInt(routineId) : undefined);
+  } = useActiveWorkout(routineId ? parseInt(routineId) : undefined, cachedStartTime);
 
   if (loading) {
     return <LoadingSkeleton onBack={handleBack} />;
