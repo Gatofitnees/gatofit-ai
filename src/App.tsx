@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
 import NutritionPage from "./pages/NutritionPage";
@@ -37,48 +37,7 @@ import { FoodEditPage } from "./pages/FoodEditPage";
 import { ProgressiveNutritionProgramPage } from "./pages/ProgressiveNutritionProgramPage";
 import RoutineDetailPage from "./pages/RoutineDetailPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
-import { WorkoutCacheProvider } from "./features/workout/contexts/WorkoutCacheContext";
-import { useWorkoutCache } from "./features/workout/hooks/useWorkoutCache";
-import { WorkoutRecoveryDialog } from "./features/workout/components/active-workout/WorkoutRecoveryDialog";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
-
-// Component to handle workout recovery on app start
-const WorkoutRecoveryHandler: React.FC = () => {
-  const navigate = useNavigate();
-  const { hasCache, cachedWorkout, clearCache, checkCache } = useWorkoutCache();
-  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
-
-  useEffect(() => {
-    // Check for cached workout on mount
-    const cache = checkCache();
-    if (cache) {
-      setShowRecoveryDialog(true);
-    }
-  }, [checkCache]);
-
-  const handleContinue = () => {
-    if (cachedWorkout) {
-      setShowRecoveryDialog(false);
-      navigate(`/workout/active/${cachedWorkout.routineId}`, {
-        state: { fromCache: true }
-      });
-    }
-  };
-
-  const handleDiscard = () => {
-    clearCache();
-    setShowRecoveryDialog(false);
-  };
-
-  return (
-    <WorkoutRecoveryDialog
-      open={showRecoveryDialog}
-      cacheData={cachedWorkout}
-      onContinue={handleContinue}
-      onDiscard={handleDiscard}
-    />
-  );
-};
 
 function App() {
   useEffect(() => {
@@ -89,22 +48,20 @@ function App() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        <WorkoutCacheProvider>
-          <Router>
-            <WorkoutRecoveryHandler />
-            <div className="bg-background text-foreground min-h-screen">
-              <RoutineProvider>
-                <Routes>
-                  <Route path="/onboarding/*" element={<OnboardingFlow />} />
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <HomePage />
-                        <NavBar />
-                      </ProtectedRoute>
-                    }
-                  />
+        <Router>
+          <div className="bg-background text-foreground min-h-screen">
+            <RoutineProvider>
+              <Routes>
+                <Route path="/onboarding/*" element={<OnboardingFlow />} />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <HomePage />
+                      <NavBar />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/home"
                   element={
@@ -363,10 +320,9 @@ function App() {
             </RoutineProvider>
           </div>
         </Router>
-      </WorkoutCacheProvider>
-    </ProfileProvider>
-  </AuthProvider>
-);
+      </ProfileProvider>
+    </AuthProvider>
+  );
 }
 
 export default App;

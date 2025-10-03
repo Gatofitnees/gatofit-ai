@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { WorkoutExercise } from "../types/workout";
 import { useBaseExerciseData } from "./useBaseExerciseData";
 import { useRoutinePreviousData } from "./useRoutinePreviousData";
@@ -7,7 +7,7 @@ import { useExerciseInputHandlers } from "./useExerciseInputHandlers";
 import { useExerciseUIState } from "./useExerciseUIState";
 import { useTemporaryExercises } from "./useTemporaryExercises";
 
-export function useExerciseData(exerciseDetails: any[], routineId?: number, cachedData?: any) {
+export function useExerciseData(exerciseDetails: any[], routineId?: number) {
   const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
   
   // Use routine-specific previous data instead of general exercise data
@@ -18,8 +18,7 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number, cach
     previousData: routinePreviousData,
     exerciseNotesMap,
     previousDataLoaded: routinePreviousLoaded,
-    routineId,
-    cachedBaseExercises: cachedData?.baseExercises
+    routineId
   });
 
   const { 
@@ -28,17 +27,8 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number, cach
     clearTemporaryExercises,
     updateTemporaryExercise,
     updateTemporaryExerciseNotes,
-    addTemporaryExerciseSet,
-    setTemporaryExercises
+    addTemporaryExerciseSet
   } = useTemporaryExercises(routineId);
-
-  // Load cached temporary exercises if available
-  useEffect(() => {
-    if (cachedData?.temporaryExercises && cachedData.temporaryExercises.length > 0 && temporaryExercises.length === 0) {
-      console.log("🔄 Restoring temporary exercises from cache");
-      setTemporaryExercises(cachedData.temporaryExercises);
-    }
-  }, [cachedData, setTemporaryExercises, temporaryExercises.length]);
   
   const { 
     showStatsDialog, 
@@ -93,8 +83,6 @@ export function useExerciseData(exerciseDetails: any[], routineId?: number, cach
 
   return {
     exercises: allExercises,
-    baseExercises: baseExerciseData,
-    temporaryExercises,
     showStatsDialog,
     isReorderMode,
     handleInputChange,

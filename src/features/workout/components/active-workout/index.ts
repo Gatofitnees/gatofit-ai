@@ -8,4 +8,3 @@ export { SaveButton } from './SaveButton';
 export { DateNavigator } from './DateNavigator';
 export { SessionStats } from './SessionStats';
 export { ProgressChart } from './ProgressChart';
-export { WorkoutRecoveryDialog } from './WorkoutRecoveryDialog';

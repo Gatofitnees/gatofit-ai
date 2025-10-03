@@ -199,7 +199,6 @@ export const useTemporaryExercises = (routineId: number | undefined) => {
     clearTemporaryExercises,
     updateTemporaryExercise,
     updateTemporaryExerciseNotes,
-    addTemporaryExerciseSet,
-    setTemporaryExercises
+    addTemporaryExerciseSet
   };
 };

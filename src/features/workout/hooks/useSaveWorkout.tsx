@@ -11,8 +11,7 @@ export function useSaveWorkout(
   workoutStartTime: Date, 
   exercises: WorkoutExercise[],
   clearTemporaryExercises?: () => void,
-  routineId?: number,
-  clearCache?: () => void
+  routineId?: number
 ) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -180,11 +179,6 @@ export function useSaveWorkout(
         if (clearTemporaryExercises) {
           clearTemporaryExercises();
           console.log("All exercise data cleared after successful save and navigation");
-        }
-        // Clear workout cache after successful save
-        if (clearCache) {
-          clearCache();
-          console.log("Workout cache cleared after successful save");
         }
       }, 100);
       
