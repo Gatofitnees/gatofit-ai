@@ -8,6 +8,7 @@ interface UseBaseExerciseDataProps {
   exerciseNotesMap: Record<number, string>;
   previousDataLoaded: boolean;
   routineId?: number;
+  cachedBaseExercises?: Record<number, WorkoutExercise>;
 }
 
 export function useBaseExerciseData({
@@ -15,7 +16,8 @@ export function useBaseExerciseData({
   previousData,
   exerciseNotesMap,
   previousDataLoaded,
-  routineId
+  routineId,
+  cachedBaseExercises
 }: UseBaseExerciseDataProps) {
   const [baseExerciseData, setBaseExerciseData] = useState<Record<number, WorkoutExercise>>({});
   const isInitialized = useRef(false);
@@ -61,17 +63,26 @@ export function useBaseExerciseData({
     
     console.log("Initializing base exercises for the first time");
     console.log("Available previous data:", previousData);
+    console.log("Cached base exercises:", cachedBaseExercises);
     
-    // Try to load existing data from storage first
+    // Priority: cachedBaseExercises > storedData > fresh data
     const storedData = loadFromStorage();
+    const dataToUse = cachedBaseExercises && Object.keys(cachedBaseExercises).length > 0 
+      ? cachedBaseExercises 
+      : storedData;
+    
+    if (cachedBaseExercises && Object.keys(cachedBaseExercises).length > 0) {
+      console.log("🔄 Restoring workout from cache");
+    }
+    
     const initialBaseExercises: Record<number, WorkoutExercise> = {};
     
     exerciseDetails.forEach(ex => {
       console.log(`Processing exercise ${ex.id} (${ex.name})`);
       console.log(`Previous data for exercise ${ex.id}:`, previousData[ex.id]);
       
-      // Check if we have stored data for this exercise
-      const storedExercise = storedData[ex.id];
+      // Check if we have cached or stored data for this exercise
+      const storedExercise = dataToUse[ex.id];
       
       if (storedExercise && storedExercise.sets.length > 0) {
         // Use stored data but update previous data and add target reps
@@ -141,7 +152,7 @@ export function useBaseExerciseData({
     setBaseExerciseData(initialBaseExercises);
     saveToStorage(initialBaseExercises);
     isInitialized.current = true;
-  }, [exerciseDetails, previousDataLoaded, previousData, exerciseNotesMap, routineId]);
+  }, [exerciseDetails, previousDataLoaded, previousData, exerciseNotesMap, routineId, cachedBaseExercises]);
 
   // Add new exercises if they appear in exerciseDetails but aren't in baseExerciseData
   useEffect(() => {

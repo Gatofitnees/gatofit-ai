@@ -4,11 +4,17 @@ import { useRoutineDetail } from "./useRoutineDetail";
 import { useExerciseData } from "./useExerciseData";
 import { useSaveWorkout } from "./useSaveWorkout";
 import { useWorkoutNavigation } from "./useWorkoutNavigation";
+import { useWorkoutCache } from "./useWorkoutCache";
+import { useDebounce } from "@/hooks/useDebounce";
 
-export function useActiveWorkout(routineId: number | undefined) {
-  const [workoutStartTime] = useState<Date>(new Date());
+export function useActiveWorkout(routineId: number | undefined, cachedStartTime?: string) {
+  const [workoutStartTime] = useState<Date>(cachedStartTime ? new Date(cachedStartTime) : new Date());
   const location = useLocation();
   const { routine, exerciseDetails, loading } = useRoutineDetail(routineId);
+  const { saveWorkoutCache, clearCache, loadWorkoutCache } = useWorkoutCache();
+  
+  // Load cached data if available
+  const cachedData = location.state?.fromCache ? loadWorkoutCache() : null;
   
   const {
     exercises,
@@ -21,13 +27,18 @@ export function useActiveWorkout(routineId: number | undefined) {
     setShowStatsDialog,
     handleToggleReorderMode,
     addTemporaryExercises,
-    clearTemporaryExercises
-  } = useExerciseData(exerciseDetails, routineId);
+    clearTemporaryExercises,
+    baseExercises,
+    temporaryExercises
+  } = useExerciseData(exerciseDetails, routineId, cachedData);
+
+  // Debounce exercises to avoid too frequent cache updates
+  const debouncedExercises = useDebounce(exercises, 2000);
 
   const {
     isSaving,
     handleSaveWorkout: originalSaveWorkout
-  } = useSaveWorkout(routine, workoutStartTime, exercises, clearTemporaryExercises, routineId);
+  } = useSaveWorkout(routine, workoutStartTime, exercises, clearTemporaryExercises, routineId, clearCache);
 
   const {
     handleBack: originalHandleBack,
@@ -37,6 +48,27 @@ export function useActiveWorkout(routineId: number | undefined) {
     confirmDiscardChanges: originalConfirmDiscardChanges,
     cancelDiscardChanges
   } = useWorkoutNavigation(routineId);
+
+  // Auto-save workout to cache (debounced)
+  useEffect(() => {
+    if (routine && routineId && debouncedExercises.length > 0) {
+      // Only save if there's actual data (at least one set with weight or reps)
+      const hasData = debouncedExercises.some(ex => 
+        ex.sets.some(set => set.weight || set.reps)
+      );
+      
+      if (hasData) {
+        console.log('💾 Auto-saving workout to cache...');
+        saveWorkoutCache(
+          routineId,
+          routine.name,
+          workoutStartTime,
+          baseExercises,
+          temporaryExercises
+        );
+      }
+    }
+  }, [debouncedExercises, routine, routineId, workoutStartTime, baseExercises, temporaryExercises, saveWorkoutCache]);
 
   // Handle incoming temporary exercises from exercise selection with improved logic
   useEffect(() => {
@@ -49,15 +81,17 @@ export function useActiveWorkout(routineId: number | undefined) {
     }
   }, [location.state?.selectedExercises, location.state?.isTemporary, addTemporaryExercises]);
 
-  // Enhanced handleBack to clear temporary exercises
+  // Enhanced handleBack to clear temporary exercises and cache
   const handleBack = () => {
     clearTemporaryExercises();
+    clearCache();
     originalHandleBack();
   };
 
-  // Enhanced confirmDiscardChanges to clear temporary exercises
+  // Enhanced confirmDiscardChanges to clear temporary exercises and cache
   const confirmDiscardChanges = () => {
     clearTemporaryExercises();
+    clearCache();
     originalConfirmDiscardChanges();
   };
 
