@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { WorkoutExercise } from "../types/workout";
 import { useBaseExerciseData } from "./useBaseExerciseData";
-import { useRoutinePreviousData } from "./useRoutinePreviousData";
+import { usePreviousData } from "./usePreviousData";
 import { useExerciseInputHandlers } from "./useExerciseInputHandlers";
 import { useExerciseUIState } from "./useExerciseUIState";
 import { useTemporaryExercises } from "./useTemporaryExercises";
@@ -10,14 +10,14 @@ import { useTemporaryExercises } from "./useTemporaryExercises";
 export function useExerciseData(exerciseDetails: any[], routineId?: number, cachedData?: any) {
   const [exerciseNotesMap, setExerciseNotesMap] = useState<Record<number, string>>({});
   
-  // Use routine-specific previous data instead of general exercise data
-  const { routinePreviousData, routinePreviousLoaded } = useRoutinePreviousData(routineId);
+  // Use general exercise history (not limited to specific routine)
+  const { previousData, exerciseNotesMap: previousNotesMap, previousDataLoaded } = usePreviousData(exerciseDetails);
   
   const { baseExerciseData, updateBaseExerciseData, clearStoredData } = useBaseExerciseData({
     exerciseDetails,
-    previousData: routinePreviousData,
+    previousData,
     exerciseNotesMap,
-    previousDataLoaded: routinePreviousLoaded,
+    previousDataLoaded,
     routineId,
     cachedBaseExercises: cachedData?.baseExercises
   });
