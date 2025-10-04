@@ -40,12 +40,16 @@ export const WorkoutRecoveryDialog: React.FC<WorkoutRecoveryDialogProps> = ({
   };
 
   const getTotalExercisesWithData = () => {
-    const baseCount = Object.values(cacheData.baseExercises).filter(ex => 
-      ex.sets.some(set => set.weight || set.reps)
-    ).length;
-    const tempCount = cacheData.temporaryExercises.filter(ex =>
-      ex.sets?.some((set: any) => set.weight || set.reps)
-    ).length;
+    const baseCount = cacheData.baseExercises 
+      ? Object.values(cacheData.baseExercises).filter(ex => 
+          ex?.sets?.some(set => set.weight || set.reps)
+        ).length 
+      : 0;
+    const tempCount = cacheData.temporaryExercises 
+      ? cacheData.temporaryExercises.filter(ex =>
+          ex?.sets?.some((set: any) => set.weight || set.reps)
+        ).length 
+      : 0;
     return baseCount + tempCount;
   };
 
