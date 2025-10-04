@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import type { WorkoutExercise } from '../types/workout';
 
 export interface WorkoutCacheData {
@@ -18,6 +18,14 @@ const MAX_CACHE_AGE_HOURS = 24;
 export function useWorkoutCache() {
   const [hasCache, setHasCache] = useState(false);
   const [cachedWorkout, setCachedWorkout] = useState<WorkoutCacheData | null>(null);
+  
+  // Use refs to track current state without causing dependency cycles
+  const hasCacheRef = useRef(hasCache);
+  const cachedWorkoutRef = useRef(cachedWorkout);
+  
+  // Update refs when state changes
+  hasCacheRef.current = hasCache;
+  cachedWorkoutRef.current = cachedWorkout;
 
   // Clear cache
   const clearCache = useCallback(() => {
@@ -36,8 +44,10 @@ export function useWorkoutCache() {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (!cached) {
-        setHasCache(false);
-        setCachedWorkout(null);
+        if (hasCacheRef.current || cachedWorkoutRef.current) {
+          setHasCache(false);
+          setCachedWorkout(null);
+        }
         return null;
       }
 
@@ -54,8 +64,11 @@ export function useWorkoutCache() {
         return null;
       }
 
-      setHasCache(true);
-      setCachedWorkout(data);
+      // Only update state if values have changed
+      if (!hasCacheRef.current || JSON.stringify(cachedWorkoutRef.current) !== JSON.stringify(data)) {
+        setHasCache(true);
+        setCachedWorkout(data);
+      }
       return data;
     } catch (error) {
       console.error('Error checking cache:', error);
@@ -103,7 +116,8 @@ export function useWorkoutCache() {
     return cache?.routineId === routineId;
   }, [loadWorkoutCache]);
 
-  return {
+  // Memoize the return value to prevent unnecessary re-renders
+  return useMemo(() => ({
     hasCache,
     cachedWorkout,
     saveWorkoutCache,
@@ -111,5 +125,5 @@ export function useWorkoutCache() {
     clearCache,
     hasCacheForRoutine,
     checkCache
-  };
+  }), [hasCache, cachedWorkout, saveWorkoutCache, loadWorkoutCache, clearCache, hasCacheForRoutine, checkCache]);
 }
