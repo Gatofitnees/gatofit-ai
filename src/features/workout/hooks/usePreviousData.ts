@@ -17,6 +17,7 @@ export function usePreviousData(exerciseDetails: any[]) {
         const exerciseIds = exerciseDetails.map(ex => ex.id);
         
         // Get the most recent workout log for each exercise (including ALL sets)
+        // Order by workout_date to get truly most recent, not by workout_log_id
         const { data: workoutLogDetails, error } = await supabase
           .from('workout_log_exercise_details')
           .select(`
@@ -29,7 +30,6 @@ export function usePreviousData(exerciseDetails: any[]) {
             workout_log:workout_logs(workout_date)
           `)
           .in('exercise_id', exerciseIds)
-          .order('workout_log_id', { ascending: false })
           .order('set_number', { ascending: true });
           
         if (error) throw error;
@@ -38,21 +38,27 @@ export function usePreviousData(exerciseDetails: any[]) {
           const exerciseHistory: Record<number, PreviousData[]> = {};
           const notesMap: Record<number, string> = {};
           
-          // Group by exercise and get the most recent workout for each
-          const latestWorkoutByExercise: Record<number, number> = {};
+          // Group by exercise and get the most recent workout for each (by date, not ID)
+          const latestWorkoutByExercise: Record<number, { workout_log_id: number; workout_date: string }> = {};
           
-          // Find the most recent workout_log_id for each exercise
+          // Find the most recent workout by date for each exercise
           workoutLogDetails.forEach(detail => {
-            if (!latestWorkoutByExercise[detail.exercise_id] || 
-                detail.workout_log_id > latestWorkoutByExercise[detail.exercise_id]) {
-              latestWorkoutByExercise[detail.exercise_id] = detail.workout_log_id;
+            const workoutDate = detail.workout_log?.workout_date;
+            if (!workoutDate) return;
+            
+            const currentLatest = latestWorkoutByExercise[detail.exercise_id];
+            if (!currentLatest || new Date(workoutDate) > new Date(currentLatest.workout_date)) {
+              latestWorkoutByExercise[detail.exercise_id] = {
+                workout_log_id: detail.workout_log_id,
+                workout_date: workoutDate
+              };
             }
           });
           
           // Collect ALL sets from the most recent workout for each exercise
           workoutLogDetails.forEach(detail => {
-            // Only include sets from the most recent workout for this exercise
-            if (detail.workout_log_id === latestWorkoutByExercise[detail.exercise_id]) {
+            // Only include sets from the most recent workout (by date) for this exercise
+            if (detail.workout_log_id === latestWorkoutByExercise[detail.exercise_id]?.workout_log_id) {
               if (!exerciseHistory[detail.exercise_id]) {
                 exerciseHistory[detail.exercise_id] = [];
               }
