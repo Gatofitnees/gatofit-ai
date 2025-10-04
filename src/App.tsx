@@ -37,24 +37,23 @@ import { FoodEditPage } from "./pages/FoodEditPage";
 import { ProgressiveNutritionProgramPage } from "./pages/ProgressiveNutritionProgramPage";
 import RoutineDetailPage from "./pages/RoutineDetailPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
-import { WorkoutCacheProvider } from "./features/workout/contexts/WorkoutCacheContext";
-import { useWorkoutCache } from "./features/workout/hooks/useWorkoutCache";
+import { WorkoutCacheProvider, useWorkoutCacheContext } from "./features/workout/contexts/WorkoutCacheContext";
 import { WorkoutRecoveryDialog } from "./features/workout/components/active-workout/WorkoutRecoveryDialog";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
 
 // Component to handle workout recovery on app start
 const WorkoutRecoveryHandler: React.FC = () => {
   const navigate = useNavigate();
-  const { hasCache, cachedWorkout, clearCache, checkCache } = useWorkoutCache();
+  const { cachedWorkout, clearCache, checkCache } = useWorkoutCacheContext();
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
 
   useEffect(() => {
-    // Check for cached workout on mount
+    // Check for cached workout on mount only once
     const cache = checkCache();
     if (cache) {
       setShowRecoveryDialog(true);
     }
-  }, [checkCache]);
+  }, []); // Empty deps - only run once on mount
 
   const handleContinue = () => {
     if (cachedWorkout) {

@@ -19,6 +19,18 @@ export function useWorkoutCache() {
   const [hasCache, setHasCache] = useState(false);
   const [cachedWorkout, setCachedWorkout] = useState<WorkoutCacheData | null>(null);
 
+  // Clear cache
+  const clearCache = useCallback(() => {
+    try {
+      localStorage.removeItem(CACHE_KEY);
+      setHasCache(false);
+      setCachedWorkout(null);
+      console.log('🗑️ Workout cache cleared');
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+    }
+  }, []);
+
   // Check if cache exists and is valid
   const checkCache = useCallback(() => {
     try {
@@ -50,7 +62,7 @@ export function useWorkoutCache() {
       clearCache();
       return null;
     }
-  }, []);
+  }, [clearCache]);
 
   // Save workout to cache
   const saveWorkoutCache = useCallback((
@@ -85,28 +97,11 @@ export function useWorkoutCache() {
     return checkCache();
   }, [checkCache]);
 
-  // Clear cache
-  const clearCache = useCallback(() => {
-    try {
-      localStorage.removeItem(CACHE_KEY);
-      setHasCache(false);
-      setCachedWorkout(null);
-      console.log('🗑️ Workout cache cleared');
-    } catch (error) {
-      console.error('Error clearing cache:', error);
-    }
-  }, []);
-
   // Check if there's a cache for a specific routine
   const hasCacheForRoutine = useCallback((routineId: number): boolean => {
     const cache = loadWorkoutCache();
     return cache?.routineId === routineId;
   }, [loadWorkoutCache]);
-
-  // Initialize on mount
-  useEffect(() => {
-    checkCache();
-  }, [checkCache]);
 
   return {
     hasCache,
