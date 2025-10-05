@@ -40,6 +40,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   const [nutritionPlans, setNutritionPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<boolean>(initialIsCompleted);
+  const [completedRoutineIds, setCompletedRoutineIds] = useState<Set<number>>(new Set());
   
   // Check for nutrition plan availability
   const { hasNutritionPlan, loading: nutritionLoading } = useNutritionPlanCheck(navigatedDate);
@@ -289,12 +290,23 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
       if (routines.length > 0) {
         const { data: workoutLogs } = await (supabase as any)
           .from('workout_logs')
-          .select('id')
+          .select('id, routine_id')
           .eq('user_id', user.id)
           .gte('workout_date', date.toISOString().split('T')[0])
           .lt('workout_date', new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
         
         isCompleted = (workoutLogs?.length || 0) > 0;
+        
+        // Track which specific routines are completed
+        const completedIds = new Set<number>();
+        workoutLogs?.forEach((log: any) => {
+          if (log.routine_id) {
+            completedIds.add(log.routine_id);
+          }
+        });
+        setCompletedRoutineIds(completedIds);
+      } else {
+        setCompletedRoutineIds(new Set());
       }
 
       setCurrentRoutines(routines);
@@ -498,7 +510,9 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-3">Entrenamiento</h3>
                         <div className="space-y-3">
-                          {currentRoutines.map((programRoutine, index) => (
+                           {currentRoutines.map((programRoutine, index) => {
+                             const isRoutineCompleted = completedRoutineIds.has(programRoutine.routine_id);
+                             return (
                             <div
                               key={programRoutine.id}
                               className="p-4 border border-border/50 rounded-lg hover:bg-secondary/30 transition-colors"
@@ -508,6 +522,12 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                                   <h4 className="font-medium text-base">
                                     {programRoutine.routine?.name || `Rutina ID: ${programRoutine.routine_id}`}
                                   </h4>
+                                  {isRoutineCompleted && (
+                                    <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                      <Check className="h-3 w-3" />
+                                      Completado
+                                    </span>
+                                  )}
                                   {programRoutine.routine?.is_missing && (
                                     <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
                                       No disponible
@@ -549,19 +569,20 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                                   onClick={() => handleStartRoutine(programRoutine.routine_id)}
                                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50"
                                   size="sm"
-                                  disabled={completionStatus || programRoutine.routine?.is_missing}
+                                  disabled={programRoutine.routine?.is_missing}
                                 >
                                   <Dumbbell className="h-4 w-4 mr-2" />
                                   {programRoutine.routine?.is_missing 
                                     ? "No disponible" 
-                                    : completionStatus 
-                                      ? "Completado" 
+                                    : isRoutineCompleted 
+                                      ? "Repetir" 
                                       : "Iniciar Rutina"
                                   }
                                 </Button>
                               </div>
                             </div>
-                          ))}
+                             );
+                           })}
                         </div>
                       </div>
                     )}
