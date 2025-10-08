@@ -1,6 +1,6 @@
 
 import React from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatMacroValue } from "@/lib/utils";
 import MacroRing from "./MacroRing";
 
 import { FlatIcon } from "./ui/FlatIcon";
@@ -56,7 +56,7 @@ const MacroProgress: React.FC<MacroProgressProps> = ({
           <span className="text-sm font-medium text-muted-foreground">{label}</span>
         </div>
         <span className="text-sm font-medium">
-          {current} / {target} {unit}
+          {formatMacroValue(current)} / {formatMacroValue(target)} {unit}
         </span>
       </div>
       <div className="h-2 relative w-full bg-secondary/50 overflow-hidden rounded-full">

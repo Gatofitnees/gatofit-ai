@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Trash2 } from 'lucide-react';
 import { FlatIcon } from '@/components/ui/FlatIcon';
-import { cn } from '@/lib/utils';
+import { cn, formatMacroValue } from '@/lib/utils';
 
 interface FoodPreviewCardProps {
   imageUrl: string;
@@ -157,17 +157,17 @@ export const FoodPreviewCard: React.FC<FoodPreviewCardProps> = ({
             <div className="flex gap-3 text-xs">
               <div className="flex items-center gap-1.5">
                 <FlatIcon name="sr-drumstick" size={12} style={{ color: '#dd6969' }} className="flex-shrink-0" />
-                <span className="font-medium">{protein}g</span>
+                <span className="font-medium">{formatMacroValue(protein)}g</span>
               </div>
               
               <div className="flex items-center gap-1.5">
                 <FlatIcon name="sr-wheat" size={12} style={{ color: '#EB9F6D' }} className="flex-shrink-0" />
-                <span className="font-medium">{carbs}g</span>
+                <span className="font-medium">{formatMacroValue(carbs)}g</span>
               </div>
               
               <div className="flex items-center gap-1.5">
                 <FlatIcon name="sr-avocado" size={12} style={{ color: '#6C95DC' }} className="flex-shrink-0" />
-                <span className="font-medium">{fat}g</span>
+                <span className="font-medium">{formatMacroValue(fat)}g</span>
               </div>
             </div>
           </div>

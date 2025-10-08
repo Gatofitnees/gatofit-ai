@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { FlatIcon } from '../ui/FlatIcon';
+import { formatMacroValue } from '@/lib/utils';
 
 interface MacronutrientsGridProps {
   protein: number;
@@ -22,7 +23,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         onClick={() => onMacroEdit('protein_g')}
       >
         <FlatIcon name="sr-drumstick" className="mx-auto mb-2" style={{ color: '#dd6969' }} size={20} />
-        <div className="text-lg font-bold">{protein}g</div>
+        <div className="text-lg font-bold">{formatMacroValue(protein)}g</div>
         <div className="text-xs text-muted-foreground">Proteína</div>
       </div>
       
@@ -31,7 +32,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         onClick={() => onMacroEdit('carbs_g')}
       >
         <FlatIcon name="sr-wheat" className="mx-auto mb-2" style={{ color: '#EB9F6D' }} size={20} />
-        <div className="text-lg font-bold">{carbs}g</div>
+        <div className="text-lg font-bold">{formatMacroValue(carbs)}g</div>
         <div className="text-xs text-muted-foreground">Carbos</div>
       </div>
       
@@ -40,7 +41,7 @@ export const MacronutrientsGrid: React.FC<MacronutrientsGridProps> = ({
         onClick={() => onMacroEdit('fat_g')}
       >
         <FlatIcon name="sr-avocado" className="mx-auto mb-2" style={{ color: '#6C95DC' }} size={20} />
-        <div className="text-lg font-bold">{fat}g</div>
+        <div className="text-lg font-bold">{formatMacroValue(fat)}g</div>
         <div className="text-xs text-muted-foreground">Grasas</div>
       </div>
     </div>

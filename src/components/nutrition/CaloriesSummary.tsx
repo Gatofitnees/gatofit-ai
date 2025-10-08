@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ProgressRing from '../ProgressRing';
+import { formatMacroValue } from '@/lib/utils';
 
 interface Macros {
   calories: { current: number; target: number; unit: string; };
@@ -20,8 +21,8 @@ export const CaloriesSummary: React.FC<CaloriesSummaryProps> = React.memo(({ mac
       <div className="relative flex items-center justify-center">
         <ProgressRing progress={calorieProgress} size={130} strokeWidth={8} className="text-primary" />
         <div className="absolute flex flex-col items-center justify-center">
-          <span className="text-xl font-bold">{macros.calories.current}</span>
-          <span className="text-xs text-muted-foreground">/ {macros.calories.target}</span>
+          <span className="text-xl font-bold">{formatMacroValue(macros.calories.current)}</span>
+          <span className="text-xs text-muted-foreground">/ {formatMacroValue(macros.calories.target)}</span>
           <span className="text-xs mt-1">kcal</span>
         </div>
       </div>
