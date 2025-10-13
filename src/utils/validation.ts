@@ -23,18 +23,37 @@ export const validateNumericInput = (input: number | string, min: number = 0, ma
   return Math.round(num * 100) / 100; // Round to 2 decimal places
 };
 
-export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+export const validateImageFile = (file: File | Blob, skipTypeCheck = false): { isValid: boolean; error?: string } => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
   const maxSize = 10 * 1024 * 1024; // 10MB
   
-  if (!allowedTypes.includes(file.type)) {
-    return { isValid: false, error: 'Tipo de archivo no permitido. Use JPEG, PNG, WebP o GIF.' };
+  console.log('🔍 Validating image file:', { 
+    size: file.size, 
+    type: file.type || 'no-type',
+    skipTypeCheck 
+  });
+  
+  // If already processed through conversion, be more permissive
+  if (!skipTypeCheck) {
+    if (!file.type) {
+      console.warn('⚠️ File has no MIME type, assuming JPEG from conversion');
+    } else if (!allowedTypes.includes(file.type)) {
+      console.error('❌ Invalid file type:', file.type);
+      return { isValid: false, error: 'Tipo de archivo no permitido. Use JPEG, PNG, WebP o GIF.' };
+    }
   }
   
   if (file.size > maxSize) {
+    console.error('❌ File too large:', file.size);
     return { isValid: false, error: 'El archivo es demasiado grande. Máximo 10MB.' };
   }
   
+  if (file.size === 0) {
+    console.error('❌ File is empty');
+    return { isValid: false, error: 'El archivo está vacío.' };
+  }
+  
+  console.log('✅ Image validation passed');
   return { isValid: true };
 };
 
