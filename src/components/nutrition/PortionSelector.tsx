@@ -25,16 +25,18 @@ interface PortionSelectorProps {
   };
   onCancel: () => void;
   onConfirm: () => void;
+  selectedDate?: string;
 }
 
 const PortionSelector: React.FC<PortionSelectorProps> = ({ 
   food, 
   onCancel, 
-  onConfirm 
+  onConfirm,
+  selectedDate
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addEntry } = useFoodLog();
+  const { addEntry } = useFoodLog(selectedDate);
   const [quantity, setQuantity] = useState('100');
   const [unit, setUnit] = useState('gramos');
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack1' | 'snack2'>('lunch');

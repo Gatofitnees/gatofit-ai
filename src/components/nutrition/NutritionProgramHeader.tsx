@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocalTimezone } from '@/hooks/useLocalTimezone';
 
 interface NutritionProgramHeaderProps {
   selectedDate: Date;
@@ -16,6 +17,7 @@ export const NutritionProgramHeader: React.FC<NutritionProgramHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { getLocalDateString } = useLocalTimezone();
 
   const formatDate = (date: Date) => {
     return format(date, "EEEE, d 'de' MMMM", { locale: es });
@@ -38,7 +40,7 @@ export const NutritionProgramHeader: React.FC<NutritionProgramHeaderProps> = ({
   };
 
   const navigateToDate = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = getLocalDateString(date);
     navigate(`/nutrition-program?date=${dateString}`);
   };
 
