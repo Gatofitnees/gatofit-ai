@@ -48,7 +48,7 @@ const deleteImageFromStorage = async (imageUrl: string): Promise<void> => {
 };
 
 export const useFoodLogOperations = () => {
-  const { getCurrentLocalDate, createLocalDateAsUTC } = useLocalTimezone();
+  const { getCurrentLocalDate, createLocalTimestamp } = useLocalTimezone();
   const { ensureUserProfile, updateUserStreak } = useFoodLogProfile();
 
   const addEntry = async (entry: Omit<FoodLogEntry, 'id' | 'logged_at' | 'log_date'>, targetDate?: string): Promise<FoodLogEntry | null> => {
@@ -63,7 +63,7 @@ export const useFoodLogOperations = () => {
 
       await ensureUserProfile(user.id);
 
-      const loggedAt = createLocalDateAsUTC();
+      const loggedAt = createLocalTimestamp();
       const logDate = targetDate || getCurrentLocalDate();
       const newEntry = {
         ...sanitizedEntry,

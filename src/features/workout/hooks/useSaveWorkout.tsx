@@ -17,7 +17,7 @@ export function useSaveWorkout(
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const { createLocalDateAsUTC } = useLocalTimezone();
+  const { createLocalTimestamp } = useLocalTimezone();
 
   const estimateCaloriesBurned = (durationMinutes: number): number => {
     const baseCaloriesPerMinute = 8;
@@ -98,7 +98,7 @@ export function useSaveWorkout(
       })));
       
       // Usar la hora local del usuario para el registro
-      const localWorkoutDate = createLocalDateAsUTC(new Date());
+      const localWorkoutDate = createLocalTimestamp(new Date());
       console.log("Saving workout with local date:", localWorkoutDate);
       
       // Save workout log

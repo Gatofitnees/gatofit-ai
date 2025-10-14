@@ -25,13 +25,12 @@ export const useLocalTimezone = () => {
     return dateString === getLocalDateString(selectedDate);
   };
 
-  // Nueva función para crear una fecha en zona local como timestamp UTC para la base de datos
-  const createLocalDateAsUTC = (localDate?: Date) => {
+  // Función para crear un timestamp ISO que preserve la fecha y hora local del usuario
+  const createLocalTimestamp = (localDate?: Date) => {
     const date = localDate || new Date();
-    // Crear un timestamp que represente la fecha/hora local como si fuera UTC
-    // Esto evita que la base de datos aplique conversiones adicionales
-    const localISOString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString();
-    return localISOString;
+    // Simplemente devolver el ISO string de la fecha actual
+    // Esto guardará la hora local real del usuario
+    return date.toISOString();
   };
 
   // Nueva función para obtener el rango de fechas de un día en la zona local del usuario
@@ -52,7 +51,7 @@ export const useLocalTimezone = () => {
     getLocalDateString,
     isDateToday,
     isDateSameAsSelected,
-    createLocalDateAsUTC,
+    createLocalTimestamp,
     getLocalDayRange
   };
 };
