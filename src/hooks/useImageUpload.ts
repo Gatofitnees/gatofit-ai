@@ -30,6 +30,17 @@ export const uploadImageWithAnalysis = async (
       console.log(`Image compressed: ${file.size} -> ${processedFile.size} bytes`);
     }
 
+    // Validar tipo MIME antes de subir
+    console.log('📤 Preparing upload:', {
+      size: processedFile.size,
+      type: processedFile.type,
+      hasValidMimeType: processedFile.type.startsWith('image/')
+    });
+    
+    if (!processedFile.type || !processedFile.type.startsWith('image/')) {
+      throw new Error(`Tipo de archivo inválido: ${processedFile.type || 'desconocido'}`);
+    }
+
     // Usar extensión de la imagen comprimida
     const extension = getImageExtension(processedFile);
     const fileName = `${user.id}/${Date.now()}.${extension}`;
@@ -84,6 +95,17 @@ export const uploadImage = async (file: Blob): Promise<CapturedFood | null> => {
       console.log('Compressing image before upload...');
       processedFile = await compressForWebhook(file);
       console.log(`Image compressed: ${file.size} -> ${processedFile.size} bytes`);
+    }
+
+    // Validar tipo MIME antes de subir
+    console.log('📤 Preparing upload:', {
+      size: processedFile.size,
+      type: processedFile.type,
+      hasValidMimeType: processedFile.type.startsWith('image/')
+    });
+    
+    if (!processedFile.type || !processedFile.type.startsWith('image/')) {
+      throw new Error(`Tipo de archivo inválido: ${processedFile.type || 'desconocido'}`);
     }
 
     // Usar extensión de la imagen comprimida

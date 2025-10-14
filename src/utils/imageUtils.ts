@@ -39,8 +39,17 @@ export const convertHeicToJpeg = async (file: Blob): Promise<Blob> => {
     
     // heic2any puede retornar Blob o Blob[]
     const resultBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-    console.log('✅ HEIC converted successfully:', resultBlob.size, 'bytes');
-    return resultBlob;
+    
+    // CRÍTICO: Crear nuevo Blob con tipo MIME explícito
+    // Esto garantiza que Supabase acepte el archivo
+    const jpegBlob = new Blob([resultBlob], { type: 'image/jpeg' });
+    
+    console.log('✅ HEIC converted successfully:', {
+      size: jpegBlob.size,
+      type: jpegBlob.type
+    });
+    
+    return jpegBlob;
   } catch (error) {
     console.error('❌ HEIC conversion failed:', error);
     throw new Error('No se pudo convertir el formato HEIC. Intenta tomar la foto directamente.');
@@ -91,10 +100,13 @@ export const convertImageToJpg = async (file: Blob): Promise<Blob> => {
       
       canvas.toBlob((blob) => {
         if (blob && blob.size > 0) {
-          // Validar que el blob no esté vacío
-          const validBlob = new Blob([blob], { type: 'image/jpeg' });
-          console.log('✅ Image converted successfully:', validBlob.size, 'bytes');
-          resolve(validBlob);
+          // Garantizar tipo MIME correcto
+          const jpegBlob = new Blob([blob], { type: 'image/jpeg' });
+          console.log('✅ Image converted successfully:', {
+            size: jpegBlob.size,
+            type: jpegBlob.type
+          });
+          resolve(jpegBlob);
         } else {
           console.error('❌ Conversion produced empty blob');
           reject(new Error('Error al convertir imagen'));
