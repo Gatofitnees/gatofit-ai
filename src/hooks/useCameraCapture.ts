@@ -4,7 +4,7 @@ import { uploadImageWithAnalysis } from './useImageUpload';
 import { convertImageToJpg } from '@/utils/imageUtils';
 import { CapturedFood } from './useFoodCapture';
 
-export const useCameraCapture = (sendToWebhookWithResponse: (url: string, blob: Blob) => Promise<any>) => {
+export const useCameraCapture = (sendToWebhookWithResponse: (url: string, blob: Blob, isFromGallery?: boolean) => Promise<any>) => {
   const captureFromCamera = useCallback((): Promise<CapturedFood | null> => {
     return new Promise((resolve) => {
       // For web, we'll use the file input with camera capture
@@ -45,17 +45,40 @@ export const useCameraCapture = (sendToWebhookWithResponse: (url: string, blob: 
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
-          console.log('Gallery file selected in hook:', file.name, 'Size:', file.size, 'Type:', file.type);
+          console.log('📸 Gallery file selected:', { 
+            name: file.name, 
+            size: file.size, 
+            type: file.type 
+          });
           
           try {
-            // Convert to JPG if it's from gallery
-            const convertedFile = await convertImageToJpg(file);
-            console.log('Image converted to JPG for gallery upload');
+            // Validate file before processing
+            if (file.size === 0) {
+              console.error('❌ Empty file selected');
+              throw new Error('Archivo vacío');
+            }
             
-            const result = await uploadImageWithAnalysis(convertedFile, sendToWebhookWithResponse);
+            if (file.size > 10 * 1024 * 1024) {
+              console.error('❌ File too large:', file.size);
+              throw new Error('Archivo muy grande (>10MB)');
+            }
+            
+            // Convert to JPG for consistency
+            console.log('🔄 Converting to JPG...');
+            const convertedFile = await convertImageToJpg(file);
+            console.log('✅ Conversion complete:', { 
+              size: convertedFile.size, 
+              type: convertedFile.type 
+            });
+            
+            // Create wrapper that passes isFromGallery flag
+            const galleryWebhookWrapper = (url: string, blob: Blob) => 
+              sendToWebhookWithResponse(url, blob, true);
+            
+            const result = await uploadImageWithAnalysis(convertedFile, galleryWebhookWrapper);
             resolve(result);
           } catch (error) {
-            console.error('Error uploading gallery image:', error);
+            console.error('❌ Error in gallery capture:', error);
             resolve(null);
           }
         } else {
