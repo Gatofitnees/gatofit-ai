@@ -10,6 +10,7 @@ import { GatofitProgram } from "@/hooks/useGatofitPrograms";
 import { AdminProgram, UnifiedProgramData } from "@/hooks/useActiveProgramUnified";
 import { supabase } from "@/integrations/supabase/client";
 import { useNutritionPlanCheck } from "@/hooks/useNutritionPlanCheck";
+import { useLocalTimezone } from "@/hooks/useLocalTimezone";
 
 interface ProgrammedRoutinesModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
   programType = 'weekly'
 }) => {
   const navigate = useNavigate();
+  const { getLocalDateString } = useLocalTimezone();
   const [navigatedDate, setNavigatedDate] = useState<Date>(initialSelectedDate);
   const [currentRoutines, setCurrentRoutines] = useState<any[]>(initialRoutines);
   const [nutritionPlans, setNutritionPlans] = useState<any[]>([]);
@@ -610,7 +612,7 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                           
                           <Button
                             onClick={() => {
-                              const dateString = navigatedDate.toISOString().split('T')[0];
+                              const dateString = getLocalDateString(navigatedDate);
                               navigate(`/nutrition-program?date=${dateString}`);
                               onClose();
                             }}

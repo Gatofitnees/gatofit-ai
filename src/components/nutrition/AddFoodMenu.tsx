@@ -3,6 +3,7 @@ import { Camera, Search, Plus, UtensilsCrossed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAdminNutritionProgram } from '@/hooks/useAdminNutritionProgram';
+import { useLocalTimezone } from '@/hooks/useLocalTimezone';
 
 interface AddFoodMenuProps {
   onCameraClick: () => void;
@@ -13,10 +14,11 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { hasNutritionPlan, loading } = useAdminNutritionProgram(selectedDate);
+  const { getLocalDateString } = useLocalTimezone();
 
   const handleSearchFood = () => {
     setIsOpen(false);
-    const dateString = selectedDate.toISOString().split('T')[0];
+    const dateString = getLocalDateString(selectedDate);
     navigate(`/nutrition/search?date=${dateString}`);
   };
 
@@ -27,7 +29,7 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
 
   const handleNutritionClick = () => {
     setIsOpen(false);
-    const dateString = selectedDate.toISOString().split('T')[0];
+    const dateString = getLocalDateString(selectedDate);
     navigate(`/nutrition-program?date=${dateString}`);
   };
 
