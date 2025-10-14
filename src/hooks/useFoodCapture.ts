@@ -47,15 +47,18 @@ export const useFoodCapture = () => {
     setError(null);
     try {
       const result = await captureFromGallery();
-      // If result is null (due to webhook error), don't return it as success
-      if (!result) {
-        setError('Error al analizar la imagen');
+      
+      // Si el usuario canceló, no es un error
+      if (result === null) {
         return null;
       }
+      
       return result;
     } catch (err) {
       console.error('Error capturing from gallery:', err);
-      setError('Error al seleccionar imagen');
+      // Usar el mensaje de error específico si está disponible
+      const errorMessage = err instanceof Error ? err.message : 'Error al seleccionar imagen';
+      setError(errorMessage);
       return null;
     } finally {
       setIsLoading(false);

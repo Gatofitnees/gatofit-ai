@@ -37,53 +37,63 @@ export const useCameraCapture = (sendToWebhookWithResponse: (url: string, blob: 
   }, [sendToWebhookWithResponse]);
 
   const captureFromGallery = useCallback((): Promise<CapturedFood | null> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/*'; // Accept any image format
+      input.accept = 'image/*';
       
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-          console.log('📸 Gallery file selected:', { 
-            name: file.name, 
-            size: file.size, 
-            type: file.type 
+        if (!file) {
+          resolve(null);
+          return;
+        }
+
+        console.log('📸 Gallery file selected:', { 
+          name: file.name, 
+          size: file.size, 
+          type: file.type 
+        });
+        
+        try {
+          // Validaciones tempranas
+          if (file.size === 0) {
+            throw new Error('El archivo seleccionado está vacío');
+          }
+          
+          if (file.size > 10 * 1024 * 1024) {
+            throw new Error('El archivo es muy grande (máximo 10MB)');
+          }
+          
+          // Convertir a JPG
+          console.log('🔄 Converting to JPG...');
+          const convertedFile = await convertImageToJpg(file);
+          
+          // Validar conversión
+          if (!convertedFile || convertedFile.size === 0) {
+            throw new Error('Error al procesar la imagen');
+          }
+          
+          console.log('✅ Conversion complete:', { 
+            size: convertedFile.size, 
+            type: convertedFile.type 
           });
           
-          try {
-            // Validate file before processing
-            if (file.size === 0) {
-              console.error('❌ Empty file selected');
-              throw new Error('Archivo vacío');
-            }
-            
-            if (file.size > 10 * 1024 * 1024) {
-              console.error('❌ File too large:', file.size);
-              throw new Error('Archivo muy grande (>10MB)');
-            }
-            
-            // Convert to JPG for consistency
-            console.log('🔄 Converting to JPG...');
-            const convertedFile = await convertImageToJpg(file);
-            console.log('✅ Conversion complete:', { 
-              size: convertedFile.size, 
-              type: convertedFile.type 
-            });
-            
-            // Create wrapper that passes isFromGallery flag
-            const galleryWebhookWrapper = (url: string, blob: Blob) => 
-              sendToWebhookWithResponse(url, blob, true);
-            
-            const result = await uploadImageWithAnalysis(convertedFile, galleryWebhookWrapper);
-            resolve(result);
-          } catch (error) {
-            console.error('❌ Error in gallery capture:', error);
-            resolve(null);
+          // Upload with gallery flag
+          const galleryWebhookWrapper = (url: string, blob: Blob) => 
+            sendToWebhookWithResponse(url, blob, true);
+          
+          const result = await uploadImageWithAnalysis(convertedFile, galleryWebhookWrapper);
+          
+          if (!result) {
+            throw new Error('No se pudo procesar la imagen');
           }
-        } else {
-          console.log('No file selected from gallery');
-          resolve(null);
+          
+          resolve(result);
+        } catch (error) {
+          console.error('❌ Error in gallery capture:', error);
+          // Rechazar con el error específico
+          reject(error instanceof Error ? error : new Error('Error al procesar imagen'));
         }
       };
 
