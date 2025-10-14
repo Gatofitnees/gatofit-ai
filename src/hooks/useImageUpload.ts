@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getImageExtension } from '@/utils/imageUtils';
+import { getImageExtension, convertImageToJpg, isHeicFormat } from '@/utils/imageUtils';
 import { compressForWebhook, shouldCompressForWebhook } from '@/utils/imageCompression';
 
 export interface CapturedFood {
@@ -22,15 +22,25 @@ export const uploadImageWithAnalysis = async (
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuario no autenticado');
 
-    // Comprimir imagen ANTES de subir a Supabase
+    // PASO 1: Convertir a JPG si es HEIC o no tiene tipo MIME válido
     let processedFile = file;
-    if (shouldCompressForWebhook(file)) {
+    if (isHeicFormat(file) || !file.type || !file.type.startsWith('image/')) {
+      console.log('🔄 Converting image to JPG before upload...');
+      processedFile = await convertImageToJpg(file);
+      console.log('✅ Image converted to JPG:', {
+        size: processedFile.size,
+        type: processedFile.type
+      });
+    }
+
+    // PASO 2: Comprimir imagen
+    if (shouldCompressForWebhook(processedFile)) {
       console.log('Compressing image before upload...');
-      processedFile = await compressForWebhook(file);
+      processedFile = await compressForWebhook(processedFile);
       console.log(`Image compressed: ${file.size} -> ${processedFile.size} bytes`);
     }
 
-    // Validar tipo MIME antes de subir
+    // PASO 3: Validar tipo MIME antes de subir
     console.log('📤 Preparing upload:', {
       size: processedFile.size,
       type: processedFile.type,
@@ -89,15 +99,25 @@ export const uploadImage = async (file: Blob): Promise<CapturedFood | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuario no autenticado');
 
-    // Comprimir imagen ANTES de subir
+    // PASO 1: Convertir a JPG si es HEIC o no tiene tipo MIME válido
     let processedFile = file;
-    if (shouldCompressForWebhook(file)) {
+    if (isHeicFormat(file) || !file.type || !file.type.startsWith('image/')) {
+      console.log('🔄 Converting image to JPG before upload...');
+      processedFile = await convertImageToJpg(file);
+      console.log('✅ Image converted to JPG:', {
+        size: processedFile.size,
+        type: processedFile.type
+      });
+    }
+
+    // PASO 2: Comprimir imagen
+    if (shouldCompressForWebhook(processedFile)) {
       console.log('Compressing image before upload...');
-      processedFile = await compressForWebhook(file);
+      processedFile = await compressForWebhook(processedFile);
       console.log(`Image compressed: ${file.size} -> ${processedFile.size} bytes`);
     }
 
-    // Validar tipo MIME antes de subir
+    // PASO 3: Validar tipo MIME antes de subir
     console.log('📤 Preparing upload:', {
       size: processedFile.size,
       type: processedFile.type,
