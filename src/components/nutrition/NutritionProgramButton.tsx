@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useNutritionPlanCheck } from "@/hooks/useNutritionPlanCheck";
 import gatofitLogo from "@/assets/gatofit-logo.svg";
-import { useLocalTimezone } from "@/hooks/useLocalTimezone";
 
 interface NutritionProgramButtonProps {
   selectedDate: Date;
@@ -13,7 +12,6 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = Rea
 }) => {
   const navigate = useNavigate();
   const { hasNutritionPlan, loading } = useNutritionPlanCheck(selectedDate);
-  const { getLocalDateString } = useLocalTimezone();
 
   // No mostrar si está cargando o no hay plan
   if (loading || !hasNutritionPlan) {
@@ -21,7 +19,7 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = Rea
   }
 
   const handleClick = () => {
-    const dateString = getLocalDateString(selectedDate);
+    const dateString = selectedDate.toISOString().split('T')[0];
     navigate(`/nutrition-program?date=${dateString}`);
   };
 

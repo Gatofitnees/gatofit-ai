@@ -61,38 +61,23 @@ export const useWebhookResponse = () => {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
 
-  const sendToWebhookWithResponse = async (imageUrl: string, imageBlob: Blob, isFromGallery: boolean = false): Promise<FoodAnalysisResult | null> => {
+  const sendToWebhookWithResponse = async (imageUrl: string, imageBlob: Blob): Promise<FoodAnalysisResult | null> => {
     setIsAnalyzing(true);
     setAnalysisError(null);
     
-    console.log('📤 Sending to webhook:', { 
-      blobSize: imageBlob.size,
-      mimeType: imageBlob.type || 'no-type',
-      isFromGallery,
-      imageUrl
-    });
-    
-    // Validate that blob is not empty
-    if (!imageBlob || imageBlob.size === 0) {
-      console.error('❌ Invalid blob: empty or null');
-      setAnalysisError('Imagen inválida. Intenta de nuevo.');
-      setIsAnalyzing(false);
-      return null;
-    }
-    
-    // Validate image file - more permissive for gallery images
-    const validation = validateImageFile(
-      new File([imageBlob], 'image.jpg', { type: imageBlob.type || 'image/jpeg' }),
-      isFromGallery // Skip type check for gallery images
-    );
-    
+    // Validate image file
+    const validation = validateImageFile(new File([imageBlob], 'image', { type: imageBlob.type }));
     if (!validation.isValid) {
-      console.error('❌ Validation failed:', validation.error);
       setAnalysisError(validation.error || 'Archivo de imagen inválido');
       setIsAnalyzing(false);
       logSecurityEvent('invalid_file_upload', validation.error);
       return null;
     }
+
+    console.log('Sending image to webhook with security validation...', { 
+      blobSize: imageBlob.size,
+      mimeType: imageBlob.type
+    });
 
     // Check if we need to compress the image
     let processedBlob = imageBlob;
