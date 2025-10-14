@@ -1,3 +1,4 @@
+import heic2any from 'heic2any';
 
 // Detectar si es HEIC por nombre de archivo o tipo MIME
 export const isHeicFormat = (file: Blob): boolean => {
@@ -27,12 +28,33 @@ export const getImageExtension = (file: Blob): string => {
   }
 };
 
+export const convertHeicToJpeg = async (file: Blob): Promise<Blob> => {
+  console.log('🔄 Converting HEIC to JPEG using heic2any...');
+  try {
+    const convertedBlob = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.9
+    });
+    
+    // heic2any puede retornar Blob o Blob[]
+    const resultBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+    console.log('✅ HEIC converted successfully:', resultBlob.size, 'bytes');
+    return resultBlob;
+  } catch (error) {
+    console.error('❌ HEIC conversion failed:', error);
+    throw new Error('No se pudo convertir el formato HEIC. Intenta tomar la foto directamente.');
+  }
+};
+
 export const convertImageToJpg = async (file: Blob): Promise<Blob> => {
+  // Si es HEIC, usar heic2any
+  if (isHeicFormat(file)) {
+    return await convertHeicToJpeg(file);
+  }
+  
+  // Para otros formatos, usar canvas
   return new Promise((resolve, reject) => {
-    // Si es un File y es HEIC, advertir al usuario
-    if (isHeicFormat(file)) {
-      console.warn('⚠️ HEIC format detected - may have conversion issues');
-    }
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');

@@ -51,7 +51,7 @@ export const CameraErrorDialog: React.FC<CameraErrorDialogProps> = ({
               💡 <strong>Sugerencia:</strong>
             </p>
             <p className="text-white/60 text-xs">
-              Las fotos de galería en iPhone usan formato HEIC. Para mejor compatibilidad, usa el botón de cámara para tomar la foto directamente.
+              Hubo un problema al convertir la imagen HEIC. Intenta tomar la foto directamente con el botón de cámara o usa una imagen en formato JPG/PNG.
             </p>
           </div>
         )}
