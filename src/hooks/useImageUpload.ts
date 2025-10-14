@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getImageExtension, convertImageToJpg, isHeicFormat } from '@/utils/imageUtils';
+import { getImageExtension, convertImageToJpg } from '@/utils/imageUtils';
 import { compressForWebhook, shouldCompressForWebhook } from '@/utils/imageCompression';
 
 export interface CapturedFood {
@@ -22,15 +22,28 @@ export const uploadImageWithAnalysis = async (
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuario no autenticado');
 
-    // PASO 1: Convertir a JPG si es HEIC o no tiene tipo MIME válido
+    // PASO 1: Convertir a JPG SOLO si es necesario
     let processedFile = file;
-    if (isHeicFormat(file) || !file.type || !file.type.startsWith('image/')) {
-      console.log('🔄 Converting image to JPG before upload...');
-      processedFile = await convertImageToJpg(file);
-      console.log('✅ Image converted to JPG:', {
-        size: processedFile.size,
-        type: processedFile.type
-      });
+    
+    // Si el archivo tiene un tipo MIME válido de imagen, usarlo directamente
+    if (file.type && file.type.startsWith('image/')) {
+      console.log('✅ Valid image type, skipping conversion:', file.type);
+      processedFile = file;
+    } else {
+      // Si no tiene tipo MIME o es inválido, convertir
+      console.log('🔄 Converting image to JPG (invalid or missing MIME type)...');
+      try {
+        processedFile = await convertImageToJpg(file);
+        console.log('✅ Image converted to JPG:', {
+          size: processedFile.size,
+          type: processedFile.type
+        });
+      } catch (error) {
+        console.error('❌ Conversion failed:', error);
+        // Si la conversión falla, intentar usar el archivo original
+        console.log('⚠️ Using original file despite conversion failure');
+        processedFile = file;
+      }
     }
 
     // PASO 2: Comprimir imagen
@@ -99,15 +112,28 @@ export const uploadImage = async (file: Blob): Promise<CapturedFood | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuario no autenticado');
 
-    // PASO 1: Convertir a JPG si es HEIC o no tiene tipo MIME válido
+    // PASO 1: Convertir a JPG SOLO si es necesario
     let processedFile = file;
-    if (isHeicFormat(file) || !file.type || !file.type.startsWith('image/')) {
-      console.log('🔄 Converting image to JPG before upload...');
-      processedFile = await convertImageToJpg(file);
-      console.log('✅ Image converted to JPG:', {
-        size: processedFile.size,
-        type: processedFile.type
-      });
+    
+    // Si el archivo tiene un tipo MIME válido de imagen, usarlo directamente
+    if (file.type && file.type.startsWith('image/')) {
+      console.log('✅ Valid image type, skipping conversion:', file.type);
+      processedFile = file;
+    } else {
+      // Si no tiene tipo MIME o es inválido, convertir
+      console.log('🔄 Converting image to JPG (invalid or missing MIME type)...');
+      try {
+        processedFile = await convertImageToJpg(file);
+        console.log('✅ Image converted to JPG:', {
+          size: processedFile.size,
+          type: processedFile.type
+        });
+      } catch (error) {
+        console.error('❌ Conversion failed:', error);
+        // Si la conversión falla, intentar usar el archivo original
+        console.log('⚠️ Using original file despite conversion failure');
+        processedFile = file;
+      }
     }
 
     // PASO 2: Comprimir imagen

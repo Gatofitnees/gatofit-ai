@@ -57,14 +57,8 @@ export const convertHeicToJpeg = async (file: Blob): Promise<Blob> => {
 };
 
 export const convertImageToJpg = async (file: Blob): Promise<Blob> => {
-  // Si es HEIC, usar heic2any
-  if (isHeicFormat(file)) {
-    return await convertHeicToJpeg(file);
-  }
-  
-  // Para otros formatos, usar canvas
+  // Intentar cargar con canvas primero
   return new Promise((resolve, reject) => {
-
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
@@ -72,7 +66,7 @@ export const convertImageToJpg = async (file: Blob): Promise<Blob> => {
     // Timeout para evitar cuelgues
     const timeout = setTimeout(() => {
       console.error('❌ Image conversion timeout');
-      reject(new Error('Timeout al convertir imagen. Intenta con otro formato.'));
+      reject(new Error('Timeout al convertir imagen'));
     }, 10000);
     
     let objectUrl: string | null = null;
@@ -114,16 +108,18 @@ export const convertImageToJpg = async (file: Blob): Promise<Blob> => {
       }, 'image/jpeg', 0.9);
     };
     
-    img.onerror = (error) => {
+    img.onerror = async (error) => {
       clearTimeout(timeout);
       if (objectUrl) URL.revokeObjectURL(objectUrl);
-      console.error('❌ Image load error:', error);
+      console.error('❌ Image load error, trying heic2any as fallback:', error);
       
-      // Para HEIC, dar un mensaje específico
-      if (isHeicFormat(file)) {
-        reject(new Error('Formato HEIC no soportado. Por favor, toma la foto desde la app o conviértela a JPG.'));
-      } else {
-        reject(new Error('Error al cargar imagen. Intenta con otro formato.'));
+      // Intentar heic2any como último recurso
+      try {
+        const convertedBlob = await convertHeicToJpeg(file);
+        resolve(convertedBlob);
+      } catch (heicError) {
+        console.error('❌ HEIC fallback also failed:', heicError);
+        reject(new Error('No se pudo procesar la imagen'));
       }
     };
     

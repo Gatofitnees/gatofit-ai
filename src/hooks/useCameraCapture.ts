@@ -1,7 +1,6 @@
 
 import { useCallback } from 'react';
 import { uploadImageWithAnalysis } from './useImageUpload';
-import { convertImageToJpg } from '@/utils/imageUtils';
 import { CapturedFood } from './useFoodCapture';
 
 export const useCameraCapture = (sendToWebhookWithResponse: (url: string, blob: Blob, isFromGallery?: boolean) => Promise<any>) => {
@@ -65,25 +64,13 @@ export const useCameraCapture = (sendToWebhookWithResponse: (url: string, blob: 
             throw new Error('El archivo es muy grande (máximo 10MB)');
           }
           
-          // Convertir a JPG
-          console.log('🔄 Converting to JPG...');
-          const convertedFile = await convertImageToJpg(file);
+          console.log('📤 Uploading gallery image...');
           
-          // Validar conversión
-          if (!convertedFile || convertedFile.size === 0) {
-            throw new Error('Error al procesar la imagen');
-          }
-          
-          console.log('✅ Conversion complete:', { 
-            size: convertedFile.size, 
-            type: convertedFile.type 
-          });
-          
-          // Upload with gallery flag
+          // Upload with gallery flag - NO CONVERTIR AQUÍ
           const galleryWebhookWrapper = (url: string, blob: Blob) => 
             sendToWebhookWithResponse(url, blob, true);
           
-          const result = await uploadImageWithAnalysis(convertedFile, galleryWebhookWrapper);
+          const result = await uploadImageWithAnalysis(file, galleryWebhookWrapper);
           
           if (!result) {
             throw new Error('No se pudo procesar la imagen');
@@ -92,7 +79,6 @@ export const useCameraCapture = (sendToWebhookWithResponse: (url: string, blob: 
           resolve(result);
         } catch (error) {
           console.error('❌ Error in gallery capture:', error);
-          // Rechazar con el error específico
           reject(error instanceof Error ? error : new Error('Error al procesar imagen'));
         }
       };
