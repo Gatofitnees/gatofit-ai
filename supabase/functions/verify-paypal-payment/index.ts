@@ -95,8 +95,10 @@ serve(async (req) => {
       ? new Date(now.setMonth(now.getMonth() + 1))
       : new Date(now.setFullYear(now.getFullYear() + 1));
 
+    console.log(`Attempting to update subscription for user ${userId}, plan: ${planType}`);
+
     // Update user subscription in Supabase
-    const { error: updateError } = await supabase
+    const { data: upsertData, error: updateError } = await supabase
       .from('user_subscriptions')
       .upsert({
         user_id: userId,
@@ -109,12 +111,18 @@ serve(async (req) => {
         payment_method: 'paypal',
         auto_renewal: true,
         updated_at: new Date().toISOString()
-      });
+      }, {
+        onConflict: 'user_id',
+        ignoreDuplicates: false
+      })
+      .select();
 
     if (updateError) {
       console.error('Error updating subscription:', updateError);
       throw new Error('Failed to update subscription in database');
     }
+
+    console.log(`Successfully updated subscription:`, upsertData);
 
     console.log(`Successfully verified and updated PayPal subscription for user ${userId}`);
 
