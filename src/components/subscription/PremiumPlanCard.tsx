@@ -47,7 +47,16 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
       return 'Procesando...';
     }
     
-    return `Cambiar a ${plan.name}`;
+    return (
+      <div className="flex items-center justify-center gap-2">
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+          <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 01-.794.679H7.72a.483.483 0 01-.477-.558L7.418 21l.7-4.432.026-.17a.806.806 0 01.793-.679h.513c2.334 0 4.16-.945 4.693-3.678.224-1.143.108-2.097-.427-2.767-.163-.206-.361-.38-.593-.522z"/>
+          <path d="M6.59 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 01-.794.679H-5.72a.483.483 0 01-.477-.558L-5.582 21l.7-4.432.026-.17a.806.806 0 01.793-.679h.513c2.334 0 4.16-.945 4.693-3.678.224-1.143.108-2.097-.427-2.767-.163-.206-.361-.38-.593-.522z"/>
+          <path d="M19.22 3.113c-.563-.315-1.222-.51-1.985-.51H8.832C8.328 2.603 7.9 3 7.837 3.51L5.653 17.24a.61.61 0 00.602.704h4.375l1.099-6.968-.034.22a.805.805 0 01.793-.679h1.65c3.239 0 5.775-1.314 6.514-5.12.028-.148.055-.292.074-.433.278-1.779-.002-2.992-.93-4.114a3.694 3.694 0 00-.576-.492z"/>
+        </svg>
+        Pagar con PayPal
+      </div>
+    );
   };
 
   const getButtonStyles = () => {
@@ -153,30 +162,28 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          {/* Primary Subscription Button */}
-          <Button
-            onClick={handleSelect}
-            disabled={isLoading || isCurrentPlan}
-            className={`w-full py-3 text-base font-semibold ${getButtonStyles()}`}
-            size="lg"
-          >
-            {getButtonContent()}
-          </Button>
-
-          {/* PayPal Button */}
-          {!isCurrentPlan && (plan.plan_type === 'monthly' || plan.plan_type === 'yearly') && (
-            <div className="space-y-2">
+        {/* Action Button */}
+        <div className="space-y-2">
+          {isCurrentPlan ? (
+            <Button
+              disabled
+              className="w-full py-3 text-base font-semibold bg-green-500/20 text-green-400 border border-green-500/30 cursor-default"
+              size="lg"
+            >
+              {getButtonContent()}
+            </Button>
+          ) : (
+            <>
               <div className="text-xs text-muted-foreground text-center">
                 o paga con
               </div>
               <PayPalButton
-                planType={plan.plan_type}
+                planType={plan.plan_type as 'monthly' | 'yearly'}
                 onSuccess={onPayPalSuccess}
                 disabled={isLoading}
+                className="w-full"
               />
-            </div>
+            </>
           )}
         </div>
       </div>
