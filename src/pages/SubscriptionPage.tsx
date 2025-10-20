@@ -1,21 +1,22 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Crown, Sparkles, Gift } from 'lucide-react';
+import { ArrowLeft, Crown, Sparkles } from 'lucide-react';
 import Button from '@/components/Button';
 import { useSubscription } from '@/hooks/subscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
-import { useDiscountCode } from '@/hooks/subscription/useDiscountCode';
 import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
 import { PremiumPlanCard } from '@/components/subscription/PremiumPlanCard';
 import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
 import { PlanChangeConfirmDialog } from '@/components/subscription/PlanChangeConfirmDialog';
 import { CancelConfirmDialog } from '@/components/subscription/CancelConfirmDialog';
 import { ScheduledChangeCard } from '@/components/subscription/ScheduledChangeCard';
-import { DiscountCodeModal } from '@/components/subscription/DiscountCodeModal';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const SubscriptionPage: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { 
     subscription, 
     plans, 
@@ -26,11 +27,9 @@ const SubscriptionPage: React.FC = () => {
     cancelScheduledPlanChange
   } = useSubscription();
   const { usage } = useUsageLimits();
-  const { appliedDiscount, clearDiscount } = useDiscountCode();
   const [isLoading, setIsLoading] = useState(false);
   const [showPlanChangeDialog, setShowPlanChangeDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | null>(null);
 
   const monthlyPlan = plans.find(p => p.plan_type === 'monthly');
@@ -77,8 +76,41 @@ const SubscriptionPage: React.FC = () => {
   const handleCancelSubscription = async () => {
     setIsLoading(true);
     try {
-      await cancelSubscription();
+      // If subscription has PayPal ID, cancel via PayPal
+      if (subscription?.paypal_subscription_id) {
+        const { data, error } = await supabase.functions.invoke('cancel-paypal-subscription', {
+          body: {
+            subscriptionId: subscription.paypal_subscription_id,
+            reason: 'User requested cancellation'
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          toast({
+            title: "Suscripción cancelada",
+            description: data.message || "Tu suscripción ha sido cancelada exitosamente",
+          });
+          
+          // Reload to update subscription status
+          window.location.reload();
+        } else {
+          throw new Error(data?.error || 'Error al cancelar suscripción');
+        }
+      } else {
+        // Fallback to regular cancellation
+        await cancelSubscription();
+      }
+      
       setShowCancelDialog(false);
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cancelar la suscripción. Inténtalo de nuevo.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -140,30 +172,6 @@ const SubscriptionPage: React.FC = () => {
               <UsageLimitsBanner type="nutrition" />
               <UsageLimitsBanner type="ai_chat" />
             </div>
-          </div>
-        )}
-
-        {/* Discount Code Section */}
-        {!isPremium && (
-          <div className="text-center">
-            <Button
-              variant="outline"
-              onClick={() => setShowDiscountModal(true)}
-              className="flex items-center gap-2 mx-auto"
-            >
-              <Gift className="h-4 w-4" />
-              ¿Tienes un código de descuento?
-            </Button>
-            {appliedDiscount && (
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-700">
-                  {appliedDiscount.type === 'months_free' 
-                    ? `¡Código aplicado! ${appliedDiscount.value} meses gratis agregados`
-                    : 'Descuento aplicado correctamente'
-                  }
-                </p>
-              </div>
-            )}
           </div>
         )}
 
@@ -263,17 +271,6 @@ const SubscriptionPage: React.FC = () => {
         isOpen={showCancelDialog}
         onClose={() => setShowCancelDialog(false)}
         onConfirm={handleCancelSubscription}
-        isLoading={isLoading}
-      />
-
-      {/* Discount Code Modal */}
-      <DiscountCodeModal
-        isOpen={showDiscountModal}
-        onClose={() => setShowDiscountModal(false)}
-        onSuccess={() => {
-          // Refetch subscription data after discount is applied
-          window.location.reload();
-        }}
         isLoading={isLoading}
       />
     </div>

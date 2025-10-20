@@ -16,6 +16,7 @@ interface PayPalTokenResponse {
 interface PayPalSubscriptionRequest {
   planType: 'monthly' | 'yearly';
   userId: string;
+  discountCode?: string;
 }
 
 serve(async (req) => {
@@ -30,7 +31,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { planType, userId }: PayPalSubscriptionRequest = await req.json();
+    const { planType, userId, discountCode }: PayPalSubscriptionRequest = await req.json();
     
     if (!planType || !userId) {
       throw new Error('Plan type and user ID are required');
@@ -85,27 +86,134 @@ serve(async (req) => {
       throw new Error('Subscription plan not found');
     }
 
+    let finalPrice = plans.price_usd;
+    let discountCodeId = null;
+    let discountInfo = null;
+
+    // Validate and apply discount code if provided
+    if (discountCode) {
+      console.log('Validating discount code:', discountCode);
+
+      const { data: discount, error: discountError } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('code', discountCode.toLowerCase())
+        .eq('is_active', true)
+        .single();
+
+      if (discountError || !discount) {
+        console.error('Discount code not found or invalid:', discountError);
+        throw new Error('Código de descuento inválido');
+      }
+
+      // Check if discount applies to the selected plan
+      if (discount.applicable_plans && 
+          !discount.applicable_plans.includes(planType) && 
+          !discount.applicable_plans.includes('both')) {
+        throw new Error('Código de descuento no válido para este plan');
+      }
+
+      // Check validity dates
+      if (discount.valid_from && new Date(discount.valid_from) > new Date()) {
+        throw new Error('Código de descuento aún no disponible');
+      }
+
+      if (discount.valid_to && new Date(discount.valid_to) < new Date()) {
+        throw new Error('Código de descuento expirado');
+      }
+
+      // Check usage limit
+      if (discount.max_uses && discount.current_uses >= discount.max_uses) {
+        throw new Error('Código de descuento agotado');
+      }
+
+      // Check if user already used this code
+      const { data: userUsage } = await supabase
+        .from('user_discount_codes')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('discount_code_id', discount.id)
+        .single();
+
+      if (userUsage && discount.usage_type === 'single_use') {
+        throw new Error('Ya has usado este código anteriormente');
+      }
+
+      // Calculate discounted price
+      if (discount.paypal_discount_fixed) {
+        finalPrice = Math.max(0, finalPrice - discount.paypal_discount_fixed);
+      } else if (discount.paypal_discount_percentage) {
+        finalPrice = finalPrice * (1 - discount.paypal_discount_percentage / 100);
+      }
+
+      discountCodeId = discount.id;
+      discountInfo = discount;
+      console.log('Discount applied. Final price:', finalPrice);
+    }
+
     // Create PayPal plan first, then subscription
-    const planPayload = {
-      product_id: "GATOFIT_PRODUCT",
-      name: `GatoFit ${planType === 'monthly' ? 'Mensual' : 'Anual'}`,
-      description: `Suscripción ${planType === 'monthly' ? 'mensual' : 'anual'} a GatoFit Premium`,
-      status: "ACTIVE",
-      billing_cycles: [{
+    const billingCycles = [];
+
+    // If discount exists and applies to first billing only
+    if (discountInfo && discountInfo.application_type === 'first_billing_only') {
+      // First cycle with discount
+      billingCycles.push({
         frequency: {
           interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
           interval_count: 1
         },
         tenure_type: "REGULAR",
         sequence: 1,
-        total_cycles: 0, // 0 means infinite
+        total_cycles: 1,
+        pricing_scheme: {
+          fixed_price: {
+            value: finalPrice.toFixed(2),
+            currency_code: "USD"
+          }
+        }
+      });
+
+      // Subsequent cycles at normal price
+      billingCycles.push({
+        frequency: {
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_count: 1
+        },
+        tenure_type: "REGULAR",
+        sequence: 2,
+        total_cycles: 0, // Infinite
         pricing_scheme: {
           fixed_price: {
             value: plans.price_usd.toString(),
             currency_code: "USD"
           }
         }
-      }],
+      });
+    } else {
+      // Single cycle (with forever discount or no discount)
+      billingCycles.push({
+        frequency: {
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_count: 1
+        },
+        tenure_type: "REGULAR",
+        sequence: 1,
+        total_cycles: 0, // Infinite
+        pricing_scheme: {
+          fixed_price: {
+            value: finalPrice.toFixed(2),
+            currency_code: "USD"
+          }
+        }
+      });
+    }
+
+    const planPayload = {
+      product_id: "GATOFIT_PRODUCT",
+      name: `GatoFit ${planType === 'monthly' ? 'Mensual' : 'Anual'}${discountInfo ? ' (Con descuento)' : ''}`,
+      description: `Suscripción ${planType === 'monthly' ? 'mensual' : 'anual'} a GatoFit Premium`,
+      status: "ACTIVE",
+      billing_cycles: billingCycles,
       payment_preferences: {
         auto_bill_outstanding: true,
         setup_fee_failure_action: "CONTINUE",
@@ -199,6 +307,30 @@ serve(async (req) => {
     
     if (!approvalUrl) {
       throw new Error('No approval URL found in PayPal response');
+    }
+
+    // If discount code was used, mark it as used
+    if (discountCodeId) {
+      // Record discount code usage
+      await supabase
+        .from('user_discount_codes')
+        .insert({
+          user_id: userId,
+          discount_code_id: discountCodeId
+        });
+
+      // Increment usage counter if there's a max_uses limit
+      if (discountInfo.max_uses) {
+        await supabase
+          .from('discount_codes')
+          .update({ 
+            current_uses: discountInfo.current_uses + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', discountCodeId);
+      }
+
+      console.log('Discount code marked as used');
     }
 
     // Log subscription creation attempt

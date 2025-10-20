@@ -29,6 +29,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_permissions: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          permission_key: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          permission_key: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          permission_key?: string
+        }
+        Relationships: []
+      }
       admin_program_exercises: {
         Row: {
           created_at: string
@@ -122,6 +146,66 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_program_routine_exercises: {
+        Row: {
+          block_name: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          exercise_id: number
+          exercise_order: number
+          id: number
+          notes: string | null
+          reps_max: number | null
+          reps_min: number | null
+          rest_between_sets_seconds: number | null
+          routine_id: number
+          sets: number | null
+        }
+        Insert: {
+          block_name?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          exercise_id: number
+          exercise_order?: number
+          id?: number
+          notes?: string | null
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_between_sets_seconds?: number | null
+          routine_id: number
+          sets?: number | null
+        }
+        Update: {
+          block_name?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          exercise_id?: number
+          exercise_order?: number
+          id?: number
+          notes?: string | null
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_between_sets_seconds?: number | null
+          routine_id?: number
+          sets?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_program_routine_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_program_routine_exercises_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "admin_program_routines_specific"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_program_routines: {
         Row: {
           created_at: string
@@ -166,6 +250,70 @@ export type Database = {
             columns: ["routine_id"]
             isOneToOne: false
             referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_program_routines_specific: {
+        Row: {
+          created_at: string | null
+          created_by_admin: string | null
+          description: string | null
+          estimated_duration_minutes: number | null
+          id: number
+          is_active: boolean | null
+          name: string
+          original_routine_id: number | null
+          program_id: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by_admin?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          original_routine_id?: number | null
+          program_id: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by_admin?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          original_routine_id?: number | null
+          program_id?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_program_routines_specific_created_by_admin_fkey"
+            columns: ["created_by_admin"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_program_routines_specific_original_routine_id_fkey"
+            columns: ["original_routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_program_routines_specific_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -252,6 +400,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      admin_role_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_key: string
+          role: Database["public"]["Enums"]["admin_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_key: string
+          role: Database["public"]["Enums"]["admin_role"]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_key?: string
+          role?: Database["public"]["Enums"]["admin_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_role_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "admin_permissions"
+            referencedColumns: ["permission_key"]
+          },
+        ]
       }
       admin_users: {
         Row: {
@@ -376,6 +553,51 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "weekly_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_settings: {
+        Row: {
+          admin_id: string | null
+          created_at: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
         ]
@@ -541,6 +763,62 @@ export type Database = {
           },
         ]
       }
+      coach_user_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          coach_id: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          coach_id: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          coach_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_user_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_user_assignments_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_user_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_user_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_rankings"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       countries: {
         Row: {
           code: string
@@ -664,41 +942,59 @@ export type Database = {
       }
       discount_codes: {
         Row: {
+          applicable_plans: string[] | null
+          application_type: string | null
           code: string
           created_at: string | null
           current_uses: number | null
           discount_type: string
           discount_value: number
+          duration_months: number | null
           id: string
           is_active: boolean | null
           max_uses: number | null
+          paypal_discount_fixed: number | null
+          paypal_discount_percentage: number | null
           updated_at: string | null
+          usage_type: string | null
           valid_from: string | null
           valid_to: string | null
         }
         Insert: {
+          applicable_plans?: string[] | null
+          application_type?: string | null
           code: string
           created_at?: string | null
           current_uses?: number | null
           discount_type: string
           discount_value: number
+          duration_months?: number | null
           id?: string
           is_active?: boolean | null
           max_uses?: number | null
+          paypal_discount_fixed?: number | null
+          paypal_discount_percentage?: number | null
           updated_at?: string | null
+          usage_type?: string | null
           valid_from?: string | null
           valid_to?: string | null
         }
         Update: {
+          applicable_plans?: string[] | null
+          application_type?: string | null
           code?: string
           created_at?: string | null
           current_uses?: number | null
           discount_type?: string
           discount_value?: number
+          duration_months?: number | null
           id?: string
           is_active?: boolean | null
           max_uses?: number | null
+          paypal_discount_fixed?: number | null
+          paypal_discount_percentage?: number | null
           updated_at?: string | null
+          usage_type?: string | null
           valid_from?: string | null
           valid_to?: string | null
         }
@@ -1343,6 +1639,47 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_user_invitations: {
+        Row: {
+          coach_id: string
+          created_at: string | null
+          email: string
+          id: string
+          invitation_token: string | null
+          invited_at: string | null
+          notes: string | null
+          status: string | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string | null
+          email: string
+          id?: string
+          invitation_token?: string | null
+          invited_at?: string | null
+          notes?: string | null
+          status?: string | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          invitation_token?: string | null
+          invited_at?: string | null
+          notes?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_user_invitations_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           abdomen_circumference_cm: number | null
@@ -1350,11 +1687,14 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           body_fat_percentage: number | null
+          business_description: string | null
+          business_name: string | null
           chest_circumference_cm: number | null
           created_at: string
           current_weight_kg: number | null
           date_of_birth: string | null
           diet_id: number | null
+          first_name: string | null
           full_name: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
           height_cm: number | null
@@ -1365,12 +1705,16 @@ export type Database = {
           initial_recommended_protein_g: number | null
           initial_weight_kg: number | null
           is_profile_public: boolean | null
+          last_name: string | null
           leg_circumference_cm: number | null
           main_goal: Database["public"]["Enums"]["goal_type"] | null
+          phone_number: string | null
           previous_app_experience: boolean | null
+          service_type: string | null
           target_kg_per_week: number | null
           target_pace: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg: number | null
+          timezone_auto_adjust: boolean | null
           timezone_name: string | null
           timezone_offset: number | null
           total_workouts: number | null
@@ -1387,11 +1731,14 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           body_fat_percentage?: number | null
+          business_description?: string | null
+          business_name?: string | null
           chest_circumference_cm?: number | null
           created_at?: string
           current_weight_kg?: number | null
           date_of_birth?: string | null
           diet_id?: number | null
+          first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
           height_cm?: number | null
@@ -1402,12 +1749,16 @@ export type Database = {
           initial_recommended_protein_g?: number | null
           initial_weight_kg?: number | null
           is_profile_public?: boolean | null
+          last_name?: string | null
           leg_circumference_cm?: number | null
           main_goal?: Database["public"]["Enums"]["goal_type"] | null
+          phone_number?: string | null
           previous_app_experience?: boolean | null
+          service_type?: string | null
           target_kg_per_week?: number | null
           target_pace?: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg?: number | null
+          timezone_auto_adjust?: boolean | null
           timezone_name?: string | null
           timezone_offset?: number | null
           total_workouts?: number | null
@@ -1424,11 +1775,14 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           body_fat_percentage?: number | null
+          business_description?: string | null
+          business_name?: string | null
           chest_circumference_cm?: number | null
           created_at?: string
           current_weight_kg?: number | null
           date_of_birth?: string | null
           diet_id?: number | null
+          first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
           height_cm?: number | null
@@ -1439,12 +1793,16 @@ export type Database = {
           initial_recommended_protein_g?: number | null
           initial_weight_kg?: number | null
           is_profile_public?: boolean | null
+          last_name?: string | null
           leg_circumference_cm?: number | null
           main_goal?: Database["public"]["Enums"]["goal_type"] | null
+          phone_number?: string | null
           previous_app_experience?: boolean | null
+          service_type?: string | null
           target_kg_per_week?: number | null
           target_pace?: Database["public"]["Enums"]["pace_type"] | null
           target_weight_kg?: number | null
+          timezone_auto_adjust?: boolean | null
           timezone_name?: string | null
           timezone_offset?: number | null
           total_workouts?: number | null
@@ -1652,7 +2010,9 @@ export type Database = {
           estimated_duration_minutes: number | null
           id: number
           is_predefined: boolean
+          is_program_duplicate: boolean | null
           name: string
+          program_id: string | null
           type: string | null
           updated_at: string
           user_id: string | null
@@ -1663,7 +2023,9 @@ export type Database = {
           estimated_duration_minutes?: number | null
           id?: number
           is_predefined?: boolean
+          is_program_duplicate?: boolean | null
           name: string
+          program_id?: string | null
           type?: string | null
           updated_at?: string
           user_id?: string | null
@@ -1674,12 +2036,21 @@ export type Database = {
           estimated_duration_minutes?: number | null
           id?: number
           is_predefined?: boolean
+          is_program_duplicate?: boolean | null
           name?: string
+          program_id?: string | null
           type?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "routines_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "routines_user_id_fkey"
             columns: ["user_id"]
@@ -2194,8 +2565,10 @@ export type Database = {
       user_subscriptions: {
         Row: {
           auto_renewal: boolean | null
+          cancellation_reason: string | null
           cancelled_at: string | null
           created_at: string | null
+          discount_code_id: string | null
           expires_at: string | null
           id: string
           next_plan_starts_at: string | null
@@ -2216,8 +2589,10 @@ export type Database = {
         }
         Insert: {
           auto_renewal?: boolean | null
+          cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string | null
+          discount_code_id?: string | null
           expires_at?: string | null
           id?: string
           next_plan_starts_at?: string | null
@@ -2238,8 +2613,10 @@ export type Database = {
         }
         Update: {
           auto_renewal?: boolean | null
+          cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string | null
+          discount_code_id?: string | null
           expires_at?: string | null
           id?: string
           next_plan_starts_at?: string | null
@@ -2258,7 +2635,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_tag_assignments: {
         Row: {
@@ -2536,8 +2921,16 @@ export type Database = {
         }
         Returns: Json
       }
+      add_client_by_email: {
+        Args: { p_email: string; p_notes?: string }
+        Returns: Json
+      }
       apply_discount_code: {
         Args: { p_code: string; p_user_id: string }
+        Returns: Json
+      }
+      assign_users_to_coach: {
+        Args: { p_coach_id: string; p_user_ids: string[] }
         Returns: Json
       }
       calculate_macro_recommendations: {
@@ -2551,6 +2944,10 @@ export type Database = {
           user_weight_kg: number
         }
         Returns: Json
+      }
+      can_coach_view_user: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       cancel_scheduled_plan_change: {
         Args: { p_user_id: string }
@@ -2580,6 +2977,14 @@ export type Database = {
         }
         Returns: string
       }
+      clone_routine_for_program: {
+        Args: {
+          new_routine_name?: string
+          source_routine_id: number
+          target_program_id: string
+        }
+        Returns: number
+      }
       copy_routine: {
         Args: { source_routine_id: number; target_user_id: string }
         Returns: Json
@@ -2587,6 +2992,10 @@ export type Database = {
       create_user_profile: {
         Args: { user_id: string }
         Returns: Json
+      }
+      duplicate_nutrition_plan: {
+        Args: { source_plan_id: string }
+        Returns: string
       }
       ensure_user_subscription: {
         Args: { p_user_id: string }
@@ -2599,6 +3008,46 @@ export type Database = {
       get_admin_role: {
         Args: { user_id?: string }
         Returns: Database["public"]["Enums"]["admin_role"]
+      }
+      get_app_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_asesorados_users: {
+        Args: { search_term?: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          id: string
+          username: string
+        }[]
+      }
+      get_coach_clients_program_end_dates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          days_remaining: number
+          full_name: string
+          program_end_date: string
+          program_name: string
+          total_weeks: number
+          user_id: string
+          username: string
+          weeks_completed: number
+        }[]
+      }
+      get_default_colors: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_my_admin_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          description: string
+          permission_key: string
+        }[]
       }
       get_public_routines: {
         Args: { target_user_id: string }
@@ -2688,7 +3137,41 @@ export type Database = {
         Args: { p_days_back?: number; p_user_id: string }
         Returns: Json
       }
+      get_users_by_tags: {
+        Args: { search_term?: string; tag_ids: string[] }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          id: string
+          username: string
+        }[]
+      }
       get_users_with_filters: {
+        Args: {
+          p_activity_level?: string
+          p_limit?: number
+          p_offset?: number
+          p_order_by?: string
+          p_order_direction?: string
+          p_search?: string
+          p_subscription_type?: string
+        }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          current_streak: number
+          full_name: string
+          id: string
+          is_active: boolean
+          last_activity: string
+          subscription_status: string
+          subscription_type: string
+          total_workouts: number
+          username: string
+        }[]
+      }
+      get_users_with_role_restrictions: {
         Args: {
           p_activity_level?: string
           p_limit?: number
@@ -2726,6 +3209,8 @@ export type Database = {
         Returns: {
           assigned_tags: Json
           avatar_url: string
+          coach_email: string
+          coach_name: string
           created_at: string
           current_streak: number
           full_name: string
@@ -2745,6 +3230,10 @@ export type Database = {
       get_workout_session_details: {
         Args: { p_workout_log_id: number }
         Returns: Json
+      }
+      has_admin_permission: {
+        Args: { p_permission_key: string }
+        Returns: boolean
       }
       increment_usage_counter: {
         Args: { counter_type: string; increment_by?: number; p_user_id: string }
@@ -2781,6 +3270,14 @@ export type Database = {
         }
         Returns: Json
       }
+      unassign_client_from_coach: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      update_app_setting: {
+        Args: { p_setting_key: string; p_setting_value: Json }
+        Returns: undefined
+      }
       update_expired_subscriptions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2803,7 +3300,7 @@ export type Database = {
       }
     }
     Enums: {
-      admin_role: "super_admin" | "moderator" | "content_manager"
+      admin_role: "super_admin" | "moderator" | "content_manager" | "coach"
       difficulty_level: "beginner" | "intermediate" | "advanced"
       gender_type: "male" | "female" | "other" | "prefer_not_to_say"
       goal_type:
@@ -2959,7 +3456,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      admin_role: ["super_admin", "moderator", "content_manager"],
+      admin_role: ["super_admin", "moderator", "content_manager", "coach"],
       difficulty_level: ["beginner", "intermediate", "advanced"],
       gender_type: ["male", "female", "other", "prefer_not_to_say"],
       goal_type: [

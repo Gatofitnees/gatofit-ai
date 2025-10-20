@@ -25,4 +25,8 @@ export interface UserSubscription {
   next_plan_type?: 'free' | 'monthly' | 'yearly' | 'asesorados';
   next_plan_starts_at?: string;
   scheduled_change_created_at?: string;
+  discount_code_id?: string;
+  cancelled_at?: string;
+  cancellation_reason?: string;
+  paypal_subscription_id?: string;
 }

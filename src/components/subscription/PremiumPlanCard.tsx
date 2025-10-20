@@ -1,9 +1,9 @@
 
-import React from 'react';
-import { Check, Star, Zap, Crown, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, Star, Zap, Crown, CheckCircle, CreditCard } from 'lucide-react';
 import Button from '@/components/Button';
 import { SubscriptionPlan } from '@/hooks/subscription/types';
-import { PayPalButton } from './PayPalButton';
+import { PayPalCheckoutModal } from './PayPalCheckoutModal';
 
 interface PremiumPlanCardProps {
   plan: SubscriptionPlan;
@@ -24,12 +24,19 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
   isCurrentPlan = false,
   onPayPalSuccess
 }) => {
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const monthlyEquivalent = plan.plan_type === 'yearly' ? (plan.price_usd / 12).toFixed(2) : null;
 
-  const handleSelect = () => {
-    // Only call onSelect if the plan type is valid and it's not the current plan
-    if (!isCurrentPlan && (plan.plan_type === 'monthly' || plan.plan_type === 'yearly')) {
-      onSelect(plan.plan_type);
+  const handleOpenCheckout = () => {
+    if (!isCurrentPlan && !isLoading) {
+      setShowCheckoutModal(true);
+    }
+  };
+
+  const handleCheckoutSuccess = () => {
+    setShowCheckoutModal(false);
+    if (onPayPalSuccess) {
+      onPayPalSuccess();
     }
   };
 
@@ -170,22 +177,35 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
               className="w-full py-3 text-base font-semibold bg-green-500/20 text-green-400 border border-green-500/30 cursor-default"
               size="lg"
             >
-              {getButtonContent()}
+              Plan Actual
             </Button>
           ) : (
-            <>
-              <div className="text-xs text-muted-foreground text-center">
-                o paga con
-              </div>
-              <PayPalButton
-                planType={plan.plan_type as 'monthly' | 'yearly'}
-                onSuccess={onPayPalSuccess}
-                disabled={isLoading}
-                className="w-full"
-              />
-            </>
+            <Button
+              onClick={handleOpenCheckout}
+              disabled={isLoading}
+              className={`w-full py-3 text-base font-semibold ${getButtonStyles()}`}
+              size="lg"
+            >
+              {isLoading ? (
+                'Procesando...'
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Suscribirme con PayPal
+                </div>
+              )}
+            </Button>
           )}
         </div>
+
+        <PayPalCheckoutModal
+          isOpen={showCheckoutModal}
+          onClose={() => setShowCheckoutModal(false)}
+          planType={plan.plan_type as 'monthly' | 'yearly'}
+          planName={plan.name}
+          originalPrice={plan.price_usd}
+          onSuccess={handleCheckoutSuccess}
+        />
       </div>
     </div>
   );
