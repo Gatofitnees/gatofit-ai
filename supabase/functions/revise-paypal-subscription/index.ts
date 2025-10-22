@@ -90,6 +90,11 @@ serve(async (req) => {
       throw new Error('Current subscription not found');
     }
 
+    // VALIDACIÓN: Bloquear downgrade de yearly a monthly
+    if (currentSub.plan_type === 'yearly' && newPlanType === 'monthly') {
+      throw new Error('No se puede cambiar de plan Anual a Mensual. Por favor contacta soporte si necesitas asistencia.');
+    }
+
     // Calculate days until current plan expires
     const now = new Date();
     const expiresAt = new Date(currentSub.expires_at);

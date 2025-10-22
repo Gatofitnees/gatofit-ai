@@ -99,9 +99,19 @@ const SubscriptionPage: React.FC = () => {
       return;
     }
 
+    // VALIDACIÓN: Bloquear downgrade de Anual a Mensual
+    if (subscription?.plan_type === 'yearly' && planType === 'monthly' && subscription?.status === 'active') {
+      toast({
+        title: "Cambio no disponible",
+        description: "No puedes cambiar de plan Anual a Mensual. Tu plan actual continuará hasta su fecha de expiración.",
+        variant: "default"
+      });
+      return;
+    }
+
     // If user already has a premium plan, handle accordingly
     if (isPremium && subscription?.status === 'active') {
-      // Plan diferente - mostrar diálogo para programar cambio al vencer
+      // Plan diferente - mostrar diálogo para cambio inmediato (Mensual -> Anual)
       setSelectedPlan(planType);
       setShowPlanChangeDialog(true);
     } else {
@@ -341,6 +351,8 @@ const SubscriptionPage: React.FC = () => {
               isLoading={isLoading}
               discountText="Flexible"
               isCurrentPlan={subscription?.plan_type === 'monthly' && subscription?.status === 'active'}
+              isDisabled={subscription?.plan_type === 'yearly' && subscription?.status === 'active'}
+              disabledReason="No puedes cambiar de Anual a Mensual"
               onPayPalSuccess={() => {
                 // Refetch subscription data after PayPal payment
                 window.location.reload();

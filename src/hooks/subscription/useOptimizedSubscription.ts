@@ -146,7 +146,17 @@ export const useOptimizedSubscription = () => {
         return false;
       }
 
-      // Si tiene plan activo diferente, usar PayPal Revise API
+      // VALIDACIÓN: Bloquear downgrade de yearly a monthly
+      if (subscription.plan_type === 'yearly' && planType === 'monthly' && subscription.status === 'active') {
+        toast({
+          title: "Cambio no disponible",
+          description: "No puedes cambiar de plan Anual a Mensual",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Si tiene plan activo diferente, usar PayPal Revise API (solo upgrade: monthly -> yearly)
       if (subscription.status === 'active' && subscription.plan_type !== planType) {
         if (!subscription.paypal_subscription_id) {
           throw new Error('No se encontró ID de suscripción de PayPal');

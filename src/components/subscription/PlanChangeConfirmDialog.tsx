@@ -93,11 +93,11 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
 
             <div className="neu-card p-3 bg-secondary/30 border border-secondary/20">
               <p className="text-xs text-foreground text-center">
-                <strong>💳 Sin cargo inmediato:</strong> Tu plan {currentPlan?.name} continuará activo hasta {expirationDate ? formatDate(expirationDate) : ''}. 
+                <strong>🚀 Upgrade inmediato:</strong> Tu plan se actualizará de {currentPlan?.name} a {newPlan?.name} ahora mismo.
                 <br/>
-                <strong>NO se te cobrará ahora.</strong>
+                <strong>💳 Cargo inmediato:</strong> Se te cobrará ${newPlan?.price_usd} al aprobar en PayPal.
                 <br/>
-                El primer pago de ${newPlan?.price_usd} del plan {newPlan?.name} se procesará automáticamente en esa fecha.
+                📅 Tu nueva fecha de expiración será dentro de {newPlan?.duration_days} días desde hoy.
               </p>
             </div>
             

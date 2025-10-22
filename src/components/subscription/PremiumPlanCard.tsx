@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Check, Star, Zap, Crown, CheckCircle, CreditCard } from 'lucide-react';
+import { Check, Star, Zap, Crown, CheckCircle, CreditCard, Ban } from 'lucide-react';
 import Button from '@/components/Button';
 import { SubscriptionPlan } from '@/hooks/subscription/types';
 import { PayPalCheckoutModal } from './PayPalCheckoutModal';
@@ -12,6 +12,8 @@ interface PremiumPlanCardProps {
   isLoading?: boolean;
   discountText?: string;
   isCurrentPlan?: boolean;
+  isDisabled?: boolean;
+  disabledReason?: string;
   onPayPalSuccess?: () => void;
 }
 
@@ -22,6 +24,8 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
   isLoading = false,
   discountText,
   isCurrentPlan = false,
+  isDisabled = false,
+  disabledReason,
   onPayPalSuccess
 }) => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -50,6 +54,15 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
       );
     }
     
+    if (isDisabled) {
+      return (
+        <div className="flex items-center justify-center gap-2">
+          <Ban className="h-4 w-4" />
+          No disponible
+        </div>
+      );
+    }
+    
     if (isLoading) {
       return 'Procesando...';
     }
@@ -65,6 +78,10 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
   const getButtonStyles = () => {
     if (isCurrentPlan) {
       return 'bg-green-500/20 text-green-400 cursor-not-allowed hover:bg-green-500/20';
+    }
+    
+    if (isDisabled) {
+      return 'bg-gray-500/20 text-gray-400 cursor-not-allowed hover:bg-gray-500/20';
     }
     
     if (isRecommended) {
@@ -168,13 +185,16 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
         {/* Action Button */}
         <div className="space-y-2">
           <Button
-            onClick={!isCurrentPlan ? handleOpenCheckout : undefined}
-            disabled={isCurrentPlan || isLoading}
+            onClick={!isCurrentPlan && !isDisabled ? handleOpenCheckout : undefined}
+            disabled={isCurrentPlan || isDisabled || isLoading}
             className={`w-full py-3 text-base font-semibold ${getButtonStyles()}`}
             size="lg"
           >
             {getButtonContent()}
           </Button>
+          {isDisabled && disabledReason && (
+            <p className="text-xs text-muted-foreground text-center">{disabledReason}</p>
+          )}
         </div>
 
         <PayPalCheckoutModal
