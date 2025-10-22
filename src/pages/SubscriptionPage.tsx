@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Crown, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Crown, Sparkles, Loader2, AlertCircle, XCircle, Info } from 'lucide-react';
 import Button from '@/components/Button';
 import { useSubscription, type CancelScheduledChangeResult } from '@/hooks/subscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
@@ -150,7 +150,19 @@ const SubscriptionPage: React.FC = () => {
   const handleCancelSubscription = async () => {
     setIsLoading(true);
     try {
-      // If subscription has PayPal ID, cancel via PayPal
+      // Check if already cancelled
+      if (subscription?.auto_renewal === false) {
+        toast({
+          title: "Suscripción ya cancelada",
+          description: "Tu suscripción ya fue cancelada anteriormente",
+          variant: "default"
+        });
+        setShowCancelDialog(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Try to cancel in PayPal if has subscription ID
       if (subscription?.paypal_subscription_id) {
         const { data, error } = await supabase.functions.invoke('cancel-paypal-subscription', {
           body: {
@@ -159,7 +171,10 @@ const SubscriptionPage: React.FC = () => {
           }
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Edge function error:', error);
+          throw new Error('No se pudo comunicar con el servidor de pagos');
+        }
 
         if (data?.success) {
           toast({
@@ -170,19 +185,20 @@ const SubscriptionPage: React.FC = () => {
           // Reload to update subscription status
           window.location.reload();
         } else {
-          throw new Error(data?.error || 'Error al cancelar suscripción');
+          throw new Error(data?.error || 'Error desconocido al cancelar');
         }
       } else {
-        // Fallback to regular cancellation
+        // Fallback: cancel only in local DB
         await cancelSubscription();
+        window.location.reload();
       }
       
       setShowCancelDialog(false);
     } catch (error) {
       console.error('Error cancelling subscription:', error);
       toast({
-        title: "Error",
-        description: "No se pudo cancelar la suscripción. Inténtalo de nuevo.",
+        title: "Error al cancelar",
+        description: error instanceof Error ? error.message : "Ocurrió un error inesperado",
         variant: "destructive"
       });
     } finally {
@@ -361,21 +377,48 @@ const SubscriptionPage: React.FC = () => {
           )}
         </div>
 
-        {/* Cancel Subscription */}
-        {isPremium && subscription?.status === 'active' && (
-          <div className="neu-card p-6 border border-red-500/20">
-            <h3 className="text-lg font-semibold mb-3 text-center">Gestionar suscripción</h3>
-            <p className="text-sm text-muted-foreground mb-4 text-center">
-              Si cancelas tu suscripción, seguirás teniendo acceso a las funciones premium hasta que expire.
-            </p>
-            <Button
-              variant="secondary"
-              onClick={() => setShowCancelDialog(true)}
-              disabled={isLoading}
-              className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
-            >
-              Cancelar suscripción
-            </Button>
+        {/* Cancel Subscription Section */}
+        {isPremium && subscription?.status === 'active' && subscription?.auto_renewal === true && (
+          <div className="neu-card p-6 border border-destructive/20">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div className="space-y-3 flex-1">
+                <div>
+                  <h3 className="font-semibold text-base mb-1">Cancelar suscripción</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Si cancelas tu suscripción, seguirás teniendo acceso premium hasta la fecha de expiración.
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowCancelDialog(true)}
+                  disabled={isLoading}
+                  className="w-full sm:w-auto bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/30"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancelar suscripción
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Subscription Already Cancelled - Info Message */}
+        {isPremium && subscription?.status === 'active' && subscription?.auto_renewal === false && (
+          <div className="neu-card p-6 border border-yellow-500/20 bg-yellow-500/5">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <h3 className="font-semibold text-base">Suscripción cancelada</h3>
+                <p className="text-sm text-muted-foreground">
+                  Tu suscripción ya fue cancelada y no se renovará automáticamente.
+                  Seguirás teniendo acceso premium hasta {subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : 'la fecha de expiración'}.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Si cambias de opinión, puedes reactivar tu suscripción en cualquier momento antes de que expire.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

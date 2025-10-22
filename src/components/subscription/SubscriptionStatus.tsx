@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Crown, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Crown, Calendar, CheckCircle, XCircle, Clock, Info } from 'lucide-react';
 import { UserSubscription } from '@/hooks/useSubscription';
 
 interface SubscriptionStatusProps {
@@ -111,6 +111,16 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
               <span className="text-muted-foreground">Renovación automática:</span>
               <span className={`font-medium ${subscription.auto_renewal ? 'text-green-500' : 'text-yellow-500'}`}>
                 {subscription.auto_renewal ? 'Activada' : 'Desactivada'}
+              </span>
+            </div>
+          )}
+
+          {/* Cancelled but still active indicator */}
+          {subscription.status === 'active' && !subscription.auto_renewal && subscription.expires_at && (
+            <div className="flex items-center gap-2 text-sm text-yellow-500 bg-yellow-500/10 rounded-lg p-3 mt-2">
+              <Info className="h-4 w-4 flex-shrink-0" />
+              <span>
+                Cancelada - Acceso hasta {formatDate(subscription.expires_at)}
               </span>
             </div>
           )}
