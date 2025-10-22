@@ -2614,6 +2614,7 @@ export type Database = {
           status: Database["public"]["Enums"]["subscription_status"]
           store_platform: string | null
           store_transaction_id: string | null
+          suspended_at: string | null
           updated_at: string | null
           user_id: string
         }
@@ -2638,6 +2639,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["subscription_status"]
           store_platform?: string | null
           store_transaction_id?: string | null
+          suspended_at?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -2662,6 +2664,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["subscription_status"]
           store_platform?: string | null
           store_transaction_id?: string | null
+          suspended_at?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -3292,6 +3295,7 @@ export type Database = {
         | "cancelled"
         | "pending"
         | "trial"
+        | "suspended"
       tag_color:
         | "gray"
         | "red"
@@ -3449,6 +3453,7 @@ export const Constants = {
         "cancelled",
         "pending",
         "trial",
+        "suspended",
       ],
       tag_color: [
         "gray",

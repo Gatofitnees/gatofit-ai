@@ -16,7 +16,7 @@ export interface UserSubscription {
   id: string;
   user_id: string;
   plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados';
-  status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial';
+  status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial' | 'suspended';
   started_at: string;
   expires_at?: string;
   store_transaction_id?: string;
@@ -29,6 +29,7 @@ export interface UserSubscription {
   cancelled_at?: string;
   cancellation_reason?: string;
   paypal_subscription_id?: string;
+  suspended_at?: string;
 }
 
 export interface CancelScheduledChangeResult {

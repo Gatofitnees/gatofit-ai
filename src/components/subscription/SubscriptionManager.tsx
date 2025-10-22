@@ -20,6 +20,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
   const isExpiredOrCancelled = subscription && 
     (subscription.status === 'expired' || subscription.status === 'cancelled');
   
+  const isSuspended = subscription && subscription.status === 'suspended';
   const isActive = subscription && subscription.status === 'active';
 
   if (!subscription) return null;
@@ -49,6 +50,35 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                 rightIcon={<ArrowRight className="h-4 w-4" />}
               >
                 {isLoading ? 'Reactivando...' : 'Retomar mi suscripción'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Suspended Subscription - Reactivate */}
+      {isSuspended && (
+        <div className="neu-card p-5 border-2 border-warning/30 bg-warning/5">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+              <Clock className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div>
+                <h3 className="font-semibold text-base">Suscripción pausada</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Tu suscripción {subscription.plan_type === 'monthly' ? 'mensual' : 'anual'} está pausada. 
+                  Puedes reactivarla en cualquier momento y el ciclo de facturación continuará desde donde lo dejaste.
+                </p>
+              </div>
+              <Button
+                onClick={onReactivate}
+                disabled={isLoading}
+                variant="primary"
+                className="w-full sm:w-auto"
+                rightIcon={<ArrowRight className="h-4 w-4" />}
+              >
+                {isLoading ? 'Reactivando...' : 'Reactivar suscripción'}
               </Button>
             </div>
           </div>

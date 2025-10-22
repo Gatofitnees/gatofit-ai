@@ -292,6 +292,80 @@ export const useOptimizedSubscription = () => {
     }
   };
 
+  const suspendSubscription = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      if (!subscription?.paypal_subscription_id) {
+        throw new Error('No se encontró ID de suscripción de PayPal');
+      }
+
+      const { error } = await supabase.functions.invoke('suspend-paypal-subscription', {
+        body: {
+          subscriptionId: subscription.paypal_subscription_id,
+          reason: 'User requested temporary suspension',
+        },
+      });
+
+      if (error) throw error;
+
+      await fetchSubscriptionData();
+      
+      toast({
+        title: "Suscripción pausada",
+        description: "Tu suscripción se ha pausado correctamente",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error suspending subscription:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo pausar la suscripción",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const reactivateSubscription = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      if (!subscription?.paypal_subscription_id) {
+        throw new Error('No se encontró ID de suscripción de PayPal');
+      }
+
+      const { error } = await supabase.functions.invoke('activate-paypal-subscription', {
+        body: {
+          subscriptionId: subscription.paypal_subscription_id,
+          reason: 'User requested reactivation',
+        },
+      });
+
+      if (error) throw error;
+
+      await fetchSubscriptionData();
+      
+      toast({
+        title: "Suscripción reactivada",
+        description: "Tu suscripción se ha reactivado correctamente",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error reactivating subscription:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo reactivar la suscripción",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   const cancelSubscription = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -338,6 +412,8 @@ export const useOptimizedSubscription = () => {
     checkPremiumStatus,
     checkUserPremiumStatus: checkCachedPremiumStatus,
     upgradeSubscription: scheduleOrUpgradeSubscription,
+    suspendSubscription,
+    reactivateSubscription,
     cancelSubscription,
     cancelScheduledPlanChange,
     refetch: fetchSubscriptionData

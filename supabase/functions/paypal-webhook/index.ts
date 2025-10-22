@@ -250,7 +250,8 @@ async function handleSubscriptionSuspended(supabase: any, event: PayPalWebhookEv
   const { error } = await supabase
     .from('user_subscriptions')
     .update({
-      status: 'cancelled',
+      status: 'suspended',
+      suspended_at: new Date().toISOString(),
       auto_renewal: false,
       updated_at: new Date().toISOString()
     })
@@ -298,6 +299,7 @@ async function handleSubscriptionActivated(supabase: any, event: PayPalWebhookEv
       .update({ 
         plan_type: subscription.next_plan_type,
         status: 'active',
+        suspended_at: null,
         auto_renewal: true,
         expires_at: expiresAt.toISOString(),
         started_at: new Date().toISOString(),
@@ -319,6 +321,7 @@ async function handleSubscriptionActivated(supabase: any, event: PayPalWebhookEv
       .from('user_subscriptions')
       .update({
         status: 'active',
+        suspended_at: null,
         auto_renewal: true,
         updated_at: new Date().toISOString()
       })

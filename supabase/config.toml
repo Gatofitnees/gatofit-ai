@@ -31,3 +31,9 @@ verify_jwt = false
 
 [functions.revise-paypal-subscription]
 verify_jwt = true
+
+[functions.suspend-paypal-subscription]
+verify_jwt = true
+
+[functions.activate-paypal-subscription]
+verify_jwt = true
