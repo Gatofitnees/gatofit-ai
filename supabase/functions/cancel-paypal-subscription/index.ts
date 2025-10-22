@@ -57,27 +57,25 @@ serve(async (req) => {
   }
 
   try {
-    // Log headers for debugging
+    // Get authorization header (automatically included by supabase.functions.invoke)
     const authHeader = req.headers.get('Authorization');
     console.log('Authorization header present:', authHeader ? 'Yes' : 'No');
-    console.log('Authorization header length:', authHeader?.length || 0);
 
-    // Create two clients: one for auth verification, one for DB operations
-    const supabaseAuth = createClient(
+    if (!authHeader) {
+      throw new Error('No authorization token provided');
+    }
+
+    // Extract token
+    const token = authHeader.replace('Bearer ', '');
+
+    // Use service role key for all operations (auth validation and DB)
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify user authentication with the user's token
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseAuth.auth.getUser();
+    // Verify JWT token using service role
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
 
     console.log('User auth result:', { userId: user?.id, error: userError?.message });
 
@@ -85,12 +83,6 @@ serve(async (req) => {
       console.error('Authentication failed:', userError);
       throw new Error('Usuario no autenticado');
     }
-
-    // Use service role key for database operations
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     const { subscriptionId, reason }: CancelSubscriptionRequest = await req.json();
 
