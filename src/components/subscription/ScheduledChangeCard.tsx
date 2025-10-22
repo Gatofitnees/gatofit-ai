@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { Clock, Calendar, X, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Calendar, ArrowRight, XCircle } from 'lucide-react';
 import Button from '@/components/Button';
 import { UserSubscription, SubscriptionPlan } from '@/hooks/useSubscription';
+import { CancelScheduledChangeDialog } from './CancelScheduledChangeDialog';
 
 interface ScheduledChangeCardProps {
   subscription: UserSubscription;
@@ -17,6 +18,8 @@ export const ScheduledChangeCard: React.FC<ScheduledChangeCardProps> = ({
   onCancelScheduledChange,
   isLoading = false
 }) => {
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+
   if (!subscription.next_plan_type || !subscription.next_plan_starts_at) {
     return null;
   }
@@ -46,25 +49,14 @@ export const ScheduledChangeCard: React.FC<ScheduledChangeCardProps> = ({
 
   return (
     <div className="neu-card p-5 border border-primary/20 bg-gradient-to-r from-background to-secondary/10">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <Clock className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-base text-foreground">Cambio de Plan Programado</h3>
-            <p className="text-sm text-primary">Se ejecutará automáticamente</p>
-          </div>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <Clock className="h-5 w-5 text-primary" />
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onCancelScheduledChange}
-          disabled={isLoading}
-          className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive border-destructive/20"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div>
+          <h3 className="font-semibold text-base text-foreground">Cambio de Plan Programado</h3>
+          <p className="text-sm text-primary">Se ejecutará automáticamente</p>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -100,7 +92,28 @@ export const ScheduledChangeCard: React.FC<ScheduledChangeCardProps> = ({
             El cambio se aplicará exactamente cuando expire.
           </p>
         </div>
+
+        <Button
+          variant="outline"
+          fullWidth
+          onClick={() => setShowCancelDialog(true)}
+          disabled={isLoading}
+          className="border-destructive/20 text-destructive hover:bg-destructive/10"
+          leftIcon={<XCircle className="h-4 w-4" />}
+        >
+          Cancelar cambio programado
+        </Button>
       </div>
+
+      <CancelScheduledChangeDialog
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirm={() => {
+          setShowCancelDialog(false);
+          onCancelScheduledChange();
+        }}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
