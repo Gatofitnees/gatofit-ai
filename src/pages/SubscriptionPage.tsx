@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Crown, Sparkles } from 'lucide-react';
+import { ArrowLeft, Crown, Sparkles, Loader2 } from 'lucide-react';
 import Button from '@/components/Button';
 import { useSubscription } from '@/hooks/subscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
@@ -34,6 +34,59 @@ const SubscriptionPage: React.FC = () => {
 
   const monthlyPlan = plans.find(p => p.plan_type === 'monthly');
   const yearlyPlan = plans.find(p => p.plan_type === 'yearly');
+
+  // Detectar retorno de PayPal y verificar pago
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const subscriptionId = urlParams.get('subscription_id') || urlParams.get('ba_token');
+    
+    if (success === 'true' && subscriptionId && !isLoading) {
+      handlePayPalReturn(subscriptionId);
+    }
+  }, []);
+
+  const handlePayPalReturn = async (subscriptionId: string) => {
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const { data, error } = await supabase.functions.invoke('verify-paypal-payment', {
+        body: {
+          subscriptionId,
+          userId: user.id
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "¡Pago confirmado!",
+          description: "Tu suscripción premium ha sido activada exitosamente.",
+        });
+        
+        // Limpiar URL y recargar datos
+        window.history.replaceState({}, '', '/subscription');
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        throw new Error(data?.error || 'Error al verificar pago');
+      }
+    } catch (error) {
+      console.error('Error verifying PayPal payment:', error);
+      toast({
+        title: "Error",
+        description: "No pudimos confirmar tu pago. Contacta soporte si el problema persiste.",
+        variant: "destructive"
+      });
+      
+      // Limpiar URL incluso si hay error
+      window.history.replaceState({}, '', '/subscription');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePlanSelection = async (planType: 'monthly' | 'yearly') => {
     // If user already has a premium plan, show confirmation dialog
@@ -147,6 +200,14 @@ const SubscriptionPage: React.FC = () => {
       </div>
 
       <div className="max-w-md mx-auto p-4 space-y-6">
+        {/* Verificando pago de PayPal */}
+        {isLoading && new URLSearchParams(window.location.search).get('success') === 'true' && (
+          <div className="neu-card p-6 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-primary" />
+            <p className="text-sm text-muted-foreground">Verificando tu pago...</p>
+          </div>
+        )}
+
         {/* Current Status */}
         <SubscriptionStatus subscription={subscription} isPremium={isPremium} />
 
