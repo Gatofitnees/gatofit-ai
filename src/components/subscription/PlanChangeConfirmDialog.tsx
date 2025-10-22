@@ -93,15 +93,14 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
 
             <div className="neu-card p-3 bg-secondary/30 border border-secondary/20">
               <p className="text-xs text-foreground text-center">
-                <strong>💳 Sin cobro inmediato:</strong> Se creará una suscripción de $0 hasta que expire tu plan actual. 
-                El cobro automático de ${newPlan?.price_usd} comenzará el {expirationDate ? formatDate(expirationDate) : ''}.
+                <strong>💳 Cambio programado:</strong> Tu suscripción actual continuará sin cambios hasta {expirationDate ? formatDate(expirationDate) : ''}. 
+                El cobro automático de ${newPlan?.price_usd} comenzará exactamente en esa fecha.
               </p>
             </div>
             
             <div className="neu-card p-3 bg-accent/10 border border-accent/20">
               <p className="text-xs text-accent-foreground text-center">
-                <strong>✅ Cancelación gratuita:</strong> Puedes cancelar el cambio en cualquier momento sin costo, 
-                ya que no se ha realizado ningún cobro.
+                <strong>✅ Cancelación gratuita:</strong> Puedes cancelar este cambio programado en cualquier momento sin costo.
               </p>
             </div>
           </AlertDialogDescription>

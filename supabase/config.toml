@@ -29,5 +29,5 @@ verify_jwt = true
 [functions.paypal-webhook]
 verify_jwt = false
 
-[functions.cancel-paypal-subscription]
+[functions.revise-paypal-subscription]
 verify_jwt = true

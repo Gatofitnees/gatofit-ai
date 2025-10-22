@@ -120,57 +120,68 @@ async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) 
   }
 
   console.log('Processing payment for subscription:', subscriptionId);
-  console.log('Event resource details:', {
-    id: event.resource.id,
-    billing_agreement_id: event.resource.billing_agreement_id,
-    state: event.resource.state,
-    amount: event.resource.amount
-  });
 
   // Find user subscription by PayPal subscription ID
-  let subscription: any = null;
-  let fetchError: any = null;
-
-  const { data: subData, error: subError } = await supabase
+  const { data: subscription, error: fetchError } = await supabase
     .from('user_subscriptions')
     .select('*')
     .eq('paypal_subscription_id', subscriptionId)
     .maybeSingle();
 
-  subscription = subData;
-  fetchError = subError;
-
-  // Fallback: try to find by transaction ID if direct lookup fails
-  if (!subscription && event.resource.id) {
-    console.log('Direct subscription lookup failed, attempting fallback search by transaction context');
-    
-    // Log full payload for debugging
-    console.log('Full event payload:', JSON.stringify(event, null, 2));
-    
-    // Try to find recent active subscriptions that might match
-    const { data: recentSubs, error: recentError } = await supabase
-      .from('user_subscriptions')
-      .select('*')
-      .not('paypal_subscription_id', 'is', null)
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false })
-      .limit(10);
-
-    if (recentSubs && recentSubs.length > 0) {
-      console.log('Found recent active subscriptions, manual intervention may be needed:', 
-        recentSubs.map((s: any) => ({ id: s.id, paypal_id: s.paypal_subscription_id, user: s.user_id }))
-      );
-    }
-  }
-
   if (fetchError || !subscription) {
     console.error('Subscription not found for PayPal ID:', subscriptionId);
-    console.error('Fetch error:', fetchError);
     return;
   }
 
   console.log('Found subscription for user:', subscription.user_id, 'Plan:', subscription.plan_type);
 
+  // Check if this payment is for a scheduled plan change
+  const isScheduledChange = subscription.next_plan_type && subscription.next_plan_starts_at;
+  
+  if (isScheduledChange) {
+    console.log('Payment detected for scheduled plan change from', subscription.plan_type, 'to', subscription.next_plan_type);
+    
+    // Calculate new expiry based on NEW plan type
+    const now = new Date();
+    let newExpiryDate: Date;
+    
+    if (subscription.next_plan_type === 'monthly') {
+      newExpiryDate = new Date(now);
+      newExpiryDate.setDate(newExpiryDate.getDate() + 30);
+    } else if (subscription.next_plan_type === 'yearly') {
+      newExpiryDate = new Date(now);
+      newExpiryDate.setFullYear(newExpiryDate.getFullYear() + 1);
+    } else {
+      console.error('Unknown next plan type:', subscription.next_plan_type);
+      return;
+    }
+    
+    // Apply scheduled plan change
+    const { error: updateError } = await supabase
+      .from('user_subscriptions')
+      .update({
+        plan_type: subscription.next_plan_type,
+        expires_at: newExpiryDate.toISOString(),
+        started_at: now.toISOString(),
+        status: 'active',
+        auto_renewal: true,
+        next_plan_type: null,
+        next_plan_starts_at: null,
+        scheduled_change_created_at: null,
+        updated_at: now.toISOString()
+      })
+      .eq('id', subscription.id);
+
+    if (updateError) {
+      console.error('Error applying scheduled plan change:', updateError);
+      throw updateError;
+    }
+
+    console.log('Successfully applied scheduled plan change for user:', subscription.user_id);
+    return;
+  }
+
+  // Normal renewal - extend current plan
   // Calculate new expiration date based on plan type
   const currentExpiry = subscription.expires_at ? new Date(subscription.expires_at) : new Date();
   const now = new Date();

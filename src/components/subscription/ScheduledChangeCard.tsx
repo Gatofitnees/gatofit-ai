@@ -88,14 +88,13 @@ export const ScheduledChangeCard: React.FC<ScheduledChangeCardProps> = ({
 
         <div className="neu-card p-3 bg-primary/10 border border-primary/20">
           <p className="text-xs text-primary text-center">
-            <strong>💳 Trial de $0 activo:</strong> Tu suscripción PayPal está creada pero sin cobro hasta {formatDate(subscription.next_plan_starts_at || '')}
+            <strong>💳 Cambio aprobado:</strong> Tu plan se actualizará automáticamente el {formatDate(subscription.next_plan_starts_at || '')} con el cobro del nuevo plan.
           </p>
         </div>
 
         <div className="neu-card p-3 bg-accent/10 border border-accent/20">
           <p className="text-xs text-accent-foreground text-center">
-            <strong>✅ Cancelación sin costo:</strong> Puedes cancelar el cambio programado sin ningún cargo, 
-            ya que aún no se ha realizado el cobro.
+            <strong>✅ Cancelación sin costo:</strong> Puedes cancelar el cambio programado en cualquier momento.
           </p>
         </div>
 
