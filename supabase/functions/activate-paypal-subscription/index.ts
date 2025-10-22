@@ -39,6 +39,34 @@ Deno.serve(async (req) => {
 
     console.log('Activating PayPal subscription:', subscriptionId);
 
+    // Check current subscription status in DB first
+    const { data: subscription, error: subError } = await supabaseClient
+      .from('user_subscriptions')
+      .select('*')
+      .eq('paypal_subscription_id', subscriptionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (subError || !subscription) {
+      console.error('Subscription not found:', subError);
+      throw new Error('Subscription not found');
+    }
+
+    // If already active with auto_renewal, no need to reactivate
+    if (subscription.status === 'active' && subscription.auto_renewal === true) {
+      console.log('Subscription already active with auto_renewal');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'La suscripción ya está activa',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     // Get PayPal access token
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
@@ -77,6 +105,44 @@ Deno.serve(async (req) => {
     if (!activateResponse.ok) {
       const errorData = await activateResponse.text();
       console.error('PayPal activate error:', errorData);
+      
+      // If subscription is already active in PayPal (422), just sync DB
+      if (activateResponse.status === 422) {
+        const errorJson = JSON.parse(errorData);
+        if (errorJson.name === 'UNPROCESSABLE_ENTITY' && 
+            errorJson.details?.[0]?.issue === 'SUBSCRIPTION_STATUS_INVALID') {
+          console.log('Subscription already active in PayPal, syncing DB');
+          
+          const { error: updateError } = await supabaseClient
+            .from('user_subscriptions')
+            .update({
+              status: 'active',
+              suspended_at: null,
+              auto_renewal: true,
+              cancelled_at: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', user.id)
+            .eq('paypal_subscription_id', subscriptionId);
+
+          if (updateError) {
+            console.error('Error updating subscription in DB:', updateError);
+            throw updateError;
+          }
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: 'La suscripción ya está activa',
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            }
+          );
+        }
+      }
+      
       throw new Error(`Failed to activate PayPal subscription: ${errorData}`);
     }
 
@@ -89,6 +155,7 @@ Deno.serve(async (req) => {
         status: 'active',
         suspended_at: null,
         auto_renewal: true,
+        cancelled_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)

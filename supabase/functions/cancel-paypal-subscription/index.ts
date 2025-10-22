@@ -93,9 +93,9 @@ serve(async (req) => {
 
     const { access_token } = await authResponse.json();
 
-    // Cancel subscription in PayPal
+    // Suspend subscription in PayPal (not cancel, so it can be reactivated)
     const cancelResponse = await fetch(
-      `${PAYPAL_API}/v1/billing/subscriptions/${subscriptionId}/cancel`,
+      `${PAYPAL_API}/v1/billing/subscriptions/${subscriptionId}/suspend`,
       {
         method: 'POST',
         headers: {
@@ -111,7 +111,7 @@ serve(async (req) => {
     // 4. Handle PayPal response
     if (cancelResponse.ok || cancelResponse.status === 204) {
       // Success - update DB
-      console.log('PayPal cancellation successful');
+      console.log('PayPal suspension successful');
       
       const { error: updateError } = await supabase
         .from('user_subscriptions')
@@ -146,8 +146,8 @@ serve(async (req) => {
 
     if (cancelResponse.status === 422 && 
         errorData.name === 'SUBSCRIPTION_STATUS_INVALID') {
-      // Subscription already cancelled in PayPal, sync DB
-      console.log('Subscription already cancelled in PayPal, syncing DB');
+      // Subscription already suspended/cancelled in PayPal, sync DB
+      console.log('Subscription already suspended/cancelled in PayPal, syncing DB');
       
       const { error: updateError } = await supabase
         .from('user_subscriptions')
