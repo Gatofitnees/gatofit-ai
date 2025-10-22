@@ -84,13 +84,14 @@ export const PayPalCheckoutModal = ({
       }
 
       // Crear suscripción en PayPal con descuento si aplica
-      const { data, error } = await supabase.functions.invoke('create-paypal-subscription', {
-        body: {
-          planType,
-          userId: user.id,
-          discountCode: appliedDiscount ? discountCode : undefined
-        }
-      });
+    const { data, error } = await supabase.functions.invoke('create-paypal-subscription', {
+      body: {
+        planType,
+        userId: user.id,
+        discountCode: appliedDiscount ? discountCode : undefined,
+        returnUrl: window.location.origin
+      }
+    });
 
       if (error) throw error;
 

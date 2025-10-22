@@ -17,6 +17,7 @@ interface PayPalSubscriptionRequest {
   planType: 'monthly' | 'yearly';
   userId: string;
   discountCode?: string;
+  returnUrl?: string;
 }
 
 serve(async (req) => {
@@ -31,7 +32,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { planType, userId, discountCode }: PayPalSubscriptionRequest = await req.json();
+    const { planType, userId, discountCode, returnUrl }: PayPalSubscriptionRequest = await req.json();
     
     if (!planType || !userId) {
       throw new Error('Plan type and user ID are required');
@@ -278,8 +279,8 @@ serve(async (req) => {
           payer_selected: "PAYPAL",
           payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED"
         },
-        return_url: `https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev/subscription?success=true`,
-        cancel_url: `https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev/subscription?cancelled=true`
+        return_url: `${returnUrl || 'https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev'}/subscription?success=true`,
+        cancel_url: `${returnUrl || 'https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev'}/subscription?cancelled=true`
       }
     };
 
