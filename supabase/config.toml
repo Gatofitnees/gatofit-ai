@@ -25,3 +25,6 @@ verify_jwt = true
 
 [functions.verify-paypal-payment]
 verify_jwt = true
+
+[functions.paypal-webhook]
+verify_jwt = false
