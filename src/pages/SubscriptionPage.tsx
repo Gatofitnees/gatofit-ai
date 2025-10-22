@@ -131,10 +131,16 @@ const SubscriptionPage: React.FC = () => {
     try {
       // If subscription has PayPal ID, cancel via PayPal
       if (subscription?.paypal_subscription_id) {
+        // Get current session to pass auth token
+        const { data: { session } } = await supabase.auth.getSession();
+        
         const { data, error } = await supabase.functions.invoke('cancel-paypal-subscription', {
           body: {
             subscriptionId: subscription.paypal_subscription_id,
             reason: 'User requested cancellation'
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`
           }
         });
 

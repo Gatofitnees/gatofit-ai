@@ -85,9 +85,49 @@ serve(async (req) => {
       });
     }
 
-    // Determine plan type from PayPal plan ID or billing info
-    const billingInfo = subscriptionData.billing_info;
-    const planType = billingInfo?.cycle_executions?.[0]?.frequency?.interval_unit === 'MONTH' ? 'monthly' : 'yearly';
+    // Get PayPal plan details to determine the correct plan type
+    const planId = subscriptionData.plan_id;
+    console.log(`Fetching PayPal plan details for: ${planId}`);
+    
+    const planResponse = await fetch(`https://api-m.sandbox.paypal.com/v1/billing/plans/${planId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!planResponse.ok) {
+      const planError = await planResponse.text();
+      console.error('Failed to fetch PayPal plan details:', planError);
+      throw new Error('Failed to fetch PayPal plan details');
+    }
+
+    const planDetails = await planResponse.json();
+    console.log('PayPal plan details:', planDetails);
+
+    // Determine plan type from the billing cycle frequency
+    const billingCycle = planDetails.billing_cycles?.find((cycle: any) => cycle.tenure_type === 'REGULAR');
+    const intervalUnit = billingCycle?.frequency?.interval_unit;
+    const planType = intervalUnit === 'MONTH' ? 'monthly' : 'yearly';
+
+    console.log(`Detected plan type: ${planType} from interval unit: ${intervalUnit}`);
+
+    // Get expected price from database for validation
+    const { data: planData } = await supabase
+      .from('subscription_plans')
+      .select('price_usd')
+      .eq('plan_type', planType)
+      .eq('is_active', true)
+      .single();
+
+    const paidAmount = parseFloat(subscriptionData.billing_info?.last_payment?.amount?.value || '0');
+    console.log(`Expected price: $${planData?.price_usd}, Paid amount: $${paidAmount}`);
+
+    // Validate price (with tolerance for discounts)
+    if (planData && Math.abs(paidAmount - planData.price_usd) > 0.01) {
+      console.warn(`Price mismatch - Expected: $${planData.price_usd}, Paid: $${paidAmount} (might be a discount)`);
+    }
     
     // Calculate expiration date
     const now = new Date();
