@@ -57,25 +57,40 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Log headers for debugging
+    const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header present:', authHeader ? 'Yes' : 'No');
+    console.log('Authorization header length:', authHeader?.length || 0);
+
+    // Create two clients: one for auth verification, one for DB operations
+    const supabaseAuth = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader! },
         },
       }
     );
 
-    // Verificar autenticación
+    // Verify user authentication with the user's token
     const {
       data: { user },
       error: userError,
-    } = await supabaseClient.auth.getUser();
+    } = await supabaseAuth.auth.getUser();
+
+    console.log('User auth result:', { userId: user?.id, error: userError?.message });
 
     if (userError || !user) {
+      console.error('Authentication failed:', userError);
       throw new Error('Usuario no autenticado');
     }
+
+    // Use service role key for database operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
     const { subscriptionId, reason }: CancelSubscriptionRequest = await req.json();
 
@@ -122,8 +137,8 @@ serve(async (req) => {
 
     console.log('PayPal subscription cancelled successfully');
 
-    // Actualizar estado en Supabase
-    const { error: updateError } = await supabaseClient
+    // Update subscription status in Supabase using admin client
+    const { error: updateError } = await supabaseAdmin
       .from('user_subscriptions')
       .update({
         auto_renewal: false,
