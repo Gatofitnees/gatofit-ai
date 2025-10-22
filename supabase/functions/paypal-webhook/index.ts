@@ -139,10 +139,32 @@ async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) 
   const isScheduledChange = subscription.next_plan_type && subscription.next_plan_starts_at;
   
   if (isScheduledChange) {
-    console.log('Payment detected for scheduled plan change from', subscription.plan_type, 'to', subscription.next_plan_type);
+    console.log('Payment detected for subscription with scheduled change');
+    
+    const now = new Date();
+    const currentExpiresAt = new Date(subscription.expires_at);
+    
+    // Calculate hours until current plan expires
+    const hoursUntilExpiry = (currentExpiresAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    // If scheduled change is more than 1 hour away, this is just an approval payment
+    // The plan change should NOT be applied yet - user keeps current plan until expires_at
+    if (hoursUntilExpiry > 1) {
+      console.log('✅ Payment is for APPROVAL only. Scheduled change remains pending.');
+      console.log('📅 Current plan continues until:', currentExpiresAt.toISOString());
+      console.log('⏳ Hours remaining on current plan:', Math.round(hoursUntilExpiry));
+      console.log('🔄 Scheduled change from', subscription.plan_type, 'to', subscription.next_plan_type, 'will apply on:', currentExpiresAt.toISOString());
+      
+      // DO NOT change the plan - just acknowledge the payment
+      // The subscription will continue with current plan_type until expires_at
+      return;
+    }
+    
+    // If we're within 1 hour of expiry, it's time to apply the scheduled change
+    console.log('⚡ Scheduled change date reached. Applying plan change now.');
+    console.log('🔄 Changing from', subscription.plan_type, 'to', subscription.next_plan_type);
     
     // Calculate new expiry based on NEW plan type
-    const now = new Date();
     let newExpiryDate: Date;
     
     if (subscription.next_plan_type === 'monthly') {
@@ -177,7 +199,8 @@ async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) 
       throw updateError;
     }
 
-    console.log('Successfully applied scheduled plan change for user:', subscription.user_id);
+    console.log('✅ Successfully applied scheduled plan change for user:', subscription.user_id);
+    console.log('📅 New expiry date:', newExpiryDate.toISOString());
     return;
   }
 
