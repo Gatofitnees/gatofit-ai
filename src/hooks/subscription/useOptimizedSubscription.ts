@@ -137,8 +137,8 @@ export const useOptimizedSubscription = () => {
         return await upgradeSubscription(planType, transactionId);
       }
 
-      // Si ya tiene el mismo plan, no hacer nada
-      if (subscription.plan_type === planType) {
+      // VALIDACIÓN: Si ya tiene el mismo plan activo, rechazar
+      if (subscription.plan_type === planType && subscription.status === 'active') {
         toast({
           title: "Plan actual",
           description: "Ya tienes este plan activo",

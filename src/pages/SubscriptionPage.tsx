@@ -89,18 +89,21 @@ const SubscriptionPage: React.FC = () => {
   };
 
   const handlePlanSelection = async (planType: 'monthly' | 'yearly') => {
+    // Si ya tiene este plan activo, no hacer nada
+    if (subscription?.plan_type === planType && subscription?.status === 'active') {
+      toast({
+        title: "Plan actual",
+        description: "Ya tienes este plan activo. Selecciona el otro plan para cambiar.",
+        variant: "default"
+      });
+      return;
+    }
+
     // If user already has a premium plan, handle accordingly
     if (isPremium && subscription?.status === 'active') {
-      const currentPlanType = subscription.plan_type;
-      
-      // Si es el mismo plan, permite renovar/extender directamente
-      if (currentPlanType === planType) {
-        await handleDirectUpgrade(planType);
-      } else {
-        // Plan diferente - mostrar diálogo para programar cambio al vencer
-        setSelectedPlan(planType);
-        setShowPlanChangeDialog(true);
-      }
+      // Plan diferente - mostrar diálogo para programar cambio al vencer
+      setSelectedPlan(planType);
+      setShowPlanChangeDialog(true);
     } else {
       // Direct upgrade for free users
       await handleDirectUpgrade(planType);

@@ -44,8 +44,8 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
     if (isCurrentPlan) {
       return (
         <div className="flex items-center justify-center gap-2">
-          <Zap className="h-4 w-4" />
-          Renovar plan
+          <CheckCircle className="h-4 w-4" />
+          Plan Activo
         </div>
       );
     }
@@ -57,14 +57,14 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
     return (
       <div className="flex items-center justify-center gap-2">
         <CreditCard className="h-5 w-5" />
-        Suscribirme con PayPal
+        Cambiar a este plan
       </div>
     );
   };
 
   const getButtonStyles = () => {
     if (isCurrentPlan) {
-      return 'bg-primary hover:bg-primary/90 shadow-glow';
+      return 'bg-green-500/20 text-green-400 cursor-not-allowed hover:bg-green-500/20';
     }
     
     if (isRecommended) {
@@ -168,8 +168,8 @@ export const PremiumPlanCard: React.FC<PremiumPlanCardProps> = ({
         {/* Action Button */}
         <div className="space-y-2">
           <Button
-            onClick={handleOpenCheckout}
-            disabled={isLoading || (isCurrentPlan && isLoading)}
+            onClick={!isCurrentPlan ? handleOpenCheckout : undefined}
+            disabled={isCurrentPlan || isLoading}
             className={`w-full py-3 text-base font-semibold ${getButtonStyles()}`}
             size="lg"
           >
