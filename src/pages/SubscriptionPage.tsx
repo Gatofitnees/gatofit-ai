@@ -206,6 +206,51 @@ const SubscriptionPage: React.FC = () => {
     }
   };
 
+  const handleReactivateSubscription = async () => {
+    setIsLoading(true);
+    try {
+      if (!subscription?.paypal_subscription_id) {
+        toast({
+          title: "Error",
+          description: "No se encontró información de la suscripción",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('activate-paypal-subscription', {
+        body: {
+          subscriptionId: subscription.paypal_subscription_id
+        }
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error('No se pudo comunicar con el servidor de pagos');
+      }
+
+      if (data?.success) {
+        toast({
+          title: "Suscripción reactivada",
+          description: "Tu suscripción ha sido reactivada exitosamente",
+        });
+        
+        window.location.reload();
+      } else {
+        throw new Error(data?.error || 'Error desconocido al reactivar');
+      }
+    } catch (error) {
+      console.error('Error reactivating subscription:', error);
+      toast({
+        title: "Error al reactivar",
+        description: error instanceof Error ? error.message : "Ocurrió un error inesperado",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCancelScheduledChange = async () => {
     setIsLoading(true);
     try {
@@ -403,20 +448,42 @@ const SubscriptionPage: React.FC = () => {
           </div>
         )}
 
-        {/* Subscription Already Cancelled - Info Message */}
+        {/* Subscription Already Cancelled - Info Message with Reactivate Button */}
         {isPremium && subscription?.status === 'active' && subscription?.auto_renewal === false && (
           <div className="neu-card p-6 border border-yellow-500/20 bg-yellow-500/5">
             <div className="flex items-start gap-3">
               <Info className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <h3 className="font-semibold text-base">Suscripción cancelada</h3>
-                <p className="text-sm text-muted-foreground">
-                  Tu suscripción ya fue cancelada y no se renovará automáticamente.
-                  Seguirás teniendo acceso premium hasta {subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : 'la fecha de expiración'}.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Si cambias de opinión, puedes reactivar tu suscripción en cualquier momento antes de que expire.
-                </p>
+              <div className="space-y-3 flex-1">
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-base">Suscripción cancelada</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Tu suscripción ya fue cancelada y no se renovará automáticamente.
+                    Seguirás teniendo acceso premium hasta {subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : 'la fecha de expiración'}.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    ¿Cambiaste de opinión? Puedes reactivar tu suscripción ahora.
+                  </p>
+                </div>
+                {subscription?.paypal_subscription_id && (
+                  <Button
+                    variant="primary"
+                    onClick={handleReactivateSubscription}
+                    disabled={isLoading}
+                    className="w-full sm:w-auto"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Reactivando...
+                      </>
+                    ) : (
+                      <>
+                        <Crown className="h-4 w-4 mr-2" />
+                        Reactivar suscripción
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
