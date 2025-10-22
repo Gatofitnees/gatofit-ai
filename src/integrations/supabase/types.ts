@@ -2146,6 +2146,53 @@ export type Database = {
           },
         ]
       }
+      subscription_payment_failures: {
+        Row: {
+          created_at: string | null
+          failed_at: string
+          failure_reason: string | null
+          grace_period_ends_at: string
+          id: string
+          last_retry_at: string | null
+          resolved_at: string | null
+          retry_count: number | null
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          failed_at?: string
+          failure_reason?: string | null
+          grace_period_ends_at: string
+          id?: string
+          last_retry_at?: string | null
+          resolved_at?: string | null
+          retry_count?: number | null
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          failed_at?: string
+          failure_reason?: string | null
+          grace_period_ends_at?: string
+          id?: string
+          last_retry_at?: string | null
+          resolved_at?: string | null
+          retry_count?: number | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payment_failures_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string | null

@@ -16,7 +16,7 @@ export interface UserSubscription {
   id: string;
   user_id: string;
   plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados';
-  status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial' | 'suspended';
+  status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial' | 'suspended' | 'payment_failed';
   started_at: string;
   expires_at?: string;
   store_transaction_id?: string;
@@ -30,6 +30,20 @@ export interface UserSubscription {
   cancellation_reason?: string;
   paypal_subscription_id?: string;
   suspended_at?: string;
+  payment_failed_at?: string;
+}
+
+export interface PaymentFailure {
+  id: string;
+  subscription_id: string;
+  user_id: string;
+  failed_at: string;
+  failure_reason?: string;
+  retry_count: number;
+  last_retry_at?: string;
+  resolved_at?: string;
+  grace_period_ends_at: string;
+  created_at: string;
 }
 
 export interface CancelScheduledChangeResult {

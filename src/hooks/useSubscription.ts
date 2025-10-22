@@ -19,7 +19,7 @@ export interface UserSubscription {
   id: string;
   user_id: string;
   plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados';
-  status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial' | 'suspended';
+  status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial' | 'suspended' | 'payment_failed';
   started_at: string;
   expires_at?: string;
   store_transaction_id?: string;
@@ -29,6 +29,7 @@ export interface UserSubscription {
   next_plan_starts_at?: string;
   scheduled_change_created_at?: string;
   suspended_at?: string;
+  payment_failed_at?: string;
 }
 
 export const useSubscription = () => {

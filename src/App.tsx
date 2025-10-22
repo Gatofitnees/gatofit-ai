@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
@@ -39,6 +39,8 @@ import RoutineDetailPage from "./pages/RoutineDetailPage";
 import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
 import { WorkoutCacheProvider, useWorkoutCacheContext } from "./features/workout/contexts/WorkoutCacheContext";
 import { WorkoutRecoveryDialog } from "./features/workout/components/active-workout/WorkoutRecoveryDialog";
+import { PaymentFailureAlert } from "./components/subscription/PaymentFailureAlert";
+import { supabase } from "@/integrations/supabase/client";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
 
 // Component to handle workout recovery on app start
@@ -79,6 +81,60 @@ const WorkoutRecoveryHandler: React.FC = () => {
   );
 };
 
+// Global payment failure banner component
+const GlobalPaymentFailureBanner: React.FC = () => {
+  const [paymentFailure, setPaymentFailure] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
+
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get subscription
+      const { data: subData } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (subData && (subData.status as string) === 'payment_failed') {
+        setSubscription(subData);
+
+        // Get payment failure info
+        const { data: failureData } = await supabase
+          .from('subscription_payment_failures')
+          .select('*')
+          .eq('user_id', user.id)
+          .is('resolved_at', null)
+          .order('failed_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (failureData) {
+          setPaymentFailure(failureData);
+        }
+      } else {
+        setPaymentFailure(null);
+        setSubscription(null);
+      }
+    };
+
+    checkPaymentStatus();
+  }, []);
+
+  if (!paymentFailure || !subscription) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 p-4">
+      <PaymentFailureAlert
+        gracePeriodEndsAt={paymentFailure.grace_period_ends_at}
+        compact={true}
+      />
+    </div>
+  );
+};
+
 function App() {
   useEffect(() => {
     // Initialize mobile optimizations
@@ -91,6 +147,7 @@ function App() {
         <WorkoutCacheProvider>
           <Router>
             <WorkoutRecoveryHandler />
+            <GlobalPaymentFailureBanner />
             <div className="bg-background text-foreground min-h-screen">
               <RoutineProvider>
                 <Routes>

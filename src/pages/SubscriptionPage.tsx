@@ -11,6 +11,7 @@ import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus
 import { PlanChangeConfirmDialog } from '@/components/subscription/PlanChangeConfirmDialog';
 import { CancelConfirmDialog } from '@/components/subscription/CancelConfirmDialog';
 import { ScheduledChangeCard } from '@/components/subscription/ScheduledChangeCard';
+import { PaymentFailureAlert } from '@/components/subscription/PaymentFailureAlert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,9 +32,37 @@ const SubscriptionPage: React.FC = () => {
   const [showPlanChangeDialog, setShowPlanChangeDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | null>(null);
+  const [paymentFailure, setPaymentFailure] = useState<any>(null);
 
   const monthlyPlan = plans.find(p => p.plan_type === 'monthly');
   const yearlyPlan = plans.find(p => p.plan_type === 'yearly');
+
+  // Fetch payment failure info if subscription status is payment_failed
+  useEffect(() => {
+    const fetchPaymentFailure = async () => {
+      if (subscription?.status === 'payment_failed') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data } = await supabase
+          .from('subscription_payment_failures')
+          .select('*')
+          .eq('user_id', user.id)
+          .is('resolved_at', null)
+          .order('failed_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (data) {
+          setPaymentFailure(data);
+        }
+      } else {
+        setPaymentFailure(null);
+      }
+    };
+
+    fetchPaymentFailure();
+  }, [subscription?.status]);
 
   // Detectar retorno de PayPal y verificar pago
   useEffect(() => {
@@ -357,6 +386,13 @@ const SubscriptionPage: React.FC = () => {
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-primary" />
             <p className="text-sm text-muted-foreground">Verificando tu pago...</p>
           </div>
+        )}
+
+        {/* Payment Failure Alert */}
+        {subscription?.status === 'payment_failed' && paymentFailure && (
+          <PaymentFailureAlert
+            gracePeriodEndsAt={paymentFailure.grace_period_ends_at}
+          />
         )}
 
         {/* Current Status */}

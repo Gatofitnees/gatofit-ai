@@ -78,6 +78,10 @@ Deno.serve(async (req) => {
         await handleSubscriptionActivated(supabase, event);
         break;
       
+      case 'BILLING.SUBSCRIPTION.PAYMENT.FAILED':
+        await handlePaymentFailed(supabase, event);
+        break;
+      
       default:
         console.log('Unhandled event type:', event.event_type);
     }
@@ -100,6 +104,39 @@ Deno.serve(async (req) => {
 });
 
 async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) {
+  // Check if this payment resolves a payment failure
+  const subscriptionId = event.resource.billing_agreement_id || event.resource.id;
+  
+  // Try to find and resolve any payment failures for this subscription
+  const { data: failureRecords } = await supabase
+    .from('subscription_payment_failures')
+    .select('*, user_subscriptions!inner(paypal_subscription_id)')
+    .eq('user_subscriptions.paypal_subscription_id', subscriptionId)
+    .is('resolved_at', null);
+
+  if (failureRecords && failureRecords.length > 0) {
+    console.log('Resolving payment failure for subscription:', subscriptionId);
+    
+    // Mark payment failure as resolved
+    await supabase
+      .from('subscription_payment_failures')
+      .update({ resolved_at: new Date().toISOString() })
+      .eq('subscription_id', failureRecords[0].subscription_id)
+      .is('resolved_at', null);
+
+    // Update subscription status back to active
+    await supabase
+      .from('user_subscriptions')
+      .update({
+        status: 'active',
+        payment_failed_at: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', failureRecords[0].subscription_id);
+
+    console.log('Payment failure resolved successfully');
+  }
+  
   // Try multiple sources for subscription ID
   let subscriptionId = event.resource.billing_agreement_id || 
                        event.resource.id;
@@ -270,6 +307,43 @@ async function handleSubscriptionSuspended(supabase: any, event: PayPalWebhookEv
   const subscriptionId = event.resource.id;
   console.log('Processing suspension for subscription:', subscriptionId);
 
+  // Check if this suspension is due to payment failure
+  const { data: subscription } = await supabase
+    .from('user_subscriptions')
+    .select('*, payment_failed_at')
+    .eq('paypal_subscription_id', subscriptionId)
+    .single();
+
+  if (subscription && subscription.payment_failed_at) {
+    const paymentFailedDate = new Date(subscription.payment_failed_at);
+    const now = new Date();
+    const daysSinceFailure = (now.getTime() - paymentFailedDate.getTime()) / (1000 * 60 * 60 * 24);
+
+    // If 4+ days have passed since payment failure, expire the subscription
+    if (daysSinceFailure >= 4) {
+      console.log('Grace period expired, marking subscription as expired');
+      
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          status: 'expired',
+          suspended_at: new Date().toISOString(),
+          auto_renewal: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('paypal_subscription_id', subscriptionId);
+
+      if (error) {
+        console.error('Error expiring subscription:', error);
+        throw error;
+      }
+
+      console.log('Subscription expired after grace period:', subscriptionId);
+      return;
+    }
+  }
+
+  // Normal suspension (not due to payment failure expiration)
   const { error } = await supabase
     .from('user_subscriptions')
     .update({
@@ -286,6 +360,61 @@ async function handleSubscriptionSuspended(supabase: any, event: PayPalWebhookEv
   }
 
   console.log('Subscription suspended:', subscriptionId);
+}
+
+async function handlePaymentFailed(supabase: any, event: PayPalWebhookEvent) {
+  const subscriptionId = event.resource.billing_agreement_id || event.resource.id;
+  console.log('Processing payment failure for subscription:', subscriptionId);
+
+  // Find subscription
+  const { data: subscription, error: fetchError } = await supabase
+    .from('user_subscriptions')
+    .select('*')
+    .eq('paypal_subscription_id', subscriptionId)
+    .single();
+
+  if (fetchError || !subscription) {
+    console.error('Subscription not found for payment failure:', subscriptionId);
+    return;
+  }
+
+  const now = new Date();
+  const gracePeriodEnds = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000); // 4 days from now
+
+  // Update subscription to payment_failed status
+  const { error: updateError } = await supabase
+    .from('user_subscriptions')
+    .update({
+      status: 'payment_failed',
+      payment_failed_at: now.toISOString(),
+      auto_renewal: true, // Keep true so PayPal can retry
+      updated_at: now.toISOString()
+    })
+    .eq('id', subscription.id);
+
+  if (updateError) {
+    console.error('Error updating subscription for payment failure:', updateError);
+    throw updateError;
+  }
+
+  // Record payment failure
+  const { error: failureError } = await supabase
+    .from('subscription_payment_failures')
+    .insert({
+      subscription_id: subscription.id,
+      user_id: subscription.user_id,
+      failed_at: now.toISOString(),
+      failure_reason: event.resource.state || 'Payment processing failed',
+      grace_period_ends_at: gracePeriodEnds.toISOString(),
+      retry_count: 0
+    });
+
+  if (failureError) {
+    console.error('Error recording payment failure:', failureError);
+  }
+
+  console.log('Payment failure recorded for subscription:', subscriptionId);
+  console.log('Grace period ends at:', gracePeriodEnds.toISOString());
 }
 
 async function handleSubscriptionActivated(supabase: any, event: PayPalWebhookEvent) {

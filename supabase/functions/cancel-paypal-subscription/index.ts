@@ -93,7 +93,53 @@ serve(async (req) => {
 
     const { access_token } = await authResponse.json();
 
-    // Suspend subscription in PayPal (not cancel, so it can be reactivated)
+    // 3.5. Check current PayPal subscription status BEFORE attempting to suspend
+    const checkResponse = await fetch(
+      `${PAYPAL_API}/v1/billing/subscriptions/${subscriptionId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (checkResponse.ok) {
+      const paypalStatus = await checkResponse.json();
+      console.log('Current PayPal status:', paypalStatus.status);
+      
+      // If already SUSPENDED or CANCELLED in PayPal, just sync DB
+      if (paypalStatus.status === 'SUSPENDED' || paypalStatus.status === 'CANCELLED') {
+        console.log('Subscription already suspended/cancelled in PayPal, syncing DB only');
+        
+        const { error: updateError } = await supabase
+          .from('user_subscriptions')
+          .update({
+            auto_renewal: false,
+            cancelled_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('paypal_subscription_id', subscriptionId)
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Failed to sync DB:', updateError);
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'La suscripción ya fue cancelada anteriormente',
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
+      }
+    }
+
+    // 4. Suspend subscription in PayPal (not cancel, so it can be reactivated)
     const cancelResponse = await fetch(
       `${PAYPAL_API}/v1/billing/subscriptions/${subscriptionId}/suspend`,
       {
