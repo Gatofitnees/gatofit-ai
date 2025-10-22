@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Crown, Sparkles, Loader2 } from 'lucide-react';
 import Button from '@/components/Button';
-import { useSubscription } from '@/hooks/subscription';
+import { useSubscription, type CancelScheduledChangeResult } from '@/hooks/subscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
 import { PremiumPlanCard } from '@/components/subscription/PremiumPlanCard';
@@ -180,14 +180,21 @@ const SubscriptionPage: React.FC = () => {
   const handleCancelScheduledChange = async () => {
     setIsLoading(true);
     try {
-      // Si hay un paypal_subscription_id asociado al cambio programado, cancelarlo primero
-      if (subscription?.paypal_subscription_id) {
-        console.log('Cancelling scheduled PayPal subscription:', subscription.paypal_subscription_id);
+      // Primero cancelar el cambio programado en la BD y obtener el PayPal ID
+      const result: CancelScheduledChangeResult = await cancelScheduledPlanChange();
+      
+      if (!result.success) {
+        throw new Error('Failed to cancel scheduled change');
+      }
+
+      // Si hay un paypal_subscription_id asociado al cambio programado, cancelarlo en PayPal
+      if (result.paypalSubscriptionId) {
+        console.log('Cancelling scheduled PayPal subscription:', result.paypalSubscriptionId);
         
         try {
           const { data, error } = await supabase.functions.invoke('cancel-paypal-subscription', {
             body: {
-              subscriptionId: subscription.paypal_subscription_id,
+              subscriptionId: result.paypalSubscriptionId,
               reason: 'User cancelled scheduled plan change'
             }
           });
@@ -195,25 +202,30 @@ const SubscriptionPage: React.FC = () => {
           if (error) {
             console.error('Error cancelling PayPal subscription:', error);
             toast({
-              title: "Advertencia",
-              description: "No se pudo cancelar la suscripción en PayPal, pero se canceló el cambio programado",
+              title: "Cambio cancelado con advertencia",
+              description: "El cambio fue cancelado pero no se pudo procesar el reembolso de PayPal automáticamente. Contacta soporte.",
               variant: "default"
             });
-          } else if (data?.success) {
+            return;
+          }
+          
+          if (data?.success) {
             console.log('✅ PayPal subscription cancelled successfully');
           }
         } catch (paypalError) {
           console.error('Error in PayPal cancellation:', paypalError);
-          // Continuar de todos modos con la cancelación del cambio programado
+          toast({
+            title: "Cambio cancelado con advertencia",
+            description: "El cambio fue cancelado pero hubo un problema con PayPal. Contacta soporte.",
+            variant: "default"
+          });
+          return;
         }
       }
-
-      // Cancelar el cambio programado en la BD
-      await cancelScheduledPlanChange();
       
       toast({
         title: "Cambio cancelado",
-        description: "El cambio de plan ha sido cancelado exitosamente",
+        description: "El cambio de plan ha sido cancelado y se procesará el reembolso correspondiente",
       });
     } catch (error) {
       console.error('Error cancelling scheduled change:', error);

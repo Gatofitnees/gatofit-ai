@@ -2945,10 +2945,7 @@ export type Database = {
         }
         Returns: Json
       }
-      can_coach_view_user: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
+      can_coach_view_user: { Args: { p_user_id: string }; Returns: boolean }
       cancel_scheduled_plan_change: {
         Args: { p_user_id: string }
         Returns: Json
@@ -2961,14 +2958,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_user_is_admin: {
-        Args: { user_uuid?: string }
-        Returns: boolean
-      }
-      clean_old_food_entries: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      check_user_is_admin: { Args: { user_uuid?: string }; Returns: boolean }
+      clean_old_food_entries: { Args: never; Returns: undefined }
       clone_nutrition_plan_for_program: {
         Args: {
           new_plan_name?: string
@@ -2989,10 +2980,7 @@ export type Database = {
         Args: { source_routine_id: number; target_user_id: string }
         Returns: Json
       }
-      create_user_profile: {
-        Args: { user_id: string }
-        Returns: Json
-      }
+      create_user_profile: { Args: { user_id: string }; Returns: Json }
       duplicate_nutrition_plan: {
         Args: { source_plan_id: string }
         Returns: string
@@ -3001,18 +2989,12 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      get_admin_dashboard_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_admin_role: {
         Args: { user_id?: string }
         Returns: Database["public"]["Enums"]["admin_role"]
       }
-      get_app_settings: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_app_settings: { Args: never; Returns: Json }
       get_asesorados_users: {
         Args: { search_term?: string }
         Returns: {
@@ -3024,7 +3006,7 @@ export type Database = {
         }[]
       }
       get_coach_clients_program_end_dates: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           days_remaining: number
@@ -3037,12 +3019,9 @@ export type Database = {
           weeks_completed: number
         }[]
       }
-      get_default_colors: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_default_colors: { Args: never; Returns: Json }
       get_my_admin_permissions: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           category: string
           description: string
@@ -3083,7 +3062,7 @@ export type Database = {
         }[]
       }
       get_safe_public_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           id: string
@@ -3095,12 +3074,9 @@ export type Database = {
         Args: { p_month?: number; p_user_id: string; p_year?: number }
         Returns: Json
       }
-      get_user_details: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
+      get_user_details: { Args: { p_user_id: string }; Returns: Json }
       get_user_growth_by_month: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           month: string
           new_users: number
@@ -3223,10 +3199,7 @@ export type Database = {
           username: string
         }[]
       }
-      get_week_start: {
-        Args: { input_date?: string }
-        Returns: string
-      }
+      get_week_start: { Args: { input_date?: string }; Returns: string }
       get_workout_session_details: {
         Args: { p_workout_log_id: number }
         Returns: Json
@@ -3239,30 +3212,12 @@ export type Database = {
         Args: { counter_type: string; increment_by?: number; p_user_id: string }
         Returns: boolean
       }
-      is_admin: {
-        Args: { user_id?: string }
-        Returns: boolean
-      }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_admin_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_user_premium: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      process_scheduled_plan_changes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      is_admin: { Args: { user_id?: string }; Returns: boolean }
+      is_current_user_admin: { Args: never; Returns: boolean }
+      is_current_user_admin_safe: { Args: never; Returns: boolean }
+      is_current_user_super_admin: { Args: never; Returns: boolean }
+      is_user_premium: { Args: { user_id: string }; Returns: boolean }
+      process_scheduled_plan_changes: { Args: never; Returns: undefined }
       schedule_plan_change: {
         Args: {
           p_new_plan_type: Database["public"]["Enums"]["subscription_plan_type"]
@@ -3270,22 +3225,13 @@ export type Database = {
         }
         Returns: Json
       }
-      unassign_client_from_coach: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
+      unassign_client_from_coach: { Args: { p_user_id: string }; Returns: Json }
       update_app_setting: {
         Args: { p_setting_key: string; p_setting_value: Json }
         Returns: undefined
       }
-      update_expired_subscriptions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_user_streak: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
+      update_expired_subscriptions: { Args: never; Returns: undefined }
+      update_user_streak: { Args: { p_user_id: string }; Returns: undefined }
       update_user_subscription_plan: {
         Args: {
           p_admin_user_id?: string
@@ -3294,10 +3240,7 @@ export type Database = {
         }
         Returns: Json
       }
-      verify_admin_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      verify_admin_status: { Args: never; Returns: Json }
     }
     Enums: {
       admin_role: "super_admin" | "moderator" | "content_manager" | "coach"

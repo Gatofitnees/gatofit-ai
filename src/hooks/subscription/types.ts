@@ -30,3 +30,9 @@ export interface UserSubscription {
   cancellation_reason?: string;
   paypal_subscription_id?: string;
 }
+
+export interface CancelScheduledChangeResult {
+  success: boolean;
+  paypalSubscriptionId?: string;
+  cancelledPlanType?: string;
+}

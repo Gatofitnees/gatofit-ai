@@ -31,6 +31,12 @@ export interface UserSubscription {
   scheduled_change_created_at?: string;
 }
 
+export interface CancelScheduledChangeResult {
+  success: boolean;
+  paypalSubscriptionId?: string;
+  cancelledPlanType?: string;
+}
+
 export const useSubscription = () => {
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -231,12 +237,12 @@ export const useSubscription = () => {
     }
   };
 
-  const cancelScheduledPlanChange = async () => {
+  const cancelScheduledPlanChange = async (): Promise<CancelScheduledChangeResult> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      const { error } = await supabase.rpc('cancel_scheduled_plan_change', {
+      const { data, error } = await supabase.rpc('cancel_scheduled_plan_change', {
         p_user_id: user.id
       });
 
@@ -244,12 +250,15 @@ export const useSubscription = () => {
 
       await fetchSubscriptionData();
       
-      toast({
-        title: "Cambio cancelado",
-        description: "Se ha cancelado el cambio de plan programado",
-      });
-
-      return true;
+      // Cast data to the expected structure
+      const result = data as { paypal_subscription_id?: string; cancelled_plan_type?: string } | null;
+      
+      // Return the PayPal subscription ID that needs to be cancelled
+      return {
+        success: true,
+        paypalSubscriptionId: result?.paypal_subscription_id,
+        cancelledPlanType: result?.cancelled_plan_type
+      };
     } catch (error) {
       console.error('Error canceling scheduled plan change:', error);
       toast({
@@ -257,7 +266,7 @@ export const useSubscription = () => {
         description: "No se pudo cancelar el cambio programado",
         variant: "destructive"
       });
-      return false;
+      return { success: false };
     }
   };
 
