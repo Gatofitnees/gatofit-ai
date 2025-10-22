@@ -74,8 +74,22 @@ export const usePayPalSubscription = () => {
         return { success: false, error: data.error };
       }
 
+      // Manejar tanto activación inmediata como programación
+      if (data.scheduled) {
+        toast({
+          title: "¡Cambio de plan programado!",
+          description: data.subscription.message,
+        });
+      } else {
+        toast({
+          title: "¡Pago verificado!",
+          description: "Tu suscripción ha sido activada exitosamente",
+        });
+      }
+
       return {
         success: true,
+        scheduled: data.scheduled,
         subscription: data.subscription
       };
 

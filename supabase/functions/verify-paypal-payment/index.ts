@@ -157,9 +157,79 @@ serve(async (req) => {
           startedAt = existingSub.started_at; // Mantener fecha de inicio original
           console.log(`✅ Extending ${planType} plan from ${existingExpiry} to ${expiresAt}`);
         } else {
-          // Intentando cambiar de plan mientras hay tiempo activo - no permitir
-          console.warn(`❌ Cannot change plan type while subscription is active`);
-          throw new Error('No puedes cambiar de plan mientras tienes uno activo. Por favor, programa el cambio para cuando expire tu plan actual.');
+          // Cambio de plan detectado - programar cambio y cancelar suscripción anterior
+          console.log(`🔄 Plan change detected: ${existingSub.plan_type} → ${planType}`);
+          
+          // Cancelar suscripción anterior en PayPal
+          if (existingSub.paypal_subscription_id && existingSub.paypal_subscription_id !== subscriptionId) {
+            console.log(`Cancelling old PayPal subscription: ${existingSub.paypal_subscription_id}`);
+            
+            try {
+              const cancelResponse = await fetch(
+                `https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${existingSub.paypal_subscription_id}/cancel`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${tokenData.access_token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    reason: 'User changed subscription plan'
+                  })
+                }
+              );
+              
+              if (cancelResponse.ok || cancelResponse.status === 204) {
+                console.log('✅ Old PayPal subscription cancelled successfully');
+              } else {
+                console.warn('⚠️ Could not cancel old PayPal subscription, continuing anyway');
+              }
+            } catch (cancelError) {
+              console.error('Error cancelling old subscription:', cancelError);
+              // Continuar de todos modos
+            }
+          }
+          
+          // Mantener el expires_at del plan anterior para que no pierda tiempo
+          expiresAt = existingExpiry;
+          startedAt = existingSub.started_at;
+          
+          // Programar el nuevo plan para que comience cuando expire el actual
+          console.log(`📅 Scheduling new plan to start at: ${expiresAt.toISOString()}`);
+          
+          const { error: scheduleError } = await supabase
+            .from('user_subscriptions')
+            .update({
+              next_plan_type: planType,
+              next_plan_starts_at: expiresAt.toISOString(),
+              scheduled_change_created_at: new Date().toISOString(),
+              paypal_subscription_id: subscriptionId,
+              paypal_payer_id: subscriptionData.subscriber?.payer_id,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+          
+          if (scheduleError) {
+            console.error('Error scheduling plan change:', scheduleError);
+            throw new Error('Failed to schedule plan change');
+          }
+          
+          console.log(`✅ Plan change scheduled successfully`);
+          
+          return new Response(JSON.stringify({
+            success: true,
+            scheduled: true,
+            subscription: {
+              id: subscriptionId,
+              status: 'scheduled',
+              planType: planType,
+              currentPlanType: existingSub.plan_type,
+              startsAt: expiresAt.toISOString(),
+              message: `Tu plan ${planType === 'monthly' ? 'mensual' : 'anual'} comenzará el ${expiresAt.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
       } else {
         // Plan expirado - crear nueva suscripción
