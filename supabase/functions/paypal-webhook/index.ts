@@ -100,18 +100,72 @@ Deno.serve(async (req) => {
 });
 
 async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) {
-  const subscriptionId = event.resource.billing_agreement_id || event.resource.id;
+  // Try multiple sources for subscription ID
+  let subscriptionId = event.resource.billing_agreement_id || 
+                       event.resource.id;
+  
+  // Check supplementary data for related IDs
+  if (!subscriptionId && event.resource.supplementary_data?.related_ids) {
+    subscriptionId = event.resource.supplementary_data.related_ids.order_id;
+  }
+  
+  // Check links array for subscription reference
+  if (!subscriptionId && event.resource.links) {
+    const subLink = event.resource.links.find((link: any) => 
+      link.rel === 'billing_agreement' || link.rel === 'subscription'
+    );
+    if (subLink?.href) {
+      subscriptionId = subLink.href.split('/').pop();
+    }
+  }
+
   console.log('Processing payment for subscription:', subscriptionId);
+  console.log('Event resource details:', {
+    id: event.resource.id,
+    billing_agreement_id: event.resource.billing_agreement_id,
+    state: event.resource.state,
+    amount: event.resource.amount
+  });
 
   // Find user subscription by PayPal subscription ID
-  const { data: subscription, error: fetchError } = await supabase
+  let subscription: any = null;
+  let fetchError: any = null;
+
+  const { data: subData, error: subError } = await supabase
     .from('user_subscriptions')
     .select('*')
     .eq('paypal_subscription_id', subscriptionId)
-    .single();
+    .maybeSingle();
+
+  subscription = subData;
+  fetchError = subError;
+
+  // Fallback: try to find by transaction ID if direct lookup fails
+  if (!subscription && event.resource.id) {
+    console.log('Direct subscription lookup failed, attempting fallback search by transaction context');
+    
+    // Log full payload for debugging
+    console.log('Full event payload:', JSON.stringify(event, null, 2));
+    
+    // Try to find recent active subscriptions that might match
+    const { data: recentSubs, error: recentError } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .not('paypal_subscription_id', 'is', null)
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
+      .limit(10);
+
+    if (recentSubs && recentSubs.length > 0) {
+      console.log('Found recent active subscriptions, manual intervention may be needed:', 
+        recentSubs.map((s: any) => ({ id: s.id, paypal_id: s.paypal_subscription_id, user: s.user_id }))
+      );
+    }
+  }
 
   if (fetchError || !subscription) {
     console.error('Subscription not found for PayPal ID:', subscriptionId);
+    console.error('Fetch error:', fetchError);
     return;
   }
 
