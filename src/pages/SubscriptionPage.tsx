@@ -89,10 +89,18 @@ const SubscriptionPage: React.FC = () => {
   };
 
   const handlePlanSelection = async (planType: 'monthly' | 'yearly') => {
-    // If user already has a premium plan, show confirmation dialog
+    // If user already has a premium plan, handle accordingly
     if (isPremium && subscription?.status === 'active') {
-      setSelectedPlan(planType);
-      setShowPlanChangeDialog(true);
+      const currentPlanType = subscription.plan_type;
+      
+      // Si es el mismo plan, permite renovar/extender directamente
+      if (currentPlanType === planType) {
+        await handleDirectUpgrade(planType);
+      } else {
+        // Plan diferente - mostrar diálogo para programar cambio al vencer
+        setSelectedPlan(planType);
+        setShowPlanChangeDialog(true);
+      }
     } else {
       // Direct upgrade for free users
       await handleDirectUpgrade(planType);

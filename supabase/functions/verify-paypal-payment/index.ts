@@ -129,13 +129,57 @@ serve(async (req) => {
       console.warn(`Price mismatch - Expected: $${planData.price_usd}, Paid: $${paidAmount} (might be a discount)`);
     }
     
+    // Check for existing subscription
+    const { data: existingSub } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    console.log(`Existing subscription:`, existingSub);
+
     // Calculate expiration date
     const now = new Date();
-    const expiresAt = planType === 'monthly' 
-      ? new Date(now.setMonth(now.getMonth() + 1))
-      : new Date(now.setFullYear(now.getFullYear() + 1));
+    let expiresAt: Date;
+    let startedAt: string;
+
+    if (existingSub && existingSub.expires_at) {
+      const existingExpiry = new Date(existingSub.expires_at);
+      
+      // Si aún tiene tiempo restante (no ha expirado)
+      if (existingExpiry > now) {
+        // Solo permite renovar/extender el MISMO plan
+        if (existingSub.plan_type === planType) {
+          // EXTENDER tiempo - sumar duración al expires_at existente
+          const daysToAdd = planType === 'monthly' ? 30 : 365;
+          expiresAt = new Date(existingExpiry);
+          expiresAt.setDate(expiresAt.getDate() + daysToAdd);
+          startedAt = existingSub.started_at; // Mantener fecha de inicio original
+          console.log(`✅ Extending ${planType} plan from ${existingExpiry} to ${expiresAt}`);
+        } else {
+          // Intentando cambiar de plan mientras hay tiempo activo - no permitir
+          console.warn(`❌ Cannot change plan type while subscription is active`);
+          throw new Error('No puedes cambiar de plan mientras tienes uno activo. Por favor, programa el cambio para cuando expire tu plan actual.');
+        }
+      } else {
+        // Plan expirado - crear nueva suscripción
+        expiresAt = planType === 'monthly' 
+          ? new Date(now.setMonth(now.getMonth() + 1))
+          : new Date(now.setFullYear(now.getFullYear() + 1));
+        startedAt = new Date().toISOString();
+        console.log(`📅 Creating new subscription (expired plan)`);
+      }
+    } else {
+      // No hay suscripción previa - crear nueva
+      expiresAt = planType === 'monthly' 
+        ? new Date(now.setMonth(now.getMonth() + 1))
+        : new Date(now.setFullYear(now.getFullYear() + 1));
+      startedAt = new Date().toISOString();
+      console.log(`🆕 Creating first subscription for user`);
+    }
 
     console.log(`Attempting to update subscription for user ${userId}, plan: ${planType}`);
+    console.log(`Started: ${startedAt}, Expires: ${expiresAt.toISOString()}`);
 
     // Update user subscription in Supabase
     const { data: upsertData, error: updateError } = await supabase
@@ -144,7 +188,7 @@ serve(async (req) => {
         user_id: userId,
         plan_type: planType,
         status: 'active',
-        started_at: new Date().toISOString(),
+        started_at: startedAt,
         expires_at: expiresAt.toISOString(),
         paypal_subscription_id: subscriptionId,
         paypal_payer_id: subscriptionData.subscriber?.payer_id,

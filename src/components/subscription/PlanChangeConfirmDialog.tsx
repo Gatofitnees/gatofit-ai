@@ -93,8 +93,8 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
 
             <div className="neu-card p-3 bg-secondary/30 border border-secondary/20">
               <p className="text-xs text-foreground text-center">
-                <strong>Resumen:</strong> Disfrutarás tu plan actual hasta su vencimiento, 
-                luego cambiarás automáticamente al {newPlan?.name}.
+                <strong>✅ No perderás tiempo premium:</strong> Disfrutarás tu {currentPlan?.name} completo 
+                hasta su vencimiento, luego cambiarás automáticamente al {newPlan?.name}.
               </p>
             </div>
           </AlertDialogDescription>
