@@ -279,7 +279,7 @@ serve(async (req) => {
           payer_selected: "PAYPAL",
           payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED"
         },
-        return_url: `${returnUrl || 'https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev'}/subscription?success=true&subscription_id=${subscriptionData.id}`,
+        return_url: `${returnUrl || 'https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev'}/subscription?success=true`,
         cancel_url: `${returnUrl || 'https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev'}/subscription?cancelled=true`
       }
     };
