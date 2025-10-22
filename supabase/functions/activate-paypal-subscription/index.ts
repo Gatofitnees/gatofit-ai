@@ -52,6 +52,27 @@ Deno.serve(async (req) => {
       throw new Error('Subscription not found');
     }
 
+    // Check if subscription has expired
+    if (subscription.expires_at) {
+      const expiresAt = new Date(subscription.expires_at);
+      const now = new Date();
+      
+      if (expiresAt < now || subscription.status === 'expired') {
+        console.log('Subscription has expired, cannot reactivate');
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'expired',
+            message: 'La suscripción ha expirado. Necesitas crear una nueva suscripción.',
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+    }
+
     // If already active with auto_renewal, no need to reactivate
     if (subscription.status === 'active' && subscription.auto_renewal === true) {
       console.log('Subscription already active with auto_renewal');

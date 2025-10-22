@@ -218,6 +218,16 @@ const SubscriptionPage: React.FC = () => {
         return;
       }
 
+      // Validar si la suscripción ha expirado
+      if (subscription?.expires_at && new Date(subscription.expires_at) < new Date()) {
+        toast({
+          title: "Suscripción expirada",
+          description: "Tu suscripción ha expirado. Necesitas crear una nueva suscripción.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('activate-paypal-subscription', {
         body: {
           subscriptionId: subscription.paypal_subscription_id
@@ -236,6 +246,12 @@ const SubscriptionPage: React.FC = () => {
         });
         
         window.location.reload();
+      } else if (data?.error === 'expired') {
+        toast({
+          title: "Suscripción expirada",
+          description: "Tu suscripción ha expirado. Necesitas crear una nueva suscripción.",
+          variant: "destructive"
+        });
       } else {
         throw new Error(data?.error || 'Error desconocido al reactivar');
       }
@@ -448,8 +464,12 @@ const SubscriptionPage: React.FC = () => {
           </div>
         )}
 
-        {/* Subscription Already Cancelled - Info Message with Reactivate Button */}
-        {isPremium && subscription?.status === 'active' && subscription?.auto_renewal === false && (
+        {/* Subscription Already Cancelled - Not Expired Yet */}
+        {isPremium && 
+         subscription?.status === 'active' && 
+         subscription?.auto_renewal === false && 
+         subscription?.expires_at && 
+         new Date(subscription.expires_at) > new Date() && (
           <div className="neu-card p-6 border border-yellow-500/20 bg-yellow-500/5">
             <div className="flex items-start gap-3">
               <Info className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -458,7 +478,7 @@ const SubscriptionPage: React.FC = () => {
                   <h3 className="font-semibold text-base">Suscripción cancelada</h3>
                   <p className="text-sm text-muted-foreground">
                     Tu suscripción ya fue cancelada y no se renovará automáticamente.
-                    Seguirás teniendo acceso premium hasta {subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : 'la fecha de expiración'}.
+                    Seguirás teniendo acceso premium hasta {new Date(subscription.expires_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}.
                   </p>
                   <p className="text-xs text-muted-foreground">
                     ¿Cambiaste de opinión? Puedes reactivar tu suscripción ahora.
@@ -484,6 +504,27 @@ const SubscriptionPage: React.FC = () => {
                     )}
                   </Button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Subscription Expired or Cancelled and Expired - Renew Section */}
+        {((subscription?.status === 'expired') || 
+          (subscription?.status === 'active' && 
+           subscription?.auto_renewal === false && 
+           subscription?.expires_at && 
+           new Date(subscription.expires_at) <= new Date())) && (
+          <div className="neu-card p-6 border border-primary/20 bg-primary/5">
+            <div className="flex items-start gap-3">
+              <Crown className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="space-y-3 flex-1">
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-base">Renovar suscripción</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Tu suscripción ha expirado. Para volver a disfrutar de los beneficios premium, selecciona un nuevo plan arriba.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
