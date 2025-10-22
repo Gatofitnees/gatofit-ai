@@ -124,7 +124,6 @@ export const useOptimizedSubscription = () => {
     }
   }, [checkCachedPremiumStatus]);
 
-  // Resto de funciones mantenidas igual
   const scheduleOrUpgradeSubscription = async (planType: 'monthly' | 'yearly', transactionId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -133,10 +132,36 @@ export const useOptimizedSubscription = () => {
       const plan = plans.find(p => p.plan_type === planType);
       if (!plan) throw new Error('Plan no encontrado');
 
+      // Si no tiene plan o tiene plan free, upgrade directo
       if (!subscription || subscription.plan_type === 'free') {
         return await upgradeSubscription(planType, transactionId);
       }
 
+      // Si tiene plan activo diferente, crear suscripción PayPal con trial de $0
+      if (subscription.status === 'active' && subscription.plan_type !== planType) {
+        // Crear suscripción PayPal con trial period
+        const { data, error } = await supabase.functions.invoke(
+          'create-paypal-subscription',
+          {
+            body: {
+              planType,
+              userId: user.id,
+              isScheduledChange: true,
+              currentExpiresAt: subscription.expires_at,
+              returnUrl: window.location.origin
+            }
+          }
+        );
+        
+        if (error) throw error;
+        
+        // Redirigir a PayPal para aprobar
+        window.location.href = data.approvalUrl;
+        
+        return true;
+      }
+
+      // Fallback a RPC si no cumple condiciones anteriores
       const { data, error } = await supabase.rpc('schedule_plan_change', {
         p_user_id: user.id,
         p_new_plan_type: planType
@@ -146,13 +171,9 @@ export const useOptimizedSubscription = () => {
 
       await fetchSubscriptionData();
       
-      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly' || subscription.plan_type === 'asesorados';
-      
       toast({
-        title: hadPremiumPlan ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",
-        description: hadPremiumPlan 
-          ? `Tu cambio al ${plan.name} se aplicará cuando expire tu plan actual`
-          : `Ahora tienes acceso al ${plan.name}`,
+        title: "¡Cambio de plan programado!",
+        description: `Tu cambio al ${plan.name} se aplicará cuando expire tu plan actual`,
       });
 
       return true;
@@ -226,22 +247,48 @@ export const useOptimizedSubscription = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      const { data, error } = await supabase.rpc('cancel_scheduled_plan_change', {
-        p_user_id: user.id
-      });
+      // Cancelar la suscripción PayPal del trial si existe
+      const paypalSubId = subscription?.paypal_subscription_id;
+      
+      if (paypalSubId) {
+        const { error: cancelError } = await supabase.functions.invoke(
+          'cancel-paypal-subscription',
+          {
+            body: {
+              subscriptionId: paypalSubId,
+              reason: 'Cambio de plan cancelado por el usuario'
+            }
+          }
+        );
+        
+        if (cancelError) {
+          console.error('Error al cancelar en PayPal:', cancelError);
+        }
+      }
+
+      // Limpiar campos en DB
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          next_plan_type: null,
+          next_plan_starts_at: null,
+          scheduled_change_created_at: null
+        })
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
       await fetchSubscriptionData();
       
-      // Cast data to the expected structure
-      const result = data as { paypal_subscription_id?: string; cancelled_plan_type?: string } | null;
+      toast({
+        title: "Cambio cancelado",
+        description: "El cambio de plan programado ha sido cancelado exitosamente",
+      });
       
-      // Return the PayPal subscription ID that needs to be cancelled
       return {
         success: true,
-        paypalSubscriptionId: result?.paypal_subscription_id,
-        cancelledPlanType: result?.cancelled_plan_type
+        paypalSubscriptionId: paypalSubId,
+        cancelledPlanType: subscription?.next_plan_type
       };
     } catch (error) {
       console.error('Error canceling scheduled plan change:', error);

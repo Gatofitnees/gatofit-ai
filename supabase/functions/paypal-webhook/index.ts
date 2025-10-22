@@ -257,19 +257,67 @@ async function handleSubscriptionActivated(supabase: any, event: PayPalWebhookEv
   const subscriptionId = event.resource.id;
   console.log('Processing activation for subscription:', subscriptionId);
 
-  const { error } = await supabase
+  // Get current subscription data
+  const { data: subscription, error: fetchError } = await supabase
     .from('user_subscriptions')
-    .update({
-      status: 'active',
-      auto_renewal: true,
-      updated_at: new Date().toISOString()
-    })
-    .eq('paypal_subscription_id', subscriptionId);
+    .select('*')
+    .eq('paypal_subscription_id', subscriptionId)
+    .maybeSingle();
 
-  if (error) {
-    console.error('Error updating subscription activation:', error);
-    throw error;
+  if (fetchError || !subscription) {
+    console.error('Subscription not found for activation:', subscriptionId);
+    return;
   }
 
-  console.log('Subscription activated:', subscriptionId);
+  // Check if this is transitioning from trial to regular billing (scheduled change)
+  if (subscription.next_plan_type && subscription.next_plan_starts_at) {
+    console.log('Transitioning from trial to regular billing for scheduled change');
+    
+    // Calculate new expiry date based on the new plan type
+    const expiresAt = new Date();
+    if (subscription.next_plan_type === 'monthly') {
+      expiresAt.setDate(expiresAt.getDate() + 30);
+    } else if (subscription.next_plan_type === 'yearly') {
+      expiresAt.setDate(expiresAt.getDate() + 365);
+    }
+    
+    // Apply the scheduled plan change
+    const { error: updateError } = await supabase
+      .from('user_subscriptions')
+      .update({ 
+        plan_type: subscription.next_plan_type,
+        status: 'active',
+        auto_renewal: true,
+        expires_at: expiresAt.toISOString(),
+        started_at: new Date().toISOString(),
+        next_plan_type: null,
+        next_plan_starts_at: null,
+        scheduled_change_created_at: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('paypal_subscription_id', subscriptionId);
+
+    if (updateError) {
+      console.error('Error applying scheduled plan change:', updateError);
+    } else {
+      console.log('Plan change applied successfully from trial to regular billing');
+    }
+  } else {
+    // Normal activation (no scheduled change)
+    const { error } = await supabase
+      .from('user_subscriptions')
+      .update({
+        status: 'active',
+        auto_renewal: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('paypal_subscription_id', subscriptionId);
+
+    if (error) {
+      console.error('Error updating subscription activation:', error);
+      throw error;
+    }
+
+    console.log('Subscription activated:', subscriptionId);
+  }
 }

@@ -18,6 +18,8 @@ interface PayPalSubscriptionRequest {
   userId: string;
   discountCode?: string;
   returnUrl?: string;
+  isScheduledChange?: boolean;
+  currentExpiresAt?: string;
 }
 
 serve(async (req) => {
@@ -32,7 +34,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { planType, userId, discountCode, returnUrl }: PayPalSubscriptionRequest = await req.json();
+    const { planType, userId, discountCode, returnUrl, isScheduledChange, currentExpiresAt }: PayPalSubscriptionRequest = await req.json();
     
     if (!planType || !userId) {
       throw new Error('Plan type and user ID are required');
@@ -152,11 +154,64 @@ serve(async (req) => {
       console.log('Discount applied. Final price:', finalPrice);
     }
 
+    // Helper function to calculate trial cycles
+    const calculateTrialCycles = (expiresAt: string, planType: 'monthly' | 'yearly'): number => {
+      const now = new Date();
+      const expiry = new Date(expiresAt);
+      const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (planType === 'monthly') {
+        return Math.max(1, Math.ceil(daysUntilExpiry / 30));
+      } else {
+        return Math.max(1, Math.ceil(daysUntilExpiry / 365));
+      }
+    };
+
     // Create PayPal plan first, then subscription
     const billingCycles = [];
 
+    // If this is a scheduled change, create trial period of $0
+    if (isScheduledChange && currentExpiresAt) {
+      const trialCycles = calculateTrialCycles(currentExpiresAt, planType);
+      
+      // TRIAL PERIOD de $0 hasta que expire el plan actual
+      billingCycles.push({
+        frequency: {
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_count: 1
+        },
+        tenure_type: "TRIAL",
+        sequence: 1,
+        total_cycles: trialCycles,
+        pricing_scheme: {
+          fixed_price: {
+            value: "0.00",
+            currency_code: "USD"
+          }
+        }
+      });
+      
+      // REGULAR BILLING después del trial
+      billingCycles.push({
+        frequency: {
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_count: 1
+        },
+        tenure_type: "REGULAR",
+        sequence: 2,
+        total_cycles: 0, // Infinito
+        pricing_scheme: {
+          fixed_price: {
+            value: finalPrice.toFixed(2),
+            currency_code: "USD"
+          }
+        }
+      });
+      
+      console.log(`Trial period created: ${trialCycles} cycles of $0 until ${currentExpiresAt}`);
+    }
     // If discount exists and applies to first billing only
-    if (discountInfo && discountInfo.application_type === 'first_billing_only') {
+    else if (discountInfo && discountInfo.application_type === 'first_billing_only') {
       // First cycle with discount
       billingCycles.push({
         frequency: {
