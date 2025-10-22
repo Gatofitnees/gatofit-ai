@@ -1639,6 +1639,36 @@ export type Database = {
         }
         Relationships: []
       }
+      paypal_webhook_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          resource_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string
+          resource_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          resource_id?: string
+        }
+        Relationships: []
+      }
       pending_user_invitations: {
         Row: {
           coach_id: string
