@@ -118,11 +118,17 @@ const Login: React.FC = () => {
         Inicia sesión en <GatofitAILogo size="lg" className="inline-block" />
       </h1>
       
-      <p className="text-muted-foreground mb-6">
+      <p className="text-muted-foreground mb-4">
         Continúa tu viaje fitness
       </p>
 
-      <LoginForm 
+      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
+        <p className="text-sm text-foreground">
+          <strong>¿Primera vez aquí?</strong> Si aún no tienes cuenta, haz clic en <span className="text-primary font-semibold">"Crear cuenta"</span> abajo.
+        </p>
+      </div>
+
+      <LoginForm
         email={email}
         setEmail={setEmail}
         password={password}
@@ -183,9 +189,15 @@ const Login: React.FC = () => {
         </button>
         
         <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            ¿No tienes cuenta? <button onClick={handleCreateAccount} className="text-primary">Crear cuenta</button>
+          <p className="text-sm text-muted-foreground mb-3">
+            ¿No tienes cuenta?
           </p>
+          <button 
+            onClick={handleCreateAccount} 
+            className="w-full py-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-xl shadow-neu-button active:shadow-neu-button-active transition-all font-medium"
+          >
+            Crear Mi Cuenta Gratis
+          </button>
         </div>
 
         <BackButton onBack={handleBack} />
