@@ -109,7 +109,15 @@ serve(async (req) => {
     // Determine plan type from the billing cycle frequency
     const billingCycle = planDetails.billing_cycles?.find((cycle: any) => cycle.tenure_type === 'REGULAR');
     const intervalUnit = billingCycle?.frequency?.interval_unit;
-    const planType = intervalUnit === 'MONTH' ? 'monthly' : 'yearly';
+    
+    let planType: 'monthly' | 'yearly' | 'test_daily';
+    if (intervalUnit === 'DAY') {
+      planType = 'test_daily';
+    } else if (intervalUnit === 'MONTH') {
+      planType = 'monthly';
+    } else {
+      planType = 'yearly';
+    }
 
     console.log(`Detected plan type: ${planType} from interval unit: ${intervalUnit}`);
 
@@ -151,7 +159,7 @@ serve(async (req) => {
         // Solo permite renovar/extender el MISMO plan
         if (existingSub.plan_type === planType) {
           // EXTENDER tiempo - sumar duración al expires_at existente
-          const daysToAdd = planType === 'monthly' ? 30 : 365;
+          const daysToAdd = planType === 'test_daily' ? 1 : (planType === 'monthly' ? 30 : 365);
           expiresAt = new Date(existingExpiry);
           expiresAt.setDate(expiresAt.getDate() + daysToAdd);
           startedAt = existingSub.started_at; // Mantener fecha de inicio original
@@ -233,17 +241,27 @@ serve(async (req) => {
         }
       } else {
         // Plan expirado - crear nueva suscripción
-        expiresAt = planType === 'monthly' 
-          ? new Date(now.setMonth(now.getMonth() + 1))
-          : new Date(now.setFullYear(now.getFullYear() + 1));
+        if (planType === 'test_daily') {
+          expiresAt = new Date(now);
+          expiresAt.setDate(expiresAt.getDate() + 1);
+        } else if (planType === 'monthly') {
+          expiresAt = new Date(now.setMonth(now.getMonth() + 1));
+        } else {
+          expiresAt = new Date(now.setFullYear(now.getFullYear() + 1));
+        }
         startedAt = new Date().toISOString();
         console.log(`📅 Creating new subscription (expired plan)`);
       }
     } else {
       // No hay suscripción previa - crear nueva
-      expiresAt = planType === 'monthly' 
-        ? new Date(now.setMonth(now.getMonth() + 1))
-        : new Date(now.setFullYear(now.getFullYear() + 1));
+      if (planType === 'test_daily') {
+        expiresAt = new Date(now);
+        expiresAt.setDate(expiresAt.getDate() + 1);
+      } else if (planType === 'monthly') {
+        expiresAt = new Date(now.setMonth(now.getMonth() + 1));
+      } else {
+        expiresAt = new Date(now.setFullYear(now.getFullYear() + 1));
+      }
       startedAt = new Date().toISOString();
       console.log(`🆕 Creating first subscription for user`);
     }

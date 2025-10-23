@@ -204,7 +204,10 @@ async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) 
     // Calculate new expiry based on NEW plan type
     let newExpiryDate: Date;
     
-    if (subscription.next_plan_type === 'monthly') {
+    if (subscription.next_plan_type === 'test_daily') {
+      newExpiryDate = new Date(now);
+      newExpiryDate.setDate(newExpiryDate.getDate() + 1);
+    } else if (subscription.next_plan_type === 'monthly') {
       newExpiryDate = new Date(now);
       newExpiryDate.setDate(newExpiryDate.getDate() + 30);
     } else if (subscription.next_plan_type === 'yearly') {
@@ -250,7 +253,10 @@ async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) 
   const baseDate = currentExpiry > now ? currentExpiry : now;
   
   let newExpiryDate: Date;
-  if (subscription.plan_type === 'monthly') {
+  if (subscription.plan_type === 'test_daily') {
+    newExpiryDate = new Date(baseDate);
+    newExpiryDate.setDate(newExpiryDate.getDate() + 1);
+  } else if (subscription.plan_type === 'monthly') {
     newExpiryDate = new Date(baseDate);
     newExpiryDate.setDate(newExpiryDate.getDate() + 30);
   } else if (subscription.plan_type === 'yearly') {
@@ -439,7 +445,9 @@ async function handleSubscriptionActivated(supabase: any, event: PayPalWebhookEv
     
     // Calculate new expiry date based on the new plan type
     const expiresAt = new Date();
-    if (subscription.next_plan_type === 'monthly') {
+    if (subscription.next_plan_type === 'test_daily') {
+      expiresAt.setDate(expiresAt.getDate() + 1);
+    } else if (subscription.next_plan_type === 'monthly') {
       expiresAt.setDate(expiresAt.getDate() + 30);
     } else if (subscription.next_plan_type === 'yearly') {
       expiresAt.setDate(expiresAt.getDate() + 365);

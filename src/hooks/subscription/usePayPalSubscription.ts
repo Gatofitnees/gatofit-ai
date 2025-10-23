@@ -7,7 +7,7 @@ export const usePayPalSubscription = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
 
-  const createPayPalSubscription = async (planType: 'monthly' | 'yearly') => {
+  const createPayPalSubscription = async (planType: 'monthly' | 'yearly' | 'test_daily') => {
     try {
       setIsCreating(true);
       

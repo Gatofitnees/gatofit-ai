@@ -14,7 +14,7 @@ interface PayPalTokenResponse {
 }
 
 interface PayPalSubscriptionRequest {
-  planType: 'monthly' | 'yearly';
+  planType: 'monthly' | 'yearly' | 'test_daily';
   userId: string;
   discountCode?: string;
   returnUrl?: string;
@@ -155,12 +155,27 @@ serve(async (req) => {
     // Create PayPal plan first, then subscription
     const billingCycles = [];
 
+    // Determine interval_unit based on planType
+    let intervalUnit: 'DAY' | 'MONTH' | 'YEAR';
+    let planDisplayName: string;
+    
+    if (planType === 'test_daily') {
+      intervalUnit = 'DAY';
+      planDisplayName = 'Prueba Diaria (Test)';
+    } else if (planType === 'monthly') {
+      intervalUnit = 'MONTH';
+      planDisplayName = 'Mensual';
+    } else {
+      intervalUnit = 'YEAR';
+      planDisplayName = 'Anual';
+    }
+
     // If discount exists and applies to first billing only
     if (discountInfo && discountInfo.application_type === 'first_billing_only') {
       // First cycle with discount
       billingCycles.push({
         frequency: {
-          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_unit: intervalUnit,
           interval_count: 1
         },
         tenure_type: "REGULAR",
@@ -177,7 +192,7 @@ serve(async (req) => {
       // Subsequent cycles at normal price
       billingCycles.push({
         frequency: {
-          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_unit: intervalUnit,
           interval_count: 1
         },
         tenure_type: "REGULAR",
@@ -194,7 +209,7 @@ serve(async (req) => {
       // Single cycle (with forever discount or no discount)
       billingCycles.push({
         frequency: {
-          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
+          interval_unit: intervalUnit,
           interval_count: 1
         },
         tenure_type: "REGULAR",
@@ -211,8 +226,8 @@ serve(async (req) => {
 
     const planPayload = {
       product_id: "GATOFIT_PRODUCT",
-      name: `GatoFit ${planType === 'monthly' ? 'Mensual' : 'Anual'}${discountInfo ? ' (Con descuento)' : ''}`,
-      description: `Suscripción ${planType === 'monthly' ? 'mensual' : 'anual'} a GatoFit Premium`,
+      name: `GatoFit ${planDisplayName}${discountInfo ? ' (Con descuento)' : ''}`,
+      description: `Suscripción ${planDisplayName.toLowerCase()} a GatoFit Premium`,
       status: "ACTIVE",
       billing_cycles: billingCycles,
       payment_preferences: {

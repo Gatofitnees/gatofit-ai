@@ -1,7 +1,7 @@
 
 export interface SubscriptionPlan {
   id: string;
-  plan_type: 'monthly' | 'yearly';
+  plan_type: 'monthly' | 'yearly' | 'test_daily';
   name: string;
   price_usd: number;
   duration_days: number;
@@ -15,14 +15,14 @@ export interface SubscriptionPlan {
 export interface UserSubscription {
   id: string;
   user_id: string;
-  plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados';
+  plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados' | 'test_daily';
   status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial' | 'suspended' | 'payment_failed';
   started_at: string;
   expires_at?: string;
   store_transaction_id?: string;
   store_platform?: string;
   auto_renewal: boolean;
-  next_plan_type?: 'free' | 'monthly' | 'yearly' | 'asesorados';
+  next_plan_type?: 'free' | 'monthly' | 'yearly' | 'asesorados' | 'test_daily';
   next_plan_starts_at?: string;
   scheduled_change_created_at?: string;
   discount_code_id?: string;
