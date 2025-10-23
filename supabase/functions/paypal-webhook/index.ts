@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { validateWebhookSignature } from './webhook-validator.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,8 +32,30 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse webhook event
-    const event: PayPalWebhookEvent = await req.json();
+    // Get raw body for signature validation
+    const rawBody = await req.text();
+    const event: PayPalWebhookEvent = JSON.parse(rawBody);
+    
+    // Validate webhook signature (CRITICAL SECURITY)
+    const isValidSignature = await validateWebhookSignature({
+      transmissionId: req.headers.get('paypal-transmission-id'),
+      transmissionTime: req.headers.get('paypal-transmission-time'),
+      certUrl: req.headers.get('paypal-cert-url'),
+      signature: req.headers.get('paypal-transmission-sig'),
+      body: rawBody,
+      webhookId: Deno.env.get('PAYPAL_WEBHOOK_ID')
+    });
+
+    if (!isValidSignature) {
+      console.error('❌ Invalid webhook signature - potential security threat!');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid webhook signature' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
     console.log('PayPal webhook received:', event.event_type, 'Event ID:', event.id);
 
     // Check if we already processed this event (idempotency)
@@ -104,39 +127,6 @@ Deno.serve(async (req) => {
 });
 
 async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) {
-  // Check if this payment resolves a payment failure
-  const subscriptionId = event.resource.billing_agreement_id || event.resource.id;
-  
-  // Try to find and resolve any payment failures for this subscription
-  const { data: failureRecords } = await supabase
-    .from('subscription_payment_failures')
-    .select('*, user_subscriptions!inner(paypal_subscription_id)')
-    .eq('user_subscriptions.paypal_subscription_id', subscriptionId)
-    .is('resolved_at', null);
-
-  if (failureRecords && failureRecords.length > 0) {
-    console.log('Resolving payment failure for subscription:', subscriptionId);
-    
-    // Mark payment failure as resolved
-    await supabase
-      .from('subscription_payment_failures')
-      .update({ resolved_at: new Date().toISOString() })
-      .eq('subscription_id', failureRecords[0].subscription_id)
-      .is('resolved_at', null);
-
-    // Update subscription status back to active
-    await supabase
-      .from('user_subscriptions')
-      .update({
-        status: 'active',
-        payment_failed_at: null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', failureRecords[0].subscription_id);
-
-    console.log('Payment failure resolved successfully');
-  }
-  
   // Try multiple sources for subscription ID
   let subscriptionId = event.resource.billing_agreement_id || 
                        event.resource.id;
@@ -171,6 +161,36 @@ async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) 
   }
 
   console.log('Found subscription for user:', subscription.user_id, 'Plan:', subscription.plan_type);
+
+  // Check if this payment resolves a payment failure
+  const { data: failureRecords } = await supabase
+    .from('subscription_payment_failures')
+    .select('*')
+    .eq('subscription_id', subscription.id)
+    .is('resolved_at', null);
+
+  if (failureRecords && failureRecords.length > 0) {
+    console.log('Resolving payment failure for subscription:', subscriptionId);
+    
+    // Mark payment failure as resolved
+    await supabase
+      .from('subscription_payment_failures')
+      .update({ resolved_at: new Date().toISOString() })
+      .eq('subscription_id', subscription.id)
+      .is('resolved_at', null);
+
+    // Update subscription status back to active
+    await supabase
+      .from('user_subscriptions')
+      .update({
+        status: 'active',
+        payment_failed_at: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', subscription.id);
+
+    console.log('Payment failure resolved successfully');
+  }
 
   // Check if this payment is for a scheduled plan change
   const isScheduledChange = subscription.next_plan_type && subscription.next_plan_starts_at;
