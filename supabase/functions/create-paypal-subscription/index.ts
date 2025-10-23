@@ -157,10 +157,10 @@ serve(async (req) => {
 
     // If discount exists and applies to first billing only
     if (discountInfo && discountInfo.application_type === 'first_billing_only') {
-      // First cycle with discount (TEST MODE: 1 DAY)
+      // First cycle with discount
       billingCycles.push({
         frequency: {
-          interval_unit: 'DAY',
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
           interval_count: 1
         },
         tenure_type: "REGULAR",
@@ -174,10 +174,10 @@ serve(async (req) => {
         }
       });
 
-      // Subsequent cycles at normal price (TEST MODE: 1 DAY)
+      // Subsequent cycles at normal price
       billingCycles.push({
         frequency: {
-          interval_unit: 'DAY',
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
           interval_count: 1
         },
         tenure_type: "REGULAR",
@@ -191,10 +191,10 @@ serve(async (req) => {
         }
       });
     } else {
-      // Single cycle (with forever discount or no discount) (TEST MODE: 1 DAY)
+      // Single cycle (with forever discount or no discount)
       billingCycles.push({
         frequency: {
-          interval_unit: 'DAY',
+          interval_unit: planType === 'monthly' ? 'MONTH' : 'YEAR',
           interval_count: 1
         },
         tenure_type: "REGULAR",
