@@ -10,12 +10,14 @@ import GatofitAILogo from "@/components/GatofitAILogo";
 import useAuthForm from "@/hooks/useAuthForm";
 import LoginForm from "@/components/onboarding/auth/LoginForm";
 import BackButton from "@/components/onboarding/auth/BackButton";
+import { usePlatform } from "@/hooks/usePlatform";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle } = useAuth();
   const context = useContext(OnboardingContext);
   const { saveOnboardingToProfile, checkIfUserHasCompleteProfile } = useOnboardingPersistence();
+  const { isNative, isAndroid, isIOS } = usePlatform();
 
   const { 
     email, setEmail,
@@ -163,7 +165,7 @@ const Login: React.FC = () => {
         </div>
 
         <button 
-          className="w-full py-6 h-auto flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10 border border-muted rounded-xl"
+          className="w-full py-6 h-auto flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10 border border-muted rounded-xl transition-all"
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
         >
@@ -177,10 +179,20 @@ const Login: React.FC = () => {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              <span>Continuar con Google</span>
+              <span>
+                {isNative ? (isAndroid ? '🚀 Google (Nativo Android)' : '🚀 Google (Nativo iOS)') : 'Continuar con Google'}
+              </span>
             </>
           )}
         </button>
+        
+        {isNative && (
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground/70">
+              ✨ Autenticación optimizada para {isAndroid ? 'Android' : 'iOS'}
+            </p>
+          </div>
+        )}
         
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
