@@ -3335,7 +3335,12 @@ export type Database = {
         | "increase_strength"
       meal_type: "breakfast" | "lunch" | "dinner" | "snack1" | "snack2"
       pace_type: "sloth" | "rabbit" | "leopard"
-      subscription_plan_type: "free" | "monthly" | "yearly" | "asesorados"
+      subscription_plan_type:
+        | "free"
+        | "monthly"
+        | "yearly"
+        | "asesorados"
+        | "test_daily"
       subscription_status:
         | "active"
         | "expired"
@@ -3493,7 +3498,13 @@ export const Constants = {
       ],
       meal_type: ["breakfast", "lunch", "dinner", "snack1", "snack2"],
       pace_type: ["sloth", "rabbit", "leopard"],
-      subscription_plan_type: ["free", "monthly", "yearly", "asesorados"],
+      subscription_plan_type: [
+        "free",
+        "monthly",
+        "yearly",
+        "asesorados",
+        "test_daily",
+      ],
       subscription_status: [
         "active",
         "expired",
