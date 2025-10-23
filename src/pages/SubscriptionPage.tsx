@@ -281,6 +281,19 @@ const SubscriptionPage: React.FC = () => {
           description: "Tu suscripción ha expirado. Necesitas crear una nueva suscripción.",
           variant: "destructive"
         });
+      } else if (data?.error === 'cancelled') {
+        toast({
+          title: "Suscripción cancelada",
+          description: "Esta suscripción fue cancelada permanentemente. Por favor, selecciona un nuevo plan abajo.",
+          variant: "destructive"
+        });
+        // Scroll to plans section
+        setTimeout(() => {
+          const plansSection = document.querySelector('[data-plans-section]');
+          if (plansSection) {
+            plansSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 500);
       } else {
         throw new Error(data?.error || 'Error desconocido al reactivar');
       }
@@ -440,7 +453,7 @@ const SubscriptionPage: React.FC = () => {
         </div>
 
         {/* Subscription Plans */}
-        <div className="space-y-4">
+        <div className="space-y-4" data-plans-section>
           {/* Yearly Plan - Recommended */}
           {yearlyPlan && (
             <PremiumPlanCard

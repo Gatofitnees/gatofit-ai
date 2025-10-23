@@ -52,6 +52,91 @@ Deno.serve(async (req) => {
       throw new Error('Subscription not found');
     }
 
+    // Get PayPal access token to check current status
+    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
+    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalBaseUrl = Deno.env.get('PAYPAL_BASE_URL') || 'https://api-m.sandbox.paypal.com';
+
+    const authResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+      },
+      body: 'grant_type=client_credentials',
+    });
+
+    if (!authResponse.ok) {
+      throw new Error('Failed to get PayPal access token');
+    }
+
+    const { access_token } = await authResponse.json();
+
+    // Check PayPal subscription status BEFORE attempting to activate
+    const statusResponse = await fetch(
+      `${paypalBaseUrl}/v1/billing/subscriptions/${subscriptionId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (statusResponse.ok) {
+      const paypalSubscription = await statusResponse.json();
+      console.log('PayPal subscription status:', paypalSubscription.status);
+
+      // If subscription is CANCELLED or EXPIRED in PayPal, cannot reactivate
+      if (paypalSubscription.status === 'CANCELLED' || paypalSubscription.status === 'EXPIRED') {
+        console.log('Subscription is permanently cancelled/expired in PayPal');
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'cancelled',
+            message: 'Esta suscripción fue cancelada permanentemente. Debes crear una nueva suscripción.',
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      // If already ACTIVE in PayPal, just sync DB
+      if (paypalSubscription.status === 'ACTIVE') {
+        console.log('Subscription already active in PayPal, syncing DB');
+        
+        const { error: updateError } = await supabaseClient
+          .from('user_subscriptions')
+          .update({
+            status: 'active',
+            suspended_at: null,
+            auto_renewal: true,
+            cancelled_at: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id)
+          .eq('paypal_subscription_id', subscriptionId);
+
+        if (updateError) {
+          console.error('Error updating subscription in DB:', updateError);
+          throw updateError;
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'La suscripción ya está activa',
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
+      }
+    }
+
     // Check if subscription has expired
     if (subscription.expires_at) {
       const expiresAt = new Date(subscription.expires_at);
@@ -73,40 +158,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If already active with auto_renewal, no need to reactivate
-    if (subscription.status === 'active' && subscription.auto_renewal === true) {
-      console.log('Subscription already active with auto_renewal');
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'La suscripción ya está activa',
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      );
-    }
-
-    // Get PayPal access token
-    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
-    const paypalBaseUrl = Deno.env.get('PAYPAL_BASE_URL') || 'https://api-m.sandbox.paypal.com';
-
-    const authResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-      },
-      body: 'grant_type=client_credentials',
-    });
-
-    if (!authResponse.ok) {
-      throw new Error('Failed to get PayPal access token');
-    }
-
-    const { access_token } = await authResponse.json();
 
     // Activate the subscription in PayPal
     const activateResponse = await fetch(

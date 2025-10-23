@@ -112,9 +112,13 @@ serve(async (req) => {
       if (paypalStatus.status === 'SUSPENDED' || paypalStatus.status === 'CANCELLED') {
         console.log('Subscription already suspended/cancelled in PayPal, syncing DB only');
         
+        // Set correct status based on PayPal state
+        const dbStatus = paypalStatus.status === 'CANCELLED' ? 'cancelled' : 'suspended';
+        
         const { error: updateError } = await supabase
           .from('user_subscriptions')
           .update({
+            status: dbStatus,
             auto_renewal: false,
             cancelled_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
