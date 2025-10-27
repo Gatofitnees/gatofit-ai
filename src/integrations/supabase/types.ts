@@ -433,6 +433,8 @@ export type Database = {
       admin_users: {
         Row: {
           avatar_url: string | null
+          banner_image_url: string | null
+          company_name: string | null
           created_at: string
           created_by: string | null
           email: string
@@ -440,11 +442,17 @@ export type Database = {
           id: string
           is_active: boolean
           last_login_at: string | null
+          logo_image_url: string | null
+          primary_button_color: string | null
+          primary_button_fill_color: string | null
+          ranking_image_url: string | null
           role: Database["public"]["Enums"]["admin_role"]
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          banner_image_url?: string | null
+          company_name?: string | null
           created_at?: string
           created_by?: string | null
           email: string
@@ -452,11 +460,17 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_login_at?: string | null
+          logo_image_url?: string | null
+          primary_button_color?: string | null
+          primary_button_fill_color?: string | null
+          ranking_image_url?: string | null
           role?: Database["public"]["Enums"]["admin_role"]
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          banner_image_url?: string | null
+          company_name?: string | null
           created_at?: string
           created_by?: string | null
           email?: string
@@ -464,6 +478,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_login_at?: string | null
+          logo_image_url?: string | null
+          primary_button_color?: string | null
+          primary_button_fill_color?: string | null
+          ranking_image_url?: string | null
           role?: Database["public"]["Enums"]["admin_role"]
           updated_at?: string
         }

@@ -26,6 +26,7 @@ import NavBar from "./components/NavBar";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import AuthProvider from "./contexts/AuthContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
+import { BrandingProvider } from "./contexts/BrandingContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SelectExercisesPage from "./pages/SelectExercisesPage";
 import ExerciseDetailsPage from "./pages/ExerciseDetailsPage";
@@ -42,6 +43,18 @@ import { WorkoutRecoveryDialog } from "./features/workout/components/active-work
 import { PaymentFailureAlert } from "./components/subscription/PaymentFailureAlert";
 import { supabase } from "@/integrations/supabase/client";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
+import { useBranding } from "./contexts/BrandingContext";
+
+// Component to update document title based on branding
+const DocumentTitleUpdater: React.FC = () => {
+  const { branding } = useBranding();
+
+  useEffect(() => {
+    document.title = branding.companyName;
+  }, [branding.companyName]);
+
+  return null;
+};
 
 // Component to handle workout recovery on app start
 const WorkoutRecoveryHandler: React.FC = () => {
@@ -144,7 +157,9 @@ function App() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        <WorkoutCacheProvider>
+        <BrandingProvider>
+          <DocumentTitleUpdater />
+          <WorkoutCacheProvider>
           <Router>
             <WorkoutRecoveryHandler />
             <GlobalPaymentFailureBanner />
@@ -420,6 +435,7 @@ function App() {
           </div>
         </Router>
       </WorkoutCacheProvider>
+        </BrandingProvider>
     </ProfileProvider>
   </AuthProvider>
 );

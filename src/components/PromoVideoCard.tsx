@@ -1,6 +1,8 @@
 
 import React from "react";
 import { Card, CardBody } from "./Card";
+import { useBranding } from "@/contexts/BrandingContext";
+import { Skeleton } from "./ui/skeleton";
 
 interface PromoVideoCardProps {
   onStartWorkout: () => void;
@@ -11,13 +13,27 @@ const PromoVideoCard: React.FC<PromoVideoCardProps> = ({
   onStartWorkout, 
   adaptToWorkoutCards = false 
 }) => {
+  const { branding, loading } = useBranding();
+
+  if (loading) {
+    return (
+      <Card className="relative overflow-hidden">
+        <CardBody className={`relative z-10 flex flex-col justify-end bg-transparent p-4 ${
+          adaptToWorkoutCards ? 'min-h-[140px]' : 'min-h-[140px]'
+        }`}>
+          <Skeleton className="w-full h-full" />
+        </CardBody>
+      </Card>
+    );
+  }
+
   return (
     <Card className="relative overflow-hidden">
-      {/* GIF Background */}
+      {/* Banner del Coach o Gatofit */}
       <div className="absolute inset-0">
         <img 
-          src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/animaciones/animacion%20gatofit%202.gif"
-          alt="Gatofit Animation"
+          src={branding.bannerImageUrl}
+          alt={`${branding.companyName} Banner`}
           className="w-full h-full object-cover"
         />
         

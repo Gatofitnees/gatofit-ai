@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Plus, Calendar, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface FloatingActionMenuProps {
   onCreateRoutine: () => void;
@@ -15,6 +16,7 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
   onOpenGatofitPrograms
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { branding } = useBranding();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -64,8 +66,8 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
             {/* Inner content with full circular image */}
             <div className="relative z-10 w-10 h-10 rounded-full overflow-hidden bg-white">
               <img 
-                src="https://storage.googleapis.com/almacenamiento-app-gatofit/Recursos%20Branding%20APP/gatofit%20logo%20APP.png" 
-                alt="Gatofit Logo" 
+                src={branding.logoImageUrl}
+                alt={`${branding.companyName} Logo`}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -74,7 +76,7 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold drop-shadow-sm" style={{
               textShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)'
             }}>
-              Programas Gatofit
+              Programas {branding.companyName}
             </span>
           </span>
         </div>

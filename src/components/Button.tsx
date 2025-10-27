@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline";
@@ -20,10 +21,12 @@ const Button: React.FC<ButtonProps> = ({
   className,
   ...props
 }) => {
+  const { branding } = useBranding();
+  
   const baseClasses = "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 shadow-neu-button active:shadow-neu-button-active overflow-hidden";
   
   const variantClasses = {
-    primary: "bg-primary hover:bg-primary/90 text-white border-none",
+    primary: "text-white border-none",
     secondary: "bg-secondary/70 hover:bg-secondary/50 text-foreground border-none",
     outline: "bg-transparent border border-muted hover:bg-secondary/10 text-foreground"
   };
@@ -34,6 +37,22 @@ const Button: React.FC<ButtonProps> = ({
     lg: "text-base py-3 px-6"
   };
 
+  // Si es primary y tiene coach, usar colores del coach
+  const customStyles = variant === 'primary' && branding.hasCoach
+    ? {
+        backgroundColor: branding.primaryButtonFillColor,
+        borderColor: branding.primaryButtonColor,
+      }
+    : variant === 'primary'
+    ? {
+        backgroundColor: 'hsl(var(--primary))',
+      }
+    : {};
+
+  const hoverClass = variant === 'primary' && !branding.hasCoach 
+    ? 'hover:bg-primary/90' 
+    : '';
+
   return (
     <button
       className={cn(
@@ -41,8 +60,10 @@ const Button: React.FC<ButtonProps> = ({
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? "w-full" : "",
+        hoverClass,
         className
       )}
+      style={customStyles}
       {...props}
     >
       {leftIcon && <span className="mr-2">{leftIcon}</span>}
