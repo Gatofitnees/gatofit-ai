@@ -39,7 +39,8 @@ export const useDynamicBranding = () => {
     const primaryHSL = hexToHSL(branding.primaryButtonColor);
     
     root.style.setProperty('--primary', primaryHSL);
-    root.style.setProperty('--primary-foreground', hexToHSL(branding.primaryButtonFillColor));
+    // Siempre usar blanco para el texto de los botones
+    root.style.setProperty('--primary-foreground', '0 0% 100%');
     root.style.setProperty('--glow-color', `${branding.primaryButtonColor}80`); // 80 = 50% opacity hex
     
     // Limpiar al desmontar
