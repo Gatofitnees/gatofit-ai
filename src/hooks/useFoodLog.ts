@@ -22,10 +22,18 @@ export const useFoodLog = (selectedDate?: string) => {
       setIsLoading(true);
       const queryDate = date || getCurrentLocalDate();
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setEntries([]);
+        setIsLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('daily_food_log_entries')
         .select('*')
         .eq('log_date', queryDate)
+        .eq('user_id', user.id)
         .order('logged_at', { ascending: false });
 
       if (error) throw error;
