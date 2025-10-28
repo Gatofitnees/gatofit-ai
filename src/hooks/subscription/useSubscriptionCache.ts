@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface SubscriptionCache {
   [userId: string]: {
     isPremium: boolean;
+    isAsesorado: boolean;
     timestamp: number;
   };
 }
@@ -15,7 +16,7 @@ const subscriptionCache: SubscriptionCache = {};
 export const useSubscriptionCache = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const getCachedPremiumStatus = useCallback((userId: string): boolean | null => {
+  const getCachedStatus = useCallback((userId: string): { isPremium: boolean; isAsesorado: boolean } | null => {
     const cached = subscriptionCache[userId];
     if (!cached) return null;
     
@@ -25,19 +26,20 @@ export const useSubscriptionCache = () => {
       return null;
     }
     
-    return cached.isPremium;
+    return { isPremium: cached.isPremium, isAsesorado: cached.isAsesorado };
   }, []);
 
-  const setCachedPremiumStatus = useCallback((userId: string, isPremium: boolean) => {
+  const setCachedStatus = useCallback((userId: string, isPremium: boolean, isAsesorado: boolean) => {
     subscriptionCache[userId] = {
       isPremium,
+      isAsesorado,
       timestamp: Date.now()
     };
   }, []);
 
-  const checkUserPremiumStatus = useCallback(async (userId: string): Promise<boolean> => {
+  const checkUserStatus = useCallback(async (userId: string): Promise<{ isPremium: boolean; isAsesorado: boolean }> => {
     // Verificar cache primero
-    const cached = getCachedPremiumStatus(userId);
+    const cached = getCachedStatus(userId);
     if (cached !== null) {
       return cached;
     }
@@ -51,24 +53,31 @@ export const useSubscriptionCache = () => {
         .single();
 
       if (error) {
-        console.error('Error checking premium status:', error);
-        setCachedPremiumStatus(userId, false);
-        return false;
+        console.error('Error checking user status:', error);
+        setCachedStatus(userId, false, false);
+        return { isPremium: false, isAsesorado: false };
       }
       
+      const isAsesorado = data?.status === 'active' && data?.plan_type === 'asesorados';
       const isPremium = data?.status === 'active' && 
-        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly' || data?.plan_type === 'asesorados');
+        (data?.plan_type === 'monthly' || data?.plan_type === 'yearly');
       
-      setCachedPremiumStatus(userId, isPremium);
-      return isPremium;
+      setCachedStatus(userId, isPremium, isAsesorado);
+      return { isPremium, isAsesorado };
     } catch (error) {
-      console.error('Error checking user premium status:', error);
-      setCachedPremiumStatus(userId, false);
-      return false;
+      console.error('Error checking user status:', error);
+      setCachedStatus(userId, false, false);
+      return { isPremium: false, isAsesorado: false };
     } finally {
       setIsLoading(false);
     }
-  }, [getCachedPremiumStatus, setCachedPremiumStatus]);
+  }, [getCachedStatus, setCachedStatus]);
+
+  // Mantener compatibilidad con código existente
+  const checkUserPremiumStatus = useCallback(async (userId: string): Promise<boolean> => {
+    const { isPremium } = await checkUserStatus(userId);
+    return isPremium;
+  }, [checkUserStatus]);
 
   const clearCache = useCallback(() => {
     Object.keys(subscriptionCache).forEach(key => {
@@ -78,6 +87,7 @@ export const useSubscriptionCache = () => {
 
   return {
     checkUserPremiumStatus,
+    checkUserStatus,
     isLoading,
     clearCache
   };

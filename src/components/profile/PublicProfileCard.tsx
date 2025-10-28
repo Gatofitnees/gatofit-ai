@@ -23,25 +23,28 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
   onFollowToggle,
   followLoading
 }) => {
-  const { checkUserPremiumStatus } = useSubscriptionCache();
+  const { checkUserStatus } = useSubscriptionCache();
   const [isPremiumUser, setIsPremiumUser] = useState(false);
+  const [isAsesoradoUser, setIsAsesoradoUser] = useState(false);
   const displayName = profile.username || profile.full_name || 'Usuario';
   
   useEffect(() => {
-    const checkPremiumStatus = async () => {
-      if (!checkUserPremiumStatus) return;
+    const checkStatus = async () => {
+      if (!checkUserStatus) return;
       
       try {
-        const premiumStatus = await checkUserPremiumStatus(profile.id);
-        setIsPremiumUser(premiumStatus);
+        const status = await checkUserStatus(profile.id);
+        setIsPremiumUser(status.isPremium);
+        setIsAsesoradoUser(status.isAsesorado);
       } catch (error) {
-        console.error('Error checking premium status:', error);
+        console.error('Error checking user status:', error);
         setIsPremiumUser(false);
+        setIsAsesoradoUser(false);
       }
     };
 
-    checkPremiumStatus();
-  }, [profile.id, checkUserPremiumStatus]);
+    checkStatus();
+  }, [profile.id, checkUserStatus]);
   
   console.log('PublicProfileCard Debug:', {
     profileId: profile.id,
@@ -49,7 +52,8 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
     fullName: profile.full_name,
     avatarUrl: profile.avatar_url,
     displayName,
-    isPremiumUser
+    isPremiumUser,
+    isAsesoradoUser
   });
 
   return (
@@ -61,6 +65,7 @@ const PublicProfileCard: React.FC<PublicProfileCardProps> = ({
           src={profile.avatar_url || undefined}
           className="mx-auto mb-4"
           isPremium={isPremiumUser}
+          isAsesorado={isAsesoradoUser}
         />
         
         <h2 className="text-xl font-bold mb-2">
