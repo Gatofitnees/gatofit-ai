@@ -9,13 +9,15 @@ interface FloatingActionMenuProps {
   onCreateProgram: () => void;
   onOpenGatofitPrograms: () => void;
   isAsesorado?: boolean;
+  isPremium?: boolean;
 }
 
 const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({ 
   onCreateRoutine, 
   onCreateProgram,
   onOpenGatofitPrograms,
-  isAsesorado = false
+  isAsesorado = false,
+  isPremium = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { branding } = useBranding();
@@ -44,8 +46,8 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
       
       {/* Action buttons */}
       <div className="flex flex-col items-center gap-3 mb-4">
-        {/* Gatofit Programs button - Hidden for asesorados */}
-        {!isAsesorado && (
+        {/* Gatofit Programs button - Only for premium users (not asesorados or free) */}
+        {isPremium && !isAsesorado && (
           <div 
             className={cn(
               "transition-all duration-300 transform relative",

@@ -215,6 +215,7 @@ const WorkoutPage: React.FC = () => {
         onCreateProgram={handleCreateProgram}
         onOpenGatofitPrograms={handleOpenGatofitPrograms}
         isAsesorado={isAsesorado}
+        isPremium={isPremium}
       />
 
       <PremiumModal
