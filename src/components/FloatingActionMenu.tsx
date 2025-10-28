@@ -8,12 +8,14 @@ interface FloatingActionMenuProps {
   onCreateRoutine: () => void;
   onCreateProgram: () => void;
   onOpenGatofitPrograms: () => void;
+  isAsesorado?: boolean;
 }
 
 const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({ 
   onCreateRoutine, 
   onCreateProgram,
-  onOpenGatofitPrograms
+  onOpenGatofitPrograms,
+  isAsesorado = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { branding } = useBranding();
@@ -42,13 +44,14 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
       
       {/* Action buttons */}
       <div className="flex flex-col items-center gap-3 mb-4">
-        {/* Gatofit Programs button */}
-        <div 
-          className={cn(
-            "transition-all duration-300 transform relative",
-            isOpen ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95 pointer-events-none"
-          )}
-        >
+        {/* Gatofit Programs button - Hidden for asesorados */}
+        {!isAsesorado && (
+          <div 
+            className={cn(
+              "transition-all duration-300 transform relative",
+              isOpen ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95 pointer-events-none"
+            )}
+          >
           <button
             onClick={() => {
               onOpenGatofitPrograms();
@@ -88,12 +91,17 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
             </span>
           </span>
         </div>
+        )}
 
-        {/* Create Program button */}
+        {/* Create Program button - Always visible for asesorados */}
         <div 
           className={cn(
             "transition-all duration-300 transform",
-            isOpen ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95 pointer-events-none"
+            isAsesorado 
+              ? "translate-y-0 opacity-100 scale-100"
+              : isOpen 
+                ? "translate-y-0 opacity-100 scale-100" 
+                : "translate-y-4 opacity-0 scale-95 pointer-events-none"
           )}
         >
           <button
@@ -109,9 +117,11 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
           >
             <Calendar className="h-6 w-6" />
           </button>
-          <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
-            Crear Programación
-          </span>
+          {(isOpen || isAsesorado) && (
+            <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+              Crear Programación
+            </span>
+          )}
         </div>
 
         {/* Create Routine button */}

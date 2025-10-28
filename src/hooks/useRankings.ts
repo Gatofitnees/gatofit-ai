@@ -22,7 +22,7 @@ export const useRankings = (limit?: number) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRankings = async (type: RankingType = 'streak', customLimit?: number) => {
+  const fetchRankings = async (type: RankingType = 'streak', customLimit?: number, coachId?: string | null) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -69,15 +69,45 @@ export const useRankings = (limit?: number) => {
         });
       });
 
-      // Get user IDs to fetch streaks
-      const userIds = profiles.map(p => p.id);
-      console.log('🔢 User IDs to fetch streaks for:', userIds);
+      // Filter by coach if coachId is provided
+      let userIdsToFetch = profiles.map(p => p.id);
+
+      if (coachId) {
+        console.log('🔍 Filtering by coach_id:', coachId);
+        
+        // Get all users assigned to the same coach
+        const { data: coachUsers, error: coachUsersError } = await supabase
+          .from('coach_user_assignments')
+          .select('user_id')
+          .eq('coach_id', coachId);
+
+        if (coachUsersError) {
+          console.error('❌ Error fetching coach users:', coachUsersError);
+        } else if (coachUsers && coachUsers.length > 0) {
+          const coachUserIds = coachUsers.map(cu => cu.user_id);
+          // Filter only public profiles that belong to users with the same coach
+          userIdsToFetch = userIdsToFetch.filter(id => coachUserIds.includes(id));
+          console.log('✅ Filtered user IDs by coach:', userIdsToFetch);
+        } else {
+          // If no users found for this coach, show empty list
+          console.log('⚠️ No users assigned to coach:', coachId);
+          userIdsToFetch = [];
+        }
+      }
+
+      if (userIdsToFetch.length === 0) {
+        console.log('⚠️ No users to fetch after filtering');
+        setRankings([]);
+        return;
+      }
+
+      console.log('🔢 User IDs to fetch streaks for:', userIdsToFetch);
       
       // Then get streak data for these users with enhanced logging
       const { data: streaks, error: streaksError } = await supabase
         .from('user_streaks')
         .select('user_id, current_streak, total_experience, current_level')
-        .in('user_id', userIds);
+        .in('user_id', userIdsToFetch);
 
       if (streaksError) {
         console.error('❌ Streaks error:', streaksError);
@@ -88,8 +118,11 @@ export const useRankings = (limit?: number) => {
       console.log('✅ Streaks data received:', streaks);
       console.log('📊 Number of streak records found:', streaks?.length || 0);
 
-      // Transform and combine the data - ensure ALL profiles are included
-      const transformedData = profiles.map((profile, index) => {
+      // Filter profiles to only include those in userIdsToFetch
+      const filteredProfiles = profiles.filter(p => userIdsToFetch.includes(p.id));
+
+      // Transform and combine the data
+      const transformedData = filteredProfiles.map((profile, index) => {
         // Find streak data for this user
         const streakData = streaks?.find(s => s.user_id === profile.id);
         

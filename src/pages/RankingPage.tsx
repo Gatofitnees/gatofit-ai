@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Flame } from 'lucide-react';
 import { Card, CardBody } from '@/components/Card';
 import { Button } from '@/components/ui/button';
@@ -8,16 +8,25 @@ import { useStreaks } from '@/hooks/useStreaks';
 import { useRankings, RankingType } from '@/hooks/useRankings';
 import { useBranding } from '@/contexts/BrandingContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCoachAssignment } from '@/hooks/useCoachAssignment';
 
 const RankingPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<RankingType>('streak');
   const { streakData, isLoading: streakLoading } = useStreaks();
-  const { rankings, isLoading: rankingsLoading, fetchRankings } = useRankings(20); // Límite de 20 usuarios
+  const { rankings, isLoading: rankingsLoading, fetchRankings } = useRankings(20);
   const { branding, loading: brandingLoading } = useBranding();
+  const { coachId, loading: coachLoading } = useCoachAssignment();
+
+  // Refetch rankings when coachId is available
+  useEffect(() => {
+    if (!coachLoading) {
+      fetchRankings(selectedType, 20, coachId);
+    }
+  }, [coachId, coachLoading]);
 
   const handleTypeChange = (type: RankingType) => {
     setSelectedType(type);
-    fetchRankings(type, 20); // Asegurar límite de 20
+    fetchRankings(type, 20, coachId);
   };
 
   return (

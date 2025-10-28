@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useRoutinesWithLimits = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const routinesHook = useRoutines();
-  const { isPremium } = useSubscription();
+  const { isPremium, isAsesorado } = useSubscription();
   const { incrementUsage, checkRoutineLimit, showLimitReachedToast } = useUsageLimits();
   const { toast } = useToast();
 
@@ -140,6 +140,7 @@ export const useRoutinesWithLimits = () => {
     getRoutineUsageInfo,
     showPremiumModal,
     setShowPremiumModal,
-    isPremium
+    isPremium,
+    isAsesorado
   };
 };

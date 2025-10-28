@@ -22,7 +22,8 @@ const WorkoutPage: React.FC = () => {
     setShowPremiumModal,
     getRoutineUsageInfo,
     deleteRoutine,
-    isPremium
+    isPremium,
+    isAsesorado
   } = useRoutinesWithLimits();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -213,6 +214,7 @@ const WorkoutPage: React.FC = () => {
         onCreateRoutine={handleCreateRoutine}
         onCreateProgram={handleCreateProgram}
         onOpenGatofitPrograms={handleOpenGatofitPrograms}
+        isAsesorado={isAsesorado}
       />
 
       <PremiumModal
