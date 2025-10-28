@@ -22,6 +22,14 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
     setIsOpen(!isOpen);
   };
 
+  const getButtonStyle = () => {
+    if (!branding.hasCoach) return {};
+    return {
+      backgroundColor: branding.primaryButtonColor,
+      color: branding.primaryButtonFillColor
+    };
+  };
+
   return (
     <div className="fixed right-4 bottom-20 z-30">
       {/* Background overlay */}
@@ -93,7 +101,11 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
               onCreateProgram();
               setIsOpen(false);
             }}
-            className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            className={cn(
+              "flex items-center justify-center w-12 h-12 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110",
+              !branding.hasCoach && "bg-blue-500 hover:bg-blue-600"
+            )}
+            style={branding.hasCoach ? getButtonStyle() : undefined}
           >
             <Calendar className="h-6 w-6" />
           </button>
@@ -114,7 +126,11 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
               onCreateRoutine();
               setIsOpen(false);
             }}
-            className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            className={cn(
+              "flex items-center justify-center w-12 h-12 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110",
+              !branding.hasCoach && "bg-blue-500 hover:bg-blue-600"
+            )}
+            style={branding.hasCoach ? getButtonStyle() : undefined}
           >
             <Dumbbell className="h-6 w-6" />
           </button>
@@ -128,11 +144,14 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
       <button
         onClick={toggleMenu}
         className={cn(
-          "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300",
+          "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 text-white",
           isOpen 
-            ? "bg-red-500 hover:bg-red-600 text-white rotate-45" 
-            : "bg-blue-500 hover:bg-blue-600 text-white hover:scale-110"
+            ? !branding.hasCoach && "bg-red-500 hover:bg-red-600 rotate-45"
+            : !branding.hasCoach && "bg-blue-500 hover:bg-blue-600 hover:scale-110",
+          isOpen && "rotate-45",
+          !isOpen && "hover:scale-110"
         )}
+        style={branding.hasCoach ? getButtonStyle() : undefined}
       >
         <Plus className="h-6 w-6" />
       </button>

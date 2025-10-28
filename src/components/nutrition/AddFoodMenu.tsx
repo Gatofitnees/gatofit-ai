@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAdminNutritionProgram } from '@/hooks/useAdminNutritionProgram';
 import { useLocalTimezone } from '@/hooks/useLocalTimezone';
+import { useBranding } from '@/contexts/BrandingContext';
 
 interface AddFoodMenuProps {
   onCameraClick: () => void;
@@ -15,6 +16,19 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
   const navigate = useNavigate();
   const { hasNutritionPlan, loading } = useAdminNutritionProgram(selectedDate);
   const { getLocalDateString } = useLocalTimezone();
+  const { branding } = useBranding();
+
+  const getButtonStyle = () => {
+    if (!branding.hasCoach) return {};
+    return {
+      backgroundColor: branding.primaryButtonColor,
+      color: branding.primaryButtonFillColor
+    };
+  };
+
+  const getButtonHoverClass = () => {
+    return branding.hasCoach ? '' : 'hover:bg-blue-600';
+  };
 
   const handleSearchFood = () => {
     setIsOpen(false);
@@ -59,7 +73,11 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
           >
             <button
               onClick={handleNutritionClick}
-              className="flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+              className={cn(
+                "flex items-center justify-center w-12 h-12 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110",
+                !branding.hasCoach && "bg-green-500 hover:bg-green-600"
+              )}
+              style={branding.hasCoach ? getButtonStyle() : undefined}
             >
               <UtensilsCrossed className="h-6 w-6" />
             </button>
@@ -78,7 +96,11 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
         >
           <button
             onClick={handleSearchFood}
-            className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            className={cn(
+              "flex items-center justify-center w-12 h-12 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110",
+              !branding.hasCoach && "bg-blue-500 hover:bg-blue-600"
+            )}
+            style={branding.hasCoach ? getButtonStyle() : undefined}
           >
             <Search className="h-6 w-6" />
           </button>
@@ -96,7 +118,11 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
         >
           <button
             onClick={handleCameraClick}
-            className="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            className={cn(
+              "flex items-center justify-center w-12 h-12 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110",
+              !branding.hasCoach && "bg-blue-500 hover:bg-blue-600"
+            )}
+            style={branding.hasCoach ? getButtonStyle() : undefined}
           >
             <Camera className="h-6 w-6" />
           </button>
@@ -110,11 +136,14 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
       <button
         onClick={toggleMenu}
         className={cn(
-          "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300",
+          "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 text-white",
           isOpen 
-            ? "bg-red-500 hover:bg-red-600 text-white rotate-45" 
-            : "bg-blue-500 hover:bg-blue-600 text-white hover:scale-110"
+            ? !branding.hasCoach && "bg-red-500 hover:bg-red-600 rotate-45"
+            : !branding.hasCoach && "bg-blue-500 hover:bg-blue-600 hover:scale-110",
+          isOpen && "rotate-45",
+          !isOpen && "hover:scale-110"
         )}
+        style={branding.hasCoach ? getButtonStyle() : undefined}
       >
         <Plus className="h-6 w-6" />
       </button>
