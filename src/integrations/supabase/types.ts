@@ -3087,6 +3087,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      get_admin_branding: { Args: never; Returns: Json }
       get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_admin_role: {
         Args: { user_id?: string }
@@ -3324,6 +3325,10 @@ export type Database = {
         Returns: Json
       }
       unassign_client_from_coach: { Args: { p_user_id: string }; Returns: Json }
+      update_admin_branding: {
+        Args: { p_setting_key: string; p_setting_value: Json }
+        Returns: undefined
+      }
       update_app_setting: {
         Args: { p_setting_key: string; p_setting_value: Json }
         Returns: undefined
