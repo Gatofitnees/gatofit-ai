@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useNutritionPlanCheck } from "@/hooks/useNutritionPlanCheck";
-import gatofitLogo from "@/assets/gatofit-logo.svg";
 import { useLocalTimezone } from "@/hooks/useLocalTimezone";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface NutritionProgramButtonProps {
   selectedDate: Date;
@@ -14,6 +14,7 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = Rea
   const navigate = useNavigate();
   const { hasNutritionPlan, loading } = useNutritionPlanCheck(selectedDate);
   const { getLocalDateString } = useLocalTimezone();
+  const { branding } = useBranding();
 
   // No mostrar si está cargando o no hay plan
   if (loading || !hasNutritionPlan) {
@@ -31,8 +32,8 @@ export const NutritionProgramButton: React.FC<NutritionProgramButtonProps> = Rea
       className="relative w-12 h-12 rounded-full border-2 border-primary/30 hover:border-primary/50 transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden"
     >
       <img 
-        src={gatofitLogo} 
-        alt="Gatofit Logo" 
+        src={branding.logoImageUrl} 
+        alt={`${branding.companyName} Logo`} 
         className="w-full h-full object-cover rounded-full"
       />
     </button>

@@ -26,7 +26,7 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
     if (!branding.hasCoach) return {};
     return {
       backgroundColor: branding.primaryButtonColor,
-      color: branding.primaryButtonFillColor
+      color: '#ffffff'
     };
   };
 

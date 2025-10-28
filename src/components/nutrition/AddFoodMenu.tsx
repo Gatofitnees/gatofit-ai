@@ -22,7 +22,7 @@ const AddFoodMenu: React.FC<AddFoodMenuProps> = ({ onCameraClick, selectedDate }
     if (!branding.hasCoach) return {};
     return {
       backgroundColor: branding.primaryButtonColor,
-      color: branding.primaryButtonFillColor
+      color: '#ffffff'
     };
   };
 
