@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, Dumbbell, Target, X, Check, AlertCircle, ChevronLeft, ChevronRight, Eye, ChefHat, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { WeeklyProgram, WeeklyProgramRoutine } from "@/hooks/useWeeklyPrograms";
 import { GatofitProgram } from "@/hooks/useGatofitPrograms";
@@ -525,10 +526,10 @@ const ProgrammedRoutinesModal: React.FC<ProgrammedRoutinesModalProps> = ({
                                     {programRoutine.routine?.name || `Rutina ID: ${programRoutine.routine_id}`}
                                   </h4>
                                   {isRoutineCompleted && (
-                                    <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                    <Badge variant="default" className="inline-flex items-center gap-1">
                                       <Check className="h-3 w-3" />
                                       Completado
-                                    </span>
+                                    </Badge>
                                   )}
                                   {programRoutine.routine?.is_missing && (
                                     <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">

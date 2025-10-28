@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { ArrowLeft, Plus, Calendar, Zap, Dumbbell, Play, Pause, Edit, Trash2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useWeeklyPrograms } from "@/hooks/useWeeklyPrograms";
@@ -159,9 +160,9 @@ const WeeklyProgramsPage: React.FC = () => {
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-medium">{program.name}</h3>
                         {program.is_active && (
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                          <Badge variant="default">
                             Activa
-                          </span>
+                          </Badge>
                         )}
                         {program.program_type === 'advanced' && (
                           <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
@@ -224,6 +225,7 @@ const WeeklyProgramsPage: React.FC = () => {
                         </Button>
                       ) : (
                         <Button
+                          variant="default"
                           size="sm"
                           onClick={() => {
                             if (program.program_type === 'advanced') {
@@ -255,7 +257,7 @@ const WeeklyProgramsPage: React.FC = () => {
             <Button 
               onClick={handleCreateProgram}
               className="w-full"
-              variant="outline"
+              variant="default"
             >
               <Plus className="h-4 w-4 mr-2" />
               Crear Nueva Programación {selectedType === 'simple' ? 'Simple' : 'Avanzada'}

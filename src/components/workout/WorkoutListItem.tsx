@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/Card";
 import { useToast } from "@/hooks/use-toast";
 import { useSharedRoutines } from "@/hooks/useSharedRoutines";
@@ -203,9 +204,9 @@ const WorkoutListItem: React.FC<WorkoutListItemProps> = ({
           <div className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
             <span>{typeLabel} • {exerciseLabel}</span>
             {isPublished && (
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+              <Badge variant="default">
                 Publicada
-              </span>
+              </Badge>
             )}
             {isDownloaded && (
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
