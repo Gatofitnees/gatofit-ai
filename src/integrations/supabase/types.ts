@@ -303,6 +303,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "admin_program_routines_specific_created_by_admin_fkey"
+            columns: ["created_by_admin"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "admin_program_routines_specific_original_routine_id_fkey"
             columns: ["original_routine_id"]
             isOneToOne: false
@@ -493,6 +500,13 @@ export type Database = {
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       advanced_program_week_routines: {
@@ -612,10 +626,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "app_settings_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "app_settings_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
             referencedColumns: ["id"]
           },
         ]
@@ -815,10 +843,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "coach_user_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "coach_user_assignments_coach_id_fkey"
             columns: ["coach_id"]
             isOneToOne: false
             referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_user_assignments_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
             referencedColumns: ["id"]
           },
           {
@@ -1724,6 +1766,13 @@ export type Database = {
             columns: ["coach_id"]
             isOneToOne: false
             referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_user_invitations_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2994,6 +3043,36 @@ export type Database = {
       }
     }
     Views: {
+      coach_branding_public: {
+        Row: {
+          banner_image_url: string | null
+          company_name: string | null
+          id: string | null
+          logo_image_url: string | null
+          primary_button_color: string | null
+          primary_button_fill_color: string | null
+          ranking_image_url: string | null
+        }
+        Insert: {
+          banner_image_url?: string | null
+          company_name?: string | null
+          id?: string | null
+          logo_image_url?: string | null
+          primary_button_color?: string | null
+          primary_button_fill_color?: string | null
+          ranking_image_url?: string | null
+        }
+        Update: {
+          banner_image_url?: string | null
+          company_name?: string | null
+          id?: string | null
+          logo_image_url?: string | null
+          primary_button_color?: string | null
+          primary_button_fill_color?: string | null
+          ranking_image_url?: string | null
+        }
+        Relationships: []
+      }
       user_rankings: {
         Row: {
           avatar_url: string | null
