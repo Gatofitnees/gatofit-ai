@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import Button from "./Button";
 import { FlatIcon } from "./ui/FlatIcon";
 import { useProfileContext } from "@/contexts/ProfileContext";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface MacroData {
   calories: { current: number; target: number; unit: string };
@@ -27,6 +28,7 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
   onAddFood
 }) => {
   const { profile, recalculatingMacros } = useProfileContext();
+  const { branding } = useBranding();
 
   // Use provided macros or create default ones from profile
   const macros = propMacros || {
@@ -59,9 +61,31 @@ const MacrosCard: React.FC<MacrosCardProps> = ({
         <div className="flex flex-col space-y-6">
           {/* Loading indicator for macro recalculation */}
           {recalculatingMacros && (
-            <div className="flex items-center justify-center gap-2 p-3 bg-primary/10 rounded-xl">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm font-medium text-primary">Recalculando macros...</span>
+            <div 
+              className={cn(
+                "flex items-center justify-center gap-2 p-3 rounded-xl",
+                !branding.hasCoach && "bg-primary/10"
+              )}
+              style={branding.hasCoach ? {
+                backgroundColor: `${branding.primaryButtonColor}10`
+              } : {}}
+            >
+              <Loader2 
+                className={cn(
+                  "h-4 w-4 animate-spin",
+                  !branding.hasCoach && "text-primary"
+                )}
+                style={branding.hasCoach ? { color: branding.primaryButtonColor } : {}}
+              />
+              <span 
+                className={cn(
+                  "text-sm font-medium",
+                  !branding.hasCoach && "text-primary"
+                )}
+                style={branding.hasCoach ? { color: branding.primaryButtonColor } : {}}
+              >
+                Recalculando macros...
+              </span>
             </div>
           )}
           

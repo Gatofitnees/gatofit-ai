@@ -8,6 +8,7 @@ import PromoVideoCard from "./PromoVideoCard";
 import ProgrammedWorkoutButton from "./ProgrammedWorkoutButton";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface WorkoutSummary {
   id?: number;
@@ -40,6 +41,7 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
   selectedDate
 }) => {
   const [currentWorkoutIndex, setCurrentWorkoutIndex] = useState(0);
+  const { branding } = useBranding();
 
   const handleSlideChange = (index: number) => {
     setCurrentWorkoutIndex(index);
@@ -73,23 +75,42 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
     );
   }
 
-  const renderCompletedWorkoutCard = (workout: WorkoutSummary, index: number, total: number) => (
-    <Card className="min-h-[140px]">
-      <CardBody>
-        <div className="space-y-3">
-          {/* Title with check icon and calories badge */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <Check className="h-5 w-5 text-primary flex-shrink-0" />
-              <h4 className="font-medium text-base truncate">{workout.name}</h4>
-            </div>
-            {workout.calories && workout.calories > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-sm flex-shrink-0 ml-2">
-                <Flame className="h-4 w-4" />
-                <span>{workout.calories} kcal</span>
+  const renderCompletedWorkoutCard = (workout: WorkoutSummary, index: number, total: number) => {
+    const checkIconStyles = branding.hasCoach ? { color: branding.primaryButtonColor } : {};
+    const badgeStyles = branding.hasCoach ? {
+      backgroundColor: `${branding.primaryButtonColor}10`,
+      color: branding.primaryButtonColor
+    } : {};
+
+    return (
+      <Card className="min-h-[140px]">
+        <CardBody>
+          <div className="space-y-3">
+            {/* Title with check icon and calories badge */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Check 
+                  className={cn(
+                    "h-5 w-5 flex-shrink-0",
+                    !branding.hasCoach && "text-primary"
+                  )}
+                  style={checkIconStyles}
+                />
+                <h4 className="font-medium text-base truncate">{workout.name}</h4>
               </div>
-            )}
-          </div>
+              {workout.calories && workout.calories > 0 && (
+                <div 
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-full text-sm flex-shrink-0 ml-2",
+                    !branding.hasCoach && "bg-primary/10 text-primary"
+                  )}
+                  style={badgeStyles}
+                >
+                  <Flame className="h-4 w-4" />
+                  <span>{workout.calories} kcal</span>
+                </div>
+              )}
+            </div>
           
           {/* Stats in responsive grid */}
           <div className="grid grid-cols-3 gap-2 text-sm">
@@ -143,7 +164,8 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
         </div>
       </CardFooter>
     </Card>
-  );
+    );
+  };
 
   // Crear array de elementos del carrusel: siempre incluir la tarjeta promocional como primer elemento
   const carouselItems = [
@@ -203,10 +225,13 @@ const TrainingCard: React.FC<TrainingCardProps> = ({
                 key={index}
                 className={cn(
                   "w-2 h-2 rounded-full transition-colors",
-                  index === currentWorkoutIndex 
+                  index === currentWorkoutIndex && !branding.hasCoach
                     ? "bg-primary" 
-                    : "bg-muted"
+                    : index !== currentWorkoutIndex ? "bg-muted" : ""
                 )}
+                style={index === currentWorkoutIndex && branding.hasCoach ? {
+                  backgroundColor: branding.primaryButtonColor
+                } : {}}
               />
             ))}
           </div>

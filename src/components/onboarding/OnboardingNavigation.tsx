@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Button from "@/components/Button";
 
 interface OnboardingNavigationProps {
   onNext?: () => void;
@@ -45,13 +46,14 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
       }}
     >
       <div className="max-w-md mx-auto space-y-4">
-        <button
+        <Button
           onClick={handleNext}
           disabled={nextDisabled || loading}
-          className="w-full py-3 px-4 h-auto font-medium bg-primary hover:bg-primary/90 text-white rounded-xl neu-button disabled:opacity-50 disabled:pointer-events-none transition-all shadow-lg"
+          variant="primary"
+          className="w-full py-3 px-4 h-auto"
         >
           {loading ? "Cargando..." : nextLabel}
-        </button>
+        </Button>
 
         {showBack && (
           <button

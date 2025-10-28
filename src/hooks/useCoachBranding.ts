@@ -17,7 +17,29 @@ export const useCoachBranding = () => {
           return;
         }
 
-        // Verificar si el usuario tiene un coach asignado
+        // Primero verificar si el usuario ES un coach
+        const { data: isCoach } = await supabase
+          .from('admin_users')
+          .select('company_name, banner_image_url, logo_image_url, ranking_image_url, primary_button_color, primary_button_fill_color')
+          .eq('id', user.id)
+          .single();
+
+        if (isCoach) {
+          // Usuario es un coach, usar su propio branding
+          setBranding({
+            companyName: isCoach.company_name || DEFAULT_GATOFIT_BRANDING.companyName,
+            bannerImageUrl: isCoach.banner_image_url || DEFAULT_GATOFIT_BRANDING.bannerImageUrl,
+            logoImageUrl: isCoach.logo_image_url || DEFAULT_GATOFIT_BRANDING.logoImageUrl,
+            rankingImageUrl: isCoach.ranking_image_url || DEFAULT_GATOFIT_BRANDING.rankingImageUrl,
+            primaryButtonColor: isCoach.primary_button_color || DEFAULT_GATOFIT_BRANDING.primaryButtonColor,
+            primaryButtonFillColor: isCoach.primary_button_fill_color || DEFAULT_GATOFIT_BRANDING.primaryButtonFillColor,
+            hasCoach: true
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Si no es coach, verificar si el usuario tiene un coach asignado
         const { data: assignment } = await supabase
           .from('coach_user_assignments')
           .select('coach_id')

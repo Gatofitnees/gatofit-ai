@@ -3,6 +3,7 @@ import { format, addDays, subDays, isSameDay, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useLocalTimezone } from "@/hooks/useLocalTimezone";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface DateCardProps {
   date: Date;
@@ -21,31 +22,47 @@ const DateCard: React.FC<DateCardProps> = ({
 }) => {
   const dayNumber = format(date, "dd");
   const dayName = format(date, "EEE", { locale: es }).toLowerCase();
+  const { branding } = useBranding();
+
+  const selectedStyles = branding.hasCoach && isSelected ? {
+    backgroundColor: `${branding.primaryButtonColor}20`,
+    color: branding.primaryButtonColor,
+    borderColor: `${branding.primaryButtonColor}30`,
+    boxShadow: `0 0 10px ${branding.primaryButtonColor}40`
+  } : {};
+
+  const dotStyles = branding.hasCoach && hasRecords && !isSelected ? {
+    backgroundColor: branding.primaryButtonColor
+  } : {};
   
   return (
     <div 
       className={cn(
         "flex flex-col items-center justify-center h-20 min-w-16 p-2 rounded-xl transition-all cursor-pointer",
         isSelected 
-          ? "bg-primary/20 text-primary border border-primary/30 shadow-glow" 
+          ? branding.hasCoach ? "border" : "bg-primary/20 text-primary border border-primary/30 shadow-glow"
           : "bg-background/30 text-muted-foreground hover:bg-secondary/10"
       )}
       onClick={onClick}
+      style={selectedStyles}
     >
       <span className={cn(
         "text-lg font-bold",
-        isSelected ? "text-primary" : "text-foreground"
+        isSelected && !branding.hasCoach ? "text-primary" : ""
       )}>
         {dayNumber}
       </span>
       <span className={cn(
         "text-xs mt-1",
-        isSelected ? "text-primary" : "text-muted-foreground"
+        isSelected && !branding.hasCoach ? "text-primary" : ""
       )}>
         {label || dayName}
       </span>
       {hasRecords && !isSelected && (
-        <div className="w-1.5 h-1.5 mt-1 rounded-full bg-primary" />
+        <div 
+          className={branding.hasCoach ? "w-1.5 h-1.5 mt-1 rounded-full" : "w-1.5 h-1.5 mt-1 rounded-full bg-primary"}
+          style={dotStyles}
+        />
       )}
     </div>
   );

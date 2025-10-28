@@ -44,6 +44,7 @@ import { PaymentFailureAlert } from "./components/subscription/PaymentFailureAle
 import { supabase } from "@/integrations/supabase/client";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
 import { useBranding } from "./contexts/BrandingContext";
+import { useDynamicBranding } from "./hooks/useDynamicBranding";
 
 // Component to update document title based on branding
 const DocumentTitleUpdater: React.FC = () => {
@@ -53,6 +54,12 @@ const DocumentTitleUpdater: React.FC = () => {
     document.title = branding.companyName;
   }, [branding.companyName]);
 
+  return null;
+};
+
+// Component to apply dynamic branding
+const DynamicBrandingApplier: React.FC = () => {
+  useDynamicBranding();
   return null;
 };
 
@@ -159,6 +166,7 @@ function App() {
       <ProfileProvider>
         <BrandingProvider>
           <DocumentTitleUpdater />
+          <DynamicBrandingApplier />
           <WorkoutCacheProvider>
           <Router>
             <WorkoutRecoveryHandler />

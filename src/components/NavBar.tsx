@@ -2,6 +2,7 @@ import React from "react";
 import { Home, Dumbbell, Utensils, Users, Flame } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface NavItem {
   id: string;
@@ -39,6 +40,35 @@ const navItems: NavItem[] = [
 
 const NavBar: React.FC = () => {
   const location = useLocation();
+  const { branding } = useBranding();
+
+  // Generar estilos dinámicos para el item activo
+  const getActiveStyles = (isActive: boolean) => {
+    if (!isActive) return {};
+    
+    if (branding.hasCoach) {
+      return {
+        backgroundColor: `${branding.primaryButtonColor}20`,
+        color: branding.primaryButtonColor,
+        boxShadow: `0 0 10px ${branding.primaryButtonColor}40`
+      };
+    }
+    
+    return {};
+  };
+
+  const getIconStyles = (isActive: boolean) => {
+    if (!isActive) return {};
+    
+    if (branding.hasCoach) {
+      return {
+        color: branding.primaryButtonColor,
+        filter: `drop-shadow(0 0 3px ${branding.primaryButtonColor}80)`
+      };
+    }
+    
+    return {};
+  };
 
   return (
     <div 
@@ -52,6 +82,9 @@ const NavBar: React.FC = () => {
       <div className="max-w-md mx-auto flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const activeStyles = getActiveStyles(isActive);
+          const iconStyles = getIconStyles(isActive);
+          
           return (
             <Link
               key={item.id}
@@ -59,15 +92,22 @@ const NavBar: React.FC = () => {
               className={cn(
                 "flex items-center justify-center p-2 rounded-lg transition-all duration-300",
                 isActive 
-                  ? "bg-primary/20 text-primary shadow-glow" 
+                  ? branding.hasCoach ? "" : "bg-primary/20 text-primary shadow-glow"
                   : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
               )}
-              style={{ width: '50px', height: '50px' }}
+              style={{ 
+                width: '50px', 
+                height: '50px',
+                ...activeStyles,
+                ...iconStyles
+              }}
             >
-              <item.icon className={cn(
-                "h-5 w-5", 
-                isActive ? "text-primary filter drop-shadow-[0_0_3px_rgba(59,130,246,0.8)]" : ""
-              )} />
+              <item.icon 
+                className={cn(
+                  "h-5 w-5", 
+                  isActive && !branding.hasCoach ? "text-primary filter drop-shadow-[0_0_3px_rgba(59,130,246,0.8)]" : ""
+                )}
+              />
             </Link>
           );
         })}
