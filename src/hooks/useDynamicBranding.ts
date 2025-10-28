@@ -34,13 +34,34 @@ export const useDynamicBranding = () => {
       return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
     };
 
+    // Calcular luminancia para determinar si usar texto blanco o negro
+    const getLuminance = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (!result) return 0.5;
+      
+      const r = parseInt(result[1], 16) / 255;
+      const g = parseInt(result[2], 16) / 255;
+      const b = parseInt(result[3], 16) / 255;
+
+      // Fórmula de luminancia relativa
+      const rs = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+      const gs = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+      const bs = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+
+      return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+    };
+
     // Inyectar colores del coach
     const root = document.documentElement;
     const primaryHSL = hexToHSL(branding.primaryButtonColor);
+    const luminance = getLuminance(branding.primaryButtonColor);
+    
+    // Si el color primario es claro (luminancia > 0.5), usar texto negro, sino blanco
+    const foregroundColor = luminance > 0.5 ? '0 0% 10%' : '0 0% 100%';
     
     root.style.setProperty('--primary', primaryHSL);
-    root.style.setProperty('--primary-foreground', hexToHSL(branding.primaryButtonFillColor));
-    root.style.setProperty('--glow-color', `${branding.primaryButtonColor}80`); // 80 = 50% opacity hex
+    root.style.setProperty('--primary-foreground', foregroundColor);
+    root.style.setProperty('--glow-color', `${branding.primaryButtonColor}80`);
     
     // Limpiar al desmontar
     return () => {
