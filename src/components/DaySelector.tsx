@@ -48,7 +48,7 @@ const DateCard: React.FC<DateCardProps> = ({
     >
       <span className={cn(
         "text-lg font-bold",
-        isSelected && !branding.hasCoach ? "text-primary" : ""
+        isSelected && !branding.hasCoach ? "text-primary" : "text-foreground"
       )}>
         {dayNumber}
       </span>
