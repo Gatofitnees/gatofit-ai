@@ -2719,6 +2719,7 @@ export type Database = {
           next_plan_type:
             | Database["public"]["Enums"]["subscription_plan_type"]
             | null
+          payment_failed_at: string | null
           payment_method: string | null
           paypal_payer_id: string | null
           paypal_subscription_id: string | null
@@ -2744,6 +2745,7 @@ export type Database = {
           next_plan_type?:
             | Database["public"]["Enums"]["subscription_plan_type"]
             | null
+          payment_failed_at?: string | null
           payment_method?: string | null
           paypal_payer_id?: string | null
           paypal_subscription_id?: string | null
@@ -2769,6 +2771,7 @@ export type Database = {
           next_plan_type?:
             | Database["public"]["Enums"]["subscription_plan_type"]
             | null
+          payment_failed_at?: string | null
           payment_method?: string | null
           paypal_payer_id?: string | null
           paypal_subscription_id?: string | null
