@@ -34,7 +34,46 @@ Deno.serve(async (req) => {
 
     // Get raw body for signature validation
     const rawBody = await req.text();
-    const event: PayPalWebhookEvent = JSON.parse(rawBody);
+
+    // Log incoming webhook request for debugging
+    console.log('📨 Webhook request received:', {
+      method: req.method,
+      contentType: req.headers.get('content-type'),
+      bodyLength: rawBody.length,
+      hasPayPalHeaders: {
+        transmissionId: !!req.headers.get('paypal-transmission-id'),
+        transmissionTime: !!req.headers.get('paypal-transmission-time'),
+        certUrl: !!req.headers.get('paypal-cert-url'),
+        signature: !!req.headers.get('paypal-transmission-sig')
+      }
+    });
+
+    // Validate that we received actual data
+    if (!rawBody || rawBody.trim() === '') {
+      console.warn('⚠️ Received empty webhook body - likely a test ping from PayPal');
+      return new Response(
+        JSON.stringify({ success: true, message: 'Empty body received' }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Parse JSON with error handling
+    let event: PayPalWebhookEvent;
+    try {
+      event = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('❌ Invalid JSON in webhook body:', parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid JSON payload' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
     
     // Validate webhook signature (CRITICAL SECURITY)
     const isValidSignature = await validateWebhookSignature({
@@ -56,7 +95,7 @@ Deno.serve(async (req) => {
         }
       );
     }
-    console.log('PayPal webhook received:', event.event_type, 'Event ID:', event.id);
+    console.log('✅ PayPal webhook received:', event.event_type, 'Event ID:', event.id);
 
     // Check if we already processed this event (idempotency)
     const { data: existingEvent } = await supabase
