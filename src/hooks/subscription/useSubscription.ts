@@ -2,41 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface SubscriptionPlan {
-  id: string;
-  plan_type: 'monthly' | 'yearly' | 'test_daily';
-  name: string;
-  price_usd: number;
-  duration_days: number;
-  features: {
-    routines_limit: number;
-    nutrition_photos_weekly: number;
-    ai_chat_messages_weekly: number;
-  };
-}
-
-export interface UserSubscription {
-  id: string;
-  user_id: string;
-  plan_type: 'free' | 'monthly' | 'yearly' | 'asesorados' | 'test_daily';
-  status: 'active' | 'expired' | 'cancelled' | 'pending' | 'trial' | 'suspended';
-  started_at: string;
-  expires_at?: string;
-  store_transaction_id?: string;
-  store_platform?: string;
-  auto_renewal: boolean;
-  next_plan_type?: 'free' | 'monthly' | 'yearly' | 'asesorados' | 'test_daily';
-  next_plan_starts_at?: string;
-  scheduled_change_created_at?: string;
-  suspended_at?: string;
-}
-
-export interface CancelScheduledChangeResult {
-  success: boolean;
-  paypalSubscriptionId?: string;
-  cancelledPlanType?: string;
-}
+import { SubscriptionPlan, UserSubscription, CancelScheduledChangeResult } from './types';
 
 export const useSubscription = () => {
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
