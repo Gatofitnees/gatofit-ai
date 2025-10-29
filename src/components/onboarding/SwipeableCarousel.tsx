@@ -185,12 +185,15 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
               maxHeight: '100%'
             }}
             key={index}
-            initial={{ opacity: 0.5, scale: 0.9 }}
+            initial={{ 
+              opacity: currentIndex === index ? 1 : 0.5, 
+              scale: currentIndex === index ? 1 : 0.9 
+            }}
             animate={{ 
-              opacity: Math.abs(currentIndex - index) <= 1 ? 1 : 0.8, // Show adjacent slides better
+              opacity: Math.abs(currentIndex - index) <= 1 ? 1 : 0.8,
               scale: currentIndex === index ? 1 : 0.95
             }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {child}
           </motion.div>
