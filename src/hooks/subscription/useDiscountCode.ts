@@ -29,7 +29,7 @@ export const useDiscountCode = () => {
       const { data: discountData, error: discountError } = await supabase
         .from('discount_codes')
         .select('*')
-        .eq('code', code.trim().toLowerCase())
+        .ilike('code', code.trim())
         .eq('is_active', true)
         .single();
 
