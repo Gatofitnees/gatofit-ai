@@ -140,8 +140,12 @@ serve(async (req) => {
         throw new Error('Ya has usado este código anteriormente');
       }
 
-      // Calculate discounted price
-      if (discount.paypal_discount_fixed) {
+      // Calculate PayPal price (months_free don't affect PayPal price)
+      if (discount.discount_type === 'months_free') {
+        // Free months will be applied after payment verification
+        finalPrice = plans.price_usd;
+        console.log('Free months discount detected - will apply after payment confirmation');
+      } else if (discount.paypal_discount_fixed) {
         finalPrice = Math.max(0, finalPrice - discount.paypal_discount_fixed);
       } else if (discount.paypal_discount_percentage) {
         finalPrice = finalPrice * (1 - discount.paypal_discount_percentage / 100);
@@ -149,7 +153,12 @@ serve(async (req) => {
 
       discountCodeId = discount.id;
       discountInfo = discount;
-      console.log('Discount applied. Final price:', finalPrice);
+      console.log('Discount validated:', {
+        type: discount.discount_type,
+        originalPrice: plans.price_usd,
+        paypalPrice: finalPrice,
+        willApplyMonthsFree: discount.discount_type === 'months_free'
+      });
     }
 
     // Create PayPal plan first, then subscription
@@ -170,8 +179,8 @@ serve(async (req) => {
       planDisplayName = 'Anual';
     }
 
-    // If discount exists and applies to first billing only
-    if (discountInfo && discountInfo.application_type === 'first_billing_only') {
+    // Configure billing cycles based on discount type
+    if (discountInfo && discountInfo.application_type === 'first_billing_only' && discountInfo.discount_type !== 'months_free') {
       // First cycle with discount
       billingCycles.push({
         frequency: {
@@ -200,13 +209,13 @@ serve(async (req) => {
         total_cycles: 0, // Infinite
         pricing_scheme: {
           fixed_price: {
-            value: plans.price_usd.toString(),
+            value: plans.price_usd.toFixed(2),
             currency_code: "USD"
           }
         }
       });
     } else {
-      // Single cycle (with forever discount or no discount)
+      // Single cycle (no discount, forever discount, or months_free)
       billingCycles.push({
         frequency: {
           interval_unit: intervalUnit,
@@ -325,37 +334,16 @@ serve(async (req) => {
       throw new Error('No approval URL found in PayPal response');
     }
 
-    // If discount code was used, mark it as used
-    if (discountCodeId) {
-      // Record discount code usage
-      await supabase
-        .from('user_discount_codes')
-        .insert({
-          user_id: userId,
-          discount_code_id: discountCodeId
-        });
-
-      // Increment usage counter if there's a max_uses limit
-      if (discountInfo.max_uses) {
-        await supabase
-          .from('discount_codes')
-          .update({ 
-            current_uses: discountInfo.current_uses + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', discountCodeId);
-      }
-
-      console.log('Discount code marked as used');
-    }
-
     // Log subscription creation attempt
     console.log(`PayPal subscription created for user ${userId}, plan: ${planType}, subscription ID: ${subscriptionData.id}`);
 
+    // Return discount code info for verification (usage will be recorded after payment confirmation)
     return new Response(JSON.stringify({
       success: true,
       subscriptionId: subscriptionData.id,
-      approvalUrl: approvalUrl
+      approvalUrl: approvalUrl,
+      discountCode: discountCode || null,
+      discountType: discountInfo?.discount_type || null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

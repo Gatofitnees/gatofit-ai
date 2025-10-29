@@ -96,6 +96,12 @@ export const PayPalCheckoutModal = ({
       if (error) throw error;
 
       if (data?.approvalUrl) {
+        // Guardar código de descuento y subscription ID en localStorage
+        if (appliedDiscount && discountCode) {
+          localStorage.setItem('pending_discount_code', discountCode);
+        }
+        localStorage.setItem('pending_subscription_id', data.subscriptionId);
+        
         // Abrir ventana de PayPal
         window.location.href = data.approvalUrl;
       } else {

@@ -84,7 +84,8 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
               const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-paypal-payment', {
                 body: { 
                   subscriptionId: data.subscriptionId,
-                  userId: user.id 
+                  userId: user.id,
+                  discountCode: data.discountCode
                 }
               });
 
@@ -98,9 +99,13 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
                 return;
               }
 
+              const bonusMessage = verifyData.subscription?.bonusMonthsApplied 
+                ? ` ¡Incluye ${verifyData.subscription.bonusMonthsApplied} meses gratis!`
+                : '';
+
               toast({
                 title: "¡Suscripción activada!",
-                description: "Tu suscripción de PayPal se ha activado correctamente",
+                description: `Tu suscripción de PayPal se ha activado correctamente.${bonusMessage}`,
                 variant: "default"
               });
 

@@ -10,6 +10,7 @@ const corsHeaders = {
 interface VerifyPaymentRequest {
   subscriptionId: string;
   userId: string;
+  discountCode?: string;
 }
 
 serve(async (req) => {
@@ -24,7 +25,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { subscriptionId, userId }: VerifyPaymentRequest = await req.json();
+    const { subscriptionId, userId, discountCode }: VerifyPaymentRequest = await req.json();
     
     if (!subscriptionId || !userId) {
       throw new Error('Subscription ID and user ID are required');
@@ -72,6 +73,30 @@ serve(async (req) => {
     }
 
     console.log('PayPal subscription data:', subscriptionData);
+
+    // Get discount code info if provided
+    let discountInfo: any = null;
+    let discountCodeId: string | null = null;
+
+    if (discountCode) {
+      const { data: discount, error: discountError } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('code', discountCode.toLowerCase())
+        .eq('is_active', true)
+        .single();
+
+      if (!discountError && discount) {
+        discountInfo = discount;
+        discountCodeId = discount.id;
+        console.log('Discount code info retrieved:', {
+          code: discountCode,
+          type: discount.discount_type,
+          value: discount.discount_value,
+          durationMonths: discount.duration_months
+        });
+      }
+    }
 
     // Check if subscription is active
     if (subscriptionData.status !== 'ACTIVE') {
@@ -146,10 +171,11 @@ serve(async (req) => {
 
     console.log(`Existing subscription:`, existingSub);
 
-    // Calculate expiration date
+    // Calculate expiration date and apply free months
     const now = new Date();
     let expiresAt: Date;
     let startedAt: string;
+    let bonusMonthsApplied = 0;
 
     if (existingSub && existingSub.expires_at) {
       const existingExpiry = new Date(existingSub.expires_at);
@@ -162,6 +188,14 @@ serve(async (req) => {
           const daysToAdd = planType === 'test_daily' ? 1 : (planType === 'monthly' ? 30 : 365);
           expiresAt = new Date(existingExpiry);
           expiresAt.setDate(expiresAt.getDate() + daysToAdd);
+          
+          // Apply free months if discount type is months_free
+          if (discountInfo?.discount_type === 'months_free' && discountInfo.duration_months) {
+            expiresAt.setMonth(expiresAt.getMonth() + discountInfo.duration_months);
+            bonusMonthsApplied = discountInfo.duration_months;
+            console.log(`✨ Applied ${bonusMonthsApplied} free months to existing subscription`);
+          }
+          
           startedAt = existingSub.started_at; // Mantener fecha de inicio original
           console.log(`✅ Extending ${planType} plan from ${existingExpiry} to ${expiresAt}`);
         } else {
@@ -245,10 +279,20 @@ serve(async (req) => {
           expiresAt = new Date(now);
           expiresAt.setDate(expiresAt.getDate() + 1);
         } else if (planType === 'monthly') {
-          expiresAt = new Date(now.setMonth(now.getMonth() + 1));
+          expiresAt = new Date(now);
+          expiresAt.setMonth(expiresAt.getMonth() + 1);
         } else {
-          expiresAt = new Date(now.setFullYear(now.getFullYear() + 1));
+          expiresAt = new Date(now);
+          expiresAt.setFullYear(expiresAt.getFullYear() + 1);
         }
+        
+        // Apply free months
+        if (discountInfo?.discount_type === 'months_free' && discountInfo.duration_months) {
+          expiresAt.setMonth(expiresAt.getMonth() + discountInfo.duration_months);
+          bonusMonthsApplied = discountInfo.duration_months;
+          console.log(`✨ Applied ${bonusMonthsApplied} free months to new subscription`);
+        }
+        
         startedAt = new Date().toISOString();
         console.log(`📅 Creating new subscription (expired plan)`);
       }
@@ -258,10 +302,20 @@ serve(async (req) => {
         expiresAt = new Date(now);
         expiresAt.setDate(expiresAt.getDate() + 1);
       } else if (planType === 'monthly') {
-        expiresAt = new Date(now.setMonth(now.getMonth() + 1));
+        expiresAt = new Date(now);
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
       } else {
-        expiresAt = new Date(now.setFullYear(now.getFullYear() + 1));
+        expiresAt = new Date(now);
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       }
+      
+      // Apply free months
+      if (discountInfo?.discount_type === 'months_free' && discountInfo.duration_months) {
+        expiresAt.setMonth(expiresAt.getMonth() + discountInfo.duration_months);
+        bonusMonthsApplied = discountInfo.duration_months;
+        console.log(`✨ Applied ${bonusMonthsApplied} free months to first subscription`);
+      }
+      
       startedAt = new Date().toISOString();
       console.log(`🆕 Creating first subscription for user`);
     }
@@ -282,6 +336,7 @@ serve(async (req) => {
         paypal_payer_id: subscriptionData.subscriber?.payer_id,
         payment_method: 'paypal',
         auto_renewal: true,
+        discount_code_id: discountCodeId,
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'user_id',
@@ -296,6 +351,55 @@ serve(async (req) => {
 
     console.log(`Successfully updated subscription:`, upsertData);
 
+    // Register discount code usage AFTER successful subscription creation
+    if (discountCodeId && discountInfo) {
+      console.log('Registering discount code usage...');
+      
+      // Check if usage already exists
+      const { data: existingUsage } = await supabase
+        .from('user_discount_codes')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('discount_code_id', discountCodeId)
+        .single();
+      
+      if (!existingUsage) {
+        // Insert usage record
+        const { error: usageError } = await supabase
+          .from('user_discount_codes')
+          .insert({
+            user_id: userId,
+            discount_code_id: discountCodeId,
+            used_at: new Date().toISOString()
+          });
+        
+        if (usageError) {
+          console.error('Error recording discount usage:', usageError);
+        } else {
+          console.log('✅ Discount code usage recorded');
+        }
+        
+        // Increment counter if max_uses exists
+        if (discountInfo.max_uses) {
+          const { error: incrementError } = await supabase
+            .from('discount_codes')
+            .update({ 
+              current_uses: (discountInfo.current_uses || 0) + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', discountCodeId);
+          
+          if (incrementError) {
+            console.error('Error incrementing discount counter:', incrementError);
+          } else {
+            console.log('✅ Discount code counter incremented');
+          }
+        }
+      } else {
+        console.log('⚠️ Discount code already registered for this user');
+      }
+    }
+
     console.log(`Successfully verified and updated PayPal subscription for user ${userId}`);
 
     return new Response(JSON.stringify({
@@ -304,7 +408,8 @@ serve(async (req) => {
         id: subscriptionId,
         status: subscriptionData.status,
         planType: planType,
-        expiresAt: expiresAt.toISOString()
+        expiresAt: expiresAt.toISOString(),
+        bonusMonthsApplied: bonusMonthsApplied
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

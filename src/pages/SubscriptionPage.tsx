@@ -81,19 +81,31 @@ const SubscriptionPage: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
+      // Recuperar código de descuento del localStorage si existe
+      const discountCode = localStorage.getItem('pending_discount_code');
+      
       const { data, error } = await supabase.functions.invoke('verify-paypal-payment', {
         body: {
           subscriptionId,
-          userId: user.id
+          userId: user.id,
+          discountCode: discountCode || undefined
         }
       });
+
+      // Limpiar localStorage
+      localStorage.removeItem('pending_discount_code');
+      localStorage.removeItem('pending_subscription_id');
 
       if (error) throw error;
 
       if (data?.success) {
+        const bonusMessage = data.subscription?.bonusMonthsApplied 
+          ? ` ¡Incluye ${data.subscription.bonusMonthsApplied} meses gratis!`
+          : '';
+        
         toast({
           title: "¡Pago confirmado!",
-          description: "Tu suscripción premium ha sido activada exitosamente.",
+          description: `Tu suscripción premium ha sido activada exitosamente.${bonusMessage}`,
         });
         
         // Limpiar URL y recargar datos

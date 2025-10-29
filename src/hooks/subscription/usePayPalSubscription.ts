@@ -50,7 +50,7 @@ export const usePayPalSubscription = () => {
     }
   };
 
-  const verifyPayPalPayment = async (subscriptionId: string) => {
+  const verifyPayPalPayment = async (subscriptionId: string, discountCode?: string) => {
     try {
       setIsVerifying(true);
       
@@ -62,7 +62,8 @@ export const usePayPalSubscription = () => {
       const { data, error } = await supabase.functions.invoke('verify-paypal-payment', {
         body: { 
           subscriptionId,
-          userId: user.id 
+          userId: user.id,
+          discountCode: discountCode
         }
       });
 
@@ -81,9 +82,13 @@ export const usePayPalSubscription = () => {
           description: data.subscription.message,
         });
       } else {
+        const bonusMessage = data.subscription?.bonusMonthsApplied 
+          ? ` ¡Incluye ${data.subscription.bonusMonthsApplied} meses gratis!`
+          : '';
+        
         toast({
           title: "¡Pago verificado!",
-          description: "Tu suscripción ha sido activada exitosamente",
+          description: `Tu suscripción ha sido activada exitosamente.${bonusMessage}`,
         });
       }
 
