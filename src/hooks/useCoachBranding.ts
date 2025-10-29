@@ -7,12 +7,38 @@ export const useCoachBranding = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchSuperadminBranding = async (): Promise<CoachBranding> => {
+      try {
+        const { data } = await supabase
+          .from('admin_users')
+          .select('company_name, banner_image_url, logo_image_url, ranking_image_url, primary_button_color, primary_button_fill_color')
+          .eq('email', 'menasebas2006@gmail.com')
+          .maybeSingle();
+        
+        if (data) {
+          return {
+            companyName: data.company_name || DEFAULT_GATOFIT_BRANDING.companyName,
+            bannerImageUrl: data.banner_image_url || DEFAULT_GATOFIT_BRANDING.bannerImageUrl,
+            logoImageUrl: data.logo_image_url || DEFAULT_GATOFIT_BRANDING.logoImageUrl,
+            rankingImageUrl: data.ranking_image_url || DEFAULT_GATOFIT_BRANDING.rankingImageUrl,
+            primaryButtonColor: data.primary_button_color || DEFAULT_GATOFIT_BRANDING.primaryButtonColor,
+            primaryButtonFillColor: data.primary_button_fill_color || DEFAULT_GATOFIT_BRANDING.primaryButtonFillColor,
+            hasCoach: false
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching superadmin branding:', error);
+      }
+      return DEFAULT_GATOFIT_BRANDING;
+    };
+
     const fetchCoachBranding = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          setBranding(DEFAULT_GATOFIT_BRANDING);
+          const superadminBranding = await fetchSuperadminBranding();
+          setBranding(superadminBranding);
           setLoading(false);
           return;
         }
@@ -47,8 +73,9 @@ export const useCoachBranding = () => {
           .single();
 
         if (!assignment?.coach_id) {
-          // Sin coach asignado, usar branding de Gatofit
-          setBranding(DEFAULT_GATOFIT_BRANDING);
+          // Sin coach asignado, usar branding del superadmin
+          const superadminBranding = await fetchSuperadminBranding();
+          setBranding(superadminBranding);
           setLoading(false);
           return;
         }
@@ -72,11 +99,13 @@ export const useCoachBranding = () => {
             hasCoach: true
           });
         } else {
-          setBranding(DEFAULT_GATOFIT_BRANDING);
+          const superadminBranding = await fetchSuperadminBranding();
+          setBranding(superadminBranding);
         }
       } catch (error) {
         console.error('Error fetching coach branding:', error);
-        setBranding(DEFAULT_GATOFIT_BRANDING);
+        const superadminBranding = await fetchSuperadminBranding();
+        setBranding(superadminBranding);
       } finally {
         setLoading(false);
       }
