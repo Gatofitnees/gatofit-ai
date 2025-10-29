@@ -3450,6 +3450,7 @@ export type Database = {
         | "pending"
         | "trial"
         | "suspended"
+        | "payment_failed"
       tag_color:
         | "gray"
         | "red"
@@ -3614,6 +3615,7 @@ export const Constants = {
         "pending",
         "trial",
         "suspended",
+        "payment_failed",
       ],
       tag_color: [
         "gray",
