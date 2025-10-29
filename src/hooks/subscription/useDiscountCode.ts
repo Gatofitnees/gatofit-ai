@@ -25,91 +25,35 @@ export const useDiscountCode = () => {
         throw new Error('Usuario no autenticado');
       }
 
-      // Obtener información del código sin aplicarlo
-      const { data: discountData, error: discountError } = await supabase
-        .from('discount_codes')
-        .select('*')
-        .ilike('code', code.trim())
-        .eq('is_active', true)
-        .single();
+      // Call secure RPC function for validation
+      const { data, error } = await supabase.rpc('validate_discount_code', {
+        p_code: code.trim(),
+        p_user_id: user.id,
+        p_plan_type: planType
+      });
 
-      if (discountError || !discountData) {
+      if (error) {
+        console.error('RPC error validating discount code:', error);
+        toast({
+          title: "Error",
+          description: "Hubo un problema al validar el código. Inténtalo de nuevo.",
+          variant: "destructive"
+        });
+        return { success: false };
+      }
+
+      const result = data as unknown as { success: boolean; discount?: DiscountInfo; error?: string };
+
+      if (!result.success) {
         toast({
           title: "Código inválido",
-          description: "El código ingresado no existe o ha expirado",
+          description: result.error || "El código ingresado no es válido",
           variant: "destructive"
         });
         return { success: false };
       }
 
-      // Verificar si aplica al plan seleccionado
-      if (discountData.applicable_plans && 
-          !discountData.applicable_plans.includes(planType) && 
-          !discountData.applicable_plans.includes('both')) {
-        toast({
-          title: "Código no válido",
-          description: `Este código no es válido para el plan ${planType === 'monthly' ? 'mensual' : 'anual'}`,
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      // Verificar fechas de validez
-      if (discountData.valid_from && new Date(discountData.valid_from) > new Date()) {
-        toast({
-          title: "Código no disponible",
-          description: "Este código aún no está disponible",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      if (discountData.valid_to && new Date(discountData.valid_to) < new Date()) {
-        toast({
-          title: "Código expirado",
-          description: "Este código ya no es válido",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      // Verificar límite de usos
-      if (discountData.max_uses && discountData.current_uses >= discountData.max_uses) {
-        toast({
-          title: "Código agotado",
-          description: "Este código ha alcanzado su límite de usos",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      // Verificar si el usuario ya usó este código
-      const { data: userUsage } = await supabase
-        .from('user_discount_codes')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('discount_code_id', discountData.id)
-        .single();
-
-      if (userUsage && discountData.usage_type === 'single_use') {
-        toast({
-          title: "Código ya usado",
-          description: "Ya has usado este código anteriormente",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      const discountInfo: DiscountInfo = {
-        type: discountData.discount_type,
-        value: discountData.discount_value,
-        application_type: discountData.application_type,
-        paypal_discount_percentage: discountData.paypal_discount_percentage,
-        paypal_discount_fixed: discountData.paypal_discount_fixed,
-        applicable_plans: discountData.applicable_plans
-      };
-
-      setAppliedDiscount(discountInfo);
+      setAppliedDiscount(result.discount!);
 
       toast({
         title: "¡Código válido!",
@@ -117,7 +61,7 @@ export const useDiscountCode = () => {
         variant: "default"
       });
 
-      return { success: true, discount: discountInfo };
+      return { success: true, discount: result.discount };
 
     } catch (error) {
       console.error('Error validating discount code:', error);

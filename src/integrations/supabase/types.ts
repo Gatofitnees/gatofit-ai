@@ -3425,6 +3425,10 @@ export type Database = {
         }
         Returns: Json
       }
+      validate_discount_code: {
+        Args: { p_code: string; p_plan_type?: string; p_user_id: string }
+        Returns: Json
+      }
       verify_admin_status: { Args: never; Returns: Json }
     }
     Enums: {
