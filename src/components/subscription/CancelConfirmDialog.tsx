@@ -17,13 +17,15 @@ interface CancelConfirmDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   isLoading: boolean;
+  isPaymentFailed?: boolean;
 }
 
 export const CancelConfirmDialog: React.FC<CancelConfirmDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  isLoading
+  isLoading,
+  isPaymentFailed = false
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -36,15 +38,31 @@ export const CancelConfirmDialog: React.FC<CancelConfirmDialogProps> = ({
             Lamentamos que tengas que irte
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm text-muted-foreground space-y-3">
-            <p>
-              Esperamos que puedas seguir con tu progreso y en un futuro volver con nosotros.
-            </p>
-            <p>
-              Recuerda que seguirás teniendo acceso a todas las funciones premium hasta que expire tu suscripción actual.
-            </p>
-            <p className="text-primary font-medium">
-              ¡Tu progreso estará aquí esperándote cuando regreses! 💪
-            </p>
+            {isPaymentFailed ? (
+              <>
+                <p className="text-destructive font-semibold">
+                  ⚠️ Estás a punto de cancelar tu suscripción permanentemente y volver al plan Free.
+                </p>
+                <p>
+                  <strong>Perderás acceso inmediato</strong> a todas las funciones premium.
+                </p>
+                <p className="text-xs">
+                  💡 <strong>Sugerencia:</strong> Si solo quieres actualizar tu método de pago, usa el botón "Actualizar método de pago" en la página de suscripción en su lugar.
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  Esperamos que puedas seguir con tu progreso y en un futuro volver con nosotros.
+                </p>
+                <p>
+                  Recuerda que seguirás teniendo acceso a todas las funciones premium hasta que expire tu suscripción actual.
+                </p>
+                <p className="text-primary font-medium">
+                  ¡Tu progreso estará aquí esperándote cuando regreses! 💪
+                </p>
+              </>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">

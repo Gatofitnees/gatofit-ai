@@ -189,6 +189,68 @@ const SubscriptionPage: React.FC = () => {
 
   const handleCancelSubscription = async () => {
     setIsLoading(true);
+    
+    // SPECIAL CASE: Permanent cancellation during grace period
+    if (subscription?.status === 'payment_failed') {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Usuario no autenticado');
+
+        // 1. Cancel in PayPal if exists
+        if (subscription?.paypal_subscription_id) {
+          await supabase.functions.invoke('cancel-paypal-subscription', {
+            body: {
+              subscriptionId: subscription.paypal_subscription_id,
+              reason: 'User cancelled during grace period'
+            }
+          });
+        }
+        
+        // 2. Update DB to FREE
+        const { error: updateError } = await supabase
+          .from('user_subscriptions')
+          .update({
+            plan_type: 'free',
+            status: 'active',
+            auto_renewal: false,
+            cancelled_at: new Date().toISOString(),
+            paypal_subscription_id: null,
+            expires_at: null,
+            payment_failed_at: null,
+            suspended_at: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+        
+        // 3. Mark payment failure as resolved
+        await supabase
+          .from('subscription_payment_failures')
+          .update({ resolved_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+          .is('resolved_at', null);
+        
+        toast({
+          title: "Suscripción cancelada",
+          description: "Has vuelto al plan gratuito. Puedes suscribirte nuevamente cuando desees.",
+        });
+        
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (error) {
+        console.error('Error cancelling during grace period:', error);
+        toast({
+          title: "Error",
+          description: "No pudimos cancelar. Intenta de nuevo.",
+          variant: "destructive"
+        });
+      }
+      setIsLoading(false);
+      setShowCancelDialog(false);
+      return;
+    }
+
+    // NORMAL FLOW: Active subscription cancellation
     try {
       // Check if already cancelled
       if (subscription?.auto_renewal === false) {
@@ -351,11 +413,18 @@ const SubscriptionPage: React.FC = () => {
           </div>
         )}
 
-        {/* Payment Failure Alert */}
+        {/* Payment Failure Alert - Prominent */}
         {subscription?.status === 'payment_failed' && paymentFailure && (
-          <PaymentFailureAlert
-            gracePeriodEndsAt={paymentFailure.grace_period_ends_at}
-          />
+          <div className="space-y-3">
+            <PaymentFailureAlert
+              gracePeriodEndsAt={paymentFailure.grace_period_ends_at}
+            />
+            <div className="neu-card p-4 bg-blue-500/5 border border-blue-500/20">
+              <p className="text-sm text-muted-foreground text-center">
+                💡 <strong>Tip:</strong> Puedes reintentar verificar el pago arriba, o crear una nueva suscripción seleccionando un plan abajo
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Current Status */}
@@ -429,7 +498,8 @@ const SubscriptionPage: React.FC = () => {
         </div>
 
         {/* Cancel Subscription Section */}
-        {isPremium && subscription?.status === 'active' && subscription?.auto_renewal === true && (
+        {((isPremium && subscription?.status === 'active' && subscription?.auto_renewal === true) || 
+          subscription?.status === 'payment_failed') && (
           <div className="neu-card p-6 border border-destructive/20">
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
@@ -437,7 +507,14 @@ const SubscriptionPage: React.FC = () => {
                 <div>
                   <h3 className="font-semibold text-base mb-1">Cancelar suscripción</h3>
                   <p className="text-sm text-muted-foreground">
-                    Si cancelas tu suscripción, seguirás teniendo acceso premium hasta la fecha de expiración.
+                    {subscription?.status === 'payment_failed' ? (
+                      <>
+                        Si cancelas ahora, volverás al plan <strong>gratuito inmediatamente</strong> y perderás el acceso a las funciones premium.
+                        Si prefieres mantener el acceso, usa el botón "Actualizar método de pago" arriba.
+                      </>
+                    ) : (
+                      'Si cancelas tu suscripción, seguirás teniendo acceso premium hasta la fecha de expiración.'
+                    )}
                   </p>
                 </div>
                 <Button
@@ -447,7 +524,9 @@ const SubscriptionPage: React.FC = () => {
                   className="w-full sm:w-auto bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/30"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
-                  Cancelar suscripción
+                  {subscription?.status === 'payment_failed' 
+                    ? 'Cancelar permanentemente y volver a Free' 
+                    : 'Cancelar renovación automática'}
                 </Button>
               </div>
             </div>
@@ -545,12 +624,13 @@ const SubscriptionPage: React.FC = () => {
       />
 
       {/* Cancel Confirmation Dialog */}
-      <CancelConfirmDialog
-        isOpen={showCancelDialog}
-        onClose={() => setShowCancelDialog(false)}
-        onConfirm={handleCancelSubscription}
-        isLoading={isLoading}
-      />
+        <CancelConfirmDialog
+          isOpen={showCancelDialog}
+          onClose={() => setShowCancelDialog(false)}
+          onConfirm={handleCancelSubscription}
+          isLoading={isLoading}
+          isPaymentFailed={subscription?.status === 'payment_failed'}
+        />
     </div>
   );
 };

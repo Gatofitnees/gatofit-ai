@@ -41,10 +41,12 @@ import { RoutineProvider } from "./features/workout/contexts/RoutineContext";
 import { WorkoutCacheProvider, useWorkoutCacheContext } from "./features/workout/contexts/WorkoutCacheContext";
 import { WorkoutRecoveryDialog } from "./features/workout/components/active-workout/WorkoutRecoveryDialog";
 import { PaymentFailureAlert } from "./components/subscription/PaymentFailureAlert";
+import { PaymentFailurePopup } from "./components/subscription/PaymentFailurePopup";
 import { supabase } from "@/integrations/supabase/client";
 import { optimizeForMobile } from '@/utils/mobileOptimizations';
 import { useBranding } from "./contexts/BrandingContext";
 import { useDynamicBranding } from "./hooks/useDynamicBranding";
+import { useLocation } from 'react-router-dom';
 
 // Component to update document title based on branding
 const DocumentTitleUpdater: React.FC = () => {
@@ -155,6 +157,74 @@ const GlobalPaymentFailureBanner: React.FC = () => {
   );
 };
 
+// Payment failure popup handler (shows once per session at app entry)
+const PaymentFailurePopupHandler: React.FC = () => {
+  const location = useLocation();
+  const [paymentFailure, setPaymentFailure] = useState<any>(null);
+  const [showPopup, setShowPopup] = useState(false);
+
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      // Don't show popup if already on subscription page
+      if (location.pathname === '/subscription') {
+        return;
+      }
+
+      // Check if popup was already shown this session
+      const POPUP_SHOWN_KEY = 'payment_failure_popup_shown';
+      const hasShownPopup = sessionStorage.getItem(POPUP_SHOWN_KEY);
+      
+      if (hasShownPopup) {
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get subscription
+      const { data: subData } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (subData && (subData.status as string) === 'payment_failed') {
+        // Get payment failure info
+        const { data: failureData } = await supabase
+          .from('subscription_payment_failures')
+          .select('*')
+          .eq('user_id', user.id)
+          .is('resolved_at', null)
+          .order('failed_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (failureData) {
+          setPaymentFailure(failureData);
+          setShowPopup(true);
+          sessionStorage.setItem(POPUP_SHOWN_KEY, 'true');
+        }
+      }
+    };
+
+    checkPaymentStatus();
+  }, [location.pathname]);
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+  };
+
+  if (!paymentFailure || !showPopup) return null;
+
+  return (
+    <PaymentFailurePopup
+      gracePeriodEndsAt={paymentFailure.grace_period_ends_at}
+      isOpen={showPopup}
+      onClose={handleClosePopup}
+    />
+  );
+};
+
 function App() {
   useEffect(() => {
     // Initialize mobile optimizations
@@ -170,6 +240,7 @@ function App() {
           <WorkoutCacheProvider>
           <Router>
             <WorkoutRecoveryHandler />
+            <PaymentFailurePopupHandler />
             <GlobalPaymentFailureBanner />
             <div className="bg-background text-foreground min-h-screen">
               <RoutineProvider>

@@ -52,18 +52,20 @@ export const PaymentFailureAlert: React.FC<PaymentFailureAlertProps> = ({
 
       if (error) throw error;
 
-      if (data?.redirectUrl) {
-        window.open(data.redirectUrl, '_blank');
+      if (data?.success && !data?.redirectUrl) {
+        // Payment already processed
         toast({
-          title: "Redirigiendo a PayPal",
-          description: "Por favor actualiza tu método de pago en la ventana que se abrió.",
-        });
-      } else if (data?.success) {
-        toast({
-          title: "Pago procesado",
+          title: "¡Pago procesado!",
           description: data.message || "Tu suscripción está activa nuevamente",
         });
         setTimeout(() => window.location.reload(), 1500);
+      } else {
+        // Payment still pending
+        toast({
+          title: "Información",
+          description: "Puedes reintentar el pago cuantas veces necesites. También puedes crear una nueva suscripción seleccionando un plan abajo.",
+          duration: 5000
+        });
       }
     } catch (error) {
       console.error('Error updating payment:', error);

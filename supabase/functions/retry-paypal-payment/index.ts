@@ -140,14 +140,11 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
       .is('resolved_at', null);
 
-    // Return PayPal update payment URL
-    const updateUrl = `https://www.${paypalBaseUrl.includes('sandbox') ? 'sandbox.' : ''}paypal.com/myaccount/autopay/`;
-
+    // Payment still pending
     return new Response(
       JSON.stringify({
-        success: true,
-        redirectUrl: updateUrl,
-        message: 'Redirigiendo a PayPal para actualizar método de pago',
+        success: false,
+        message: 'El pago aún está pendiente. Puedes crear una nueva suscripción desde los planes disponibles.',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

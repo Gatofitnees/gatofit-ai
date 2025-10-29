@@ -43,3 +43,6 @@ verify_jwt = true
 
 [functions.retry-paypal-payment]
 verify_jwt = true
+
+[functions.check-expired-grace-periods]
+verify_jwt = false
