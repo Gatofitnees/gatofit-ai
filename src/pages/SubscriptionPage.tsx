@@ -329,7 +329,7 @@ const SubscriptionPage: React.FC = () => {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/home")}
             className="h-10 w-10 p-0"
           >
             <ArrowLeft className="h-4 w-4" />
