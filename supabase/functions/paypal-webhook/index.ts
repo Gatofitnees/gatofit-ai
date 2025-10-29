@@ -192,77 +192,8 @@ async function handlePaymentCompleted(supabase: any, event: PayPalWebhookEvent) 
     console.log('Payment failure resolved successfully');
   }
 
-  // Check if this payment is for a scheduled plan change
-  const isScheduledChange = subscription.next_plan_type && subscription.next_plan_starts_at;
-  
-  if (isScheduledChange) {
-    console.log('Payment detected for subscription with scheduled change');
-    
-    const now = new Date();
-    const currentExpiresAt = new Date(subscription.expires_at);
-    
-    // Calculate hours until current plan expires
-    const hoursUntilExpiry = (currentExpiresAt.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
-    // If scheduled change is more than 1 hour away, this is just an approval payment
-    // The plan change should NOT be applied yet - user keeps current plan until expires_at
-    if (hoursUntilExpiry > 1) {
-      console.log('✅ Payment is for APPROVAL only. Scheduled change remains pending.');
-      console.log('📅 Current plan continues until:', currentExpiresAt.toISOString());
-      console.log('⏳ Hours remaining on current plan:', Math.round(hoursUntilExpiry));
-      console.log('🔄 Scheduled change from', subscription.plan_type, 'to', subscription.next_plan_type, 'will apply on:', currentExpiresAt.toISOString());
-      
-      // DO NOT change the plan - just acknowledge the payment
-      // The subscription will continue with current plan_type until expires_at
-      return;
-    }
-    
-    // If we're within 1 hour of expiry, it's time to apply the scheduled change
-    console.log('⚡ Scheduled change date reached. Applying plan change now.');
-    console.log('🔄 Changing from', subscription.plan_type, 'to', subscription.next_plan_type);
-    
-    // Calculate new expiry based on NEW plan type
-    let newExpiryDate: Date;
-    
-    if (subscription.next_plan_type === 'test_daily') {
-      newExpiryDate = new Date(now);
-      newExpiryDate.setDate(newExpiryDate.getDate() + 1);
-    } else if (subscription.next_plan_type === 'monthly') {
-      newExpiryDate = new Date(now);
-      newExpiryDate.setDate(newExpiryDate.getDate() + 30);
-    } else if (subscription.next_plan_type === 'yearly') {
-      newExpiryDate = new Date(now);
-      newExpiryDate.setFullYear(newExpiryDate.getFullYear() + 1);
-    } else {
-      console.error('Unknown next plan type:', subscription.next_plan_type);
-      return;
-    }
-    
-    // Apply scheduled plan change
-    const { error: updateError } = await supabase
-      .from('user_subscriptions')
-      .update({
-        plan_type: subscription.next_plan_type,
-        expires_at: newExpiryDate.toISOString(),
-        started_at: now.toISOString(),
-        status: 'active',
-        auto_renewal: true,
-        next_plan_type: null,
-        next_plan_starts_at: null,
-        scheduled_change_created_at: null,
-        updated_at: now.toISOString()
-      })
-      .eq('id', subscription.id);
-
-    if (updateError) {
-      console.error('Error applying scheduled plan change:', updateError);
-      throw updateError;
-    }
-
-    console.log('✅ Successfully applied scheduled plan change for user:', subscription.user_id);
-    console.log('📅 New expiry date:', newExpiryDate.toISOString());
-    return;
-  }
+  // Scheduled changes are no longer used - changes are applied immediately
+  // This section has been removed as part of the immediate plan change implementation
 
   // Normal renewal - extend current plan
   // Calculate new expiration date based on plan type
@@ -459,43 +390,8 @@ async function handleSubscriptionActivated(supabase: any, event: PayPalWebhookEv
     return;
   }
 
-  // Check if this is transitioning from trial to regular billing (scheduled change)
-  if (subscription.next_plan_type && subscription.next_plan_starts_at) {
-    console.log('Transitioning from trial to regular billing for scheduled change');
-    
-    // Calculate new expiry date based on the new plan type
-    const expiresAt = new Date();
-    if (subscription.next_plan_type === 'test_daily') {
-      expiresAt.setDate(expiresAt.getDate() + 1);
-    } else if (subscription.next_plan_type === 'monthly') {
-      expiresAt.setDate(expiresAt.getDate() + 30);
-    } else if (subscription.next_plan_type === 'yearly') {
-      expiresAt.setDate(expiresAt.getDate() + 365);
-    }
-    
-    // Apply the scheduled plan change
-    const { error: updateError } = await supabase
-      .from('user_subscriptions')
-      .update({ 
-        plan_type: subscription.next_plan_type,
-        status: 'active',
-        suspended_at: null,
-        auto_renewal: true,
-        expires_at: expiresAt.toISOString(),
-        started_at: new Date().toISOString(),
-        next_plan_type: null,
-        next_plan_starts_at: null,
-        scheduled_change_created_at: null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('paypal_subscription_id', subscriptionId);
-
-    if (updateError) {
-      console.error('Error applying scheduled plan change:', updateError);
-    } else {
-      console.log('Plan change applied successfully from trial to regular billing');
-    }
-  } else {
+  // Scheduled changes are no longer used - changes are applied immediately
+  // Normal activation
     // Normal activation (no scheduled change)
     const { error } = await supabase
       .from('user_subscriptions')

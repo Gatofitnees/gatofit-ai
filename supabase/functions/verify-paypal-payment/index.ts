@@ -177,104 +177,84 @@ serve(async (req) => {
     let startedAt: string;
     let bonusMonthsApplied = 0;
 
-    if (existingSub && existingSub.expires_at) {
+    if (existingSub && existingSub.status === 'active' && existingSub.expires_at) {
       const existingExpiry = new Date(existingSub.expires_at);
       
-      // Si aún tiene tiempo restante (no ha expirado)
+      // Check if it's active and not expired
       if (existingExpiry > now) {
-        // Solo permite renovar/extender el MISMO plan
-        if (existingSub.plan_type === planType) {
-          // EXTENDER tiempo - sumar duración al expires_at existente
-          const daysToAdd = planType === 'test_daily' ? 1 : (planType === 'monthly' ? 30 : 365);
-          expiresAt = new Date(existingExpiry);
-          expiresAt.setDate(expiresAt.getDate() + daysToAdd);
-          
-          // Apply free months if discount type is months_free
-          if (discountInfo?.discount_type === 'months_free' && discountInfo.duration_months) {
-            expiresAt.setMonth(expiresAt.getMonth() + discountInfo.duration_months);
-            bonusMonthsApplied = discountInfo.duration_months;
-            console.log(`✨ Applied ${bonusMonthsApplied} free months to existing subscription`);
-          }
-          
-          startedAt = existingSub.started_at; // Mantener fecha de inicio original
-          console.log(`✅ Extending ${planType} plan from ${existingExpiry} to ${expiresAt}`);
-        } else {
-          // Cambio de plan detectado - programar cambio y cancelar suscripción anterior
-          console.log(`🔄 Plan change detected: ${existingSub.plan_type} → ${planType}`);
-          
-          // Cancelar suscripción anterior en PayPal
-          if (existingSub.paypal_subscription_id && existingSub.paypal_subscription_id !== subscriptionId) {
-            console.log(`Cancelling old PayPal subscription: ${existingSub.paypal_subscription_id}`);
-            
-            try {
-              const cancelResponse = await fetch(
-                `https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${existingSub.paypal_subscription_id}/cancel`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${tokenData.access_token}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    reason: 'User changed subscription plan'
-                  })
-                }
-              );
-              
-              if (cancelResponse.ok || cancelResponse.status === 204) {
-                console.log('✅ Old PayPal subscription cancelled successfully');
-              } else {
-                console.warn('⚠️ Could not cancel old PayPal subscription, continuing anyway');
-              }
-            } catch (cancelError) {
-              console.error('Error cancelling old subscription:', cancelError);
-              // Continuar de todos modos
-            }
-          }
-          
-          // Mantener el expires_at del plan anterior para que no pierda tiempo
-          expiresAt = existingExpiry;
-          startedAt = existingSub.started_at;
-          
-          // Programar el nuevo plan para que comience cuando expire el actual
-          console.log(`📅 Scheduling new plan to start at: ${expiresAt.toISOString()}`);
-          
-          const { error: scheduleError } = await supabase
-            .from('user_subscriptions')
-            .update({
-              next_plan_type: planType,
-              next_plan_starts_at: expiresAt.toISOString(),
-              scheduled_change_created_at: new Date().toISOString(),
-              paypal_subscription_id: subscriptionId,
-              paypal_payer_id: subscriptionData.subscriber?.payer_id,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId);
-          
-          if (scheduleError) {
-            console.error('Error scheduling plan change:', scheduleError);
-            throw new Error('Failed to schedule plan change');
-          }
-          
-          console.log(`✅ Plan change scheduled successfully`);
-          
+        // Detect if it's upgrade, downgrade, or same plan
+        const isUpgrade = (existingSub.plan_type === 'monthly' && planType === 'yearly');
+        const isDowngrade = (existingSub.plan_type === 'yearly' && planType === 'monthly');
+        const isSamePlan = (existingSub.plan_type === planType);
+
+        // BLOCK DOWNGRADE
+        if (isDowngrade) {
+          console.error(`❌ Downgrade not allowed: ${existingSub.plan_type} → ${planType}`);
           return new Response(JSON.stringify({
-            success: true,
-            scheduled: true,
-            subscription: {
-              id: subscriptionId,
-              status: 'scheduled',
-              planType: planType,
-              currentPlanType: existingSub.plan_type,
-              startsAt: expiresAt.toISOString(),
-              message: `Tu plan ${planType === 'monthly' ? 'mensual' : 'anual'} comenzará el ${expiresAt.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-            }
+            success: false,
+            error: 'No puedes cambiar de plan Anual a Mensual. Tu plan actual continuará hasta su fecha de expiración.'
           }), {
+            status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
+
+        // UPGRADE or SAME PLAN - Apply immediately
+        console.log(`🔄 Plan change detected: ${existingSub.plan_type} → ${planType} (${isUpgrade ? 'UPGRADE' : 'SAME PLAN'})`);
+        
+        // Cancel old PayPal subscription
+        if (existingSub.paypal_subscription_id && existingSub.paypal_subscription_id !== subscriptionId) {
+          console.log(`Cancelling old PayPal subscription: ${existingSub.paypal_subscription_id}`);
+          
+          try {
+            const cancelResponse = await fetch(
+              `https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${existingSub.paypal_subscription_id}/cancel`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${tokenData.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  reason: 'User changed subscription plan'
+                })
+              }
+            );
+            
+            if (cancelResponse.ok || cancelResponse.status === 204) {
+              console.log('✅ Old PayPal subscription cancelled successfully');
+            } else {
+              console.warn('⚠️ Could not cancel old PayPal subscription, continuing anyway');
+            }
+          } catch (cancelError) {
+            console.error('Error cancelling old subscription:', cancelError);
+            // Continue anyway
+          }
+        }
+        
+        // Calculate new expiry from TODAY (not from old expiry)
+        if (planType === 'test_daily') {
+          expiresAt = new Date(now);
+          expiresAt.setDate(expiresAt.getDate() + 1);
+        } else if (planType === 'monthly') {
+          expiresAt = new Date(now);
+          expiresAt.setMonth(expiresAt.getMonth() + 1);
+        } else {
+          expiresAt = new Date(now);
+          expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        }
+        
+        // Apply free months
+        if (discountInfo?.discount_type === 'months_free' && discountInfo.duration_months) {
+          expiresAt.setMonth(expiresAt.getMonth() + discountInfo.duration_months);
+          bonusMonthsApplied = discountInfo.duration_months;
+          console.log(`✨ Applied ${bonusMonthsApplied} free months`);
+        }
+        
+        startedAt = new Date().toISOString();
+        console.log(`✅ Plan change applied immediately. New expiry: ${expiresAt.toISOString()}`);
       } else {
-        // Plan expirado - crear nueva suscripción
+        // Plan expired - create new subscription
         if (planType === 'test_daily') {
           expiresAt = new Date(now);
           expiresAt.setDate(expiresAt.getDate() + 1);

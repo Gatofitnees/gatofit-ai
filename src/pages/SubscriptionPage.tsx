@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Crown, Sparkles, Loader2, AlertCircle, XCircle, Info } from 'lucide-react';
 import Button from '@/components/Button';
-import { useSubscription, type CancelScheduledChangeResult } from '@/hooks/subscription';
+import { useSubscription } from '@/hooks/subscription';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { UsageLimitsBanner } from '@/components/premium/UsageLimitsBanner';
 import { PremiumPlanCard } from '@/components/subscription/PremiumPlanCard';
 import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
 import { PlanChangeConfirmDialog } from '@/components/subscription/PlanChangeConfirmDialog';
 import { CancelConfirmDialog } from '@/components/subscription/CancelConfirmDialog';
-import { ScheduledChangeCard } from '@/components/subscription/ScheduledChangeCard';
+
 import { PaymentFailureAlert } from '@/components/subscription/PaymentFailureAlert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -22,10 +22,8 @@ const SubscriptionPage: React.FC = () => {
     subscription, 
     plans, 
     isPremium, 
-    hasScheduledChange,
     upgradeSubscription, 
-    cancelSubscription,
-    cancelScheduledPlanChange
+    cancelSubscription
   } = useSubscription();
   const { usage } = useUsageLimits();
   const [isLoading, setIsLoading] = useState(false);
@@ -140,19 +138,20 @@ const SubscriptionPage: React.FC = () => {
       return;
     }
 
-    // VALIDACIÓN: Bloquear downgrade de Anual a Mensual
+    // VALIDACIÓN CRÍTICA: Bloquear downgrade de Anual a Mensual
     if (subscription?.plan_type === 'yearly' && planType === 'monthly' && subscription?.status === 'active') {
       toast({
         title: "Cambio no disponible",
-        description: "No puedes cambiar de plan Anual a Mensual. Tu plan actual continuará hasta su fecha de expiración.",
-        variant: "default"
+        description: "No puedes cambiar de plan Anual a Mensual hasta que expire tu suscripción actual. Tu plan Anual te ofrece más beneficios a mejor precio.",
+        variant: "destructive",
+        duration: 5000
       });
       return;
     }
 
     // If user already has a premium plan, handle accordingly
     if (isPremium && subscription?.status === 'active') {
-      // Plan diferente - mostrar diálogo para cambio inmediato (Mensual -> Anual)
+      // Plan diferente - mostrar diálogo para cambio inmediato (solo upgrade)
       setSelectedPlan(planType);
       setShowPlanChangeDialog(true);
     } else {
@@ -321,67 +320,6 @@ const SubscriptionPage: React.FC = () => {
     }
   };
 
-  const handleCancelScheduledChange = async () => {
-    setIsLoading(true);
-    try {
-      // Primero cancelar el cambio programado en la BD y obtener el PayPal ID
-      const result: CancelScheduledChangeResult = await cancelScheduledPlanChange();
-      
-      if (!result.success) {
-        throw new Error('Failed to cancel scheduled change');
-      }
-
-      // Si hay un paypal_subscription_id asociado al cambio programado, cancelarlo en PayPal
-      if (result.paypalSubscriptionId) {
-        console.log('Cancelling scheduled PayPal subscription:', result.paypalSubscriptionId);
-        
-        try {
-          const { data, error } = await supabase.functions.invoke('cancel-paypal-subscription', {
-            body: {
-              subscriptionId: result.paypalSubscriptionId,
-              reason: 'User cancelled scheduled plan change'
-            }
-          });
-
-          if (error) {
-            console.error('Error cancelling PayPal subscription:', error);
-            toast({
-              title: "Cambio cancelado con advertencia",
-              description: "El cambio fue cancelado pero no se pudo procesar el reembolso de PayPal automáticamente. Contacta soporte.",
-              variant: "default"
-            });
-            return;
-          }
-          
-          if (data?.success) {
-            console.log('✅ PayPal subscription cancelled successfully');
-          }
-        } catch (paypalError) {
-          console.error('Error in PayPal cancellation:', paypalError);
-          toast({
-            title: "Cambio cancelado con advertencia",
-            description: "El cambio fue cancelado pero hubo un problema con PayPal. Contacta soporte.",
-            variant: "default"
-          });
-          return;
-        }
-      }
-      
-      toast({
-        title: "Cambio cancelado",
-        description: "El cambio de plan ha sido cancelado y se procesará el reembolso correspondiente",
-      });
-    } catch (error) {
-      console.error('Error cancelling scheduled change:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cancelar el cambio programado",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-20">
@@ -423,15 +361,6 @@ const SubscriptionPage: React.FC = () => {
         {/* Current Status */}
         <SubscriptionStatus subscription={subscription} isPremium={isPremium} />
 
-        {/* Scheduled Change Card */}
-        {hasScheduledChange && (
-          <ScheduledChangeCard
-            subscription={subscription!}
-            plans={plans}
-            onCancelScheduledChange={handleCancelScheduledChange}
-            isLoading={isLoading}
-          />
-        )}
 
         {/* Usage Stats for Free Users */}
         {!isPremium && usage && (

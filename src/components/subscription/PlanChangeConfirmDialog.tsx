@@ -60,7 +60,7 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
             <Clock className="h-6 w-6 text-primary" />
           </div>
           <AlertDialogTitle className="text-lg font-semibold">
-            Cambio de Plan Programado
+            Confirmar Cambio de Plan
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm text-muted-foreground space-y-4">
             <div className="space-y-3 text-left">
@@ -72,7 +72,7 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
                     Termina el {expirationDate ? formatDate(expirationDate) : 'fecha no disponible'}
                   </p>
                   <p className="text-xs text-primary font-medium">
-                    {daysRemaining} días restantes que conservarás
+                    {daysRemaining} días restantes
                   </p>
                 </div>
               </div>
@@ -81,9 +81,6 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
                 <Clock className="h-4 w-4 text-secondary-foreground mt-0.5" />
                 <div>
                   <p className="font-medium">Nuevo plan: {newPlan?.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Comenzará automáticamente el {expirationDate ? formatDate(expirationDate) : 'cuando expire tu plan actual'}
-                  </p>
                   <p className="text-xs text-secondary-foreground font-medium">
                     ${newPlan?.price_usd} por {newPlan?.plan_type === 'monthly' ? 'mes' : 'año'}
                   </p>
@@ -92,18 +89,14 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
             </div>
 
             <div className="neu-card p-3 bg-secondary/30 border border-secondary/20">
-              <p className="text-xs text-foreground text-center">
-                <strong>🚀 Upgrade inmediato:</strong> Tu plan se actualizará de {currentPlan?.name} a {newPlan?.name} ahora mismo.
-                <br/>
-                <strong>💳 Cargo inmediato:</strong> Se te cobrará ${newPlan?.price_usd} al aprobar en PayPal.
-                <br/>
-                📅 Tu nueva fecha de expiración será dentro de {newPlan?.duration_days} días desde hoy.
-              </p>
-            </div>
-            
-            <div className="neu-card p-3 bg-accent/10 border border-accent/20">
-              <p className="text-xs text-accent-foreground text-center">
-                <strong>✅ Cancelación gratuita:</strong> Puedes cancelar este cambio programado en cualquier momento sin costo.
+              <p className="text-xs text-foreground text-left">
+                <strong>🚀 Cambio inmediato:</strong> Tu plan se actualizará de {currentPlan?.name} a {newPlan?.name} al confirmar el pago en PayPal.
+                <br/><br/>
+                <strong>💳 Nuevo cobro:</strong> Se te cobrará ${newPlan?.price_usd} y tu suscripción PayPal actual será cancelada.
+                <br/><br/>
+                📅 Tu nueva suscripción durará {newPlan?.duration_days} días desde hoy.
+                <br/><br/>
+                ⚠️ <strong>Importante:</strong> Los {daysRemaining} días restantes de tu plan actual no se transferirán. El nuevo plan comenzará inmediatamente después del pago.
               </p>
             </div>
           </AlertDialogDescription>
@@ -114,7 +107,7 @@ export const PlanChangeConfirmDialog: React.FC<PlanChangeConfirmDialogProps> = (
             disabled={isLoading}
             className="w-full bg-primary hover:bg-primary/90"
           >
-            {isLoading ? 'Programando cambio...' : 'Confirmar cambio programado'}
+            {isLoading ? 'Procesando...' : 'Confirmar cambio de plan'}
           </AlertDialogAction>
           <AlertDialogCancel
             onClick={onClose}

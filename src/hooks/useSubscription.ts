@@ -140,47 +140,6 @@ export const useSubscription = () => {
     }
   };
 
-  const scheduleOrUpgradeSubscription = async (planType: 'monthly' | 'yearly' | 'asesorados', transactionId?: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
-
-      const plan = plans.find(p => p.plan_type === planType);
-      if (!plan) throw new Error('Plan no encontrado');
-
-      if (!subscription || subscription.plan_type === 'free') {
-        return await upgradeSubscription(planType, transactionId);
-      }
-
-      const { data, error } = await supabase.rpc('schedule_plan_change', {
-        p_user_id: user.id,
-        p_new_plan_type: planType as any
-      });
-
-      if (error) throw error;
-
-      await fetchSubscriptionData();
-      
-      const hadPremiumPlan = subscription.plan_type === 'monthly' || subscription.plan_type === 'yearly' || subscription.plan_type === 'asesorados';
-      
-      toast({
-        title: hadPremiumPlan ? "¡Cambio de plan programado!" : "¡Suscripción actualizada!",
-        description: hadPremiumPlan 
-          ? `Tu cambio al ${plan.name} se aplicará cuando expire tu plan actual`
-          : `Ahora tienes acceso al ${plan.name}`,
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error scheduling/upgrading subscription:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo procesar el cambio de plan",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
 
   const upgradeSubscription = async (planType: 'monthly' | 'yearly' | 'asesorados', transactionId?: string) => {
     try {
@@ -236,35 +195,6 @@ export const useSubscription = () => {
     }
   };
 
-  const cancelScheduledPlanChange = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
-
-      const { error } = await supabase.rpc('cancel_scheduled_plan_change', {
-        p_user_id: user.id
-      });
-
-      if (error) throw error;
-
-      await fetchSubscriptionData();
-      
-      toast({
-        title: "Cambio cancelado",
-        description: "Se ha cancelado el cambio de plan programado",
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error canceling scheduled plan change:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cancelar el cambio programado",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
 
   const cancelSubscription = async () => {
     try {
@@ -301,20 +231,16 @@ export const useSubscription = () => {
     }
   };
 
-  const hasScheduledChange = subscription?.next_plan_type && subscription?.next_plan_starts_at;
-
   return {
     subscription,
     plans,
     isLoading,
     isPremium,
     isAsesorado,
-    hasScheduledChange,
     checkPremiumStatus,
     checkUserPremiumStatus,
-    upgradeSubscription: scheduleOrUpgradeSubscription,
+    upgradeSubscription,
     cancelSubscription,
-    cancelScheduledPlanChange,
     refetch: fetchSubscriptionData
   };
 };
