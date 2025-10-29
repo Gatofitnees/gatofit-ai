@@ -392,22 +392,20 @@ async function handleSubscriptionActivated(supabase: any, event: PayPalWebhookEv
 
   // Scheduled changes are no longer used - changes are applied immediately
   // Normal activation
-    // Normal activation (no scheduled change)
-    const { error } = await supabase
-      .from('user_subscriptions')
-      .update({
-        status: 'active',
-        suspended_at: null,
-        auto_renewal: true,
-        updated_at: new Date().toISOString()
-      })
-      .eq('paypal_subscription_id', subscriptionId);
+  const { error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      status: 'active',
+      suspended_at: null,
+      auto_renewal: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('paypal_subscription_id', subscriptionId);
 
-    if (error) {
-      console.error('Error updating subscription activation:', error);
-      throw error;
-    }
-
-    console.log('Subscription activated:', subscriptionId);
+  if (error) {
+    console.error('Error updating subscription activation:', error);
+    throw error;
   }
+
+  console.log('Subscription activated:', subscriptionId);
 }
