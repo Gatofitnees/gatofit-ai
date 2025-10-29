@@ -82,7 +82,7 @@ serve(async (req) => {
       const { data: discount, error: discountError } = await supabase
         .from('discount_codes')
         .select('*')
-        .eq('code', discountCode.toLowerCase())
+        .ilike('code', discountCode)
         .eq('is_active', true)
         .single();
 
