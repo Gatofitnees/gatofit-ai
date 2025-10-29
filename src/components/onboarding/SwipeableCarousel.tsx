@@ -175,28 +175,20 @@ const SwipeableCarousel: React.FC<SwipeableCarouselProps> = ({
         }}
       >
         {React.Children.map(children, (child, index) => (
-          <motion.div 
-            className="flex-shrink-0"
+          <div 
+            className="flex-shrink-0 transition-opacity duration-300"
             style={{ 
               width: slideWidth, 
               marginLeft: index === 0 ? 0 : slideMargin,
               marginRight: index === children.length - 1 ? 0 : slideMargin,
               touchAction: 'none',
-              maxHeight: '100%'
+              maxHeight: '100%',
+              opacity: currentIndex === index ? 1 : 0.6
             }}
             key={index}
-            initial={{ 
-              opacity: currentIndex === index ? 1 : 0.5, 
-              scale: currentIndex === index ? 1 : 0.9 
-            }}
-            animate={{ 
-              opacity: Math.abs(currentIndex - index) <= 1 ? 1 : 0.8,
-              scale: currentIndex === index ? 1 : 0.95
-            }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {child}
-          </motion.div>
+          </div>
         ))}
       </motion.div>
       

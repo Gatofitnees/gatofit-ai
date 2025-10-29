@@ -16,18 +16,15 @@ const FeatureCard: React.FC<{
   icon: React.ReactNode;
 }> = ({ title, description, icon }) => {
   return (
-    <motion.div 
+    <div 
       className="flex flex-col items-center p-4 rounded-2xl bg-secondary/20 shadow-neu-card text-center h-full"
-      initial={{ y: 10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
     >
       <div className="bg-primary/10 p-3 rounded-xl mb-3">
         {icon}
       </div>
       <h3 className="font-semibold text-lg mb-2">{title}</h3>
       <p className="text-muted-foreground text-sm">{description}</p>
-    </motion.div>
+    </div>
   );
 };
 
