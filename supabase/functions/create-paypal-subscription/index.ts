@@ -181,13 +181,13 @@ serve(async (req) => {
 
     // Configure billing cycles based on discount type
     if (discountInfo && discountInfo.application_type === 'first_billing_only' && discountInfo.discount_type !== 'months_free') {
-      // First cycle with discount
+      // First cycle with discount - use TRIAL tenure
       billingCycles.push({
         frequency: {
           interval_unit: intervalUnit,
           interval_count: 1
         },
-        tenure_type: "REGULAR",
+        tenure_type: "TRIAL",
         sequence: 1,
         total_cycles: 1,
         pricing_scheme: {
@@ -198,7 +198,7 @@ serve(async (req) => {
         }
       });
 
-      // Subsequent cycles at normal price
+      // Subsequent cycles at normal price - REGULAR tenure
       billingCycles.push({
         frequency: {
           interval_unit: intervalUnit,
