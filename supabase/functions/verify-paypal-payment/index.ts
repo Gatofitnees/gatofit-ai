@@ -31,16 +31,27 @@ serve(async (req) => {
       throw new Error('Subscription ID and user ID are required');
     }
 
-    // Get PayPal access token
-    const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const paypalClientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    // Get PayPal credentials based on mode
+    const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
+    const isLive = paypalMode === 'live';
+    
+    const paypalClientId = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_ID_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_ID');
+    const paypalClientSecret = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_SECRET_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalBaseUrl = isLive
+      ? 'https://api-m.paypal.com'
+      : 'https://api-m.sandbox.paypal.com';
     
     if (!paypalClientId || !paypalClientSecret) {
       throw new Error('PayPal credentials not configured');
     }
 
+    console.log(`PayPal Mode: ${paypalMode}`);
     const auth = btoa(`${paypalClientId}:${paypalClientSecret}`);
-    const paypalTokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const paypalTokenResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -56,7 +67,7 @@ serve(async (req) => {
     }
 
     // Verify subscription status with PayPal
-    const subscriptionResponse = await fetch(`https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${subscriptionId}`, {
+    const subscriptionResponse = await fetch(`${paypalBaseUrl}/v1/billing/subscriptions/${subscriptionId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -114,7 +125,7 @@ serve(async (req) => {
     const planId = subscriptionData.plan_id;
     console.log(`Fetching PayPal plan details for: ${planId}`);
     
-    const planResponse = await fetch(`https://api-m.sandbox.paypal.com/v1/billing/plans/${planId}`, {
+    const planResponse = await fetch(`${paypalBaseUrl}/v1/billing/plans/${planId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -208,7 +219,7 @@ serve(async (req) => {
           
           try {
             const cancelResponse = await fetch(
-              `https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${existingSub.paypal_subscription_id}/cancel`,
+              `${paypalBaseUrl}/v1/billing/subscriptions/${existingSub.paypal_subscription_id}/cancel`,
               {
                 method: 'POST',
                 headers: {

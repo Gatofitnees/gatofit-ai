@@ -69,10 +69,19 @@ Deno.serve(async (req) => {
 
     console.log(`⚠️ Found ${subscriptionsToCancel.length} subscriptions with truly expired grace periods`);
 
-    // Get PayPal credentials
-    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
-    const paypalBaseUrl = Deno.env.get('PAYPAL_BASE_URL') || 'https://api-m.sandbox.paypal.com';
+    // Get PayPal credentials based on mode
+    const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
+    const isLive = paypalMode === 'live';
+    
+    const clientId = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_ID_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_ID');
+    const clientSecret = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_SECRET_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalBaseUrl = isLive
+      ? 'https://api-m.paypal.com'
+      : 'https://api-m.sandbox.paypal.com';
 
     // Get PayPal access token
     const authResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {

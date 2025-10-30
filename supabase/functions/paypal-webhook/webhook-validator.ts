@@ -30,11 +30,17 @@ export async function validateWebhookSignature(
   }
 
   try {
-    // Get PayPal access token
-    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    // Get PayPal credentials based on mode
     const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
-    const baseUrl = paypalMode === 'live' 
+    const isLive = paypalMode === 'live';
+    
+    const clientId = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_ID_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_ID');
+    const clientSecret = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_SECRET_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const baseUrl = isLive
       ? 'https://api-m.paypal.com'
       : 'https://api-m.sandbox.paypal.com';
 

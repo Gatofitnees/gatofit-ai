@@ -75,6 +75,15 @@ Deno.serve(async (req) => {
       );
     }
     
+    // Get webhook ID based on mode
+    const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
+    const isLive = paypalMode === 'live';
+    const webhookId = isLive
+      ? Deno.env.get('PAYPAL_WEBHOOK_ID_PRODUCTION')
+      : Deno.env.get('PAYPAL_WEBHOOK_ID');
+    
+    console.log(`Webhook Mode: ${paypalMode}, Using ${isLive ? 'PRODUCTION' : 'SANDBOX'} webhook ID`);
+    
     // Validate webhook signature (CRITICAL SECURITY)
     const isValidSignature = await validateWebhookSignature({
       transmissionId: req.headers.get('paypal-transmission-id'),
@@ -82,7 +91,7 @@ Deno.serve(async (req) => {
       certUrl: req.headers.get('paypal-cert-url'),
       signature: req.headers.get('paypal-transmission-sig'),
       body: rawBody,
-      webhookId: Deno.env.get('PAYPAL_WEBHOOK_ID')
+      webhookId: webhookId
     });
 
     if (!isValidSignature) {

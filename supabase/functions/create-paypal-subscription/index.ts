@@ -38,18 +38,28 @@ serve(async (req) => {
       throw new Error('Plan type and user ID are required');
     }
 
-    // Get PayPal access token
-    const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const paypalClientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    // Get PayPal credentials based on mode
+    const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
+    const isLive = paypalMode === 'live';
+    
+    const paypalClientId = isLive 
+      ? Deno.env.get('PAYPAL_CLIENT_ID_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_ID');
+    const paypalClientSecret = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_SECRET_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalBaseUrl = isLive
+      ? 'https://api-m.paypal.com'
+      : 'https://api-m.sandbox.paypal.com';
     
     if (!paypalClientId || !paypalClientSecret) {
       throw new Error('PayPal credentials not configured');
     }
 
+    console.log(`PayPal Mode: ${paypalMode}, Using ${isLive ? 'LIVE' : 'SANDBOX'} credentials`);
     const auth = btoa(`${paypalClientId}:${paypalClientSecret}`);
-    console.log('PayPal Auth attempt with client ID:', paypalClientId?.substring(0, 10) + '...');
     
-    const paypalTokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const paypalTokenResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -330,7 +340,7 @@ serve(async (req) => {
     };
 
     // Try to create product (it might already exist)
-    const productResponse = await fetch('https://api-m.sandbox.paypal.com/v1/catalogs/products', {
+    const productResponse = await fetch(`${paypalBaseUrl}/v1/catalogs/products`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -342,7 +352,7 @@ serve(async (req) => {
     });
 
     // Create the billing plan
-    const planResponse = await fetch('https://api-m.sandbox.paypal.com/v1/billing/plans', {
+    const planResponse = await fetch(`${paypalBaseUrl}/v1/billing/plans`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -373,12 +383,12 @@ serve(async (req) => {
           payer_selected: "PAYPAL",
           payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED"
         },
-        return_url: `${returnUrl || 'https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev'}/subscription?success=true`,
-        cancel_url: `${returnUrl || 'https://628cddac-e2d9-484d-a252-d981a8e3ed9f.sandbox.lovable.dev'}/subscription?cancelled=true`
+        return_url: `${returnUrl || 'https://app.gatofit.com'}/subscription?success=true`,
+        cancel_url: `${returnUrl || 'https://app.gatofit.com'}/subscription?cancelled=true`
       }
     };
 
-    const subscriptionResponse = await fetch('https://api-m.sandbox.paypal.com/v1/billing/subscriptions', {
+    const subscriptionResponse = await fetch(`${paypalBaseUrl}/v1/billing/subscriptions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,

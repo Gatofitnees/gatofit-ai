@@ -63,9 +63,19 @@ serve(async (req) => {
 
     console.log(`Changing plan from ${subscription.plan_type} to ${subscription.next_plan_type}`);
 
-    // Get PayPal credentials
-    const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const paypalClientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    // Get PayPal credentials based on mode
+    const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
+    const isLive = paypalMode === 'live';
+    
+    const paypalClientId = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_ID_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_ID');
+    const paypalClientSecret = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_SECRET_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalBaseUrl = isLive
+      ? 'https://api-m.paypal.com'
+      : 'https://api-m.sandbox.paypal.com';
     
     if (!paypalClientId || !paypalClientSecret) {
       throw new Error('PayPal credentials not configured');
@@ -73,7 +83,7 @@ serve(async (req) => {
 
     // Get PayPal access token
     const auth = btoa(`${paypalClientId}:${paypalClientSecret}`);
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const tokenResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -93,7 +103,7 @@ serve(async (req) => {
       console.log(`Cancelling old PayPal subscription: ${subscription.paypal_subscription_id}`);
       
       const cancelResponse = await fetch(
-        `https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${subscription.paypal_subscription_id}/cancel`,
+        `${paypalBaseUrl}/v1/billing/subscriptions/${subscription.paypal_subscription_id}/cancel`,
         {
           method: 'POST',
           headers: {

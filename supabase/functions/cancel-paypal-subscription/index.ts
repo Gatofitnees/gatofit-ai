@@ -65,12 +65,16 @@ serve(async (req) => {
     }
 
     // 3. Try to cancel in PayPal
-    const PAYPAL_API = Deno.env.get('PAYPAL_MODE') === 'live'
-      ? 'https://api-m.paypal.com'
-      : 'https://api-m.sandbox.paypal.com';
-
-    const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID');
-    const PAYPAL_CLIENT_SECRET = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
+    const isLive = paypalMode === 'live';
+    
+    const PAYPAL_API = isLive ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+    const PAYPAL_CLIENT_ID = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_ID_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_ID');
+    const PAYPAL_CLIENT_SECRET = isLive
+      ? Deno.env.get('PAYPAL_CLIENT_SECRET_PRODUCTION')
+      : Deno.env.get('PAYPAL_CLIENT_SECRET');
 
     if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
       throw new Error('PayPal credentials not configured');
