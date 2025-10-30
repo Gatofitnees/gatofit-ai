@@ -177,7 +177,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to admin
     const { error: adminEmailError } = await resend.emails.send({
-      from: "GatofitAI Soporte <noreply@resend.dev>",
+      from: "GatofitAI Soporte <noreply@soporte.gatofit.com>",
       to: [SUPPORT_EMAIL],
       subject: `[Ticket #${ticket.id.substring(0, 8)}] ${subject}`,
       html: adminEmailHtml,
@@ -243,7 +243,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const { error: userEmailError } = await resend.emails.send({
-      from: "GatofitAI Soporte <noreply@resend.dev>",
+      from: "GatofitAI Soporte <noreply@soporte.gatofit.com>",
       to: [user.email!],
       subject: `Tu ticket de soporte ha sido recibido (#${ticket.id.substring(0, 8)})`,
       html: userEmailHtml,
