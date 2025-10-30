@@ -4,7 +4,7 @@ import Avatar from "./Avatar";
 import RankBadge from "./RankBadge";
 import ExperienceBar from "./ExperienceBar";
 import AIChat from "./AIChat";
-import { Settings, LogOut, Globe, CreditCard, RefreshCw, User } from "lucide-react";
+import { Settings, LogOut, Globe, CreditCard, RefreshCw, User, HelpCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileContext } from "@/contexts/ProfileContext";
 import { useStreaks } from "@/hooks/useStreaks";
@@ -61,6 +61,11 @@ const UserHeader: React.FC<UserHeaderProps> = ({
       });
     }
     setShowMenu(false);
+  };
+
+  const handleSupport = () => {
+    setShowMenu(false);
+    navigate('/support');
   };
 
   // Get experience progress
@@ -195,6 +200,16 @@ const UserHeader: React.FC<UserHeaderProps> = ({
             >
               <CreditCard className="h-4 w-4 mr-2" />
               Gestionar plan de pago
+            </Button>
+            
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="justify-start"
+              onClick={handleSupport}
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Soporte
             </Button>
             
             <Button 

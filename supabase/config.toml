@@ -46,3 +46,6 @@ verify_jwt = true
 
 [functions.check-expired-grace-periods]
 verify_jwt = false
+
+[functions.send-support-email]
+verify_jwt = true

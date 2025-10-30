@@ -16,6 +16,7 @@ import SettingsPage from "./pages/SettingsPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import AIChatPage from "./pages/AIChatPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
+import SupportPage from "./pages/SupportPage";
 import WeeklyProgramsPage from "./pages/WeeklyProgramsPage";
 import CreateWeeklyProgramPage from "./pages/CreateWeeklyProgramPage";
 import ViewWeeklyProgramPage from "./pages/ViewWeeklyProgramPage";
@@ -285,6 +286,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <SubscriptionPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/support"
+                  element={
+                    <ProtectedRoute>
+                      <SupportPage />
                     </ProtectedRoute>
                   }
                 />
