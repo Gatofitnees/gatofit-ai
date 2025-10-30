@@ -191,7 +191,7 @@ const SupportPage: React.FC = () => {
                     <FormLabel>Asunto</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Resume tu consulta en pocas palabras"
+                        placeholder="Escribe el asunto aquí..."
                         {...field}
                         maxLength={100}
                       />
@@ -296,7 +296,7 @@ const SupportPage: React.FC = () => {
                           ) : (
                             <FileText className="h-5 w-5 text-primary" />
                           )}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 max-w-[200px]">
                             <p className="text-sm font-medium truncate">{file.name}</p>
                             <p className="text-xs text-muted-foreground">
                               {formatFileSize(file.size)}
