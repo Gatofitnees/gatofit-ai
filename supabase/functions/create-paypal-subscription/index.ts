@@ -180,8 +180,75 @@ serve(async (req) => {
     }
 
     // Configure billing cycles based on discount type
-    if (discountInfo && discountInfo.application_type === 'first_billing_only' && discountInfo.discount_type !== 'months_free') {
-      // First cycle with discount - use TRIAL tenure
+    if (discountInfo && discountInfo.discount_type === 'months_free') {
+      // ===== MONTHS_FREE: 3 billing cycles =====
+      // This ensures user pays once, gets free months, then regular billing
+      // Example: 6 months free = Pay $29 today, next charge in 7 months
+      
+      const freeMonthsCount = discountInfo.duration_months || 0;
+      
+      console.log(`Configuring months_free billing cycles: ${freeMonthsCount} free months`);
+      
+      // Cycle 1: Initial payment at regular price (TRIAL)
+      billingCycles.push({
+        frequency: {
+          interval_unit: intervalUnit,
+          interval_count: 1
+        },
+        tenure_type: "TRIAL",
+        sequence: 1,
+        total_cycles: 1,
+        pricing_scheme: {
+          fixed_price: {
+            value: plans.price_usd.toFixed(2), // Regular price
+            currency_code: "USD"
+          }
+        }
+      });
+
+      // Cycle 2: Free months at $0.00 (TRIAL)
+      if (freeMonthsCount > 0) {
+        billingCycles.push({
+          frequency: {
+            interval_unit: intervalUnit,
+            interval_count: 1
+          },
+          tenure_type: "TRIAL",
+          sequence: 2,
+          total_cycles: freeMonthsCount, // N free cycles
+          pricing_scheme: {
+            fixed_price: {
+              value: "0.00", // FREE
+              currency_code: "USD"
+            }
+          }
+        });
+      }
+
+      // Cycle 3: Regular billing after free period (REGULAR)
+      billingCycles.push({
+        frequency: {
+          interval_unit: intervalUnit,
+          interval_count: 1
+        },
+        tenure_type: "REGULAR",
+        sequence: freeMonthsCount > 0 ? 3 : 2,
+        total_cycles: 0, // Infinite
+        pricing_scheme: {
+          fixed_price: {
+            value: plans.price_usd.toFixed(2), // Regular price
+            currency_code: "USD"
+          }
+        }
+      });
+
+      console.log(`Billing cycles configured: 1 paid + ${freeMonthsCount} free + infinite regular`);
+
+    } else if (discountInfo && discountInfo.application_type === 'first_billing_only' && discountInfo.discount_type !== 'months_free') {
+      // ===== FIRST_BILLING_ONLY: 2 billing cycles =====
+      // First cycle with discount, then regular price
+      
+      // Cycle 1: First billing with discount (TRIAL)
       billingCycles.push({
         frequency: {
           interval_unit: intervalUnit,
@@ -198,7 +265,7 @@ serve(async (req) => {
         }
       });
 
-      // Subsequent cycles at normal price - REGULAR tenure
+      // Cycle 2: Subsequent cycles at normal price (REGULAR)
       billingCycles.push({
         frequency: {
           interval_unit: intervalUnit,
@@ -214,8 +281,11 @@ serve(async (req) => {
           }
         }
       });
+      
     } else {
-      // Single cycle (no discount, forever discount, or months_free)
+      // ===== STANDARD or FOREVER DISCOUNT: 1 billing cycle =====
+      // Single cycle at discounted or regular price (infinite)
+      
       billingCycles.push({
         frequency: {
           interval_unit: intervalUnit,
