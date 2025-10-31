@@ -296,6 +296,7 @@ async function handleSubscriptionCancelled(supabase: any, event: PayPalWebhookEv
     .update({
       auto_renewal: false,
       cancelled_at: new Date().toISOString(),
+      paypal_subscription_id: null, // Clear PayPal ID when cancelled completely
       updated_at: new Date().toISOString()
     })
     .eq('paypal_subscription_id', subscriptionId);
