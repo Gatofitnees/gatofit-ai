@@ -1,8 +1,9 @@
 
 import React, { useState } from "react";
-import { Plus, Calendar, Dumbbell } from "lucide-react";
+import { Plus, Calendar, Dumbbell, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBranding } from "@/contexts/BrandingContext";
+import { PremiumModal } from "@/components/premium/PremiumModal";
 
 interface FloatingActionMenuProps {
   onCreateRoutine: () => void;
@@ -20,6 +21,7 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
   isPremium = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showGatofitPremiumModal, setShowGatofitPremiumModal] = useState(false);
   const { branding } = useBranding();
 
   const toggleMenu = () => {
@@ -46,8 +48,8 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
       
       {/* Action buttons */}
       <div className="flex flex-col items-center gap-3 mb-4">
-        {/* Gatofit Programs button - Only for premium users (not asesorados or free) */}
-        {isPremium && !isAsesorado && (
+        {/* Gatofit Programs button - Shown to all non-asesorado users */}
+        {!isAsesorado && (
           <div 
             className={cn(
               "transition-all duration-300 transform relative",
@@ -56,7 +58,11 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
           >
           <button
             onClick={() => {
-              onOpenGatofitPrograms();
+              if (isPremium) {
+                onOpenGatofitPrograms();
+              } else {
+                setShowGatofitPremiumModal(true);
+              }
               setIsOpen(false);
             }}
             className="relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-200 hover:scale-110 overflow-hidden group"
@@ -84,6 +90,13 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
                 className="w-full h-full object-cover"
               />
             </div>
+            
+            {/* Lock overlay for free users */}
+            {!isPremium && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 rounded-full">
+                <Lock className="h-6 w-6 text-white" />
+              </div>
+            )}
           </button>
           <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold drop-shadow-sm" style={{
@@ -167,6 +180,13 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
       >
         <Plus className="h-6 w-6" />
       </button>
+
+      {/* Premium Modal for Gatofit Programs */}
+      <PremiumModal
+        isOpen={showGatofitPremiumModal}
+        onClose={() => setShowGatofitPremiumModal(false)}
+        feature="gatofit_programs"
+      />
     </div>
   );
 };

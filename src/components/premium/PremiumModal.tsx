@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 interface PremiumModalProps {
   isOpen: boolean;
   onClose: () => void;
-  feature?: 'routines' | 'nutrition' | 'ai_chat';
+  feature?: 'routines' | 'nutrition' | 'ai_chat' | 'gatofit_programs';
   currentUsage?: number;
   limit?: number;
 }
@@ -40,6 +40,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         return {
           title: 'Límite alcanzado',
           description: `Has usado ${currentUsage}/${limit} chats esta semana. Actualiza a Premium para chats ilimitados.`
+        };
+      case 'gatofit_programs':
+        return {
+          title: 'Desbloquea Programas Gatofit',
+          description: 'Accede a todos los programas profesionales de entrenamiento creados por Gatofit al ser usuario Premium.'
         };
       default:
         return {
