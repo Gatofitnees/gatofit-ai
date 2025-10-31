@@ -119,29 +119,30 @@ export const useSupportTicket = () => {
         attachmentCount: ticketData.attachments.length
       });
 
-      // Call edge function to create ticket and send emails
-      const { data, error } = await supabase.functions.invoke('send-support-email', {
-        body: {
-          subject: ticketData.subject,
-          message: ticketData.message,
+      // Step 1: Create ticket in database first (without sending emails yet)
+      const { data: ticket, error: ticketError } = await supabase
+        .from('support_tickets')
+        .insert({
+          user_id: user.id,
+          subject: ticketData.subject.trim(),
+          message: ticketData.message.trim(),
           category: ticketData.category,
-          attachmentCount: ticketData.attachments.length
-        }
-      });
+          status: 'open',
+          priority: 'medium'
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error("Error calling edge function:", error);
-        throw error;
+      if (ticketError || !ticket) {
+        console.error("Error creating ticket:", ticketError);
+        throw new Error("Error al crear el ticket");
       }
 
-      if (!data?.success) {
-        throw new Error(data?.error || "Error al crear el ticket");
-      }
-
-      const ticketId = data.ticketId;
+      const ticketId = ticket.id;
       console.log("Ticket created with ID:", ticketId);
 
-      // Upload attachments if any
+      // Step 2: Upload attachments BEFORE sending emails
+      const attachmentUrls: string[] = [];
       if (ticketData.attachments.length > 0) {
         console.log(`Uploading ${ticketData.attachments.length} attachments...`);
         
@@ -149,13 +150,31 @@ export const useSupportTicket = () => {
           const file = ticketData.attachments[i];
           const uploadedUrl = await uploadAttachment(file, ticketId);
           
-          if (!uploadedUrl) {
+          if (uploadedUrl) {
+            attachmentUrls.push(uploadedUrl);
+          } else {
             console.warn(`Failed to upload attachment: ${file.name}`);
-            // Continue with other files
           }
           
           setUploadProgress(((i + 1) / ticketData.attachments.length) * 100);
         }
+      }
+
+      // Step 3: Now send emails with attachment URLs
+      const { data, error } = await supabase.functions.invoke('send-support-email', {
+        body: {
+          ticketId: ticketId,
+          subject: ticketData.subject,
+          message: ticketData.message,
+          category: ticketData.category,
+          attachmentUrls: attachmentUrls
+        }
+      });
+
+      if (error) {
+        console.error("Error calling edge function:", error);
+        // Don't throw - ticket is already created, just log the error
+        console.warn("Ticket created but email notification failed");
       }
 
       toast.success("¡Ticket enviado exitosamente! Te responderemos pronto.", {

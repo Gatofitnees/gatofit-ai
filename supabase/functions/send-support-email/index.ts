@@ -11,10 +11,11 @@ const corsHeaders = {
 };
 
 interface SupportTicketRequest {
+  ticketId: string;
   subject: string;
   message: string;
   category: string;
-  attachmentCount?: number;
+  attachmentUrls?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -50,12 +51,16 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized");
     }
 
-    console.log(`Processing support ticket for user: ${user.email}`);
+    console.log(`Processing support ticket email for user: ${user.email}`);
 
     // Parse request body
-    const { subject, message, category, attachmentCount = 0 }: SupportTicketRequest = await req.json();
+    const { ticketId, subject, message, category, attachmentUrls = [] }: SupportTicketRequest = await req.json();
 
     // Validate inputs
+    if (!ticketId) {
+      throw new Error("Ticket ID is required");
+    }
+
     if (!subject || subject.trim().length < 3 || subject.trim().length > 100) {
       throw new Error("Subject must be between 3 and 100 characters");
     }
@@ -84,26 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const userName = profile?.full_name || profile?.username || user.email;
 
-    // Insert ticket into database
-    const { data: ticket, error: ticketError } = await supabase
-      .from("support_tickets")
-      .insert({
-        user_id: user.id,
-        subject: subject.trim(),
-        message: sanitizedMessage.trim(),
-        category: category,
-        status: "open",
-        priority: "medium",
-      })
-      .select()
-      .single();
-
-    if (ticketError) {
-      console.error("Error creating ticket:", ticketError);
-      throw new Error("Failed to create support ticket");
-    }
-
-    console.log(`Ticket created with ID: ${ticket.id}`);
+    console.log(`Sending emails for ticket ID: ${ticketId}, attachments: ${attachmentUrls.length}`);
 
     // Prepare email content for admin
     const categoryLabels: Record<string, string> = {
@@ -112,6 +98,19 @@ const handler = async (req: Request): Promise<Response> => {
       question: "❓ Pregunta",
       other: "📝 Otro",
     };
+
+    const attachmentLinksHtml = attachmentUrls.length > 0 ? `
+      <h3 style="color: #667eea; margin-top: 20px;">📎 Archivos Adjuntos:</h3>
+      <div style="background: white; padding: 15px; margin: 15px 0; border-radius: 4px;">
+        ${attachmentUrls.map((url, index) => `
+          <div style="margin: 8px 0;">
+            <a href="${url}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: bold;">
+              📄 Adjunto ${index + 1} - Ver archivo
+            </a>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
 
     const adminEmailHtml = `
       <!DOCTYPE html>
@@ -133,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div class="container">
             <div class="header">
               <h2>🎫 Nuevo Ticket de Soporte</h2>
-              <p>Ticket ID: <span class="ticket-id">#${ticket.id.substring(0, 8)}</span></p>
+              <p>Ticket ID: <span class="ticket-id">#${ticketId.substring(0, 8)}</span></p>
             </div>
             <div class="content">
               <div class="info-row">
@@ -146,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <span class="label">🏷️ Categoría:</span> ${categoryLabels[category]}
               </div>
               <div class="info-row">
-                <span class="label">📎 Adjuntos:</span> ${attachmentCount} archivo(s)
+                <span class="label">📎 Adjuntos:</span> ${attachmentUrls.length} archivo(s)
               </div>
               <div class="info-row">
                 <span class="label">📅 Fecha:</span> ${new Date().toLocaleString("es-ES")}
@@ -160,15 +159,11 @@ const handler = async (req: Request): Promise<Response> => {
                 ${sanitizedMessage.replace(/\n/g, "<br>")}
               </div>
               
-              ${attachmentCount > 0 ? `
-                <p style="margin-top: 20px; font-style: italic; color: #666;">
-                  ℹ️ Este ticket incluye ${attachmentCount} archivo(s) adjunto(s). Los archivos están disponibles en el panel de administración.
-                </p>
-              ` : ""}
+              ${attachmentLinksHtml}
             </div>
             <div class="footer">
               <p>Sistema de Soporte GatofitAI</p>
-              <p>Ticket ID: ${ticket.id}</p>
+              <p>Ticket ID: ${ticketId}</p>
             </div>
           </div>
         </body>
@@ -179,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: adminEmailError } = await resend.emails.send({
       from: "GatofitAI Soporte <noreply@gatofit.com>",
       to: [SUPPORT_EMAIL],
-      subject: `[Ticket #${ticket.id.substring(0, 8)}] ${subject}`,
+      subject: `[Ticket #${ticketId.substring(0, 8)}] ${subject}`,
       html: adminEmailHtml,
     });
 
@@ -219,10 +214,11 @@ const handler = async (req: Request): Promise<Response> => {
               <p>Tu ticket de soporte ha sido creado exitosamente. Nuestro equipo lo revisará y te responderá a la brevedad.</p>
               
               <div class="ticket-box">
-                <p><strong>🎫 Número de Ticket:</strong> #${ticket.id.substring(0, 8)}</p>
+                <p><strong>🎫 Número de Ticket:</strong> #${ticketId.substring(0, 8)}</p>
                 <p><strong>📋 Asunto:</strong> ${subject}</p>
                 <p><strong>🏷️ Categoría:</strong> ${categoryLabels[category]}</p>
                 <p><strong>📅 Fecha de Creación:</strong> ${new Date().toLocaleString("es-ES")}</p>
+                ${attachmentUrls.length > 0 ? `<p><strong>📎 Adjuntos:</strong> ${attachmentUrls.length} archivo(s)</p>` : ''}
               </div>
               
               <p><strong>⏱️ Tiempo estimado de respuesta:</strong> 24-48 horas</p>
@@ -245,7 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: userEmailError } = await resend.emails.send({
       from: "GatofitAI Soporte <noreply@gatofit.com>",
       to: [user.email!],
-      subject: `Tu ticket de soporte ha sido recibido (#${ticket.id.substring(0, 8)})`,
+      subject: `Tu ticket de soporte ha sido recibido (#${ticketId.substring(0, 8)})`,
       html: userEmailHtml,
     });
 
@@ -259,8 +255,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        ticketId: ticket.id,
-        message: "Ticket creado exitosamente",
+        ticketId: ticketId,
+        message: "Emails enviados exitosamente",
       }),
       {
         status: 200,
