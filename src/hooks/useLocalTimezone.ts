@@ -28,9 +28,18 @@ export const useLocalTimezone = () => {
   // Función para crear un timestamp ISO que preserve la fecha y hora local del usuario
   const createLocalTimestamp = (localDate?: Date) => {
     const date = localDate || new Date();
-    // Simplemente devolver el ISO string de la fecha actual
-    // Esto guardará la hora local real del usuario
-    return date.toISOString();
+    
+    // Obtener componentes de fecha en hora local (sin conversión a UTC)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    // Construir timestamp en formato ISO pero SIN zona horaria
+    // PostgreSQL lo guardará como está, preservando la hora local
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   };
 
   // Nueva función para obtener el rango de fechas de un día en la zona local del usuario
