@@ -1621,6 +1621,7 @@ export type Database = {
           is_program_specific: boolean | null
           name: string
           original_plan_id: string | null
+          program_id: string | null
           program_specific_id: string | null
           target_calories: number
           target_carbs_g: number
@@ -1639,6 +1640,7 @@ export type Database = {
           is_program_specific?: boolean | null
           name: string
           original_plan_id?: string | null
+          program_id?: string | null
           program_specific_id?: string | null
           target_calories: number
           target_carbs_g: number
@@ -1657,6 +1659,7 @@ export type Database = {
           is_program_specific?: boolean | null
           name?: string
           original_plan_id?: string | null
+          program_id?: string | null
           program_specific_id?: string | null
           target_calories?: number
           target_carbs_g?: number
@@ -1670,6 +1673,13 @@ export type Database = {
             columns: ["original_plan_id"]
             isOneToOne: false
             referencedRelation: "nutrition_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_plans_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "gatofit_programs"
             referencedColumns: ["id"]
           },
           {
@@ -2105,6 +2115,7 @@ export type Database = {
           created_at: string
           description: string | null
           estimated_duration_minutes: number | null
+          gatofit_program_id: string | null
           id: number
           is_predefined: boolean
           is_program_duplicate: boolean | null
@@ -2118,6 +2129,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           estimated_duration_minutes?: number | null
+          gatofit_program_id?: string | null
           id?: number
           is_predefined?: boolean
           is_program_duplicate?: boolean | null
@@ -2131,6 +2143,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           estimated_duration_minutes?: number | null
+          gatofit_program_id?: string | null
           id?: number
           is_predefined?: boolean
           is_program_duplicate?: boolean | null
@@ -2141,6 +2154,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "routines_gatofit_program_id_fkey"
+            columns: ["gatofit_program_id"]
+            isOneToOne: false
+            referencedRelation: "gatofit_programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "routines_program_id_fkey"
             columns: ["program_id"]
@@ -3224,6 +3244,14 @@ export type Database = {
           target_program_id: string
         }
         Returns: string
+      }
+      clone_routine_for_gatofit_program: {
+        Args: {
+          new_routine_name?: string
+          source_routine_id: number
+          target_program_id: string
+        }
+        Returns: number
       }
       clone_routine_for_program: {
         Args: {
