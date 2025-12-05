@@ -2811,8 +2811,6 @@ export type Database = {
           created_at: string | null
           discount_code_id: string | null
           expires_at: string | null
-          google_play_order_id: string | null
-          google_play_purchase_token: string | null
           id: string
           next_plan_starts_at: string | null
           next_plan_type:
@@ -2839,8 +2837,6 @@ export type Database = {
           created_at?: string | null
           discount_code_id?: string | null
           expires_at?: string | null
-          google_play_order_id?: string | null
-          google_play_purchase_token?: string | null
           id?: string
           next_plan_starts_at?: string | null
           next_plan_type?:
@@ -2867,8 +2863,6 @@ export type Database = {
           created_at?: string | null
           discount_code_id?: string | null
           expires_at?: string | null
-          google_play_order_id?: string | null
-          google_play_purchase_token?: string | null
           id?: string
           next_plan_starts_at?: string | null
           next_plan_type?:
@@ -3465,6 +3459,7 @@ export type Database = {
       }
       get_users_with_tags_and_filters: {
         Args: {
+          p_activity_level?: string
           p_limit?: number
           p_offset?: number
           p_order_by?: string
@@ -3474,17 +3469,18 @@ export type Database = {
           p_tag_id?: string
         }
         Returns: {
+          assigned_tags: Json
           avatar_url: string
+          coach_email: string
+          coach_name: string
           created_at: string
           current_streak: number
-          email: string
           full_name: string
           id: string
           is_active: boolean
           last_activity: string
           subscription_status: string
           subscription_type: string
-          tags: Json
           total_workouts: number
           username: string
         }[]
