@@ -2178,6 +2178,45 @@ export type Database = {
         }
         Relationships: []
       }
+      revenuecat_webhook_events: {
+        Row: {
+          app_user_id: string | null
+          created_at: string | null
+          environment: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          product_id: string | null
+          store: string | null
+        }
+        Insert: {
+          app_user_id?: string | null
+          created_at?: string | null
+          environment?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          product_id?: string | null
+          store?: string | null
+        }
+        Update: {
+          app_user_id?: string | null
+          created_at?: string | null
+          environment?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          product_id?: string | null
+          store?: string | null
+        }
+        Relationships: []
+      }
       routine_exercises: {
         Row: {
           block_name: string | null
@@ -3102,6 +3141,7 @@ export type Database = {
           paypal_payer_id: string | null
           paypal_subscription_id: string | null
           plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          revenuecat_original_transaction_id: string | null
           scheduled_change_created_at: string | null
           started_at: string
           status: Database["public"]["Enums"]["subscription_status"]
@@ -3130,6 +3170,7 @@ export type Database = {
           paypal_payer_id?: string | null
           paypal_subscription_id?: string | null
           plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          revenuecat_original_transaction_id?: string | null
           scheduled_change_created_at?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["subscription_status"]
@@ -3158,6 +3199,7 @@ export type Database = {
           paypal_payer_id?: string | null
           paypal_subscription_id?: string | null
           plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          revenuecat_original_transaction_id?: string | null
           scheduled_change_created_at?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["subscription_status"]
