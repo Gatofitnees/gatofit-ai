@@ -157,6 +157,7 @@ export type Database = {
           notes: string | null
           reps_max: number | null
           reps_min: number | null
+          reps_range: string | null
           rest_between_sets_seconds: number | null
           routine_id: number
           sets: number | null
@@ -171,6 +172,7 @@ export type Database = {
           notes?: string | null
           reps_max?: number | null
           reps_min?: number | null
+          reps_range?: string | null
           rest_between_sets_seconds?: number | null
           routine_id: number
           sets?: number | null
@@ -185,6 +187,7 @@ export type Database = {
           notes?: string | null
           reps_max?: number | null
           reps_min?: number | null
+          reps_range?: string | null
           rest_between_sets_seconds?: number | null
           routine_id?: number
           sets?: number | null
@@ -809,6 +812,125 @@ export type Database = {
           },
         ]
       }
+      coach_subscription_plans: {
+        Row: {
+          created_at: string | null
+          duration_days: number
+          id: string
+          is_active: boolean | null
+          max_clients: number
+          name: string
+          paypal_plan_id: string | null
+          plan_type: string
+          price_usd: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_days: number
+          id?: string
+          is_active?: boolean | null
+          max_clients: number
+          name: string
+          paypal_plan_id?: string | null
+          plan_type: string
+          price_usd: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean | null
+          max_clients?: number
+          name?: string
+          paypal_plan_id?: string | null
+          plan_type?: string
+          price_usd?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      coach_subscriptions: {
+        Row: {
+          auto_renewal: boolean | null
+          coach_id: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          max_clients: number
+          next_plan_id: string | null
+          next_plan_starts_at: string | null
+          paypal_payer_id: string | null
+          paypal_subscription_id: string | null
+          plan_id: string | null
+          started_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_renewal?: boolean | null
+          coach_id: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          max_clients?: number
+          next_plan_id?: string | null
+          next_plan_starts_at?: string | null
+          paypal_payer_id?: string | null
+          paypal_subscription_id?: string | null
+          plan_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_renewal?: boolean | null
+          coach_id?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          max_clients?: number
+          next_plan_id?: string | null
+          next_plan_starts_at?: string | null
+          paypal_payer_id?: string | null
+          paypal_subscription_id?: string | null
+          plan_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_subscriptions_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: true
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_subscriptions_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: true
+            referencedRelation: "coach_branding_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_subscriptions_next_plan_id_fkey"
+            columns: ["next_plan_id"]
+            isOneToOne: false
+            referencedRelation: "coach_subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "coach_subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_user_assignments: {
         Row: {
           assigned_at: string | null
@@ -1070,6 +1192,7 @@ export type Database = {
           equipment_required: string | null
           id: number
           image_url: string | null
+          is_public: boolean
           muscle_group_main: string | null
           name: string
           thumbnail_url: string | null
@@ -1084,6 +1207,7 @@ export type Database = {
           equipment_required?: string | null
           id?: number
           image_url?: string | null
+          is_public?: boolean
           muscle_group_main?: string | null
           name: string
           thumbnail_url?: string | null
@@ -1098,6 +1222,7 @@ export type Database = {
           equipment_required?: string | null
           id?: number
           image_url?: string | null
+          is_public?: boolean
           muscle_group_main?: string | null
           name?: string
           thumbnail_url?: string | null
@@ -2012,7 +2137,7 @@ export type Database = {
           total_fiber_g: number
           total_protein_g: number
           updated_at: string
-          user_id: string
+          user_id: string | null
           youtube_url: string | null
         }
         Insert: {
@@ -2030,7 +2155,7 @@ export type Database = {
           total_fiber_g?: number
           total_protein_g?: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           youtube_url?: string | null
         }
         Update: {
@@ -2048,7 +2173,7 @@ export type Database = {
           total_fiber_g?: number
           total_protein_g?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           youtube_url?: string | null
         }
         Relationships: []
@@ -2063,6 +2188,7 @@ export type Database = {
           notes: string | null
           reps_max: number | null
           reps_min: number | null
+          reps_range: string | null
           rest_between_sets_seconds: number | null
           routine_id: number
           sets: number | null
@@ -2076,6 +2202,7 @@ export type Database = {
           notes?: string | null
           reps_max?: number | null
           reps_min?: number | null
+          reps_range?: string | null
           rest_between_sets_seconds?: number | null
           routine_id: number
           sets?: number | null
@@ -2089,6 +2216,7 @@ export type Database = {
           notes?: string | null
           reps_max?: number | null
           reps_min?: number | null
+          reps_range?: string | null
           rest_between_sets_seconds?: number | null
           routine_id?: number
           sets?: number | null
@@ -2755,6 +2883,157 @@ export type Database = {
           },
         ]
       }
+      user_scheduled_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          created_by_admin: string | null
+          description: string | null
+          duration_minutes: number | null
+          evolution_body_fat: number | null
+          evolution_notes: string | null
+          evolution_weight_kg: number | null
+          exercise_id: number | null
+          id: string
+          is_completed: boolean | null
+          is_recurring: boolean | null
+          nutrition_plan_id: string | null
+          parent_task_id: string | null
+          program_id: string | null
+          recurrence_end_date: string | null
+          recurrence_pattern: string | null
+          routine_id: number | null
+          scheduled_date: string
+          session_notes: string | null
+          session_time: string | null
+          session_type: string | null
+          task_type: string
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by_admin?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          evolution_body_fat?: number | null
+          evolution_notes?: string | null
+          evolution_weight_kg?: number | null
+          exercise_id?: number | null
+          id?: string
+          is_completed?: boolean | null
+          is_recurring?: boolean | null
+          nutrition_plan_id?: string | null
+          parent_task_id?: string | null
+          program_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
+          routine_id?: number | null
+          scheduled_date: string
+          session_notes?: string | null
+          session_time?: string | null
+          session_type?: string | null
+          task_type: string
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by_admin?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          evolution_body_fat?: number | null
+          evolution_notes?: string | null
+          evolution_weight_kg?: number | null
+          exercise_id?: number | null
+          id?: string
+          is_completed?: boolean | null
+          is_recurring?: boolean | null
+          nutrition_plan_id?: string | null
+          parent_task_id?: string | null
+          program_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
+          routine_id?: number | null
+          scheduled_date?: string
+          session_notes?: string | null
+          session_time?: string | null
+          session_type?: string | null
+          task_type?: string
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_scheduled_tasks_created_by_admin_fkey"
+            columns: ["created_by_admin"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_created_by_admin_fkey"
+            columns: ["created_by_admin"]
+            isOneToOne: false
+            referencedRelation: "coach_branding_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_nutrition_plan_id_fkey"
+            columns: ["nutrition_plan_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "user_scheduled_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "admin_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scheduled_tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_rankings"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_streaks: {
         Row: {
           created_at: string
@@ -3228,7 +3507,12 @@ export type Database = {
         }
         Returns: Json
       }
+      can_coach_add_client: { Args: { p_coach_id: string }; Returns: boolean }
       can_coach_view_user: { Args: { p_user_id: string }; Returns: boolean }
+      can_view_exercise: {
+        Args: { exercise_creator_id: string; exercise_is_public: boolean }
+        Returns: boolean
+      }
       cancel_scheduled_plan_change: {
         Args: { p_user_id: string }
         Returns: Json
@@ -3251,6 +3535,14 @@ export type Database = {
         }
         Returns: string
       }
+      clone_nutrition_plan_for_user: {
+        Args: {
+          new_plan_name?: string
+          source_plan_id: string
+          target_user_id: string
+        }
+        Returns: string
+      }
       clone_routine_for_gatofit_program: {
         Args: {
           new_routine_name?: string
@@ -3264,6 +3556,14 @@ export type Database = {
           new_routine_name?: string
           source_routine_id: number
           target_program_id: string
+        }
+        Returns: number
+      }
+      clone_routine_for_user: {
+        Args: {
+          new_routine_name?: string
+          source_routine_id: number
+          target_user_id: string
         }
         Returns: number
       }
@@ -3297,6 +3597,7 @@ export type Database = {
           username: string
         }[]
       }
+      get_coach_client_count: { Args: { p_coach_id: string }; Returns: number }
       get_coach_clients_program_end_dates: {
         Args: never
         Returns: {
@@ -3463,32 +3764,60 @@ export type Database = {
           username: string
         }[]
       }
-      get_users_with_tags_and_filters: {
-        Args: {
-          p_limit?: number
-          p_offset?: number
-          p_order_by?: string
-          p_order_direction?: string
-          p_search?: string
-          p_subscription_type?: string
-          p_tag_id?: string
-        }
-        Returns: {
-          avatar_url: string
-          created_at: string
-          current_streak: number
-          email: string
-          full_name: string
-          id: string
-          is_active: boolean
-          last_activity: string
-          subscription_status: string
-          subscription_type: string
-          tags: Json
-          total_workouts: number
-          username: string
-        }[]
-      }
+      get_users_with_tags_and_filters:
+        | {
+            Args: {
+              p_limit?: number
+              p_offset?: number
+              p_order_by?: string
+              p_order_direction?: string
+              p_search?: string
+              p_subscription_type?: string
+              p_tag_id?: string
+            }
+            Returns: {
+              avatar_url: string
+              coach_avatar_url: string
+              coach_id: string
+              coach_name: string
+              created_at: string
+              current_streak: number
+              email: string
+              full_name: string
+              id: string
+              is_active: boolean
+              last_activity: string
+              subscription_status: string
+              subscription_type: string
+              tags: Json
+              total_workouts: number
+              username: string
+            }[]
+          }
+        | {
+            Args: {
+              p_limit?: number
+              p_offset?: number
+              p_search?: string
+              p_subscription_type?: string
+              p_tag_ids?: string[]
+            }
+            Returns: {
+              avatar_url: string
+              created_at: string
+              current_streak: number
+              email: string
+              full_name: string
+              id: string
+              is_active: boolean
+              last_activity: string
+              subscription_status: string
+              subscription_type: string
+              tags: Json
+              total_workouts: number
+              username: string
+            }[]
+          }
       get_week_start: { Args: { input_date?: string }; Returns: string }
       get_workout_session_details: {
         Args: { p_workout_log_id: number }
